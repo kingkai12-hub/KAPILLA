@@ -1,0 +1,209 @@
+"use client";
+
+import React, { useState } from 'react';
+import { Printer, Save, RefreshCw } from 'lucide-react';
+
+export default function CreateShipment() {
+  const [formData, setFormData] = useState({
+    senderName: '', senderPhone: '', senderAddress: '',
+    receiverName: '', receiverPhone: '', receiverAddress: '',
+    origin: 'Dar es Salaam', destination: '',
+    weight: '', type: 'Parcel'
+  });
+  const [generatedWaybill, setGeneratedWaybill] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/shipments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error('Failed to create shipment');
+
+      const data = await res.json();
+      setGeneratedWaybill(data.waybillNumber);
+    } catch (error) {
+      console.error(error);
+      alert('Error creating shipment. Please try again.');
+    }
+  };
+
+  const handleReset = () => {
+    setGeneratedWaybill(null);
+    setFormData({
+      senderName: '', senderPhone: '', senderAddress: '',
+      receiverName: '', receiverPhone: '', receiverAddress: '',
+      origin: 'Dar es Salaam', destination: '',
+      weight: '', type: 'Parcel'
+    });
+  };
+
+  if (generatedWaybill) {
+    return (
+      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        <div className="bg-green-50 p-6 border-b border-green-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-green-800">Shipment Created!</h2>
+            <p className="text-green-600">Waybill generated successfully.</p>
+          </div>
+          <div className="text-right">
+            <span className="block text-sm text-gray-500">Waybill Number</span>
+            <span className="block text-3xl font-mono font-bold text-gray-900">{generatedWaybill}</span>
+          </div>
+        </div>
+
+        <div className="p-8 space-y-6">
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">From (Sender)</h3>
+              <p className="font-bold text-lg">{formData.senderName}</p>
+              <p className="text-gray-600">{formData.senderPhone}</p>
+              <p className="text-gray-600 text-sm">{formData.senderAddress}</p>
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">To (Receiver)</h3>
+              <p className="font-bold text-lg">{formData.receiverName}</p>
+              <p className="text-gray-600">{formData.receiverPhone}</p>
+              <p className="text-gray-600 text-sm">{formData.receiverAddress}</p>
+            </div>
+          </div>
+
+          <div className="border-t pt-6 grid grid-cols-3 gap-4">
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Origin</h3>
+              <p className="font-medium">{formData.origin}</p>
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Destination</h3>
+              <p className="font-medium">{formData.destination}</p>
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Weight / Type</h3>
+              <p className="font-medium">{formData.weight} kg / {formData.type}</p>
+            </div>
+          </div>
+
+          <div className="mt-8 flex gap-4">
+            <button 
+              onClick={() => window.open(`/staff/shipments/${generatedWaybill}/label`, '_blank')}
+              className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white py-3 rounded-md hover:bg-gray-900 transition-colors"
+            >
+              <Printer className="w-5 h-5" />
+              Print Waybill Label
+            </button>
+            <button 
+              onClick={handleReset}
+              className="flex items-center justify-center gap-2 px-6 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+              New Shipment
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Shipment</h1>
+      
+      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 sm:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Sender Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Sender Details</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <input required type="text" name="senderName" value={formData.senderName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address / Location</label>
+              <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+          </div>
+
+          {/* Receiver Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Receiver Details</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <input required type="text" name="receiverName" value={formData.receiverName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input required type="tel" name="receiverPhone" value={formData.receiverPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address / Location</label>
+              <textarea name="receiverAddress" value={formData.receiverAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+          </div>
+        </div>
+
+        {/* Shipment Info */}
+        <div className="mt-8 space-y-4">
+          <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Package Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Origin City</label>
+              <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option>Dar es Salaam</option>
+                <option>Mwanza</option>
+                <option>Arusha</option>
+                <option>Dodoma</option>
+                <option>Mbeya</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Destination City</label>
+              <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">Select Destination</option>
+                <option>Dar es Salaam</option>
+                <option>Mwanza</option>
+                <option>Arusha</option>
+                <option>Dodoma</option>
+                <option>Mbeya</option>
+                <option>Nairobi (Intl)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Type</label>
+              <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option>Parcel</option>
+                <option>Document</option>
+                <option>Fragile</option>
+                <option>Heavy Cargo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-end">
+          <button
+            type="submit"
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm"
+          >
+            <Save className="w-5 h-5" />
+            Generate Waybill
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
