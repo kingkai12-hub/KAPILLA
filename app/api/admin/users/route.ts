@@ -83,6 +83,17 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 });
     }
 
+    // Check if user is admin before deleting
+    const userToDelete = await db.user.findUnique({ where: { id } });
+    
+    if (!userToDelete) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (userToDelete.role === 'ADMIN') {
+        return NextResponse.json({ error: 'Cannot delete an ADMIN account' }, { status: 403 });
+    }
+
     await db.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

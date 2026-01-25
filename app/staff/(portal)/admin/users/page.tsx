@@ -231,8 +231,9 @@ export default function UserManagement() {
                       </button>
                       <button 
                         onClick={() => handleDelete(user.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                        title="Delete"
+                        className={`p-1 rounded ${user.role === 'ADMIN' ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
+                        title={user.role === 'ADMIN' ? "Cannot delete Admin" : "Delete"}
+                        disabled={user.role === 'ADMIN'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
