@@ -66,6 +66,16 @@ export async function DELETE(
       db.trackingEvent.deleteMany({
         where: { shipmentId: shipment.id }
       }),
+      db.checkIn.deleteMany({
+        where: {
+          trip: {
+            shipmentId: shipment.id
+          }
+        }
+      }),
+      db.trip.deleteMany({
+        where: { shipmentId: shipment.id }
+      }),
       db.shipment.delete({
         where: { waybillNumber: waybill }
       })

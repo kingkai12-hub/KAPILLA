@@ -26,10 +26,16 @@ function UpdateTrackingContent() {
   const sigCanvas = useRef<any>(null);
   const [signature, setSignature] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!waybill) return;
+    if (!waybill) {
+      alert('Please enter a Waybill Number.');
+      return;
+    }
+
+    setLoading(true);
 
     let signatureData = null;
     if (status === 'DELIVERED') {
@@ -37,11 +43,13 @@ function UpdateTrackingContent() {
         signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
       } else {
         alert('Please provide a signature for delivery.');
+        setLoading(false);
         return;
       }
       
       if (!receivedBy.trim()) {
         alert('Please enter the name of the receiver.');
+        setLoading(false);
         return;
       }
     }
@@ -78,6 +86,8 @@ function UpdateTrackingContent() {
         if (status === 'DELIVERED') {
           setShowSuccessModal(true);
           setStatus('IN_TRANSIT'); // Reset to hide signature section
+        } else {
+            alert('Status updated successfully!');
         }
       } else {
         const errorData = await res.json();
@@ -86,6 +96,8 @@ function UpdateTrackingContent() {
     } catch (error) {
       console.error(error);
       alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,10 +209,22 @@ function UpdateTrackingContent() {
 
           <button
             type="submit"
-            className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform active:scale-[0.98]"
+            disabled={loading}
+            className={`w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white transition-all transform active:scale-[0.98] ${
+              loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+            }`}
           >
-            <Save className="mr-2 h-5 w-5" />
-            Update Status
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Updating...
+              </span>
+            ) : (
+              <>
+                <Save className="mr-2 h-5 w-5" />
+                Update Status
+              </>
+            )}
           </button>
         </form>
       </div>
