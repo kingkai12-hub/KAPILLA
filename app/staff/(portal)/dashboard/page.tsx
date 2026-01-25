@@ -129,7 +129,7 @@ export default async function StaffDashboard() {
         {/* Recent Shipments Table */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Live Shipments</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Shipments</h3>
             <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700">View All</button>
           </div>
           <div className="overflow-x-auto">
@@ -143,35 +143,37 @@ export default async function StaffDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
-                {[
-                  { id: 'KPL-8829', dest: 'Mwanza', status: 'In Transit', date: '2 mins ago' },
-                  { id: 'KPL-9921', dest: 'Arusha', status: 'Pending', date: '15 mins ago' },
-                  { id: 'KPL-7732', dest: 'Dodoma', status: 'Delivered', date: '1 hour ago' },
-                  { id: 'KPL-1102', dest: 'Zanzibar', status: 'Customs', date: '2 hours ago' },
-                  { id: 'KPL-3391', dest: 'Mbeya', status: 'In Transit', date: '3 hours ago' },
-                ].map((shipment) => (
-                  <tr key={shipment.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">{shipment.id}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-700 dark:text-slate-300">{shipment.dest}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={cn(
-                        "px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full border",
-                        shipment.status === 'Delivered' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-100 dark:border-green-800' : 
-                        shipment.status === 'In Transit' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800' : 
-                        'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
-                      )}>
-                        {shipment.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                      {shipment.date}
+                {recentShipments.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+                      No shipments found.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentShipments.map((shipment) => (
+                    <tr key={shipment.waybillNumber} className="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">{shipment.waybillNumber}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-700 dark:text-slate-300">{shipment.destination}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={cn(
+                          "px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full border",
+                          shipment.currentStatus === 'DELIVERED' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-100 dark:border-green-800' : 
+                          shipment.currentStatus === 'IN_TRANSIT' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800' : 
+                          'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+                        )}>
+                          {shipment.currentStatus.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                        {new Date(shipment.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

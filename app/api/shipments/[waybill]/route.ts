@@ -37,9 +37,25 @@ export async function DELETE(
   try {
     const { waybill } = await params;
 
-    await db.shipment.delete({
-      where: { waybillNumber: waybill }
+    // Find the shipment first to get its ID (needed for relation deletion)
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybill },
+      select: { id: true }
     });
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
+    // Delete related events first, then the shipment (transactional)
+    await db.$transaction([
+      db.trackingEvent.deleteMany({
+        where: { shipmentId: shipment.id }
+      }),
+      db.shipment.delete({
+        where: { waybillNumber: waybill }
+      })
+    ]);
 
     return NextResponse.json({ message: 'Shipment deleted' });
   } catch (error) {
