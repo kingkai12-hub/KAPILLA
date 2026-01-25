@@ -127,7 +127,7 @@ export default function UserManagement() {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={e => setFormData({...formData, name: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                 />
               </div>
@@ -136,9 +136,9 @@ export default function UserManagement() {
                 <input
                   type="text"
                   value={formData.workId}
-                  onChange={e => setFormData({...formData, workId: e.target.value})}
+                  onChange={e => setFormData({...formData, workId: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
-                  placeholder="e.g. EMP-001"
+                  placeholder="EMP-001"
                 />
               </div>
               <div>
@@ -146,9 +146,9 @@ export default function UserManagement() {
                 <input
                   type="text"
                   value={formData.phoneNumber}
-                  onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
+                  onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10)})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
-                  placeholder="+255..."
+                  placeholder="0xxxxxxxxx"
                 />
               </div>
               <div>

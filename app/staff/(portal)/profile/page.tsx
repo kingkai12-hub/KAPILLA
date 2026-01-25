@@ -135,7 +135,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => setName(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="John Doe"
                   />
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={workId}
-                    onChange={(e) => setWorkId(e.target.value)}
+                    onChange={(e) => setWorkId(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="EMP-001"
                   />
@@ -163,9 +163,9 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    placeholder="+255..."
+                    placeholder="0xxxxxxxxx"
                   />
                 </div>
               </div>

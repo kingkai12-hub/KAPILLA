@@ -37,7 +37,29 @@ export default function CreateShipment() {
   const [generatedWaybill, setGeneratedWaybill] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    let newValue = value;
+
+    // Phone Number Validation: Only numbers, max 10 digits
+    if (name === 'senderPhone' || name === 'receiverPhone') {
+      newValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
+    // Weight Validation: Only numbers and decimal point
+    else if (name === 'weight') {
+      newValue = value.replace(/[^0-9.]/g, '');
+    }
+    // Title Case (Names, Cities, Addresses)
+    else if (['senderName', 'receiverName', 'origin', 'destination', 'senderAddress', 'receiverAddress'].includes(name)) {
+      newValue = value.replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+    // Sentence Case (Cargo Details)
+    else if (name === 'cargoDetails') {
+      if (newValue.length > 0) {
+        newValue = newValue.charAt(0).toUpperCase() + newValue.slice(1);
+      }
+    }
+
+    setFormData({ ...formData, [name]: newValue });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

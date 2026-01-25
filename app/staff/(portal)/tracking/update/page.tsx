@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle } from 'lucide-react';
+import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle, MapPin } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import { useSearchParams } from 'next/navigation';
 
@@ -152,13 +152,18 @@ function UpdateTrackingContent() {
             {/* Location Input */}
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Current Location</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="e.g. Dar es Salaam Hub"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
+                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="e.g. Dar es Salaam Hub"
+                />
+              </div>
             </div>
           </div>
 
@@ -172,7 +177,7 @@ function UpdateTrackingContent() {
                 <input
                   type="text"
                   value={receivedBy}
-                  onChange={(e) => setReceivedBy(e.target.value)}
+                  onChange={(e) => setReceivedBy(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
                   className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Enter receiver's name"
                   required={status === 'DELIVERED'}
