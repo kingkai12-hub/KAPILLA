@@ -207,7 +207,7 @@ export default function Home() {
                            searchResult.trips[0].checkIns[0].latitude, 
                            searchResult.trips[0].checkIns[0].longitude
                          ] : [-6.3690, 34.8888]}
-                         zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 12 : 6}
+                         zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 10 : 6}
                        />
                     </div>
 
