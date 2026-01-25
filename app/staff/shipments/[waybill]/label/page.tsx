@@ -79,7 +79,7 @@ export default function LabelPage() {
         {/* Header Section */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Logo" className="w-32 h-32 object-contain print:invert-0" />
+            <img src="/logo.png" alt="Logo" className="w-48 h-48 object-contain print:invert-0" />
             <div>
               {/* <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1> */}
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
@@ -91,7 +91,7 @@ export default function LabelPage() {
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-4xl font-black text-black uppercase tracking-tighter">WAYBILL</h2>
+            <h2 className="text-2xl font-black text-black uppercase tracking-tighter">WAYBILL</h2>
             <p className="text-xs font-bold uppercase text-black mt-1">Consignment Note</p>
             <div className="mt-2 border-2 border-black p-2 inline-block">
               <p className="text-lg font-mono font-bold">{data.waybillNumber}</p>
