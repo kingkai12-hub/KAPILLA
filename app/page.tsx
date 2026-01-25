@@ -22,16 +22,14 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!waybill.trim()) return;
-    
+  const performSearch = async (wb: string) => {
+    setWaybill(wb);
     setLoading(true);
     setHasSearched(true);
     setSearchResult(null);
 
     try {
-      const res = await fetch(`/api/shipments/${waybill}`);
+      const res = await fetch(`/api/shipments/${wb}`);
       if (res.ok) {
         const data = await res.json();
         setSearchResult(data);
@@ -43,8 +41,17 @@ export default function Home() {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waybill.trim()) return;
+    performSearch(waybill);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
+      <Suspense fallback={null}>
+        <SearchParamsHandler onSearch={performSearch} />
+      </Suspense>
       {/* Navigation */}
       <nav className="absolute w-full z-10 px-6 py-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">

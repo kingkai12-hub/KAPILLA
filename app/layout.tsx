@@ -7,8 +7,37 @@ import RefreshHandler from '@/components/RefreshHandler';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kapilla Logistics',
-  description: 'Global Logistics & Tracking System',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://kapilla-logistics.vercel.app'),
+  title: {
+    default: 'Kapilla Logistics',
+    template: '%s | Kapilla Logistics',
+  },
+  description: 'Global Logistics & Tracking System - Fast, Reliable, Secure.',
+  openGraph: {
+    title: 'Kapilla Logistics',
+    description: 'Track your shipment in real-time across our global network.',
+    url: '/',
+    siteName: 'Kapilla Logistics',
+    images: [
+      {
+        url: '/logo.png',
+        width: 800,
+        height: 600,
+        alt: 'Kapilla Logistics Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kapilla Logistics',
+    description: 'Global Logistics & Tracking System',
+    images: ['/logo.png'],
+  },
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
