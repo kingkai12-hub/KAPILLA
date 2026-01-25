@@ -67,12 +67,6 @@ export default function Home() {
               Request Pickup
             </button>
             <a 
-              href="/driver"
-              className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-all"
-            >
-              Driver App
-            </a>
-            <a 
               href="/staff/login"
               className="px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >

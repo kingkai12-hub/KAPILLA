@@ -95,14 +95,8 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Request Submitted!</h3>
-              <p className="text-slate-600 mb-4">Our team has received your pickup request.</p>
+              <p className="text-slate-600 mb-4">Our team has received your pickup request. We will contact you shortly.</p>
               
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 w-full mb-6">
-                <p className="text-sm text-slate-500 mb-1">Your Request ID:</p>
-                <code className="text-lg font-mono font-bold text-blue-600 select-all">{requestId}</code>
-                <p className="text-xs text-slate-400 mt-2">Please save this ID to track your request status.</p>
-              </div>
-
               <button 
                 onClick={handleClose}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
