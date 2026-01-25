@@ -126,13 +126,8 @@ function UpdateTrackingContent() {
                 className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
                 <option value="PENDING">Pending</option>
-                <option value="PICKED_UP">Picked Up</option>
                 <option value="IN_TRANSIT">In Transit</option>
-                <option value="CUSTOMS_CLEARANCE">Customs Clearance</option>
-                <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
                 <option value="DELIVERED">Delivered</option>
-                <option value="FAILED_ATTEMPT">Failed Attempt</option>
-                <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
 

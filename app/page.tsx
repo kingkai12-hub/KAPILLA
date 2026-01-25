@@ -5,6 +5,7 @@ import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Map from '@/components/Map';
 
 // Helper for classes
 function cn(...inputs: (string | undefined | null | false)[]) {
