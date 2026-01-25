@@ -43,6 +43,7 @@ model Shipment {
   destination    String
   weight         Float?
   price          Float?
+  cargoDetails   String?
   
   currentStatus  String   @default("PENDING")
   receiverSignature String? // Base64 signature

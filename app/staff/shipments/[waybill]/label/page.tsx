@@ -58,6 +58,7 @@ export default function LabelPage() {
     weight: '0.0',
     type: '',
     price: 0,
+    cargoDetails: '',
     createdAt: new Date().toISOString()
   };
 
@@ -170,9 +171,14 @@ export default function LabelPage() {
         </div>
 
         {/* Special Instructions */}
-        <div className="mb-8 border border-black p-3 h-20">
-          <p className="text-[10px] font-bold uppercase text-black mb-1">Special Instructions / Remarks</p>
-          <p className="text-sm italic">{data.remarks || 'None'}</p>
+        <div className="mb-8 border border-black p-3 min-h-20">
+          <p className="text-[10px] font-bold uppercase text-black mb-1">Cargo Details / Description</p>
+          <p className="text-sm text-black">{data.cargoDetails || 'No additional details provided.'}</p>
+          
+          <div className="mt-4 border-t border-black pt-2">
+            <p className="text-[10px] font-bold uppercase text-black mb-1">Remarks</p>
+            <p className="text-sm italic text-black">{data.remarks || 'None'}</p>
+          </div>
         </div>
 
         {/* Signatures Section */}

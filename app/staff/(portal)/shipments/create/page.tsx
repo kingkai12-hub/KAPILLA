@@ -8,7 +8,7 @@ export default function CreateShipment() {
     senderName: '', senderPhone: '', senderAddress: '',
     receiverName: '', receiverPhone: '', receiverAddress: '',
     origin: 'Dar es Salaam', destination: '',
-    weight: '', type: 'Parcel'
+    weight: '', type: 'Parcel', cargoDetails: ''
   });
   const [generatedWaybill, setGeneratedWaybill] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export default function CreateShipment() {
       senderName: '', senderPhone: '', senderAddress: '',
       receiverName: '', receiverPhone: '', receiverAddress: '',
       origin: 'Dar es Salaam', destination: '',
-      weight: '', type: 'Parcel'
+      weight: '', type: 'Parcel', cargoDetails: ''
     });
   };
 
@@ -195,6 +195,10 @@ export default function CreateShipment() {
                 <option>Heavy Cargo</option>
               </select>
             </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">Additional Details / Cargo Description</label>
+            <textarea name="cargoDetails" value={formData.cargoDetails} onChange={handleChange} rows={3} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" placeholder="Describe contents, special handling instructions, etc." />
           </div>
         </div>
 
