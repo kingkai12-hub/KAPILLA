@@ -1,9 +1,30 @@
-"use client";
-
 import React from 'react';
 import { Users, DollarSign, TrendingUp, Package } from 'lucide-react';
+import { db } from '@/lib/db';
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  // Fetch real stats
+  const totalShipments = await db.shipment.count();
+  const totalUsers = await db.user.count();
+  
+  const revenueResult = await db.shipment.aggregate({
+    _sum: {
+      price: true
+    }
+  });
+  const totalRevenue = revenueResult._sum.price || 0;
+
+  // Use "Pending Shipments" instead of Growth for now as it's a real metric
+  const pendingShipments = await db.shipment.count({
+    where: { currentStatus: 'PENDING' }
+  });
+
+  // Fetch recent users
+  const recentUsers = await db.user.findMany({
+    take: 5,
+    orderBy: { createdAt: 'desc' }
+  });
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Admin Analytics Dashboard</h1>
@@ -22,7 +43,9 @@ export default function AdminDashboard() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                  <dd className="text-2xl font-bold text-gray-900">Tzs 45.2M</dd>
+                  <dd className="text-2xl font-bold text-gray-900">
+                    {new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(totalRevenue)}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -39,8 +62,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Staff</dt>
-                  <dd className="text-2xl font-bold text-gray-900">24</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                  <dd className="text-2xl font-bold text-gray-900">{totalUsers}</dd>
                 </dl>
               </div>
             </div>
@@ -57,8 +80,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Growth (MoM)</dt>
-                  <dd className="text-2xl font-bold text-gray-900">+12%</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Pending Shipments</dt>
+                  <dd className="text-2xl font-bold text-gray-900">{pendingShipments}</dd>
                 </dl>
               </div>
             </div>
@@ -76,7 +99,7 @@ export default function AdminDashboard() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Shipments</dt>
-                  <dd className="text-2xl font-bold text-gray-900">1,248</dd>
+                  <dd className="text-2xl font-bold text-gray-900">{totalShipments}</dd>
                 </dl>
               </div>
             </div>
@@ -87,7 +110,7 @@ export default function AdminDashboard() {
       {/* Recent Users Table */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">System Users</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Users</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -95,24 +118,23 @@ export default function AdminDashboard() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Super Admin</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ADMIN</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">John Staff</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">STAFF</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                </td>
-              </tr>
+              {recentUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">No users found.</td>
+                </tr>
+              ) : (
+                recentUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
