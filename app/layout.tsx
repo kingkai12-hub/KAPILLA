@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Kapilla Logistics',
   description: 'Global Logistics & Tracking System',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

@@ -83,7 +83,7 @@ export default function ProofOfDeliveryPage() {
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-900 text-white flex items-center justify-center rounded-lg font-bold text-3xl print:text-black print:border-2 print:border-black print:bg-transparent">K</div>
+            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain print:invert-0" />
             <div>
               <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1>
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">

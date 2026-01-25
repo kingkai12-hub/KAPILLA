@@ -99,9 +99,7 @@ export default function StaffPortalLayout({
           {/* Sidebar Header */}
           <div className="h-20 flex items-center px-6 bg-slate-950 border-b border-slate-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <span className="text-white font-bold text-xl">K</span>
-              </div>
+              <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain rounded-lg" />
               <div>
                 <span className="font-bold text-lg tracking-tight block leading-none">Kapilla<span className="text-blue-500">Group</span></span>
                 <span className="text-xs text-slate-400 font-medium tracking-wide">STAFF PORTAL</span>

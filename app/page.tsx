@@ -46,9 +46,7 @@ export default function Home() {
       <nav className="absolute w-full z-10 px-6 py-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <span className="text-white font-bold text-xl">K</span>
-            </div>
+            <img src="/logo.png" alt="Kapilla Logo" className="w-12 h-12 object-contain" />
             <span className="text-xl font-bold text-slate-900 tracking-tight">Kapilla<span className="text-blue-600">Group</span></span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
@@ -261,9 +259,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">K</span>
-              </div>
+              <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain brightness-0 invert" />
               <span className="text-lg font-bold text-white tracking-tight">Kapilla<span className="text-blue-500">Group</span></span>
             </div>
             <p className="max-w-xs text-sm leading-relaxed mb-6">
