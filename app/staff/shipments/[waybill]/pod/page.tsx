@@ -145,7 +145,10 @@ export default function ProofOfDeliveryPage() {
             </thead>
             <tbody>
               <tr className="border-b border-slate-100 print:border-black">
-                <td className="p-3">Standard Package</td>
+                <td className="p-3">
+                  <p className="font-bold">{shipment.type}</p>
+                  <p className="text-xs text-gray-600 print:text-black">{shipment.cargoDetails}</p>
+                </td>
                 <td className="p-3">{shipment.weight} KG</td>
                 <td className="p-3">Standard Ground</td>
                 <td className="p-3 text-right">Tzs {shipment.price?.toLocaleString()}</td>
@@ -183,14 +186,14 @@ export default function ProofOfDeliveryPage() {
             </div>
           </div>
           
-          <p className="text-[10px] text-slate-500 text-center mt-6">
+          <p className="text-[10px] text-black text-center mt-6">
             By signing above, the receiver acknowledges receipt of the shipment in good order and condition.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-[20mm] left-[20mm] right-[20mm] flex justify-between items-center border-t pt-4">
-          <div className="text-xs text-slate-400">
+        <div className="absolute bottom-[20mm] left-[20mm] right-[20mm] flex justify-between items-center border-t border-black pt-4">
+          <div className="text-xs text-black">
             <p>Kapilla Logistics Ltd.</p>
             <p>www.kapilla-group.com</p>
           </div>
