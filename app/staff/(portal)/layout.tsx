@@ -38,6 +38,7 @@ export default function StaffPortalLayout({
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [pendingPickupCount, setPendingPickupCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -48,6 +49,26 @@ export default function StaffPortalLayout({
     } else {
       setUser(JSON.parse(storedUser));
     }
+
+    // Fetch pending pickup requests count
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch('/api/pickup-requests');
+        if (res.ok) {
+          const data = await res.json();
+          const pending = data.filter((req: any) => req.status === 'PENDING').length;
+          setPendingPickupCount(pending);
+        }
+      } catch (error) {
+        console.error("Failed to fetch pending requests", error);
+      }
+    };
+    
+    fetchPendingCount();
+    // Poll every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+
   }, [router]);
 
   const handleLogout = () => {
@@ -119,25 +140,29 @@ export default function StaffPortalLayout({
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 px-2">Menu</div>
             {navigation.map((item) => {
-              if (!item.roles.includes(user.role)) return null;
-
+              if (item.roles && !item.roles.includes(user.role)) return null;
               const isActive = pathname === item.href;
+              
               return (
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "group flex items-center justify-between px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200",
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
+                    isActive 
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50" 
                       : "text-slate-400 hover:bg-slate-800 hover:text-white"
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
-                    {item.name}
-                  </div>
-                  {isActive && <ChevronRight className="w-4 h-4 opacity-50" />}
+                  <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "animate-pulse")} />
+                  <span className="font-medium">{item.name}</span>
+                  
+                  {item.name === 'Pickup Requests' && pendingPickupCount > 0 && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
+                      {pendingPickupCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -102,7 +102,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                     required
                     value={formData.senderName}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -114,7 +114,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                     required
                     value={formData.senderPhone}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="+255..."
                   />
                 </div>
@@ -128,7 +128,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                   required
                   value={formData.pickupAddress}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   placeholder="Street, Area, City"
                 />
               </div>
@@ -141,7 +141,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                   required
                   value={formData.destination}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   placeholder="City, Region"
                 />
               </div>
@@ -153,7 +153,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                   name="estimatedWeight"
                   value={formData.estimatedWeight}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   placeholder="e.g. 50kg"
                 />
               </div>
@@ -166,7 +166,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                   value={formData.cargoDetails}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                   placeholder="Describe your items..."
                 />
               </div>
