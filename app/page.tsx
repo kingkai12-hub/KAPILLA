@@ -191,6 +191,23 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Map Section */}
+                  <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                     <Map 
+                       currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
+                         lat: searchResult.trips[0].checkIns[0].latitude,
+                         lng: searchResult.trips[0].checkIns[0].longitude,
+                         label: searchResult.trips[0].checkIns[0].location,
+                         timestamp: new Date(searchResult.trips[0].checkIns[0].timestamp).toLocaleString()
+                       } : undefined}
+                       center={searchResult.trips?.[0]?.checkIns?.[0] ? [
+                         searchResult.trips[0].checkIns[0].latitude, 
+                         searchResult.trips[0].checkIns[0].longitude
+                       ] : [-6.3690, 34.8888]}
+                       zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 12 : 6}
+                     />
+                  </div>
+
                   {/* Horizontal Status Line */}
                   <div className="w-full py-8 px-4">
                     <div className="flex items-center justify-between relative">
