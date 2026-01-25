@@ -57,12 +57,20 @@ export default function Home() {
             <a href="#" className="hover:text-blue-600 transition-colors">About</a>
             <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
-          <a 
-            href="/staff/login"
-            className="px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
-          >
-            Staff Portal
-          </a>
+          <div className="flex gap-4">
+            <a 
+              href="/driver"
+              className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-all"
+            >
+              Driver App
+            </a>
+            <a 
+              href="/staff/login"
+              className="px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+            >
+              Staff Portal
+            </a>
+          </div>
         </div>
       </nav>
 

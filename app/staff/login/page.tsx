@@ -113,6 +113,12 @@ export default function StaffLogin() {
               </button>
             </div>
           </form>
+          
+          <div className="mt-6 text-center">
+            <a href="/driver" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+              Go to Driver App &rarr;
+            </a>
+          </div>
         </div>
       </div>
     </div>
