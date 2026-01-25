@@ -125,12 +125,12 @@ export default async function StaffDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="w-full">
         {/* Recent Shipments Table */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Shipments</h3>
-            <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700">View All</button>
+            <a href="/staff/shipments" className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700">View All</a>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
@@ -176,54 +176,6 @@ export default async function StaffDashboard() {
                 )}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* System Status / Notices */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                <Activity className="w-5 h-5 text-blue-300" />
-              </div>
-              <h3 className="font-bold text-lg">System Health</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-300">API Status</span>
-                <span className="text-green-400 font-medium flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> Operational
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-300">Database</span>
-                <span className="text-green-400 font-medium flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-green-400 rounded-full" /> Connected
-                </span>
-              </div>
-              <div className="h-px bg-white/10 my-2" />
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-300">Last Backup</span>
-                <span className="text-slate-400">03:00 AM Today</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
-              Alerts
-            </h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-xl text-sm text-orange-800 dark:text-orange-200">
-                <span className="font-bold block mb-1">Heavy Rain Warning</span>
-                Deliveries to coastal regions may experience delays of 2-4 hours.
-              </div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-xl text-sm text-blue-800 dark:text-blue-200">
-                <span className="font-bold block mb-1">New Hub Opening</span>
-                Mwanza Hub is now fully operational for express cargo.
-              </div>
-            </div>
           </div>
         </div>
       </div>
