@@ -58,41 +58,48 @@ export default function CreateShipment() {
             <p className="text-green-600">Waybill generated successfully.</p>
           </div>
           <div className="text-right">
-            <span className="block text-sm text-gray-500">Waybill Number</span>
-            <span className="block text-3xl font-mono font-bold text-gray-900">{generatedWaybill}</span>
+            <span className="block text-sm text-blue-900">Waybill Number</span>
+            <span className="block text-3xl font-mono font-bold text-blue-950">{generatedWaybill}</span>
           </div>
         </div>
 
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">From (Sender)</h3>
-              <p className="font-bold text-lg">{formData.senderName}</p>
-              <p className="text-gray-800">{formData.senderPhone}</p>
-              <p className="text-gray-700 text-sm">{formData.senderAddress}</p>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">From (Sender)</h3>
+              <p className="font-bold text-lg text-blue-950">{formData.senderName}</p>
+              <p className="text-blue-900">{formData.senderPhone}</p>
+              <p className="text-blue-900 text-sm">{formData.senderAddress}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">To (Receiver)</h3>
-              <p className="font-bold text-lg">{formData.receiverName}</p>
-              <p className="text-gray-800">{formData.receiverPhone}</p>
-              <p className="text-gray-700 text-sm">{formData.receiverAddress}</p>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">To (Receiver)</h3>
+              <p className="font-bold text-lg text-blue-950">{formData.receiverName}</p>
+              <p className="text-blue-900">{formData.receiverPhone}</p>
+              <p className="text-blue-900 text-sm">{formData.receiverAddress}</p>
             </div>
           </div>
 
           <div className="border-t pt-6 grid grid-cols-3 gap-4">
             <div>
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Origin</h3>
-              <p className="font-medium">{formData.origin}</p>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Origin</h3>
+              <p className="font-medium text-blue-950">{formData.origin}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Destination</h3>
-              <p className="font-medium">{formData.destination}</p>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Destination</h3>
+              <p className="font-medium text-blue-950">{formData.destination}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Weight / Type</h3>
-              <p className="font-medium">{formData.weight} kg / {formData.type}</p>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Weight / Type</h3>
+              <p className="font-medium text-blue-950">{formData.weight} kg / {formData.type}</p>
             </div>
           </div>
+
+          {formData.cargoDetails && (
+            <div className="border-t pt-6">
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">Cargo Details</h3>
+              <p className="text-blue-950">{formData.cargoDetails}</p>
+            </div>
+          )}
 
           <div className="mt-8 flex gap-4">
             <button 
