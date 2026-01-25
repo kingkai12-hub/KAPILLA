@@ -4,15 +4,25 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 
-export default function ProofOfDeliveryPage({ params }: { params: { waybill: string } }) {
+export default function ProofOfDeliveryPage() {
+  const params = useParams();
+  const rawWaybill = params?.waybill;
+  const waybill = Array.isArray(rawWaybill) ? rawWaybill[0] : rawWaybill;
+
   const [shipment, setShipment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!waybill) {
+      setLoading(false);
+      return;
+    }
+
     const fetchShipment = async () => {
       try {
-        const res = await fetch(`/api/shipments/${params.waybill}`);
+        const res = await fetch(`/api/shipments/${waybill}`);
         if (res.ok) {
           const data = await res.json();
           setShipment(data);
@@ -25,7 +35,7 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
     };
 
     fetchShipment();
-  }, [params.waybill]);
+  }, [waybill]);
 
   const handlePrint = () => {
     window.print();
@@ -160,6 +170,13 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
 
             <div className="text-center">
               <div className="h-20 flex items-end justify-center pb-2">
+                 <span className="text-lg font-mono font-bold">{shipment.receivedBy || shipment.receiverName}</span>
+              </div>
+              <p className="text-xs font-bold border-t border-slate-300 pt-2 px-8 uppercase">Received By</p>
+            </div>
+
+            <div className="text-center">
+              <div className="h-20 flex items-end justify-center pb-2">
                 <span className="text-lg font-mono">{new Date(shipment.updatedAt).toLocaleTimeString()}</span>
               </div>
               <p className="text-xs font-bold border-t border-slate-300 pt-2 px-8 uppercase">Time</p>
@@ -177,7 +194,7 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
             <p>Kapilla Logistics Ltd.</p>
             <p>www.kapilla-group.com</p>
           </div>
-          <QRCodeSVG value={`https://kapilla-group.com/track/${params.waybill}`} size={60} />
+          <QRCodeSVG value={`https://kapilla-group.com/track/${waybill}`} size={60} />
         </div>
 
       </div>

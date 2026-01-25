@@ -46,6 +46,7 @@ model Shipment {
   
   currentStatus  String   @default("PENDING")
   receiverSignature String? // Base64 signature
+  receivedBy     String?  // Name of the person who actually received it
   
   events         TrackingEvent[]
   

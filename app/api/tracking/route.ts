@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { waybillNumber, status, location, remarks, signature } = body;
+    const { waybillNumber, status, location, remarks, signature, receivedBy } = body;
 
     if (!waybillNumber || !status || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -21,8 +21,9 @@ export async function POST(req: Request) {
 
     // Prepare update data
     const shipmentUpdateData: any = { currentStatus: status };
-    if (status === 'DELIVERED' && signature) {
-      shipmentUpdateData.receiverSignature = signature;
+    if (status === 'DELIVERED') {
+      if (signature) shipmentUpdateData.receiverSignature = signature;
+      if (receivedBy) shipmentUpdateData.receivedBy = receivedBy;
     }
 
     // Create tracking event AND update current status

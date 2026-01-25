@@ -19,6 +19,7 @@ function UpdateTrackingContent() {
   const [status, setStatus] = useState('IN_TRANSIT');
   const [location, setLocation] = useState('Dar es Salaam Hub');
   const [remarks, setRemarks] = useState('');
+  const [receivedBy, setReceivedBy] = useState('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
   // Signature State
@@ -37,6 +38,11 @@ function UpdateTrackingContent() {
         alert('Please provide a signature for delivery.');
         return;
       }
+      
+      if (!receivedBy.trim()) {
+        alert('Please enter the name of the receiver.');
+        return;
+      }
     }
 
     try {
@@ -48,6 +54,7 @@ function UpdateTrackingContent() {
           status,
           location,
           remarks,
+          receivedBy: status === 'DELIVERED' ? receivedBy : undefined,
           signature: signatureData
         }),
       });
@@ -64,6 +71,7 @@ function UpdateTrackingContent() {
         setRecentScans([newScan, ...recentScans]);
         setWaybill(''); // Clear for next scan
         setRemarks('');
+        setReceivedBy('');
         if (sigCanvas.current) sigCanvas.current.clear();
       } else {
         const errorData = await res.json();
@@ -141,21 +149,23 @@ function UpdateTrackingContent() {
             </div>
           </div>
 
-          {/* Remarks */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Remarks (Optional)</label>
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              rows={2}
-              className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-              placeholder="Any additional notes..."
-            />
-          </div>
-
-          {/* Signature Pad (Only visible if Delivered) */}
+          {/* Receiver Info & Signature (Only visible if Delivered) */}
           {status === 'DELIVERED' && (
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+              
+              {/* Receiver Name */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Received By (Name)</label>
+                <input
+                  type="text"
+                  value={receivedBy}
+                  onChange={(e) => setReceivedBy(e.target.value)}
+                  className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Enter receiver's name"
+                  required={status === 'DELIVERED'}
+                />
+              </div>
+
               <div className="flex justify-between items-center mb-2">
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
                   <PenTool className="w-4 h-4" />

@@ -8,9 +8,16 @@ export default function ShipmentsPage() {
   const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [userRole, setUserRole] = useState<string>('');
 
   useEffect(() => {
     fetchShipments();
+    // Get user role from local storage
+    const userStr = localStorage.getItem('kapilla_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role || '');
+    }
   }, []);
 
   const fetchShipments = async () => {
@@ -162,14 +169,16 @@ export default function ShipmentsPage() {
                           </button>
                         )}
 
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDelete(shipment.waybillNumber)}
-                          title="Delete Shipment"
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Delete - Only Admin */}
+                        {userRole === 'ADMIN' && (
+                          <button
+                            onClick={() => handleDelete(shipment.waybillNumber)}
+                            title="Delete Shipment"
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

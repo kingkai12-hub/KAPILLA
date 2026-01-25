@@ -3,15 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer, Package, MapPin, Calendar, Phone, CreditCard, Scale, FileText } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-export default function LabelPage({ params }: { params: { waybill: string } }) {
+export default function LabelPage() {
+  const params = useParams();
+  const rawWaybill = params?.waybill;
+  const waybill = Array.isArray(rawWaybill) ? rawWaybill[0] : rawWaybill;
+
   const [shipment, setShipment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!waybill) {
+      setLoading(false);
+      return;
+    }
+
     const fetchShipment = async () => {
       try {
-        const res = await fetch(`/api/shipments/${params.waybill}`);
+        const res = await fetch(`/api/shipments/${waybill}`);
         if (res.ok) {
           const data = await res.json();
           setShipment(data);
@@ -24,7 +34,7 @@ export default function LabelPage({ params }: { params: { waybill: string } }) {
     };
 
     fetchShipment();
-  }, [params.waybill]);
+  }, [waybill]);
 
   const handlePrint = () => {
     window.print();
@@ -36,7 +46,7 @@ export default function LabelPage({ params }: { params: { waybill: string } }) {
 
   // Fallback data
   const data = shipment || {
-    waybillNumber: params.waybill,
+    waybillNumber: waybill,
     senderName: '',
     senderPhone: '',
     senderAddress: '',
