@@ -18,6 +18,11 @@
         ```bash
         npx prisma db push
         ```
+    *   **Windows PowerShell Note**: If you see a "cannot be loaded because running scripts is disabled" error, run this command first:
+        ```powershell
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+        ```
+        Then try `npx prisma db push` again.
 
 ## Phase 2: Web Deployment (Vercel)
 
@@ -46,3 +51,4 @@
 
 *   **Database connection error**: Double-check your password in the connection string. Special characters in passwords must be URL-encoded.
 *   **Build fails**: Check the "Build Logs" in Vercel.
+*   **PowerShell Security Error**: If `npx` or `npm` commands fail, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in your terminal.

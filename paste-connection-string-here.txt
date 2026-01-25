@@ -1,0 +1,19 @@
+⚠️ IMPORTANT: The previous connection string didn't work because it was IPv6-only.
+We need the "Transaction Mode" (IPv4) connection string.
+
+STEP 1: Go to Supabase > Project Settings > Database.
+STEP 2: Change "Connection Mode" from "Session" to "Transaction".
+STEP 3: Copy the URI.
+   -> It MUST contain "pooler.supabase.com"
+   -> It MUST end with ":6543/postgres"
+
+PASTE IT BELOW:
+-------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------
+
+STEP 4: PASTE YOUR PASSWORD BELOW (Again, just to be safe):
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
