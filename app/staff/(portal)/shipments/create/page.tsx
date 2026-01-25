@@ -170,23 +170,27 @@ export default function CreateShipment() {
             <div>
               <label className="block text-sm font-medium text-gray-700">Origin City</label>
               <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
-                <option>Dar es Salaam</option>
-                <option>Mwanza</option>
-                <option>Arusha</option>
-                <option>Dodoma</option>
-                <option>Mbeya</option>
+                <option value="">Select Origin</option>
+                {Object.entries(tanzaniaLocations).map(([category, cities]) => (
+                  <optgroup key={category} label={category}>
+                    {cities.sort().map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination City</label>
               <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
                 <option value="">Select Destination</option>
-                <option>Dar es Salaam</option>
-                <option>Mwanza</option>
-                <option>Arusha</option>
-                <option>Dodoma</option>
-                <option>Mbeya</option>
-                <option>Nairobi (Intl)</option>
+                {Object.entries(tanzaniaLocations).map(([category, cities]) => (
+                  <optgroup key={category} label={category}>
+                    {cities.sort().map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
             <div>
