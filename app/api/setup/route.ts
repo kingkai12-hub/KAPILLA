@@ -14,11 +14,19 @@ export async function GET() {
         "password" TEXT NOT NULL,
         "name" TEXT,
         "role" TEXT NOT NULL DEFAULT 'STAFF',
+        "image" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "User_pkey" PRIMARY KEY ("id")
       );
     `);
+    
+    // Add image column if it doesn't exist (for migration)
+    try {
+        await db.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "image" TEXT;`);
+    } catch (e) {
+        // Ignore if column already exists or other non-critical error
+    }
     
     // 3. Create Unique Index on User Email
     // Using try-catch for index creation as 'IF NOT EXISTS' syntax support varies by PG version for indexes

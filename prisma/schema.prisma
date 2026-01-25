@@ -16,7 +16,8 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  role      String   @default("STAFF") // SQLite does not support enums, using String
+  role      String   @default("STAFF") // ADMIN, STAFF, MANAGER, DRIVER, OPERATION_OFFICER
+  image     String?  // Base64 or URL
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
