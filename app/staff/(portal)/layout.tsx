@@ -142,33 +142,8 @@ export default function StaffPortalLayout({
             })}
           </nav>
 
-          {/* User Profile */}
+          {/* Sidebar Footer */}
           <div className="p-4 border-t border-slate-800 bg-slate-950">
-            <div className="flex items-center justify-between mb-4 px-1">
-               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Theme</span>
-               {mounted && (
-                 <button 
-                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                   className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                 >
-                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                 </button>
-               )}
-            </div>
-
-            <div className="flex items-center gap-3 mb-4 p-2 rounded-lg bg-slate-900 border border-slate-800">
-              {user.image ? (
-                <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-slate-700" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-slate-900 font-bold shadow-sm">
-                  {user.name.charAt(0)}
-                </div>
-              )}
-              <div className="overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                <p className="text-xs text-slate-400 truncate">{user.role} Account</p>
-              </div>
-            </div>
             <button
               onClick={handleLogout}
               className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl transition-all duration-200"
@@ -182,22 +157,58 @@ export default function StaffPortalLayout({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-        {/* Mobile Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:hidden sticky top-0 z-30 transition-colors duration-300">
-          <div className="flex items-center justify-between h-16 px-4">
-            <button
+        {/* Header (Desktop & Mobile) */}
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-300">
+          <div className="flex items-center justify-between h-16 px-6">
+            <div className="flex items-center gap-4">
+              <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 -ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                className="p-2 -ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors md:hidden"
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <div className="flex items-center gap-2">
+              
+              {/* Mobile Logo */}
+              <div className="flex items-center gap-2 md:hidden">
                 <div className="bg-white p-1 rounded-lg dark:bg-white/90">
                   <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="font-bold text-slate-900 dark:text-white">Kapilla Portal</span>
               </div>
-            <div className="w-8"></div> {/* Spacer */}
+
+              {/* Desktop Welcome Message */}
+              <div className="hidden md:block">
+                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
+                   Welcome back, {user?.name?.split(' ')[0]}
+                 </h2>
+              </div>
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-4">
+              {mounted && (
+                <button 
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+              )}
+
+              <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{user?.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{user?.role}</p>
+                </div>
+                {user?.image ? (
+                  <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+                    {user?.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 
