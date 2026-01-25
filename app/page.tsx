@@ -8,6 +8,55 @@ import { twMerge } from 'tailwind-merge';
 import Map from '@/components/Map';
 import PickupRequestModal from '@/components/PickupRequestModal';
 
+// Location Coordinates Mapping
+const locationCoords: Record<string, { lat: number, lng: number }> = {
+  // Major Cities
+  "Dar es Salaam": { lat: -6.7924, lng: 39.2083 },
+  "Mwanza": { lat: -2.5164, lng: 32.9175 },
+  "Arusha": { lat: -3.3869, lng: 36.6830 },
+  "Dodoma": { lat: -6.1630, lng: 35.7516 },
+  "Mbeya": { lat: -8.9094, lng: 33.4608 },
+  "Morogoro": { lat: -6.8278, lng: 37.6591 },
+  "Tanga": { lat: -5.0889, lng: 39.0983 },
+  "Zanzibar City": { lat: -6.1659, lng: 39.2026 },
+  // Regional Centers
+  "Moshi": { lat: -3.3500, lng: 37.3333 },
+  "Tabora": { lat: -5.0167, lng: 32.8000 },
+  "Iringa": { lat: -7.7667, lng: 35.7000 },
+  "Kigoma": { lat: -4.8769, lng: 29.6267 },
+  "Songea": { lat: -10.6833, lng: 35.6500 },
+  "Sumbawanga": { lat: -7.9667, lng: 31.6167 },
+  "Shinyanga": { lat: -3.6667, lng: 33.4167 },
+  "Musoma": { lat: -1.5000, lng: 33.8000 },
+  "Bukoba": { lat: -1.3316, lng: 31.8128 },
+  "Lindi": { lat: -9.9969, lng: 39.7145 },
+  "Mtwara": { lat: -10.2736, lng: 40.1828 },
+  "Singida": { lat: -4.8167, lng: 34.7500 },
+  // Towns & Districts
+  "Kahama": { lat: -3.8333, lng: 32.6000 },
+  "Geita": { lat: -2.8667, lng: 32.2500 },
+  "Bagamoyo": { lat: -6.4442, lng: 38.9056 },
+  "Mafia": { lat: -7.9167, lng: 39.7833 },
+  "Tunduma": { lat: -9.3000, lng: 32.7667 },
+  "Makambako": { lat: -8.8436, lng: 34.8258 },
+  "Njombe": { lat: -9.3333, lng: 34.7667 },
+  "Bariadi": { lat: -2.8000, lng: 33.9833 },
+  "Babati": { lat: -4.2167, lng: 35.7500 },
+  "Kibaha": { lat: -6.7667, lng: 38.9167 },
+  "Chalinze": { lat: -6.6372, lng: 38.3544 },
+  "Mikumi": { lat: -7.4069, lng: 36.9772 },
+  "Ifakara": { lat: -8.1333, lng: 36.6833 },
+  // International
+  "Nairobi (Kenya)": { lat: -1.2921, lng: 36.8219 },
+  "Mombasa (Kenya)": { lat: -4.0435, lng: 39.6682 },
+  "Kampala (Uganda)": { lat: 0.3476, lng: 32.5825 },
+  "Kigali (Rwanda)": { lat: -1.9441, lng: 30.0619 },
+  "Bujumbura (Burundi)": { lat: -3.3731, lng: 29.3644 },
+  "Lubumbashi (DRC)": { lat: -11.6600, lng: 27.4794 },
+  "Lusaka (Zambia)": { lat: -15.3875, lng: 28.3228 },
+  "Lilongwe (Malawi)": { lat: -13.9626, lng: 33.7741 }
+};
+
 // Helper for classes
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -203,6 +252,35 @@ export default function Home() {
                            label: searchResult.trips[0].checkIns[0].location,
                            timestamp: new Date(searchResult.trips[0].checkIns[0].timestamp).toLocaleString()
                          } : undefined}
+                         startPoint={locationCoords[searchResult.origin] ? {
+                           ...locationCoords[searchResult.origin],
+                           label: searchResult.origin
+                         } : undefined}
+                         endPoint={locationCoords[searchResult.destination] ? {
+                           ...locationCoords[searchResult.destination],
+                           label: searchResult.destination
+                         } : undefined}
+                         routePath={
+                           (() => {
+                             const currentCheckIn = searchResult.trips?.[0]?.checkIns?.[0];
+                             const originCoords = locationCoords[searchResult.origin];
+                             const destinationCoords = locationCoords[searchResult.destination];
+                             
+                             if (!destinationCoords) return [];
+
+                             // Start from Current Location if available, otherwise Origin
+                             const startPoint = currentCheckIn 
+                               ? { lat: currentCheckIn.latitude, lng: currentCheckIn.longitude }
+                               : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
+                             
+                             if (!startPoint) return [];
+
+                             return [
+                               [startPoint.lat, startPoint.lng],
+                               [destinationCoords.lat, destinationCoords.lng]
+                             ];
+                           })()
+                         }
                          center={searchResult.trips?.[0]?.checkIns?.[0] ? [
                            searchResult.trips[0].checkIns[0].latitude, 
                            searchResult.trips[0].checkIns[0].longitude
