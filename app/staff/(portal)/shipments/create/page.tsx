@@ -3,6 +3,21 @@
 import React, { useState } from 'react';
 import { Printer, Save, RefreshCw } from 'lucide-react';
 
+const tanzaniaLocations = {
+  "Major Cities": [
+    "Dar es Salaam", "Mwanza", "Arusha", "Dodoma", "Mbeya", "Morogoro", "Tanga", "Zanzibar City"
+  ],
+  "Regional Centers": [
+    "Moshi", "Tabora", "Iringa", "Kigoma", "Songea", "Sumbawanga", "Shinyanga", "Musoma", "Bukoba", "Lindi", "Mtwara", "Singida"
+  ],
+  "Towns & Districts": [
+    "Kahama", "Geita", "Bagamoyo", "Mafia", "Tunduma", "Makambako", "Njombe", "Bariadi", "Babati", "Kibaha", "Chalinze", "Mikumi", "Ifakara"
+  ],
+  "International": [
+    "Nairobi (Kenya)", "Mombasa (Kenya)", "Kampala (Uganda)", "Kigali (Rwanda)", "Bujumbura (Burundi)", "Lubumbashi (DRC)", "Lusaka (Zambia)", "Lilongwe (Malawi)"
+  ]
+};
+
 export default function CreateShipment() {
   const [formData, setFormData] = useState({
     senderName: '', senderPhone: '', senderAddress: '',
