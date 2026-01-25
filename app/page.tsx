@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar } from 'lucide-react';
+import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -15,26 +15,24 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 
 export default function Home() {
   const [waybill, setWaybill] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!waybill) return;
-
+    if (!waybill.trim()) return;
+    
     setLoading(true);
-    setSearchResult(null);
     setHasSearched(true);
+    setSearchResult(null);
 
     try {
       const res = await fetch(`/api/shipments/${waybill}`);
       if (res.ok) {
         const data = await res.json();
         setSearchResult(data);
-      } else {
-        setSearchResult(null);
       }
     } catch (error) {
       console.error(error);
@@ -125,7 +123,7 @@ export default function Home() {
                   type="text"
                   value={waybill}
                   onChange={(e) => setWaybill(e.target.value)}
-                  placeholder="Enter your Waybill Number (e.g., KPL-8829)"
+                  placeholder="Enter Waybill Number (e.g., KPL-8829)"
                   className="flex-1 py-4 bg-transparent text-lg font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
                 />
                 <button
@@ -157,115 +155,118 @@ export default function Home() {
                     <Package className="w-8 h-8 text-red-500" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900">Shipment Not Found</h3>
-                  <p className="text-slate-500 mt-2">We couldn't find any shipment with that Waybill Number.</p>
+                  <p className="text-slate-500 mt-2">
+                    We couldn't find any shipment with that Waybill Number.
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-12">
-                  {/* Status Header */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-slate-100">
-                    <div>
-                      <div className="text-sm text-slate-500 font-medium mb-1">Waybill Number</div>
-                      <div className="text-3xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
+                  <div className="space-y-12">
+                    {/* Status Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-slate-100">
+                      <div>
+                        <div className="text-sm text-slate-500 font-medium mb-1">Waybill Number</div>
+                        <div className="text-3xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
+                      </div>
+                      <div className="flex flex-col md:items-end">
+                        <div className="text-sm text-slate-500 font-medium mb-1">Current Status</div>
+                        <div className={cn(
+                          "px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm",
+                          searchResult.currentStatus === 'DELIVERED' ? "bg-green-100 text-green-700" :
+                          searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
+                          "bg-blue-100 text-blue-700"
+                        )}>
+                          {searchResult.currentStatus.replace(/_/g, ' ')}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col md:items-end">
-                      <div className="text-sm text-slate-500 font-medium mb-1">Current Status</div>
-                      <div className={cn(
-                        "px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm",
-                        searchResult.currentStatus === 'DELIVERED' ? "bg-green-100 text-green-700" :
-                        searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
-                        "bg-blue-100 text-blue-700"
-                      )}>
-                        {searchResult.currentStatus.replace(/_/g, ' ')}
+
+                    {/* Route Info */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Origin</div>
+                        <div className="font-semibold text-slate-900 text-lg">{searchResult.origin}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Destination</div>
+                        <div className="font-semibold text-slate-900 text-lg">{searchResult.destination}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
+                        <div className="font-semibold text-slate-900 text-lg">Oct 24, 2026</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Service Type</div>
+                        <div className="font-semibold text-slate-900 text-lg">Standard Ground</div>
+                      </div>
+                    </div>
+
+                    {/* Map Section */}
+                    <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                       <Map 
+                         currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
+                           lat: searchResult.trips[0].checkIns[0].latitude,
+                           lng: searchResult.trips[0].checkIns[0].longitude,
+                           label: searchResult.trips[0].checkIns[0].location,
+                           timestamp: new Date(searchResult.trips[0].checkIns[0].timestamp).toLocaleString()
+                         } : undefined}
+                         center={searchResult.trips?.[0]?.checkIns?.[0] ? [
+                           searchResult.trips[0].checkIns[0].latitude, 
+                           searchResult.trips[0].checkIns[0].longitude
+                         ] : [-6.3690, 34.8888]}
+                         zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 12 : 6}
+                       />
+                    </div>
+
+                    {/* Horizontal Status Line */}
+                    <div className="w-full py-8 px-4">
+                      <div className="flex items-center justify-between relative">
+                        {/* Progress Bar Background */}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
+                        
+                        {/* Active Progress Bar */}
+                        <div 
+                          className={cn(
+                            "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
+                            searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
+                            searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
+                            "w-[100%]"
+                          )} 
+                        />
+
+                        {/* Steps */}
+                        {[
+                          { id: 'PENDING', label: 'Pending', icon: Package },
+                          { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
+                          { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
+                        ].map((step, index) => {
+                          const isCompleted = 
+                            (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                            (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                            (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
+
+                          const isCurrent = step.id === searchResult.currentStatus;
+
+                          return (
+                            <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
+                              <div className={cn(
+                                "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                                isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
+                              )}>
+                                <step.icon className="w-6 h-6" />
+                              </div>
+                              <span className={cn(
+                                "text-sm font-bold transition-colors duration-300",
+                                isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
+                              )}>
+                                {step.label}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
 
-                  {/* Route Info */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    <div className="space-y-1">
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Origin</div>
-                      <div className="font-semibold text-slate-900 text-lg">{searchResult.origin}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Destination</div>
-                      <div className="font-semibold text-slate-900 text-lg">{searchResult.destination}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
-                      <div className="font-semibold text-slate-900 text-lg">Oct 24, 2026</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Service Type</div>
-                      <div className="font-semibold text-slate-900 text-lg">Standard Ground</div>
-                    </div>
-                  </div>
-
-                  {/* Map Section */}
-                  <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                     <Map 
-                       currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
-                         lat: searchResult.trips[0].checkIns[0].latitude,
-                         lng: searchResult.trips[0].checkIns[0].longitude,
-                         label: searchResult.trips[0].checkIns[0].location,
-                         timestamp: new Date(searchResult.trips[0].checkIns[0].timestamp).toLocaleString()
-                       } : undefined}
-                       center={searchResult.trips?.[0]?.checkIns?.[0] ? [
-                         searchResult.trips[0].checkIns[0].latitude, 
-                         searchResult.trips[0].checkIns[0].longitude
-                       ] : [-6.3690, 34.8888]}
-                       zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 12 : 6}
-                     />
-                  </div>
-
-                  {/* Horizontal Status Line */}
-                  <div className="w-full py-8 px-4">
-                    <div className="flex items-center justify-between relative">
-                      {/* Progress Bar Background */}
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
-                      
-                      {/* Active Progress Bar */}
-                      <div 
-                        className={cn(
-                          "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
-                          searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
-                          searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
-                          "w-[100%]"
-                        )} 
-                      />
-
-                      {/* Steps */}
-                      {[
-                        { id: 'PENDING', label: 'Pending', icon: Package },
-                        { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
-                        { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
-                      ].map((step, index) => {
-                        const isCompleted = 
-                          (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                          (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                          (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
-
-                        const isCurrent = step.id === searchResult.currentStatus;
-
-                        return (
-                          <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
-                            <div className={cn(
-                              "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                              isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
-                            )}>
-                              <step.icon className="w-6 h-6" />
-                            </div>
-                            <span className={cn(
-                              "text-sm font-bold transition-colors duration-300",
-                              isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
-                            )}>
-                              {step.label}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
           </motion.section>

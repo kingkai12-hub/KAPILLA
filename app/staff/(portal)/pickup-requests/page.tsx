@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2 } from 'lucide-react';
+import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2, XCircle, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -42,6 +42,31 @@ export default function PickupRequests() {
     }).toString();
     
     router.push(`/staff/shipments/create?${query}`);
+  };
+
+  const handleReject = async (request: any) => {
+    if (!confirm('Are you sure you want to reject this pickup request?')) return;
+
+    try {
+      const res = await fetch(`/api/pickup-requests/${request.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED' }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setRequests(requests.map(req => 
+          req.id === request.id ? { ...req, status: 'REJECTED' } : req
+        ));
+        alert('Request rejected. Customer has been notified via SMS.');
+      } else {
+        alert('Failed to reject request');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred');
+    }
   };
 
   const filteredRequests = requests.filter(req => 
@@ -87,7 +112,9 @@ export default function PickupRequests() {
               <div 
                 key={req.id} 
                 className={`bg-white dark:bg-slate-800 p-6 rounded-xl border transition-all hover:shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between
-                  ${req.status === 'ISSUED' ? 'border-green-200 dark:border-green-900 bg-green-50/30 dark:bg-green-900/10' : 'border-slate-200 dark:border-slate-700'}
+                  ${req.status === 'ISSUED' ? 'border-green-200 dark:border-green-900 bg-green-50/30 dark:bg-green-900/10' : 
+                    req.status === 'REJECTED' ? 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10' :
+                    'border-slate-200 dark:border-slate-700'}
                 `}
               >
                 <div className="flex-1">
@@ -95,6 +122,8 @@ export default function PickupRequests() {
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border
                       ${req.status === 'ISSUED' 
                         ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
+                        : req.status === 'REJECTED'
+                        ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
                         : 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'}
                     `}>
                       {req.status}
@@ -124,17 +153,32 @@ export default function PickupRequests() {
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
                   {req.status === 'PENDING' ? (
-                    <button
-                      onClick={() => handleIssueWaybill(req)}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-lg shadow-blue-600/20"
-                    >
-                      <PackagePlus className="w-4 h-4" />
-                      Issue Waybill
-                    </button>
-                  ) : (
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <button
+                        onClick={() => handleReject(req)}
+                        className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2.5 rounded-lg font-medium transition-colors"
+                        title="Reject Request"
+                      >
+                        <X className="w-4 h-4" />
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleIssueWaybill(req)}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-lg shadow-blue-600/20"
+                      >
+                        <PackagePlus className="w-4 h-4" />
+                        Issue Waybill
+                      </button>
+                    </div>
+                  ) : req.status === 'ISSUED' ? (
                     <div className="flex items-center gap-2 text-green-600 dark:text-green-500 font-medium px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <CheckCircle className="w-5 h-5" />
                       Waybill Issued
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-medium px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                      <XCircle className="w-5 h-5" />
+                      Rejected
                     </div>
                   )}
                 </div>

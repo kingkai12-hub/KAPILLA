@@ -20,6 +20,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [requestId, setRequestId] = useState<string>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,19 +37,10 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
       });
 
       if (res.ok) {
+        const data = await res.json();
         setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          setFormData({
-            senderName: '',
-            senderPhone: '',
-            pickupAddress: '',
-            destination: '',
-            cargoDetails: '',
-            estimatedWeight: '',
-          });
-          onClose();
-        }, 3000);
+        setRequestId(data.id);
+        // Don't auto-close immediately so they can see the ID
       } else {
         alert('Failed to submit request. Please try again.');
       }
@@ -58,6 +50,20 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setSuccess(false);
+    setRequestId('');
+    setFormData({
+      senderName: '',
+      senderPhone: '',
+      pickupAddress: '',
+      destination: '',
+      cargoDetails: '',
+      estimatedWeight: '',
+    });
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -77,7 +83,7 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
             </div>
             <h2 className="text-xl font-bold text-slate-900">Request Pickup</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+          <button onClick={handleClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -89,7 +95,20 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Request Submitted!</h3>
-              <p className="text-slate-600">Our team has received your pickup request and will contact you shortly.</p>
+              <p className="text-slate-600 mb-4">Our team has received your pickup request.</p>
+              
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 w-full mb-6">
+                <p className="text-sm text-slate-500 mb-1">Your Request ID:</p>
+                <code className="text-lg font-mono font-bold text-blue-600 select-all">{requestId}</code>
+                <p className="text-xs text-slate-400 mt-2">Please save this ID to track your request status.</p>
+              </div>
+
+              <button 
+                onClick={handleClose}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Done
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
