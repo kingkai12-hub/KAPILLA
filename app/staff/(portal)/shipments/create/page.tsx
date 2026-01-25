@@ -96,7 +96,7 @@ export default function CreateShipment() {
               className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white py-3 rounded-md hover:bg-gray-900 transition-colors"
             >
               <Printer className="w-5 h-5" />
-              Print Waybill Label
+              Print Waybill / POD
             </button>
             <button 
               onClick={handleReset}

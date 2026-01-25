@@ -68,21 +68,25 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
       </button>
 
       {/* A4 Paper Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl print:shadow-none print:w-full print:h-full box-border relative text-slate-900">
+      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl print:shadow-none print:w-full print:h-full box-border relative text-black">
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
+        <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-900 text-white flex items-center justify-center rounded-lg font-bold text-2xl">K</div>
+            <div className="w-16 h-16 bg-blue-900 text-white flex items-center justify-center rounded-lg font-bold text-3xl print:text-black print:border-2 print:border-black print:bg-transparent">K</div>
             <div>
-              <h1 className="text-2xl font-bold uppercase tracking-wide text-slate-900">Kapilla Group Limited</h1>
-              <p className="text-sm text-slate-500">P.O. BOX 71729</p>
-              <p className="text-sm text-slate-500">DAR ES SALAAM, TANZANIA</p>
+              <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1>
+              <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
+                <p>P.O. BOX 71729</p>
+                <p>DAR ES SALAAM, TANZANIA</p>
+                <p>Tel: +255 123 456 789</p>
+                <p>Email: info@kapilla-group.com</p>
+              </div>
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-xl font-bold text-slate-900">PROOF OF DELIVERY</h2>
-            <p className="text-sm font-mono mt-1 text-slate-500">REF: {shipment.waybillNumber}</p>
+            <h2 className="text-3xl font-black text-black uppercase tracking-tighter">PROOF OF DELIVERY</h2>
+            <p className="text-sm font-mono mt-1 text-black font-bold">REF: {shipment.waybillNumber}</p>
           </div>
         </div>
 
