@@ -24,8 +24,13 @@ export async function POST(req: Request) {
     const { password: _, ...userWithoutPassword } = user;
     
     return NextResponse.json(userWithoutPassword);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[AUTH_LOGIN]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Return detailed error for debugging (REMOVE IN PRODUCTION AFTER FIX)
+    return NextResponse.json({ 
+      error: 'Internal Server Error', 
+      details: error.message,
+      stack: error.stack 
+    }, { status: 500 });
   }
 }

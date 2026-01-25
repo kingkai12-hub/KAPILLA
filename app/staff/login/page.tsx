@@ -28,7 +28,8 @@ export default function StaffLogin() {
         router.push('/staff/dashboard');
       } else {
         const data = await res.json();
-        alert(data.error || 'Login failed');
+        // Show detailed error if available
+        alert(data.details || data.error || 'Login failed');
       }
     } catch (error) {
       console.error(error);
