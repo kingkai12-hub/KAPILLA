@@ -92,7 +92,7 @@ export default function LeafletMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapUpdater center={center} zoom={zoom} />
+      <MapUpdater center={center} zoom={zoom} routePath={routePath} />
 
       {startPoint && (
         <Marker position={[startPoint.lat, startPoint.lng]} icon={defaultIcon}>
