@@ -24,6 +24,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <RefreshHandler />
           {children}
         </ThemeProvider>
       </body>
