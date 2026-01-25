@@ -47,8 +47,12 @@ export async function POST(req: Request) {
 
     const { password: _, ...userWithoutPassword } = newUser;
     return NextResponse.json(userWithoutPassword);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Create User Error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to create user', 
+      details: error.message || 'Unknown error' 
+    }, { status: 500 });
   }
 }
 
