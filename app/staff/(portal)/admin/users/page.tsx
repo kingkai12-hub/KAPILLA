@@ -126,7 +126,7 @@ export default function UserManagement() {
                   required
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -136,7 +136,7 @@ export default function UserManagement() {
                   required
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   disabled={!!editingUser} // Prevent email change for simplicity
                 />
               </div>
@@ -149,7 +149,7 @@ export default function UserManagement() {
                   required={!editingUser}
                   value={formData.password}
                   onChange={e => setFormData({...formData, password: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   placeholder={editingUser ? "Leave blank to keep current" : ""}
                 />
               </div>
@@ -158,7 +158,7 @@ export default function UserManagement() {
                 <select
                   value={formData.role}
                   onChange={e => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                 >
                   <option value="STAFF">Staff (General)</option>
                   <option value="DRIVER">Driver</option>

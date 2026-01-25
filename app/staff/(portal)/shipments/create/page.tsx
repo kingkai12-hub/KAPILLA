@@ -122,15 +122,15 @@ export default function CreateShipment() {
             <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Sender Details</h3>
             <div>
               <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input required type="text" name="senderName" value={formData.senderName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input required type="text" name="senderName" value={formData.senderName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Address / Location</label>
-              <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
           </div>
 
@@ -139,15 +139,15 @@ export default function CreateShipment() {
             <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Receiver Details</h3>
             <div>
               <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input required type="text" name="receiverName" value={formData.receiverName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input required type="text" name="receiverName" value={formData.receiverName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input required type="tel" name="receiverPhone" value={formData.receiverPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input required type="tel" name="receiverPhone" value={formData.receiverPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Address / Location</label>
-              <textarea name="receiverAddress" value={formData.receiverAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <textarea name="receiverAddress" value={formData.receiverAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function CreateShipment() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Origin City</label>
-              <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+              <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
                 <option>Dar es Salaam</option>
                 <option>Mwanza</option>
                 <option>Arusha</option>
@@ -168,7 +168,7 @@ export default function CreateShipment() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination City</label>
-              <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+              <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
                 <option value="">Select Destination</option>
                 <option>Dar es Salaam</option>
                 <option>Mwanza</option>
@@ -180,11 +180,11 @@ export default function CreateShipment() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
-              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Type</label>
-              <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+              <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
                 <option>Parcel</option>
                 <option>Document</option>
                 <option>Fragile</option>
