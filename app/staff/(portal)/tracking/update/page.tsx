@@ -1,11 +1,21 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { ScanLine, Save, RotateCcw, PenTool, Printer } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
+import { useSearchParams } from 'next/navigation';
 
-export default function UpdateTrackingPage() {
+function UpdateTrackingContent() {
+  const searchParams = useSearchParams();
   const [waybill, setWaybill] = useState('');
+  
+  useEffect(() => {
+    const queryWaybill = searchParams.get('waybill');
+    if (queryWaybill) {
+      setWaybill(queryWaybill);
+    }
+  }, [searchParams]);
+
   const [status, setStatus] = useState('IN_TRANSIT');
   const [location, setLocation] = useState('Dar es Salaam Hub');
   const [remarks, setRemarks] = useState('');
@@ -226,5 +236,13 @@ export default function UpdateTrackingPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function UpdateTrackingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UpdateTrackingContent />
+    </Suspense>
   );
 }

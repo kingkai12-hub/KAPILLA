@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle } from 'lucide-react';
+import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ShipmentsPage() {
@@ -133,6 +133,15 @@ export default function ShipmentsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Update Status */}
+                        <Link
+                          href={`/staff/tracking/update?waybill=${shipment.waybillNumber}`}
+                          title="Update Status"
+                          className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                        >
+                          <ScanLine className="w-4 h-4" />
+                        </Link>
+
                         {/* Print Waybill */}
                         <button
                           onClick={() => window.open(`/staff/shipments/${shipment.waybillNumber}/label`, '_blank')}
