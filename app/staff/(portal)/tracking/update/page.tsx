@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { ScanLine, Save, RotateCcw, PenTool, Printer } from 'lucide-react';
+import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import { useSearchParams } from 'next/navigation';
 
@@ -25,6 +25,7 @@ function UpdateTrackingContent() {
   // Signature State
   const sigCanvas = useRef<any>(null);
   const [signature, setSignature] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +74,11 @@ function UpdateTrackingContent() {
         setRemarks('');
         setReceivedBy('');
         if (sigCanvas.current) sigCanvas.current.clear();
+
+        if (status === 'DELIVERED') {
+          setShowSuccessModal(true);
+          setStatus('IN_TRANSIT'); // Reset to hide signature section
+        }
       } else {
         const errorData = await res.json();
         alert(`Error: ${errorData.error || 'Failed to update'}`);
@@ -238,6 +244,27 @@ function UpdateTrackingContent() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Congratulations!</h2>
+            <p className="text-slate-600 dark:text-slate-300">
+              Shipment has been successfully delivered and signed for.
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
