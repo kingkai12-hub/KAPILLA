@@ -52,6 +52,7 @@ export default function LeafletMap({
   endPoint,
   currentLocation,
   routePath = [],
+  remainingPath = [],
   checkIns = []
 }: MapProps) {
   
@@ -99,7 +100,7 @@ export default function LeafletMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapUpdater center={center} zoom={zoom} routePath={routePath} />
+      <MapUpdater center={center} zoom={zoom} routePath={routePath} remainingPath={remainingPath} />
 
       {startPoint && (
         <Marker position={[startPoint.lat, startPoint.lng]} icon={defaultIcon}>

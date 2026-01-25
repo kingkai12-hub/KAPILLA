@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
