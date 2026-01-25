@@ -20,15 +20,41 @@ export default function StaffDashboard() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Overview of logistics operations for today.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Overview of logistics operations.</p>
         </div>
         <div className="hidden sm:flex gap-3">
-          <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            Download Report
-          </button>
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md shadow-blue-600/20 hover:bg-blue-700 transition-colors">
-            New Shipment
-          </button>
+          <a href="/staff/shipments/create" className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md shadow-blue-600/20 hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            New Waybill
+          </a>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/staff/shipments/create" className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group">
+          <div className="p-3 bg-blue-600 text-white rounded-full group-hover:scale-110 transition-transform">
+             <Package className="w-6 h-6" />
+          </div>
+          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Create Waybill</span>
+        </a>
+        <a href="/staff/tracking/update" className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group">
+          <div className="p-3 bg-purple-600 text-white rounded-full group-hover:scale-110 transition-transform">
+             <Map className="w-6 h-6" />
+          </div>
+          <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Track Cargo</span>
+        </a>
+        <a href="/staff/profile" className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors group">
+           <div className="p-3 bg-green-600 text-white rounded-full group-hover:scale-110 transition-transform">
+             <Truck className="w-6 h-6" />
+           </div>
+           <span className="text-sm font-medium text-green-900 dark:text-green-100">My Profile</span>
+        </a>
+        <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors group cursor-pointer">
+           <div className="p-3 bg-orange-600 text-white rounded-full group-hover:scale-110 transition-transform">
+             <Clock className="w-6 h-6" />
+           </div>
+           <span className="text-sm font-medium text-orange-900 dark:text-orange-100">Schedule</span>
         </div>
       </div>
 

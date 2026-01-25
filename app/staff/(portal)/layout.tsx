@@ -55,10 +55,11 @@ export default function StaffPortalLayout({
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF'] },
-    { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanLine, roles: ['ADMIN', 'STAFF', 'DRIVER'] },
-    { name: 'Admin Analytics', href: '/staff/admin', icon: ShieldAlert, roles: ['ADMIN'] },
+    { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanLine, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'User Management', href: '/staff/admin/users', icon: User, roles: ['ADMIN'] },
+    { name: 'My Profile', href: '/staff/profile', icon: User, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
   ];
 
   if (!user) return (
