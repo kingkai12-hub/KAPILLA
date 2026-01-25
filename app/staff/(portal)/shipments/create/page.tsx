@@ -18,15 +18,41 @@ const tanzaniaLocations = {
   ]
 };
 
+import { useRouter, useSearchParams } from 'next/navigation';
+
 export default function CreateShipment() {
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('kapilla_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-  }, []);
+    
+    // Auto-fill from pickup request if params exist
+    if (searchParams) {
+      const senderName = searchParams.get('senderName') || '';
+      const senderPhone = searchParams.get('senderPhone') || '';
+      const senderAddress = searchParams.get('pickupAddress') || ''; // Map pickup address to sender address
+      const destination = searchParams.get('destination') || '';
+      const cargoDetails = searchParams.get('cargoDetails') || '';
+      const weight = searchParams.get('weight') || '';
+      
+      if (senderName) {
+        setFormData(prev => ({
+          ...prev,
+          senderName,
+          senderPhone,
+          senderAddress,
+          destination,
+          cargoDetails,
+          weight
+        }));
+      }
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState({
     senderName: '', senderPhone: '', senderAddress: '',
@@ -81,6 +107,16 @@ export default function CreateShipment() {
 
       if (!res.ok) {
         throw new Error(data.details || 'Failed to create shipment');
+      }
+
+      // If this was from a pickup request, mark it as ISSUED
+      const pickupRequestId = searchParams?.get('pickupRequestId');
+      if (pickupRequestId) {
+        await fetch(`/api/pickup-requests/${pickupRequestId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'ISSUED' }),
+        });
       }
 
       setGeneratedWaybill(data.waybillNumber);

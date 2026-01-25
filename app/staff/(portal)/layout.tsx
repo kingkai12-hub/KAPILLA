@@ -60,6 +60,7 @@ export default function StaffPortalLayout({
     { name: 'All Shipments', href: '/staff/shipments', icon: Package, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanLine, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'Pickup Requests', href: '/staff/pickup-requests', icon: Truck, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'Live Fleet', href: '/staff/trucking', icon: Truck, roles: ['ADMIN', 'STAFF', 'MANAGER', 'OPERATION_OFFICER'] },
     { name: 'User Management', href: '/staff/admin/users', icon: User, roles: ['ADMIN'] },
     { name: 'My Profile', href: '/staff/profile', icon: User, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },

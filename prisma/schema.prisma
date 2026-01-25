@@ -1,5 +1,4 @@
 // prisma/schema.prisma
-// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -112,4 +111,19 @@ model TrackingEvent {
   timestamp   DateTime       @default(now())
 
   @@map("TrackingEvent")
+}
+
+model PickupRequest {
+  id              String   @id @default(uuid())
+  senderName      String
+  senderPhone     String
+  pickupAddress   String
+  destination     String
+  cargoDetails    String
+  estimatedWeight String?
+  status          String   @default("PENDING") // PENDING, ISSUED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("PickupRequest")
 }

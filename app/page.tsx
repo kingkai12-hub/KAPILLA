@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2 } from 'lucide-react';
+import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Map from '@/components/Map';
+import PickupRequestModal from '@/components/PickupRequestModal';
 
 // Helper for classes
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -15,6 +16,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 export default function Home() {
   const [waybill, setWaybill] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -59,6 +61,13 @@ export default function Home() {
             <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
           <div className="flex gap-4">
+            <button
+              onClick={() => setIsPickupModalOpen(true)}
+              className="px-5 py-2.5 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+            >
+              <Truck className="w-4 h-4" />
+              Request Pickup
+            </button>
             <a 
               href="/driver"
               className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-all"
@@ -320,6 +329,11 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      {/* Pickup Modal */}
+      <PickupRequestModal 
+        isOpen={isPickupModalOpen} 
+        onClose={() => setIsPickupModalOpen(false)} 
+      />
     </div>
   );
 }
