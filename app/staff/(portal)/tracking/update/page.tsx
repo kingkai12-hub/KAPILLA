@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle, MapPin } from 'lucide-react';
+import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle, MapPin, Navigation } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import { useSearchParams } from 'next/navigation';
+import { locationCoords } from '@/lib/locations';
 
 function UpdateTrackingContent() {
   const searchParams = useSearchParams();
@@ -18,10 +19,31 @@ function UpdateTrackingContent() {
 
   const [status, setStatus] = useState('IN_TRANSIT');
   const [location, setLocation] = useState('Dar es Salaam Hub');
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(locationCoords['Dar es Salaam'] || null);
   const [remarks, setRemarks] = useState('');
   const [receivedBy, setReceivedBy] = useState('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
+  // Update coords when location changes if it matches a known location
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newLocation = e.target.value;
+    setLocation(newLocation);
+    if (locationCoords[newLocation]) {
+        setCoords(locationCoords[newLocation]);
+    }
+  };
+
+  // Manual coordinate update
+  const handleCoordChange = (type: 'lat' | 'lng', value: string) => {
+      const val = parseFloat(value);
+      if (!isNaN(val)) {
+          setCoords(prev => ({
+              lat: type === 'lat' ? val : (prev?.lat || 0),
+              lng: type === 'lng' ? val : (prev?.lng || 0)
+          }));
+      }
+  };
+
   // Signature State
   const sigCanvas = useRef<any>(null);
   const [signature, setSignature] = useState('');
@@ -62,6 +84,8 @@ function UpdateTrackingContent() {
           waybillNumber: waybill,
           status,
           location,
+          latitude: coords?.lat,
+          longitude: coords?.lng,
           remarks,
           receivedBy: status === 'DELIVERED' ? receivedBy : undefined,
           signature: signatureData
@@ -159,12 +183,46 @@ function UpdateTrackingContent() {
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
+                  onChange={handleLocationChange}
+                  list="locations"
                   className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="e.g. Dar es Salaam Hub"
+                  placeholder="Select or type location..."
                 />
+                <datalist id="locations">
+                    {Object.keys(locationCoords).map(city => (
+                        <option key={city} value={city} />
+                    ))}
+                </datalist>
               </div>
             </div>
+          </div>
+
+          {/* Coordinates (Auto-filled or Manual) */}
+          <div className="grid grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
+              <div className="col-span-2 flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  <Navigation className="w-4 h-4" />
+                  <span>Map Coordinates (Auto-filled)</span>
+              </div>
+              <div>
+                  <input 
+                      type="number" 
+                      placeholder="Latitude"
+                      value={coords?.lat || ''}
+                      onChange={(e) => handleCoordChange('lat', e.target.value)}
+                      step="any"
+                      className="block w-full py-2 px-3 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-lg"
+                  />
+              </div>
+              <div>
+                  <input 
+                      type="number" 
+                      placeholder="Longitude"
+                      value={coords?.lng || ''}
+                      onChange={(e) => handleCoordChange('lng', e.target.value)}
+                      step="any"
+                      className="block w-full py-2 px-3 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-lg"
+                  />
+              </div>
           </div>
 
           {/* Receiver Info & Signature (Only visible if Delivered) */}

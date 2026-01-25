@@ -26,15 +26,22 @@ interface MapProps {
   startPoint?: Location;
   endPoint?: Location;
   currentLocation?: Location;
-  routePath?: [number, number][]; // Array of [lat, lng]
+  routePath?: [number, number][]; // Traveled path (Origin -> Current)
+  remainingPath?: [number, number][]; // Remaining path (Current -> Dest)
   checkIns?: Location[];
 }
 
-function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+function MapUpdater({ center, zoom, routePath, remainingPath }: { center: [number, number]; zoom: number; routePath?: [number, number][]; remainingPath?: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    const allPoints = [...(routePath || []), ...(remainingPath || [])];
+    if (allPoints.length > 1) {
+      const bounds = L.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map, routePath, remainingPath]);
   return null;
 }
 
