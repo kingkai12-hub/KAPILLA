@@ -191,45 +191,52 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Timeline */}
-                  <div className="relative">
-                    <div className="absolute top-0 left-8 h-full w-px bg-slate-200" />
-                    <div className="space-y-8">
-                      {searchResult.events.map((event: any, index: number) => (
-                        <motion.div 
-                          key={event.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="relative flex items-start group"
-                        >
-                          <div className={cn(
-                            "absolute left-0 w-16 flex justify-center pt-1 bg-white",
-                          )}>
+                  {/* Horizontal Status Line */}
+                  <div className="w-full py-8 px-4">
+                    <div className="flex items-center justify-between relative">
+                      {/* Progress Bar Background */}
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
+                      
+                      {/* Active Progress Bar */}
+                      <div 
+                        className={cn(
+                          "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
+                          searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
+                          searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
+                          "w-[100%]"
+                        )} 
+                      />
+
+                      {/* Steps */}
+                      {[
+                        { id: 'PENDING', label: 'Pending', icon: Package },
+                        { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
+                        { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
+                      ].map((step, index) => {
+                        const isCompleted = 
+                          (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                          (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                          (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
+
+                        const isCurrent = step.id === searchResult.currentStatus;
+
+                        return (
+                          <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
                             <div className={cn(
-                              "w-4 h-4 rounded-full border-2 z-10 transition-colors duration-300",
-                              index === 0 ? "bg-blue-600 border-blue-600 ring-4 ring-blue-100" : "bg-white border-slate-300 group-hover:border-blue-400"
-                            )} />
-                          </div>
-                          <div className="ml-16 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow w-full">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                              <span className="font-bold text-slate-900">{event.status.replace(/_/g, ' ')}</span>
-                              <span className="text-sm text-slate-400 font-medium">
-                                {new Date(event.timestamp).toLocaleString()}
-                              </span>
+                              "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                              isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
+                            )}>
+                              <step.icon className="w-6 h-6" />
                             </div>
-                            <div className="flex items-center gap-2 text-slate-600 text-sm mb-2">
-                              <MapPin className="w-4 h-4 text-slate-400" />
-                              {event.location}
-                            </div>
-                            {event.remarks && (
-                              <p className="text-slate-500 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                "{event.remarks}"
-                              </p>
-                            )}
+                            <span className={cn(
+                              "text-sm font-bold transition-colors duration-300",
+                              isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
+                            )}>
+                              {step.label}
+                            </span>
                           </div>
-                        </motion.div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
