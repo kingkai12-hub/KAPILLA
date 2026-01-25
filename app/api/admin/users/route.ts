@@ -11,6 +11,8 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        workId: true,
+        phoneNumber: true,
         createdAt: true,
         // Exclude password
       }
@@ -60,9 +62,9 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, role, password } = body;
+    const { id, name, role, password, workId, phoneNumber } = body;
 
-    const data: any = { name, role };
+    const data: any = { name, role, workId, phoneNumber };
     if (password) data.password = password;
 
     const updatedUser = await db.user.update({

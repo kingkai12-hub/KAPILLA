@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, password, image } = body;
+    const { id, name, password, image, workId, phoneNumber } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
@@ -12,7 +12,9 @@ export async function PUT(req: Request) {
 
     const dataToUpdate: any = {
       name,
-      image
+      image,
+      workId,
+      phoneNumber
     };
 
     if (password) {

@@ -14,6 +14,8 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [workId, setWorkId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [image, setImage] = useState(''); // Base64 string
 
   useEffect(() => {
@@ -23,6 +25,8 @@ export default function ProfilePage() {
       setUser(parsedUser);
       setName(parsedUser.name || '');
       setEmail(parsedUser.email || '');
+      setWorkId(parsedUser.workId || '');
+      setPhoneNumber(parsedUser.phoneNumber || '');
       setImage(parsedUser.image || '');
     }
   }, []);
@@ -56,7 +60,9 @@ export default function ProfilePage() {
           name, 
           email, 
           password: password || undefined, // Only send if changed
-          image 
+          image,
+          workId,
+          phoneNumber
         }),
       });
 
@@ -137,6 +143,34 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Work ID</label>
+                <div className="relative">
+                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-400 rounded">ID</div>
+                  <input
+                    type="text"
+                    value={workId}
+                    onChange={(e) => setWorkId(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="EMP-001"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
+                <div className="relative">
+                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs">📞</div>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="+255..."
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
@@ -147,6 +181,34 @@ export default function ProfilePage() {
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="john@example.com"
                     disabled // Email usually shouldn't be changed easily by user
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Work ID</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={workId}
+                    onChange={(e) => setWorkId(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="EMP-001"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="+255..."
                   />
                 </div>
               </div>

@@ -14,7 +14,9 @@ export default function UserManagement() {
     name: '',
     email: '',
     password: '',
-    role: 'STAFF'
+    role: 'STAFF',
+    workId: '',
+    phoneNumber: ''
   });
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function UserManagement() {
         fetchUsers();
         setNewUserMode(false);
         setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', role: 'STAFF' });
+        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '' });
       } else {
         const data = await res.json();
         alert(data.error || 'Operation failed');
@@ -127,6 +129,26 @@ export default function UserManagement() {
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Work ID</label>
+                <input
+                  type="text"
+                  value={formData.workId}
+                  onChange={e => setFormData({...formData, workId: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  placeholder="e.g. EMP-001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={formData.phoneNumber}
+                  onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  placeholder="+255..."
                 />
               </div>
               <div>
@@ -205,6 +227,8 @@ export default function UserManagement() {
                         <div>
                           <div className="font-medium text-slate-900 dark:text-white">{user.name || 'Unnamed'}</div>
                           <div className="text-xs text-slate-500">{user.email}</div>
+                          {user.workId && <div className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">ID: {user.workId}</div>}
+                          {user.phoneNumber && <div className="text-xs text-slate-500 mt-0.5">{user.phoneNumber}</div>}
                         </div>
                       </div>
                     </td>

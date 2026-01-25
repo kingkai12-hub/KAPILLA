@@ -17,6 +17,8 @@ model User {
   password  String
   name      String?
   role      String   @default("STAFF") // ADMIN, STAFF, MANAGER, DRIVER, OPERATION_OFFICER
+  workId    String?  @unique // Employee ID
+  phoneNumber String?
   image     String?  // Base64 or URL
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
