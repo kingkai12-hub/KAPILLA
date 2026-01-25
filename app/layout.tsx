@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import RefreshHandler from '@/components/RefreshHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 

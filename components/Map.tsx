@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/skeleton'; // Assuming you might have a skeleton or I'll just use a div
 
 const LeafletMap = dynamic(() => import('./LeafletMap'), {
   ssr: false,
