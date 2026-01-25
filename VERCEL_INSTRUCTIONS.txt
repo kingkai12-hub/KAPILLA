@@ -12,6 +12,14 @@ Since direct connection from the local machine is failing, we will set up the da
 6. Click "Run" (bottom right).
    - This will create the tables (User, Shipment, TrackingEvent) and set up the necessary relationships.
 
+7. Create an Admin User:
+   - Clear the editor (or click "New Query" again).
+   - Copy the content of `create_admin.sql`.
+   - Paste and Run.
+   - This creates a user with:
+     - Email: admin@kapilla.com
+     - Password: admin123
+
 STEP 2: GITHUB
 --------------
 1. The code has been pushed to your GitHub repository: https://github.com/kingkai12-hub/KAPILLA
