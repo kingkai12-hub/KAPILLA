@@ -79,8 +79,8 @@ export default function LabelPage() {
         {/* Header Section */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
           <div className="flex items-start gap-4">
-            <img src="/logo.png" alt="Logo" className="w-48 h-48 object-contain print:invert-0" />
-            <div className="mt-4">
+            <img src="/logo.png" alt="Logo" className="w-64 h-64 -mt-8 object-contain print:invert-0" />
+            <div className="mt-8">
               {/* <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1> */}
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
