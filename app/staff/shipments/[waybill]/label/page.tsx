@@ -207,7 +207,9 @@ export default function LabelPage() {
              <div className="space-y-4">
                 <div className="flex items-end gap-2">
                    <span className="text-xs w-16">Name:</span>
-                   <div className="flex-1 border-b border-dotted border-black"></div>
+                   <div className="flex-1 border-b border-dotted border-black font-mono font-bold pl-2 text-sm">
+                     {data.receivedBy || ''}
+                   </div>
                 </div>
                 <div className="flex items-end gap-2">
                    <span className="text-xs w-16">ID No:</span>
@@ -215,11 +217,21 @@ export default function LabelPage() {
                 </div>
                 <div className="flex items-end gap-2">
                    <span className="text-xs w-16">Signature:</span>
-                   <div className="flex-1 border-b border-dotted border-black h-8"></div>
+                   <div className="flex-1 border-b border-dotted border-black h-8 relative">
+                     {data.receiverSignature && (
+                       <img 
+                         src={data.receiverSignature} 
+                         alt="Signature" 
+                         className="h-full object-contain mix-blend-multiply absolute bottom-0 left-0" 
+                       />
+                     )}
+                   </div>
                 </div>
                 <div className="flex items-end gap-2">
                    <span className="text-xs w-16">Date:</span>
-                   <div className="flex-1 border-b border-dotted border-black"></div>
+                   <div className="flex-1 border-b border-dotted border-black font-mono pl-2 text-sm">
+                     {data.currentStatus === 'DELIVERED' ? new Date(data.updatedAt).toLocaleDateString() : ''}
+                   </div>
                 </div>
              </div>
           </div>
