@@ -15,6 +15,21 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
+function SearchParamsHandler({ onSearch }: { onSearch: (term: string) => void }) {
+  const searchParams = useSearchParams();
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    const wb = searchParams.get('waybill');
+    if (wb && !initialized.current) {
+      initialized.current = true;
+      onSearch(wb);
+    }
+  }, [searchParams, onSearch]);
+
+  return null;
+}
+
 export default function Home() {
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
@@ -86,7 +101,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+      <section className="relative pt-24 pb-12 lg:pt-32 lg:pb-20 overflow-hidden">
         {/* Background Blobs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-100/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-yellow-50/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
@@ -97,15 +112,15 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wide mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wide mb-4">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
               Global Logistics Partner
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6">
-              Delivery that <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Moves You.</span>
+            <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-4">
+              Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Trusted Partner</span>
             </h1>
-            <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-600 mb-12 leading-relaxed">
-              Fast, reliable, and secure logistics solutions tailored for your business. Track your shipment in real-time across our global network.
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+              Experience the next generation of logistics. Real-time tracking, global reach, and unmatched reliability for your business needs.
             </p>
           </motion.div>
 
@@ -184,7 +199,7 @@ export default function Home() {
                     </div>
 
                     {/* Route Info */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-1">
                         <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Origin</div>
                         <div className="font-semibold text-slate-900 text-lg">{searchResult.origin}</div>
@@ -204,7 +219,7 @@ export default function Home() {
                     </div>
 
                     {/* Map Section */}
-                    <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                    <div className="w-full h-[320px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
                        <Map 
                          currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
                            lat: searchResult.trips[0].checkIns[0].latitude,
@@ -268,7 +283,7 @@ export default function Home() {
                     </div>
 
                     {/* Horizontal Status Line */}
-                    <div className="w-full py-8 px-4">
+                    <div className="w-full py-4 px-4">
                       <div className="flex items-center justify-between relative">
                         {/* Progress Bar Background */}
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />

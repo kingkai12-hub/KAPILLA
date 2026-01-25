@@ -143,6 +143,16 @@ export default function LeafletMap({
           opacity={0.8} 
         />
       )}
+
+      {remainingPath && remainingPath.length > 0 && (
+        <Polyline 
+          positions={remainingPath} 
+          color="#94a3b8" 
+          weight={5} 
+          opacity={0.5} 
+          dashArray="10, 10"
+        />
+      )}
     </MapContainer>
   );
 }
