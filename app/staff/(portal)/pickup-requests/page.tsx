@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2, XCircle, X } from 'lucide-react';
+import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2, XCircle, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -9,10 +9,16 @@ export default function PickupRequests() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [userRole, setUserRole] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
     fetchRequests();
+    const userStr = localStorage.getItem('kapilla_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role || '');
+    }
   }, []);
 
   const fetchRequests = async () => {
@@ -66,6 +72,26 @@ export default function PickupRequests() {
     } catch (error) {
       console.error(error);
       alert('An error occurred');
+    }
+  };
+
+  const handleDelete = async (requestId: string) => {
+    if (!confirm('Are you sure you want to delete this rejected request? This action cannot be undone.')) return;
+
+    try {
+      const res = await fetch(`/api/pickup-requests/${requestId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setRequests(requests.filter(req => req.id !== requestId));
+        alert('Request deleted successfully');
+      } else {
+        alert('Failed to delete request');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error deleting request');
     }
   };
 
@@ -176,9 +202,32 @@ export default function PickupRequests() {
                       Waybill Issued
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-medium px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <XCircle className="w-5 h-5" />
-                      Rejected
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-medium px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <XCircle className="w-5 h-5" />
+                        Rejected
+                      </div>
+                      
+                      {/* Re-issue Option */}
+                      <button
+                        onClick={() => handleIssueWaybill(req)}
+                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                        title="Re-issue Waybill"
+                      >
+                        <PackagePlus className="w-4 h-4" />
+                        Issue
+                      </button>
+
+                      {/* Delete Option - Admin/Manager Only */}
+                      {(userRole === 'ADMIN' || userRole === 'OPERATION_OFFICER') && (
+                        <button
+                          onClick={() => handleDelete(req.id)}
+                          className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"
+                          title="Delete Request"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
