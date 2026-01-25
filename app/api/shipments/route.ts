@@ -21,7 +21,8 @@ export async function POST(req: Request) {
     const {
       senderName, senderPhone, senderAddress,
       receiverName, receiverPhone, receiverAddress,
-      origin, destination, weight, price, type, cargoDetails
+      origin, destination, weight, price, type, cargoDetails,
+      dispatcherName, dispatcherSignature
     } = body;
 
     // Generate unique waybill (Simple random for demo)
@@ -42,6 +43,8 @@ export async function POST(req: Request) {
         price: price ? parseFloat(price) : null,
         cargoDetails,
         currentStatus: 'PENDING',
+        dispatcherName,
+        dispatcherSignature,
         events: {
           create: {
             status: 'PENDING',

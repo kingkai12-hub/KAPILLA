@@ -184,19 +184,25 @@ export default function LabelPage() {
         <div className="grid grid-cols-2 gap-8 mt-auto">
           {/* Dispatch / Driver */}
           <div className="border-t-2 border-black pt-2">
-             <p className="text-xs font-bold uppercase mb-8">Dispatched By (Driver/Agent):</p>
+             <p className="text-xs font-bold uppercase mb-4">Dispatched By (Dispatcher/Agent):</p>
              <div className="space-y-4">
                 <div className="flex items-end gap-2">
-                   <span className="text-xs w-16">Name:</span>
-                   <div className="flex-1 border-b border-dotted border-black"></div>
+                   <span className="text-xs w-16 font-bold">Name:</span>
+                   <div className="flex-1 border-b border-dotted border-black font-mono font-bold text-sm uppercase">
+                     {data.dispatcherName || '_________________'}
+                   </div>
                 </div>
                 <div className="flex items-end gap-2">
-                   <span className="text-xs w-16">Signature:</span>
-                   <div className="flex-1 border-b border-dotted border-black h-8"></div>
+                   <span className="text-xs w-16 font-bold">Sign (ID):</span>
+                   <div className="flex-1 border-b border-dotted border-black font-mono font-bold text-sm uppercase">
+                     {data.dispatcherSignature || '_________________'}
+                   </div>
                 </div>
                 <div className="flex items-end gap-2">
-                   <span className="text-xs w-16">Date:</span>
-                   <div className="flex-1 border-b border-dotted border-black"></div>
+                   <span className="text-xs w-16 font-bold">Date:</span>
+                   <div className="flex-1 border-b border-dotted border-black font-mono font-bold text-sm">
+                     {data.createdAt ? new Date(data.createdAt).toLocaleString() : '_________________'}
+                   </div>
                 </div>
              </div>
           </div>

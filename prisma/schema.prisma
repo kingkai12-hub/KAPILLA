@@ -50,6 +50,8 @@ model Shipment {
   cargoDetails   String?
   
   currentStatus  String   @default("PENDING")
+  dispatcherName String?
+  dispatcherSignature String? // Stores workId
   receiverSignature String? // Base64 signature
   receivedBy     String?  // Name of the person who actually received it
   

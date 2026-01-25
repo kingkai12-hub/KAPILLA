@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Printer, Save, RefreshCw } from 'lucide-react';
 
 const tanzaniaLocations = {
@@ -19,6 +19,15 @@ const tanzaniaLocations = {
 };
 
 export default function CreateShipment() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('kapilla_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const [formData, setFormData] = useState({
     senderName: '', senderPhone: '', senderAddress: '',
     receiverName: '', receiverPhone: '', receiverAddress: '',
@@ -34,10 +43,16 @@ export default function CreateShipment() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        dispatcherName: user?.name || 'Unknown',
+        dispatcherSignature: user?.workId || 'N/A'
+      };
+
       const res = await fetch('/api/shipments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
