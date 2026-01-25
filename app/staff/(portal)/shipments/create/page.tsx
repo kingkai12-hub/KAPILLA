@@ -66,30 +66,30 @@ export default function CreateShipment() {
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">From (Sender)</h3>
+              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">From (Sender)</h3>
               <p className="font-bold text-lg">{formData.senderName}</p>
-              <p className="text-gray-600">{formData.senderPhone}</p>
-              <p className="text-gray-600 text-sm">{formData.senderAddress}</p>
+              <p className="text-gray-800">{formData.senderPhone}</p>
+              <p className="text-gray-700 text-sm">{formData.senderAddress}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">To (Receiver)</h3>
+              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">To (Receiver)</h3>
               <p className="font-bold text-lg">{formData.receiverName}</p>
-              <p className="text-gray-600">{formData.receiverPhone}</p>
-              <p className="text-gray-600 text-sm">{formData.receiverAddress}</p>
+              <p className="text-gray-800">{formData.receiverPhone}</p>
+              <p className="text-gray-700 text-sm">{formData.receiverAddress}</p>
             </div>
           </div>
 
           <div className="border-t pt-6 grid grid-cols-3 gap-4">
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Origin</h3>
+              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Origin</h3>
               <p className="font-medium">{formData.origin}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Destination</h3>
+              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Destination</h3>
               <p className="font-medium">{formData.destination}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Weight / Type</h3>
+              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Weight / Type</h3>
               <p className="font-medium">{formData.weight} kg / {formData.type}</p>
             </div>
           </div>

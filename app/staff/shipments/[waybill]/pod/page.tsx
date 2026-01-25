@@ -112,35 +112,35 @@ export default function ProofOfDeliveryPage() {
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-12 mb-12">
           <div>
-            <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Sender Information</h3>
+            <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Sender Information</h3>
             <div className="space-y-1">
               <p className="font-bold text-lg">{shipment.senderName}</p>
-              <p className="text-slate-600 print:text-black">{shipment.senderPhone}</p>
-              <p className="text-slate-600 print:text-black">{shipment.senderAddress || 'N/A'}</p>
-              <p className="text-sm text-slate-400 print:text-black mt-2">Origin: {shipment.origin}</p>
+              <p className="text-black">{shipment.senderPhone}</p>
+              <p className="text-black">{shipment.senderAddress || 'N/A'}</p>
+              <p className="text-sm text-black mt-2">Origin: {shipment.origin}</p>
             </div>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Receiver Information</h3>
+            <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Receiver Information</h3>
             <div className="space-y-1">
               <p className="font-bold text-lg">{shipment.receiverName}</p>
-              <p className="text-slate-600 print:text-black">{shipment.receiverPhone}</p>
-              <p className="text-slate-600 print:text-black">{shipment.receiverAddress || 'N/A'}</p>
-              <p className="text-sm text-slate-400 print:text-black mt-2">Destination: {shipment.destination}</p>
+              <p className="text-black">{shipment.receiverPhone}</p>
+              <p className="text-black">{shipment.receiverAddress || 'N/A'}</p>
+              <p className="text-sm text-black mt-2">Destination: {shipment.destination}</p>
             </div>
           </div>
         </div>
 
         {/* Shipment Details */}
         <div className="mb-12">
-          <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
+          <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
           <table className="w-full text-sm">
             <thead className="bg-slate-50 print:bg-transparent">
               <tr>
-                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Description</th>
-                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Weight</th>
-                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Service</th>
-                <th className="text-right p-3 font-semibold text-slate-600 print:text-black">Declared Value</th>
+                <th className="text-left p-3 font-semibold text-black">Description</th>
+                <th className="text-left p-3 font-semibold text-black">Weight</th>
+                <th className="text-left p-3 font-semibold text-black">Service</th>
+                <th className="text-right p-3 font-semibold text-black">Declared Value</th>
               </tr>
             </thead>
             <tbody>

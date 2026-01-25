@@ -92,7 +92,7 @@ export default function LabelPage() {
           </div>
           <div className="text-right">
             <h2 className="text-3xl font-black text-black uppercase tracking-tighter">PROOF OF DELIVERY</h2>
-            <p className="text-xs font-bold uppercase text-gray-500 print:text-black mt-1">Consignment Note</p>
+            <p className="text-xs font-bold uppercase text-black mt-1">Consignment Note</p>
             <div className="mt-2 border-2 border-black p-2 inline-block">
               <p className="text-lg font-mono font-bold">{data.waybillNumber}</p>
             </div>
@@ -171,7 +171,7 @@ export default function LabelPage() {
 
         {/* Special Instructions */}
         <div className="mb-8 border border-black p-3 h-20">
-          <p className="text-[10px] font-bold uppercase text-gray-500 print:text-black mb-1">Special Instructions / Remarks</p>
+          <p className="text-[10px] font-bold uppercase text-black mb-1">Special Instructions / Remarks</p>
           <p className="text-sm italic">{data.remarks || 'None'}</p>
         </div>
 
