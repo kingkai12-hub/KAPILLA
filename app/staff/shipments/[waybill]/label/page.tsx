@@ -108,7 +108,7 @@ export default function LabelPage() {
             <p className="text-xs text-gray-500 print:text-black mt-1">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
           </div>
           <div>
-            <QRCodeSVG value={`https://kapilla-group.com/track/${data.waybillNumber}`} size={80} />
+            <QRCodeSVG value={data.waybillNumber} size={80} />
           </div>
         </div>
 
