@@ -19,6 +19,8 @@ model User {
   role      String   @default("STAFF") // SQLite does not support enums, using String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("User")
 }
 
 model Shipment {
@@ -48,6 +50,8 @@ model Shipment {
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  @@map("Shipment")
 }
 
 model TrackingEvent {
@@ -60,4 +64,6 @@ model TrackingEvent {
   remarks     String?        // e.g., "Dispatched to Mwanza Branch"
   
   timestamp   DateTime       @default(now())
+
+  @@map("TrackingEvent")
 }
