@@ -46,7 +46,9 @@ export default function Home() {
       <nav className="absolute w-full z-10 px-6 py-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Kapilla Logo" className="w-12 h-12 object-contain" />
+            <div className="bg-white p-1 rounded-lg shadow-sm">
+              <img src="/logo.png" alt="Kapilla Logo" className="w-14 h-14 object-contain" />
+            </div>
             <span className="text-xl font-bold text-slate-900 tracking-tight">Kapilla<span className="text-blue-600">Group</span></span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">

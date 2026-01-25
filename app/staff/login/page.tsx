@@ -43,7 +43,9 @@ export default function StaffLogin() {
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <img src="/logo.png" alt="Kapilla Logo" className="w-20 h-20 object-contain" />
+          <div className="bg-white p-2 rounded-xl shadow-sm">
+            <img src="/logo.png" alt="Kapilla Logo" className="w-24 h-24 object-contain" />
+          </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Staff Portal

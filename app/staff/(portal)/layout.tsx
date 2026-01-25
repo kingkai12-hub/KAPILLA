@@ -185,12 +185,17 @@ export default function StaffPortalLayout({
         <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:hidden sticky top-0 z-30 transition-colors duration-300">
           <div className="flex items-center justify-between h-16 px-4">
             <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 -ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <span className="font-bold text-slate-900 dark:text-white">Kapilla Portal</span>
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 -ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="bg-white p-1 rounded-lg dark:bg-white/90">
+                  <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain" />
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white">Kapilla Portal</span>
+              </div>
             <div className="w-8"></div> {/* Spacer */}
           </div>
         </header>
