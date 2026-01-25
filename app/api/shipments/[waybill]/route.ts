@@ -3,10 +3,10 @@ import { db } from '@/lib/db';
 
 export async function GET(
   req: Request,
-  { params }: { params: { waybill: string } }
+  { params }: { params: Promise<{ waybill: string }> }
 ) {
   try {
-    const waybill = params.waybill;
+    const { waybill } = await params;
 
     const shipment = await db.shipment.findUnique({
       where: { waybillNumber: waybill },
@@ -32,10 +32,10 @@ export async function GET(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { waybill: string } }
+  { params }: { params: Promise<{ waybill: string }> }
 ) {
   try {
-    const waybill = params.waybill;
+    const { waybill } = await params;
 
     await db.shipment.delete({
       where: { waybillNumber: waybill }

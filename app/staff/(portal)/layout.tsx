@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  PackagePlus, 
+  PackagePlus,
+  Package, 
   ScanLine, 
   LogOut, 
   Menu, 
