@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { ScanLine, Save, RotateCcw, PenTool } from 'lucide-react';
+import { ScanLine, Save, RotateCcw, PenTool, Printer } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 
 export default function UpdateTrackingPage() {
@@ -72,7 +72,7 @@ export default function UpdateTrackingPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Update Tracking</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white text-slate-900 tracking-tight">Update Tracking</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Scan or enter waybill to update shipment status.</p>
       </div>
 
@@ -91,7 +91,7 @@ export default function UpdateTrackingPage() {
                 type="text"
                 value={waybill}
                 onChange={(e) => setWaybill(e.target.value.toUpperCase())}
-                className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono uppercase placeholder:text-slate-400"
+                className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono uppercase placeholder:text-slate-400"
                 placeholder="Scan or type waybill..."
                 autoFocus
               />
@@ -125,7 +125,7 @@ export default function UpdateTrackingPage() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="e.g. Dar es Salaam Hub"
               />
             </div>
@@ -138,7 +138,7 @@ export default function UpdateTrackingPage() {
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               rows={2}
-              className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
               placeholder="Any additional notes..."
             />
           </div>
@@ -198,12 +198,27 @@ export default function UpdateTrackingPage() {
                     <p className="text-sm font-bold text-slate-900 dark:text-white">{scan.waybill}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{scan.location}</p>
                   </div>
-                  <div className="text-right">
-                    <span className="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-bold">
-                      {scan.status}
+                  <div className="flex items-center gap-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                      scan.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
+                      scan.status === 'IN_TRANSIT' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-slate-100 text-slate-700'
+                    }`}>
+                      {scan.status.replace(/_/g, ' ')}
                     </span>
-                    <p className="text-xs text-slate-400 mt-1">{scan.time}</p>
+                    {scan.status === 'DELIVERED' && (
+                      <button
+                        onClick={() => window.open(`/staff/shipments/${scan.waybill}/pod`, '_blank')}
+                        className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors"
+                        title="Print Proof of Delivery"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
+                </div>
+                <div className="mt-1 flex justify-between items-center text-xs text-slate-400">
+                  <span>{scan.time}</span>
                 </div>
               </li>
             ))}

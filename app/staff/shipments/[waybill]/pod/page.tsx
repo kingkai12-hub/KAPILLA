@@ -75,8 +75,9 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-900 text-white flex items-center justify-center rounded-lg font-bold text-2xl">K</div>
             <div>
-              <h1 className="text-2xl font-bold uppercase tracking-wide text-slate-900">Kapilla Logistics</h1>
-              <p className="text-sm text-slate-500">Global Logistics & Supply Chain</p>
+              <h1 className="text-2xl font-bold uppercase tracking-wide text-slate-900">Kapilla Group Limited</h1>
+              <p className="text-sm text-slate-500">P.O. BOX 71729</p>
+              <p className="text-sm text-slate-500">DAR ES SALAAM, TANZANIA</p>
             </div>
           </div>
           <div className="text-right">
