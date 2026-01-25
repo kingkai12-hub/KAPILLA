@@ -29,3 +29,21 @@ export async function GET(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { waybill: string } }
+) {
+  try {
+    const waybill = params.waybill;
+
+    await db.shipment.delete({
+      where: { waybillNumber: waybill }
+    });
+
+    return NextResponse.json({ message: 'Shipment deleted' });
+  } catch (error) {
+    console.error('[DELETE_SHIPMENT]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

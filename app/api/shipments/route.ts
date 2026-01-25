@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export async function GET(req: Request) {
+  try {
+    const shipments = await db.shipment.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    return NextResponse.json(shipments);
+  } catch (error) {
+    console.error('[SHIPMENTS_GET]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();

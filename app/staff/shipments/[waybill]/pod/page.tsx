@@ -102,39 +102,39 @@ export default function ProofOfDeliveryPage({ params }: { params: { waybill: str
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-12 mb-12">
           <div>
-            <h3 className="text-xs font-bold uppercase text-slate-500 mb-4 tracking-wider border-b pb-2">Sender Information</h3>
+            <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Sender Information</h3>
             <div className="space-y-1">
               <p className="font-bold text-lg">{shipment.senderName}</p>
-              <p className="text-slate-600">{shipment.senderPhone}</p>
-              <p className="text-slate-600">{shipment.senderAddress || 'N/A'}</p>
-              <p className="text-sm text-slate-400 mt-2">Origin: {shipment.origin}</p>
+              <p className="text-slate-600 print:text-black">{shipment.senderPhone}</p>
+              <p className="text-slate-600 print:text-black">{shipment.senderAddress || 'N/A'}</p>
+              <p className="text-sm text-slate-400 print:text-black mt-2">Origin: {shipment.origin}</p>
             </div>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase text-slate-500 mb-4 tracking-wider border-b pb-2">Receiver Information</h3>
+            <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Receiver Information</h3>
             <div className="space-y-1">
               <p className="font-bold text-lg">{shipment.receiverName}</p>
-              <p className="text-slate-600">{shipment.receiverPhone}</p>
-              <p className="text-slate-600">{shipment.receiverAddress || 'N/A'}</p>
-              <p className="text-sm text-slate-400 mt-2">Destination: {shipment.destination}</p>
+              <p className="text-slate-600 print:text-black">{shipment.receiverPhone}</p>
+              <p className="text-slate-600 print:text-black">{shipment.receiverAddress || 'N/A'}</p>
+              <p className="text-sm text-slate-400 print:text-black mt-2">Destination: {shipment.destination}</p>
             </div>
           </div>
         </div>
 
         {/* Shipment Details */}
         <div className="mb-12">
-          <h3 className="text-xs font-bold uppercase text-slate-500 mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
+          <h3 className="text-xs font-bold uppercase text-slate-500 print:text-black mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
           <table className="w-full text-sm">
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-50 print:bg-transparent">
               <tr>
-                <th className="text-left p-3 font-semibold text-slate-600">Description</th>
-                <th className="text-left p-3 font-semibold text-slate-600">Weight</th>
-                <th className="text-left p-3 font-semibold text-slate-600">Service</th>
-                <th className="text-right p-3 font-semibold text-slate-600">Declared Value</th>
+                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Description</th>
+                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Weight</th>
+                <th className="text-left p-3 font-semibold text-slate-600 print:text-black">Service</th>
+                <th className="text-right p-3 font-semibold text-slate-600 print:text-black">Declared Value</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-slate-100 print:border-black">
                 <td className="p-3">Standard Package</td>
                 <td className="p-3">{shipment.weight} KG</td>
                 <td className="p-3">Standard Ground</td>

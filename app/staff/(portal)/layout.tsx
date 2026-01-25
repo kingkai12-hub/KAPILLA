@@ -56,6 +56,7 @@ export default function StaffPortalLayout({
 
   const navigation = [
     { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'All Shipments', href: '/staff/shipments', icon: Package, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanLine, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
     { name: 'User Management', href: '/staff/admin/users', icon: User, roles: ['ADMIN'] },

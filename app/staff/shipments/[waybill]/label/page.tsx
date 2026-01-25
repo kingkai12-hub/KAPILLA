@@ -81,7 +81,7 @@ export default function LabelPage({ params }: { params: { waybill: string } }) {
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-black text-black uppercase tracking-tighter">Waybill</h2>
+            <h2 className="text-3xl font-black text-black uppercase tracking-tighter">PROOF OF DELIVERY</h2>
             <p className="text-xs font-bold uppercase text-gray-500 print:text-black mt-1">Consignment Note</p>
             <div className="mt-2 border-2 border-black p-2 inline-block">
               <p className="text-lg font-mono font-bold">{data.waybillNumber}</p>
