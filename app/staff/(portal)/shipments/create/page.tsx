@@ -25,13 +25,17 @@ export default function CreateShipment() {
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error('Failed to create shipment');
-
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.details || 'Failed to create shipment');
+      }
+
       setGeneratedWaybill(data.waybillNumber);
     } catch (error) {
       console.error(error);
-      alert('Error creating shipment. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Error creating shipment: ${errorMessage}`);
     }
   };
 
