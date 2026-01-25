@@ -156,9 +156,13 @@ export default function StaffPortalLayout({
             </div>
 
             <div className="flex items-center gap-3 mb-4 p-2 rounded-lg bg-slate-900 border border-slate-800">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-slate-900 font-bold shadow-sm">
-                {user.name.charAt(0)}
-              </div>
+              {user.image ? (
+                <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-slate-700" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-slate-900 font-bold shadow-sm">
+                  {user.name.charAt(0)}
+                </div>
+              )}
               <div className="overflow-hidden">
                 <p className="text-sm font-medium text-white truncate">{user.name}</p>
                 <p className="text-xs text-slate-400 truncate">{user.role} Account</p>
