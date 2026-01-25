@@ -78,15 +78,16 @@ export default function LabelPage() {
         
         {/* Header Section */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-4">
             <img src="/logo.png" alt="Logo" className="w-48 h-48 object-contain print:invert-0" />
-            <div>
+            <div className="mt-4">
               {/* <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1> */}
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
                 <p>DAR ES SALAAM, TANZANIA</p>
-                <p>Tel: +255 123 456 789</p>
-                <p>Email: info@kapilla-group.com</p>
+                <p>Tel: +255 766 724 062</p>
+                <p>Tel: +255 756 656 218</p>
+                <p>Email: express@kapillagroup.co.tz</p>
               </div>
             </div>
           </div>
