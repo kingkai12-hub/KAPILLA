@@ -53,7 +53,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json(shipment, { status: 201 });
   } catch (error) {
-    console.error('[SHIPMENTS_POST]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[SHIPMENTS_POST] Error:', error);
+    // Return the actual error message for debugging (in development)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal Server Error', details: errorMessage }, { status: 500 });
   }
 }
