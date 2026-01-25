@@ -132,9 +132,8 @@ export default function LeafletMap({
         <Polyline 
           positions={routePath} 
           color="#2563eb" 
-          weight={4} 
-          opacity={0.7} 
-          dashArray="10, 10" 
+          weight={5} 
+          opacity={0.8} 
         />
       )}
     </MapContainer>
