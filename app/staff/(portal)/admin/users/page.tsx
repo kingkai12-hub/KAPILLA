@@ -71,7 +71,7 @@ export default function UserManagement() {
         await fetchUsers();
         setNewUserMode(false);
         setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', role: 'STAFF' });
+        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '' });
         alert(isEdit ? 'User updated successfully' : 'User created successfully');
       } else {
         const data = await res.json();
