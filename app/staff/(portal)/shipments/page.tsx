@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine, Edit, X } from 'lucide-react';
 import Link from 'next/link';
 import SignatureCanvas from 'react-signature-canvas';
+import { locationCoords } from '@/lib/locations';
 
 export default function ShipmentsPage() {
   const [shipments, setShipments] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function ShipmentsPage() {
   // Status Edit State
   const [editingStatusShipment, setEditingStatusShipment] = useState<any>(null);
   const [newStatus, setNewStatus] = useState('');
+  const [updateLocation, setUpdateLocation] = useState('Dar es Salaam'); // Default location
   const [receivedBy, setReceivedBy] = useState('');
   const sigCanvas = useRef<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,6 +152,19 @@ export default function ShipmentsPage() {
                   <option value="IN_TRANSIT">IN_TRANSIT</option>
                   <option value="DELIVERED">DELIVERED</option>
                   <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Location</label>
+                <select
+                  value={updateLocation}
+                  onChange={(e) => setUpdateLocation(e.target.value)}
+                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                >
+                   {Object.keys(locationCoords).map(city => (
+                        <option key={city} value={city}>{city}</option>
+                    ))}
                 </select>
               </div>
 

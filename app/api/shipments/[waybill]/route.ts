@@ -120,7 +120,7 @@ export async function PATCH(
       data: {
         shipmentId: shipment.id,
         status: status,
-        location: 'Admin Update', // Or pass this if needed
+        location: location || 'Admin Update', 
         remarks: `Status updated to ${status}`
       }
     });

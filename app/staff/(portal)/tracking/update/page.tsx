@@ -33,17 +33,6 @@ function UpdateTrackingContent() {
     }
   };
 
-  // Manual coordinate update
-  const handleCoordChange = (type: 'lat' | 'lng', value: string) => {
-      const val = parseFloat(value);
-      if (!isNaN(val)) {
-          setCoords(prev => ({
-              lat: type === 'lat' ? val : (prev?.lat || 0),
-              lng: type === 'lng' ? val : (prev?.lng || 0)
-          }));
-      }
-  };
-
   const [loading, setLoading] = useState(false);
 
   const handleScan = async (e: React.FormEvent) => {
@@ -131,49 +120,17 @@ function UpdateTrackingContent() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MapPin className="h-5 w-5 text-slate-400" />
                 </div>
-                <input
-                  type="text"
+                <select
                   value={location}
                   onChange={handleLocationChange}
-                  list="locations"
-                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Select or type location..."
-                />
-                <datalist id="locations">
+                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                >
                     {Object.keys(locationCoords).map(city => (
-                        <option key={city} value={city} />
+                        <option key={city} value={city}>{city}</option>
                     ))}
-                </datalist>
+                </select>
               </div>
             </div>
-          </div>
-
-          {/* Coordinates (Auto-filled or Manual) */}
-          <div className="grid grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
-              <div className="col-span-2 flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  <Navigation className="w-4 h-4" />
-                  <span>Map Coordinates (Auto-filled)</span>
-              </div>
-              <div>
-                  <input 
-                      type="number" 
-                      placeholder="Latitude"
-                      value={coords?.lat || ''}
-                      onChange={(e) => handleCoordChange('lat', e.target.value)}
-                      step="any"
-                      className="block w-full py-2 px-3 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-lg"
-                  />
-              </div>
-              <div>
-                  <input 
-                      type="number" 
-                      placeholder="Longitude"
-                      value={coords?.lng || ''}
-                      onChange={(e) => handleCoordChange('lng', e.target.value)}
-                      step="any"
-                      className="block w-full py-2 px-3 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-lg"
-                  />
-              </div>
           </div>
 
           <button
