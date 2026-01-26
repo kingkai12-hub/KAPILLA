@@ -74,13 +74,13 @@ export default function LabelPage() {
       </button>
 
       {/* A4 Document Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl print:shadow-none print:w-full print:h-full box-border relative text-black font-sans text-sm">
+      <div className="bg-white w-full max-w-[210mm] min-h-[297mm] p-4 md:p-[15mm] shadow-2xl print:shadow-none print:w-full print:max-w-none print:h-full box-border relative text-black font-sans text-sm mx-auto">
         
         {/* Header Section */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
-          <div className="flex items-start gap-4">
-            <img src="/logo.png" alt="Logo" className="w-64 h-64 -mt-8 object-contain print:invert-0" />
-            <div className="mt-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-black pb-4 mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <img src="/logo.png" alt="Logo" className="w-48 sm:w-64 h-48 sm:h-64 -mt-4 sm:-mt-8 object-contain print:invert-0 self-center sm:self-start" />
+            <div className="mt-4 sm:mt-8 text-center sm:text-left">
               {/* <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1> */}
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
@@ -91,7 +91,7 @@ export default function LabelPage() {
               </div>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-center sm:text-right w-full sm:w-auto mt-4 sm:mt-0">
             <h2 className="text-2xl font-black text-black uppercase tracking-tighter">WAYBILL</h2>
             <p className="text-xs font-bold uppercase text-black mt-1">Consignment Note</p>
             <div className="mt-2 border-2 border-black p-2 inline-block">
@@ -101,8 +101,8 @@ export default function LabelPage() {
         </div>
 
         {/* Barcode / QR Section */}
-        <div className="flex justify-between items-center mb-6 bg-gray-50 print:bg-transparent p-4 border border-gray-200 print:border-black rounded-lg">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gray-50 print:bg-transparent p-4 border border-gray-200 print:border-black rounded-lg gap-4">
+          <div className="flex-1 text-center sm:text-left">
             <p className="text-xs font-bold uppercase text-gray-500 print:text-black mb-1">Tracking Number</p>
             <p className="text-xl font-mono font-bold">{data.waybillNumber}</p>
             <p className="text-xs text-gray-500 print:text-black mt-1">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
@@ -113,19 +113,19 @@ export default function LabelPage() {
         </div>
 
         {/* Route Info */}
-        <div className="grid grid-cols-2 gap-0 border-2 border-black mb-6">
-          <div className="p-3 border-r-2 border-black">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-2 border-black mb-6">
+          <div className="p-3 border-b-2 sm:border-b-0 sm:border-r-2 border-black text-center sm:text-left">
             <p className="text-[10px] font-bold uppercase text-gray-500 print:text-black mb-1">Origin</p>
             <p className="text-xl font-black uppercase">{data.origin}</p>
           </div>
-          <div className="p-3">
+          <div className="p-3 text-center sm:text-left">
             <p className="text-[10px] font-bold uppercase text-gray-500 print:text-black mb-1">Destination</p>
             <p className="text-xl font-black uppercase">{data.destination}</p>
           </div>
         </div>
 
         {/* Sender & Receiver Details */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           {/* Sender */}
           <div className="border border-gray-300 print:border-black rounded p-4">
             <h3 className="text-xs font-bold uppercase bg-black text-white print:text-black print:bg-transparent print:border print:border-black inline-block px-2 py-0.5 mb-3">From (Sender)</h3>
@@ -148,9 +148,9 @@ export default function LabelPage() {
         </div>
 
         {/* Shipment Details Table */}
-        <div className="mb-6">
+        <div className="mb-6 overflow-x-auto">
           <h3 className="text-xs font-bold uppercase text-black mb-2">Shipment Particulars</h3>
-          <table className="w-full border-collapse border border-black text-sm">
+          <table className="w-full border-collapse border border-black text-sm min-w-[600px] sm:min-w-0">
             <thead className="bg-gray-100 print:bg-gray-200">
               <tr>
                 <th className="border border-black p-2 text-left w-1/4">Type</th>
@@ -182,7 +182,7 @@ export default function LabelPage() {
         </div>
 
         {/* Signatures Section */}
-        <div className="grid grid-cols-2 gap-8 mt-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-auto">
           {/* Dispatch / Driver */}
           <div className="border-t-2 border-black pt-2">
              <p className="text-xs font-bold uppercase mb-4">Dispatched By (Dispatcher/Agent):</p>

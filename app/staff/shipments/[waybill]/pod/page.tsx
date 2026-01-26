@@ -78,11 +78,11 @@ export default function ProofOfDeliveryPage() {
       </button>
 
       {/* A4 Paper Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl print:shadow-none print:w-full print:h-full box-border relative text-black">
+      <div className="bg-white w-full max-w-[210mm] min-h-[297mm] p-4 md:p-[20mm] shadow-2xl print:shadow-none print:w-full print:max-w-none print:h-full box-border relative text-black mx-auto flex flex-col">
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-black pb-6 mb-8 gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left w-full sm:w-auto">
             <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain print:invert-0" />
             <div>
               <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1>
@@ -94,14 +94,14 @@ export default function ProofOfDeliveryPage() {
               </div>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-center sm:text-right w-full sm:w-auto">
             <h2 className="text-3xl font-black text-black uppercase tracking-tighter">PROOF OF DELIVERY</h2>
             <p className="text-sm font-mono mt-1 text-black font-bold">REF: {shipment.waybillNumber}</p>
           </div>
         </div>
 
         {/* Status Banner */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center gap-3">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
           <CheckCircle className="w-6 h-6 text-green-600" />
           <div>
             <p className="text-green-800 font-bold text-lg">Shipment Delivered Successfully</p>
@@ -110,7 +110,7 @@ export default function ProofOfDeliveryPage() {
         </div>
 
         {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-12 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 mb-12">
           <div>
             <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Sender Information</h3>
             <div className="space-y-1">
@@ -132,9 +132,9 @@ export default function ProofOfDeliveryPage() {
         </div>
 
         {/* Shipment Details */}
-        <div className="mb-12">
+        <div className="mb-12 overflow-x-auto">
           <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[600px] sm:min-w-0">
             <thead className="bg-slate-50 print:bg-transparent">
               <tr>
                 <th className="text-left p-3 font-semibold text-black">Description</th>
@@ -161,8 +161,8 @@ export default function ProofOfDeliveryPage() {
         <div className="border-2 border-slate-900 rounded-xl p-6 mb-8 bg-slate-50">
           <h3 className="text-sm font-bold uppercase text-slate-900 mb-6 text-center">Receiver Acknowledgment</h3>
           
-          <div className="flex justify-around items-end">
-            <div className="text-center">
+          <div className="flex flex-col sm:flex-row justify-around items-center sm:items-end gap-8 sm:gap-0">
+            <div className="text-center w-full sm:w-auto">
               {shipment.receiverSignature ? (
                 <img src={shipment.receiverSignature} alt="Signature" className="h-20 mx-auto mb-2 mix-blend-multiply" />
               ) : (
@@ -171,14 +171,14 @@ export default function ProofOfDeliveryPage() {
               <p className="text-xs font-bold border-t border-slate-300 pt-2 px-8 uppercase">Signature</p>
             </div>
 
-            <div className="text-center">
+            <div className="text-center w-full sm:w-auto">
               <div className="h-20 flex items-end justify-center pb-2">
                  <span className="text-lg font-mono font-bold">{shipment.receivedBy || shipment.receiverName}</span>
               </div>
               <p className="text-xs font-bold border-t border-slate-300 pt-2 px-8 uppercase">Received By</p>
             </div>
 
-            <div className="text-center">
+            <div className="text-center w-full sm:w-auto">
               <div className="h-20 flex items-end justify-center pb-2">
                 <span className="text-lg font-mono">{new Date(shipment.updatedAt).toLocaleTimeString()}</span>
               </div>
@@ -192,14 +192,13 @@ export default function ProofOfDeliveryPage() {
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-[20mm] left-[20mm] right-[20mm] flex justify-between items-center border-t border-black pt-4">
+        <div className="mt-auto sm:absolute sm:bottom-[20mm] sm:left-[20mm] sm:right-[20mm] flex justify-between items-center border-t border-black pt-4 print:absolute print:bottom-[20mm] print:left-[20mm] print:right-[20mm]">
           <div className="text-xs text-black">
             <p>Kapilla Logistics Ltd.</p>
             <p>www.kapilla-group.com</p>
           </div>
           <QRCodeSVG value={`https://kapilla-group.com/track/${waybill}`} size={60} />
         </div>
-
       </div>
     </div>
   );
