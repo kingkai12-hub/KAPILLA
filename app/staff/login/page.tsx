@@ -114,6 +114,9 @@ export default function StaffLogin() {
             </div>
           </form>
         </div>
+        <div className="mt-8 text-center text-xs font-mono text-blue-900/60 font-bold tracking-widest">
+          DEVELOPED BY KAISI
+        </div>
       </div>
     </div>
   );

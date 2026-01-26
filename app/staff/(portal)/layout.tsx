@@ -197,6 +197,9 @@ export default function StaffPortalLayout({
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </button>
+            <div className="mt-6 text-center text-[10px] font-mono text-slate-600 font-bold tracking-wider opacity-70">
+              DEVELOPED BY KAISI
+            </div>
           </div>
         </div>
       </motion.div>

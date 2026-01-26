@@ -377,6 +377,7 @@ export default function Home() {
               Setting the standard for modern logistics in East Africa and beyond. Fast, Secure, Reliable.
             </p>
             <div className="text-sm">© 2026 Kapilla Group Ltd.</div>
+            <div className="mt-4 text-[10px] font-mono text-slate-500 font-bold tracking-wider">DEVELOPED BY KAISI</div>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Company</h4>
