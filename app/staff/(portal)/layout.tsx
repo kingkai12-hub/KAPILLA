@@ -117,7 +117,7 @@ export default function StaffPortalLayout({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-50 to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 flex font-sans transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
