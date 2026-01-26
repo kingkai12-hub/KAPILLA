@@ -134,7 +134,7 @@ function UpdateTrackingContent() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white text-slate-900 tracking-tight">Add Tracking Scan (v2.1)</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white text-slate-900 tracking-tight">Add Tracking Scan</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Scan or enter waybill to add a location update.</p>
       </div>
 

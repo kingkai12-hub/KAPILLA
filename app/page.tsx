@@ -95,7 +95,7 @@ export default function Home() {
               href="/staff/login"
               className="px-4 py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
-              Staff Portal v2.1
+              Staff Portal
             </a>
           </div>
         </div>
