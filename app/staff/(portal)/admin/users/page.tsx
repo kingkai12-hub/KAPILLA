@@ -119,6 +119,7 @@ export default function UserManagement() {
           onClick={() => {
             setNewUserMode(true);
             setEditingUser(null);
+            setIsSubmitting(false);
             setFormData({ 
               name: '', 
               email: '', 

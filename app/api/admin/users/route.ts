@@ -36,7 +36,14 @@ export async function POST(req: Request) {
 
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
+    }
+
+    if (workId) {
+      const existingWorkId = await db.user.findUnique({ where: { workId } });
+      if (existingWorkId) {
+        return NextResponse.json({ error: 'Work ID already exists' }, { status: 409 });
+      }
     }
 
     const newUser = await db.user.create({
@@ -54,6 +61,9 @@ export async function POST(req: Request) {
     return NextResponse.json(userWithoutPassword);
   } catch (error: any) {
     console.error('Create User Error:', error);
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
+    }
     return NextResponse.json({ 
       error: 'Failed to create user', 
       details: error.message || 'Unknown error' 
