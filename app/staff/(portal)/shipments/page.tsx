@@ -281,14 +281,16 @@ export default function ShipmentsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Edit Status - New */}
-                        <button
-                          onClick={() => openStatusModal(shipment)}
-                          title="Edit Shipment Status"
-                          className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {/* Edit Status - New (Disabled if Delivered) */}
+                        {shipment.currentStatus !== 'DELIVERED' && (
+                          <button
+                            onClick={() => openStatusModal(shipment)}
+                            title="Edit Shipment Status"
+                            className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
 
                         {/* Add Location Scan */}
                         <Link

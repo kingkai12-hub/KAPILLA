@@ -105,6 +105,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
     }
 
+    if (shipment.currentStatus === 'DELIVERED') {
+      return NextResponse.json({ error: 'Shipment is already delivered and cannot be edited' }, { status: 400 });
+    }
+
     const updateData: any = { currentStatus: status };
     if (status === 'DELIVERED') {
       if (signature) updateData.receiverSignature = signature;
