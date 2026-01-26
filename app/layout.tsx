@@ -41,6 +41,8 @@ export const metadata: Metadata = {
   },
 };
 
+// Deployment trigger: v2
+
 export default function RootLayout({
   children,
 }: {
