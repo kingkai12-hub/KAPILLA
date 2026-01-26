@@ -51,12 +51,16 @@ export default function UserManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     const isEdit = !!editingUser;
     const url = '/api/admin/users';
     const method = isEdit ? 'PUT' : 'POST';
     const body = isEdit ? { ...formData, id: editingUser.id } : formData;
 
     try {
+      console.log('Submitting user data:', body);
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -64,16 +68,21 @@ export default function UserManagement() {
       });
 
       if (res.ok) {
-        fetchUsers();
+        await fetchUsers();
         setNewUserMode(false);
         setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '' });
+        setFormData({ name: '', email: '', password: '', role: 'STAFF' });
+        alert(isEdit ? 'User updated successfully' : 'User created successfully');
       } else {
         const data = await res.json();
+        console.error('Submission failed:', data);
         alert(data.error || 'Operation failed');
       }
     } catch (error) {
-      alert('Network error');
+      console.error('Network error:', error);
+      alert('Network error - please check your connection');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -190,8 +199,19 @@ export default function UserManagement() {
                 </select>
               </div>
               <div className="pt-4">
-                <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                  {editingUser ? 'Update User' : 'Create User'}
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {editingUser ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    editingUser ? 'Update User' : 'Create User'
+                  )}
                 </button>
               </div>
             </form>

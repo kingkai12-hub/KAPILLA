@@ -28,7 +28,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, workId, phoneNumber } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
@@ -44,7 +44,9 @@ export async function POST(req: Request) {
         name,
         email,
         password, // In production, hash this!
-        role: role || 'STAFF'
+        role: role || 'STAFF',
+        workId: workId || null,
+        phoneNumber: phoneNumber || null
       }
     });
 
