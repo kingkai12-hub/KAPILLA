@@ -185,7 +185,23 @@ function UpdateTrackingContent() {
                          <span className="text-red-400 text-xs">Unverified</span>
                     ) : null}
                 </div>
+              
+                {/* Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul className="absolute z-50 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-60 overflow-y-auto mt-1 divide-y divide-slate-100 dark:divide-slate-700 top-full left-0">
+                      {suggestions.map((place) => (
+                          <li 
+                              key={place}
+                              onMouseDown={() => handleSuggestionClick(place)}
+                              className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer text-sm text-slate-700 dark:text-slate-300 transition-colors"
+                          >
+                              {place}
+                          </li>
+                      ))}
+                  </ul>
+                )}
               </div>
+
               <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania. System will verify coordinates automatically.</p>
             </div>
           </div>
