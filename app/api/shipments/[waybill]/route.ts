@@ -87,3 +87,48 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ waybill: string }> }
+) {
+  try {
+    const { waybill } = await params;
+    const body = await req.json();
+    const { status, signature, receivedBy } = body;
+
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybill },
+    });
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
+    const updateData: any = { currentStatus: status };
+    if (status === 'DELIVERED') {
+      if (signature) updateData.receiverSignature = signature;
+      if (receivedBy) updateData.receivedBy = receivedBy;
+    }
+
+    // Create a tracking event for the status change
+    await db.trackingEvent.create({
+      data: {
+        shipmentId: shipment.id,
+        status: status,
+        location: 'Admin Update', // Or pass this if needed
+        remarks: `Status updated to ${status}`
+      }
+    });
+
+    const updatedShipment = await db.shipment.update({
+      where: { waybillNumber: waybill },
+      data: updateData
+    });
+
+    return NextResponse.json(updatedShipment);
+  } catch (error) {
+    console.error('[PATCH_SHIPMENT]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

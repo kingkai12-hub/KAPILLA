@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine, Edit, X } from 'lucide-react';
 import Link from 'next/link';
+import SignatureCanvas from 'react-signature-canvas';
 
 export default function ShipmentsPage() {
   const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [userRole, setUserRole] = useState<string>('');
+
+  // Status Edit State
+  const [editingStatusShipment, setEditingStatusShipment] = useState<any>(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [receivedBy, setReceivedBy] = useState('');
+  const sigCanvas = useRef<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchShipments();
@@ -52,6 +60,62 @@ export default function ShipmentsPage() {
     }
   };
 
+  const handleUpdateStatus = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStatusShipment) return;
+    setIsSubmitting(true);
+
+    let signatureData = null;
+    if (newStatus === 'DELIVERED') {
+        if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+            signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+        } else if (!editingStatusShipment.receiverSignature) {
+             alert('Please provide a signature');
+             setIsSubmitting(false);
+             return;
+        }
+        
+        if (!receivedBy && !editingStatusShipment.receivedBy) {
+             alert('Please enter receiver name');
+             setIsSubmitting(false);
+             return;
+        }
+    }
+
+    try {
+        const res = await fetch(`/api/shipments/${editingStatusShipment.waybillNumber}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                status: newStatus,
+                signature: signatureData,
+                receivedBy: receivedBy || editingStatusShipment.receivedBy
+            })
+        });
+
+        if (res.ok) {
+            setEditingStatusShipment(null);
+            fetchShipments();
+            setReceivedBy('');
+            setNewStatus('');
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Failed to update status');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error updating status');
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const openStatusModal = (shipment: any) => {
+    setEditingStatusShipment(shipment);
+    setNewStatus(shipment.currentStatus);
+    setReceivedBy(shipment.receivedBy || '');
+  };
+
   const filteredShipments = shipments.filter(s => 
     s.waybillNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,6 +124,83 @@ export default function ShipmentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Status Edit Modal */}
+      {editingStatusShipment && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+              <h3 className="font-bold text-lg dark:text-white">Update Status</h3>
+              <button 
+                onClick={() => setEditingStatusShipment(null)}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                >
+                  <option value="PENDING">PENDING</option>
+                  <option value="IN_TRANSIT">IN_TRANSIT</option>
+                  <option value="DELIVERED">DELIVERED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </div>
+
+              {newStatus === 'DELIVERED' && (
+                <div className="space-y-4 animate-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Received By</label>
+                    <input
+                      type="text"
+                      value={receivedBy}
+                      onChange={(e) => setReceivedBy(e.target.value)}
+                      className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                      placeholder="Receiver's Name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Signature</label>
+                    <div className="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white">
+                      <SignatureCanvas 
+                        ref={sigCanvas}
+                        penColor="black"
+                        canvasProps={{width: 350, height: 150, className: 'signature-canvas'}} 
+                      />
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => sigCanvas.current?.clear()}
+                      className="text-xs text-red-500 mt-1 hover:underline"
+                    >
+                      Clear Signature
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Updating...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Shipments</h1>
@@ -140,10 +281,19 @@ export default function ShipmentsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Update Status */}
+                        {/* Edit Status - New */}
+                        <button
+                          onClick={() => openStatusModal(shipment)}
+                          title="Edit Shipment Status"
+                          className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+
+                        {/* Add Location Scan */}
                         <Link
                           href={`/staff/tracking/update?waybill=${shipment.waybillNumber}`}
-                          title="Update Status"
+                          title="Add Tracking Scan"
                           className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
                         >
                           <ScanLine className="w-4 h-4" />

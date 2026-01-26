@@ -46,12 +46,9 @@ export async function POST(req: Request) {
     }
 
     // Prepare update data
-    const shipmentUpdateData: any = { currentStatus: status };
-    if (status === 'DELIVERED') {
-      if (signature) shipmentUpdateData.receiverSignature = signature;
-      if (receivedBy) shipmentUpdateData.receivedBy = receivedBy;
-    }
-
+    // We NO LONGER update the shipment status here based on user request.
+    // "only update of cargo stuatus can be made in a shipment and not in atracking"
+    
     // Transaction operations
     const operations: any[] = [
       db.trackingEvent.create({
@@ -61,10 +58,6 @@ export async function POST(req: Request) {
           location,
           remarks
         }
-      }),
-      db.shipment.update({
-        where: { id: shipment.id },
-        data: shipmentUpdateData
       })
     ];
 

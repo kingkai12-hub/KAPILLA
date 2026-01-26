@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { ScanLine, Save, RotateCcw, PenTool, Printer, CheckCircle, MapPin, Navigation } from 'lucide-react';
-import SignatureCanvas from 'react-signature-canvas';
+import React, { useState, useEffect, Suspense } from 'react';
+import { ScanLine, MapPin, Navigation, Save } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { locationCoords } from '@/lib/locations';
 
@@ -17,11 +16,12 @@ function UpdateTrackingContent() {
     }
   }, [searchParams]);
 
-  const [status, setStatus] = useState('IN_TRANSIT');
+  // Status is always IN_TRANSIT for tracking updates
+  const status = 'IN_TRANSIT'; 
+  
   const [location, setLocation] = useState('Dar es Salaam Hub');
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(locationCoords['Dar es Salaam'] || null);
   const [remarks, setRemarks] = useState('');
-  const [receivedBy, setReceivedBy] = useState('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
   // Update coords when location changes if it matches a known location
@@ -44,10 +44,6 @@ function UpdateTrackingContent() {
       }
   };
 
-  // Signature State
-  const sigCanvas = useRef<any>(null);
-  const [signature, setSignature] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleScan = async (e: React.FormEvent) => {
@@ -59,23 +55,6 @@ function UpdateTrackingContent() {
 
     setLoading(true);
 
-    let signatureData = null;
-    if (status === 'DELIVERED') {
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
-      } else {
-        alert('Please provide a signature for delivery.');
-        setLoading(false);
-        return;
-      }
-      
-      if (!receivedBy.trim()) {
-        alert('Please enter the name of the receiver.');
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
       const res = await fetch('/api/tracking', {
         method: 'POST',
@@ -86,9 +65,7 @@ function UpdateTrackingContent() {
           location,
           latitude: coords?.lat,
           longitude: coords?.lng,
-          remarks,
-          receivedBy: status === 'DELIVERED' ? receivedBy : undefined,
-          signature: signatureData
+          remarks
         }),
       });
 
@@ -104,15 +81,7 @@ function UpdateTrackingContent() {
         setRecentScans([newScan, ...recentScans]);
         setWaybill(''); // Clear for next scan
         setRemarks('');
-        setReceivedBy('');
-        if (sigCanvas.current) sigCanvas.current.clear();
-
-        if (status === 'DELIVERED') {
-          setShowSuccessModal(true);
-          setStatus('IN_TRANSIT'); // Reset to hide signature section
-        } else {
-            alert('Status updated successfully!');
-        }
+        alert('Tracking update added successfully!');
       } else {
         const errorData = await res.json();
         alert(`Error: ${errorData.error || 'Failed to update'}`);
@@ -125,15 +94,11 @@ function UpdateTrackingContent() {
     }
   };
 
-  const clearSignature = () => {
-    if (sigCanvas.current) sigCanvas.current.clear();
-  };
-
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white text-slate-900 tracking-tight">Update Tracking</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Scan or enter waybill to update shipment status.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white text-slate-900 tracking-tight">Add Tracking Scan</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Scan or enter waybill to add a location update.</p>
       </div>
 
       <div className="bg-white dark:bg-slate-800 shadow-xl rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
@@ -158,21 +123,7 @@ function UpdateTrackingContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Status Select */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">New Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              >
-                <option value="PENDING">Pending</option>
-                <option value="IN_TRANSIT">In Transit</option>
-                <option value="DELIVERED">Delivered</option>
-              </select>
-            </div>
-
+          <div className="grid grid-cols-1 gap-6">
             {/* Location Input */}
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Current Location</label>
@@ -225,51 +176,6 @@ function UpdateTrackingContent() {
               </div>
           </div>
 
-          {/* Receiver Info & Signature (Only visible if Delivered) */}
-          {status === 'DELIVERED' && (
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-              
-              {/* Receiver Name */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Received By (Name)</label>
-                <input
-                  type="text"
-                  value={receivedBy}
-                  onChange={(e) => setReceivedBy(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
-                  className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter receiver's name"
-                  required={status === 'DELIVERED'}
-                />
-              </div>
-
-              <div className="flex justify-between items-center mb-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
-                  <PenTool className="w-4 h-4" />
-                  Receiver Signature
-                </label>
-                <button
-                  type="button"
-                  onClick={clearSignature}
-                  className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  Clear
-                </button>
-              </div>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 overflow-hidden cursor-crosshair">
-                <SignatureCanvas 
-                  ref={sigCanvas}
-                  penColor="black"
-                  canvasProps={{
-                    className: 'signature-canvas w-full h-40'
-                  }} 
-                  backgroundColor="transparent"
-                />
-              </div>
-              <p className="text-xs text-slate-500 mt-2">Sign above to confirm receipt.</p>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
@@ -285,7 +191,7 @@ function UpdateTrackingContent() {
             ) : (
               <>
                 <Save className="mr-2 h-5 w-5" />
-                Update Status
+                Add Tracking Scan
               </>
             )}
           </button>
@@ -307,22 +213,9 @@ function UpdateTrackingContent() {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{scan.location}</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                      scan.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                      scan.status === 'IN_TRANSIT' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-slate-100 text-slate-700">
                       {scan.status.replace(/_/g, ' ')}
                     </span>
-                    {scan.status === 'DELIVERED' && (
-                      <button
-                        onClick={() => window.open(`/staff/shipments/${scan.waybill}/pod`, '_blank')}
-                        className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors"
-                        title="Print Proof of Delivery"
-                      >
-                        <Printer className="w-4 h-4" />
-                      </button>
-                    )}
                   </div>
                 </div>
                 <div className="mt-1 flex justify-between items-center text-xs text-slate-400">
@@ -331,27 +224,6 @@ function UpdateTrackingContent() {
               </li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
-            </div>
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Congratulations!</h2>
-            <p className="text-slate-600 dark:text-slate-300">
-              Shipment has been successfully delivered and signed for.
-            </p>
-            <button
-              onClick={() => setShowSuccessModal(false)}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
-            >
-              Close
-            </button>
-          </div>
         </div>
       )}
     </div>
