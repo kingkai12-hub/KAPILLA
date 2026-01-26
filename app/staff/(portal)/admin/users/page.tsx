@@ -8,6 +8,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [newUserMode, setNewUserMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -92,10 +93,14 @@ export default function UserManagement() {
       name: user.name || '',
       email: user.email,
       password: '', // Leave blank to keep existing
-      role: user.role
+      role: user.role || 'STAFF',
+      workId: user.workId || '',
+      phoneNumber: user.phoneNumber || ''
     });
     setNewUserMode(true);
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="space-y-6">
