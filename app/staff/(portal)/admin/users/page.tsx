@@ -135,7 +135,7 @@ export default function UserManagement() {
                 <input
                   type="text"
                   required
-                  value={formData.name}
+                  value={formData.name || ''}
                   onChange={e => setFormData({...formData, name: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                 />
@@ -144,7 +144,7 @@ export default function UserManagement() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Work ID</label>
                 <input
                   type="text"
-                  value={formData.workId}
+                  value={formData.workId || ''}
                   onChange={e => setFormData({...formData, workId: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   placeholder="EMP-001"
@@ -154,7 +154,7 @@ export default function UserManagement() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
                 <input
                   type="text"
-                  value={formData.phoneNumber}
+                  value={formData.phoneNumber || ''}
                   onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10)})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   placeholder="0xxxxxxxxx"
@@ -165,7 +165,7 @@ export default function UserManagement() {
                 <input
                   type="email"
                   required
-                  value={formData.email}
+                  value={formData.email || ''}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   disabled={!!editingUser} // Prevent email change for simplicity
@@ -178,7 +178,7 @@ export default function UserManagement() {
                 <input
                   type="password"
                   required={!editingUser}
-                  value={formData.password}
+                  value={formData.password || ''}
                   onChange={e => setFormData({...formData, password: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                   placeholder={editingUser ? "Leave blank to keep current" : ""}
@@ -187,7 +187,7 @@ export default function UserManagement() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
                 <select
-                  value={formData.role}
+                  value={formData.role || 'STAFF'}
                   onChange={e => setFormData({...formData, role: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
                 >
