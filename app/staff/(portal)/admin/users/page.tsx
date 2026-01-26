@@ -9,6 +9,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [newUserMode, setNewUserMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ export default function UserManagement() {
   });
 
   useEffect(() => {
+    setIsMounted(true);
     fetchUsers();
   }, []);
 
