@@ -340,25 +340,25 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Features Grid */}
-      <section className="py-24 bg-white">
+      <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Why Kapilla Group?</h2>
-            <p className="text-slate-600">We don't just move boxes; we deliver promises. Experience logistics re-imagined for the modern world.</p>
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Why Kapilla Group?</h2>
+            <p className="text-slate-600 text-sm">We don't just move boxes; we deliver promises. Experience logistics re-imagined for the modern world.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-4">
             {[
               { icon: Globe, title: 'Global Network', desc: 'Seamless shipping to over 200 countries with integrated customs handling.' },
               { icon: Clock, title: 'Real-Time Tracking', desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates.' },
               { icon: Truck, title: 'Express Fleet', desc: 'From bikes to cargo planes, we have the right vehicle for every speed.' },
             ].map((feature, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-7 h-7 text-blue-600" />
+              <div key={i} className="p-5 rounded-2xl bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <feature.icon className="w-5 h-5 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{feature.desc}</p>
+                <h3 className="text-base font-bold text-slate-900 mb-1">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-xs">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -366,17 +366,17 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
+      <footer className="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8">
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-6">
-              <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain brightness-0 invert" />
-              <span className="text-lg font-bold text-white tracking-tight">Kapilla<span className="text-blue-500">Group</span></span>
+            <div className="flex items-center gap-2 mb-4">
+              <img src="/logo.png" alt="Kapilla Logo" className="w-8 h-8 object-contain brightness-0 invert" />
+              <span className="text-base font-bold text-white tracking-tight">Kapilla<span className="text-blue-500">Group</span></span>
             </div>
-            <p className="max-w-xs text-sm leading-relaxed mb-6">
+            <p className="max-w-xs text-xs leading-relaxed mb-4">
               Setting the standard for modern logistics in East Africa and beyond. Fast, Secure, Reliable.
             </p>
-            <div className="text-sm">© 2026 Kapilla Group Ltd.</div>
+            <div className="text-xs">© 2026 Kapilla Group Ltd.</div>
             <div className="mt-4 text-[10px] font-mono text-slate-500 font-bold tracking-wider">DEVELOPED BY KAISI</div>
           </div>
           <div>
