@@ -79,17 +79,26 @@ export default function LeafletMap({
 
     const fetchRoute = async () => {
       try {
-        // OSRM Public Demo API (Use lon,lat)
-        const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${startPoint.lng},${startPoint.lat};${endPoint.lng},${endPoint.lat}?overview=full&geometries=geojson`
-        );
+        let url = '';
+        if (currentLocation) {
+            // Fetch route with intermediate waypoint: Start -> Current -> End
+            url = `https://router.project-osrm.org/route/v1/driving/${startPoint.lng},${startPoint.lat};${currentLocation.lng},${currentLocation.lat};${endPoint.lng},${endPoint.lat}?overview=full&geometries=geojson`;
+        } else {
+            // Fetch direct route: Start -> End
+            url = `https://router.project-osrm.org/route/v1/driving/${startPoint.lng},${startPoint.lat};${endPoint.lng},${endPoint.lat}?overview=full&geometries=geojson`;
+        }
+
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.routes && data.routes[0]) {
           const coordinates = data.routes[0].geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
           
           if (currentLocation) {
-             // Find closest point on route to current location
+             // If we used a waypoint, the route is guaranteed to pass through/near current location.
+             // We can find the closest point (which should be very close) to split.
+             // Or, simpler: we know the route has 2 legs (Start->Current, Current->End) but OSRM geojson is usually merged.
+             // Let's stick to the distance split, which is robust for the returned geometry.
              let minDist = Infinity;
              let splitIndex = 0;
              
@@ -106,9 +115,6 @@ export default function LeafletMap({
                 remaining: coordinates.slice(splitIndex)
              });
           } else {
-             // No current location (e.g. Pending), assume all remaining or handled by status logic upstream.
-             // But usually if we track, we have a current location. If not, show full route as remaining?
-             // Or show nothing? Let's show full route as remaining for now.
              setRouteSegments({
                 traveled: [],
                 remaining: coordinates
