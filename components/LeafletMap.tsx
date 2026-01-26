@@ -69,6 +69,71 @@ export default function LeafletMap({
     });
   }, []);
 
+  const [routeSegments, setRouteSegments] = useState<{
+    traveled: [number, number][];
+    remaining: [number, number][];
+  }>({ traveled: [], remaining: [] });
+
+  useEffect(() => {
+    if (!startPoint || !endPoint) return;
+
+    const fetchRoute = async () => {
+      try {
+        // OSRM Public Demo API (Use lon,lat)
+        const response = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${startPoint.lng},${startPoint.lat};${endPoint.lng},${endPoint.lat}?overview=full&geometries=geojson`
+        );
+        const data = await response.json();
+        
+        if (data.routes && data.routes[0]) {
+          const coordinates = data.routes[0].geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+          
+          if (currentLocation) {
+             // Find closest point on route to current location
+             let minDist = Infinity;
+             let splitIndex = 0;
+             
+             coordinates.forEach((coord: [number, number], index: number) => {
+                const dist = Math.pow(coord[0] - currentLocation.lat, 2) + Math.pow(coord[1] - currentLocation.lng, 2);
+                if (dist < minDist) {
+                    minDist = dist;
+                    splitIndex = index;
+                }
+             });
+
+             setRouteSegments({
+                traveled: coordinates.slice(0, splitIndex + 1),
+                remaining: coordinates.slice(splitIndex)
+             });
+          } else {
+             // No current location (e.g. Pending), assume all remaining or handled by status logic upstream.
+             // But usually if we track, we have a current location. If not, show full route as remaining?
+             // Or show nothing? Let's show full route as remaining for now.
+             setRouteSegments({
+                traveled: [],
+                remaining: coordinates
+             });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch route:", error);
+        // Fallback to straight lines if API fails
+        if (currentLocation) {
+            setRouteSegments({
+                traveled: [[startPoint.lat, startPoint.lng], [currentLocation.lat, currentLocation.lng]],
+                remaining: [[currentLocation.lat, currentLocation.lng], [endPoint.lat, endPoint.lng]]
+            });
+        }
+      }
+    };
+
+    fetchRoute();
+  }, [startPoint, endPoint, currentLocation]);
+
+  // Use internal route segments if available, otherwise fall back to props
+  const finalTraveled = routeSegments.traveled.length > 0 ? routeSegments.traveled : routePath;
+  const finalRemaining = routeSegments.remaining.length > 0 ? routeSegments.remaining : remainingPath;
+
   const truckIcon = L.icon({
     iconUrl: truckIconUrl,
     iconSize: [40, 40],
@@ -100,7 +165,7 @@ export default function LeafletMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapUpdater center={center} zoom={zoom} routePath={routePath} remainingPath={remainingPath} />
+      <MapUpdater center={center} zoom={zoom} routePath={finalTraveled} remainingPath={finalRemaining} />
 
       {startPoint && (
         <Marker position={[startPoint.lat, startPoint.lng]} icon={defaultIcon}>
@@ -136,18 +201,18 @@ export default function LeafletMap({
         </Marker>
       ))}
 
-      {routePath.length > 0 && (
+      {finalTraveled.length > 0 && (
         <Polyline 
-          positions={routePath} 
+          positions={finalTraveled} 
           color="#2563eb" 
           weight={5} 
           opacity={0.8} 
         />
       )}
 
-      {remainingPath && remainingPath.length > 0 && (
+      {finalRemaining.length > 0 && (
         <Polyline 
-          positions={remainingPath} 
+          positions={finalRemaining} 
           color="#94a3b8" 
           weight={5} 
           opacity={0.5} 
