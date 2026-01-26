@@ -13,6 +13,7 @@ export async function GET() {
         role: true,
         workId: true,
         phoneNumber: true,
+        lastActive: true,
         createdAt: true,
         // Exclude password
       }

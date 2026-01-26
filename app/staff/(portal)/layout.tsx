@@ -71,6 +71,27 @@ export default function StaffPortalLayout({
 
   }, [router]);
 
+  // Heartbeat Effect
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/auth/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
+      } catch (error) {
+        console.error("Heartbeat failed", error);
+      }
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 60000); // 1 minute
+    return () => clearInterval(interval);
+  }, [user]);
+
   const handleLogout = () => {
     localStorage.removeItem('kapilla_user');
     router.push('/staff/login');

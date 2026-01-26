@@ -206,6 +206,7 @@ export default function UserManagement() {
             <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Created</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
@@ -231,6 +232,19 @@ export default function UserManagement() {
                           {user.phoneNumber && <div className="text-xs text-slate-500 mt-0.5">{user.phoneNumber}</div>}
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {(() => {
+                        const isOnline = user.lastActive && (new Date().getTime() - new Date(user.lastActive).getTime() < 2 * 60 * 1000);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
+                            <span className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-slate-400'}`}>
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${

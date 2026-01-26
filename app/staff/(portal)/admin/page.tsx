@@ -2,6 +2,8 @@ import React from 'react';
 import { Users, DollarSign, TrendingUp, Package } from 'lucide-react';
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
   // Fetch real stats
   const totalShipments = await db.shipment.count();

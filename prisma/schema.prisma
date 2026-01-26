@@ -19,6 +19,7 @@ model User {
   workId    String?  @unique // Employee ID
   phoneNumber String?
   image     String?  // Base64 or URL
+  lastActive DateTime? // Track online status
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
