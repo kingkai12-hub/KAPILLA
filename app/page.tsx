@@ -69,31 +69,31 @@ export default function Home() {
         <SearchParamsHandler onSearch={performSearch} />
       </Suspense>
       {/* Navigation */}
-      <nav className="absolute w-full z-10 px-6 py-6">
+      <nav className="absolute w-full z-10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-1 rounded-lg shadow-sm">
-              <img src="/logo.png" alt="Kapilla Logo" className="w-14 h-14 object-contain" />
+              <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain" />
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">Kapilla<span className="text-blue-600">Group</span></span>
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla<span className="text-blue-600">Group</span></span>
           </div>
-          <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
+          <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <a href="#" className="hover:text-blue-600 transition-colors">Services</a>
             <a href="#" className="hover:text-blue-600 transition-colors">Network</a>
             <a href="#" className="hover:text-blue-600 transition-colors">About</a>
             <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               onClick={() => setIsPickupModalOpen(true)}
-              className="px-5 py-2.5 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              className="px-4 py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
             >
-              <Truck className="w-4 h-4" />
+              <Truck className="w-3.5 h-3.5" />
               Request Pickup
             </button>
             <a 
               href="/staff/login"
-              className="px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+              className="px-4 py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Staff Portal
             </a>
@@ -102,7 +102,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-12 lg:pt-32 lg:pb-20 overflow-hidden">
+      <section className="relative pt-20 pb-8 lg:pt-28 lg:pb-16 overflow-hidden">
         {/* Background Blobs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-100/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-yellow-50/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
@@ -113,14 +113,14 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wide mb-4">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-semibold uppercase tracking-wide mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
               Global Logistics Partner
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-4">
+            <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
               Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Trusted Partner</span>
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+            <p className="text-base text-slate-600 max-w-xl mx-auto mb-6">
               Experience the next generation of logistics. Real-time tracking, global reach, and unmatched reliability for your business needs.
             </p>
           </motion.div>
@@ -130,27 +130,27 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="max-w-xl mx-auto relative z-20"
+            className="max-w-lg mx-auto relative z-20"
           >
             <form onSubmit={handleSearch} className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative flex items-center bg-white rounded-xl shadow-xl p-2 pr-2.5">
-                <div className="pl-4 pr-3 text-slate-400">
-                  <Package className="w-6 h-6" />
+              <div className="relative flex items-center bg-white rounded-xl shadow-xl p-1.5 pr-2">
+                <div className="pl-3 pr-2 text-slate-400">
+                  <Package className="w-5 h-5" />
                 </div>
                 <input
                   type="text"
                   value={waybill}
                   onChange={(e) => setWaybill(e.target.value)}
                   placeholder="Enter Waybill Number (e.g., KPL-8829)"
-                  className="flex-1 py-4 bg-transparent text-lg font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 py-3 bg-transparent text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-lg transition-all duration-200 shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg transition-all duration-200 shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                 </button>
               </div>
             </form>
@@ -167,29 +167,29 @@ export default function Home() {
             exit={{ opacity: 0, height: 0 }}
             className="bg-white border-y border-slate-100 shadow-[inset_0_4px_20px_-12px_rgba(0,0,0,0.1)]"
           >
-            <div className="max-w-4xl mx-auto px-6 py-16">
+            <div className="max-w-4xl mx-auto px-6 py-10">
               {!searchResult ? (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4">
-                    <Package className="w-8 h-8 text-red-500" />
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
+                    <Package className="w-7 h-7 text-red-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Shipment Not Found</h3>
-                  <p className="text-slate-500 mt-2">
+                  <h3 className="text-lg font-bold text-slate-900">Shipment Not Found</h3>
+                  <p className="text-slate-500 mt-2 text-sm">
                     We couldn't find any shipment with that Waybill Number.
                   </p>
                 </div>
               ) : (
-                  <div className="space-y-12">
+                  <div className="space-y-8">
                     {/* Status Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-slate-100">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                       <div>
-                        <div className="text-sm text-slate-500 font-medium mb-1">Waybill Number</div>
-                        <div className="text-3xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Waybill Number</div>
+                        <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
                       </div>
                       <div className="flex flex-col md:items-end">
-                        <div className="text-sm text-slate-500 font-medium mb-1">Current Status</div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Current Status</div>
                         <div className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm",
+                          "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm",
                           searchResult.currentStatus === 'DELIVERED' ? "bg-green-100 text-green-700" :
                           searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
                           "bg-blue-100 text-blue-700"
@@ -202,25 +202,25 @@ export default function Home() {
                     {/* Route Info */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-1">
-                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Origin</div>
-                        <div className="font-semibold text-slate-900 text-lg">{searchResult.origin}</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Origin</div>
+                        <div className="font-semibold text-slate-900 text-base">{searchResult.origin}</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Destination</div>
-                        <div className="font-semibold text-slate-900 text-lg">{searchResult.destination}</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Destination</div>
+                        <div className="font-semibold text-slate-900 text-base">{searchResult.destination}</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
-                        <div className="font-semibold text-slate-900 text-lg">Oct 24, 2026</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
+                        <div className="font-semibold text-slate-900 text-base">Oct 24, 2026</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Service Type</div>
-                        <div className="font-semibold text-slate-900 text-lg">Standard Ground</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Service Type</div>
+                        <div className="font-semibold text-slate-900 text-base">Standard Ground</div>
                       </div>
                     </div>
 
                     {/* Map Section */}
-                    <div className="w-full h-[320px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                    <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
                        <Map 
                          currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
                            lat: searchResult.trips[0].checkIns[0].latitude,
@@ -380,16 +380,16 @@ export default function Home() {
             <div className="mt-4 text-[10px] font-mono text-slate-500 font-bold tracking-wider">DEVELOPED BY KAISI</div>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="text-white font-semibold mb-3 text-sm">Company</h4>
+            <ul className="space-y-1.5 text-xs">
               <li><a href="#" className="hover:text-blue-400">About Us</a></li>
               <li><a href="#" className="hover:text-blue-400">Careers</a></li>
               <li><a href="#" className="hover:text-blue-400">Press</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Support</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="text-white font-semibold mb-3 text-sm">Support</h4>
+            <ul className="space-y-1.5 text-xs">
               <li><a href="#" className="hover:text-blue-400">Help Center</a></li>
               <li><a href="#" className="hover:text-blue-400">Terms of Service</a></li>
               <li><a href="#" className="hover:text-blue-400">Privacy Policy</a></li>
