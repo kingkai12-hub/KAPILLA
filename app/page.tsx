@@ -222,12 +222,34 @@ export default function Home() {
                     {/* Map Section */}
                     <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
                        <Map 
-                         currentLocation={searchResult.trips?.[0]?.checkIns?.[0] ? {
-                           lat: searchResult.trips[0].checkIns[0].latitude,
-                           lng: searchResult.trips[0].checkIns[0].longitude,
-                           label: searchResult.trips[0].checkIns[0].location,
-                           timestamp: new Date(searchResult.trips[0].checkIns[0].timestamp).toLocaleString()
-                         } : undefined}
+                         currentLocation={
+                           // Prioritize the latest Tracking Event with location if available, otherwise fall back to Trip CheckIns
+                           (() => {
+                               const latestEvent = searchResult.events?.[0]; // Assuming events are ordered desc? If not need to sort.
+                               // Usually events are returned newest first. Let's assume typical sorting or we can check timestamps.
+                               // Actually prisma include events usually doesn't sort by default unless specified. 
+                               // But searchResult likely has logic.
+                               
+                               // Let's look for a valid location in events or checkIns.
+                               // Note: TrackingEvent schema usually doesn't store lat/long unless we added it (we verified it doesn't in schema, but we passed it to API? Wait).
+                               // In the API `app/api/tracking/route.ts`, we saw `db.checkIn.create` using lat/long. 
+                               // So `searchResult.trips[0].checkIns[0]` SHOULD be the latest if the API created a checkIn.
+                               // However, `trips` might not be sorted or `checkIns` might not be sorted by date desc.
+                               
+                               const trip = searchResult.trips?.[0];
+                               const latestCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                               
+                               if (latestCheckIn) {
+                                   return {
+                                       lat: latestCheckIn.latitude,
+                                       lng: latestCheckIn.longitude,
+                                       label: latestCheckIn.location,
+                                       timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
+                                   };
+                               }
+                               return undefined;
+                           })()
+                         }
                          startPoint={locationCoords[searchResult.origin] ? {
                            ...locationCoords[searchResult.origin],
                            label: searchResult.origin
@@ -238,7 +260,8 @@ export default function Home() {
                          } : undefined}
                          routePath={
                            (() => {
-                             const currentCheckIn = searchResult.trips?.[0]?.checkIns?.[0];
+                             const trip = searchResult.trips?.[0];
+                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                              const originCoords = locationCoords[searchResult.origin];
                              
                              if (!originCoords) return [];
@@ -256,7 +279,8 @@ export default function Home() {
                          }
                          remainingPath={
                            (() => {
-                             const currentCheckIn = searchResult.trips?.[0]?.checkIns?.[0];
+                             const trip = searchResult.trips?.[0];
+                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                              const originCoords = locationCoords[searchResult.origin];
                              const destinationCoords = locationCoords[searchResult.destination];
                              
@@ -275,11 +299,13 @@ export default function Home() {
                              ];
                            })()
                          }
-                         center={searchResult.trips?.[0]?.checkIns?.[0] ? [
-                           searchResult.trips[0].checkIns[0].latitude, 
-                           searchResult.trips[0].checkIns[0].longitude
-                         ] : [-6.3690, 34.8888]}
-                         zoom={searchResult.trips?.[0]?.checkIns?.[0] ? 10 : 6}
+                         center={(() => {
+                             const trip = searchResult.trips?.[0];
+                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                             if (currentCheckIn) return [currentCheckIn.latitude, currentCheckIn.longitude];
+                             return [-6.3690, 34.8888];
+                         })()}
+                         zoom={searchResult.trips?.[0]?.checkIns?.length > 0 ? 10 : 6}
                        />
                     </div>
 

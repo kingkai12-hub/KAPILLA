@@ -120,16 +120,25 @@ function UpdateTrackingContent() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MapPin className="h-5 w-5 text-slate-400" />
                 </div>
-                <select
+                <input
+                  type="text"
                   value={location}
                   onChange={handleLocationChange}
-                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
-                >
-                    {Object.keys(locationCoords).map(city => (
-                        <option key={city} value={city}>{city}</option>
-                    ))}
-                </select>
+                  onBlur={handleLocationBlur}
+                  className={`block w-full py-3 px-4 pl-10 border ${!coords && location ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-500'} dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:border-transparent transition-all`}
+                  placeholder="Enter village, town, or city in Tanzania..."
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    {isSearchingLocation ? (
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    ) : coords ? (
+                        <span className="text-green-500 text-xs font-bold">Verified</span>
+                    ) : location ? (
+                         <span className="text-red-400 text-xs">Unverified</span>
+                    ) : null}
+                </div>
               </div>
+              <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania. System will verify coordinates automatically.</p>
             </div>
           </div>
 

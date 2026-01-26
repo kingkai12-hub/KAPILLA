@@ -49,6 +49,15 @@ export async function POST(req: Request) {
     // We NO LONGER update the shipment status here based on user request.
     // "only update of cargo stuatus can be made in a shipment and not in atracking"
     
+    // EXCEPTION: If the shipment is currently PENDING, a tracking update means it has started moving.
+    // So we auto-transition it to IN_TRANSIT to avoid it being "stuck" in PENDING on the map.
+    if (shipment.currentStatus === 'PENDING') {
+        await db.shipment.update({
+            where: { id: shipment.id },
+            data: { currentStatus: 'IN_TRANSIT' }
+        });
+    }
+
     // Transaction operations
     const operations: any[] = [
       db.trackingEvent.create({
