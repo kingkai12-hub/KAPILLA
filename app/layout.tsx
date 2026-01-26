@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import RefreshHandler from '@/components/RefreshHandler';
+import IdleLogout from '@/components/IdleLogout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -55,6 +56,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <RefreshHandler />
+          <IdleLogout />
           {children}
         </ThemeProvider>
       </body>
