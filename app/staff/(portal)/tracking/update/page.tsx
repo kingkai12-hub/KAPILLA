@@ -24,12 +24,55 @@ function UpdateTrackingContent() {
   const [remarks, setRemarks] = useState('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  
+  const verifyLocation = async (query: string) => {
+    if (!query) return;
+    
+    // Check hardcoded first
+    if (locationCoords[query]) {
+        setCoords(locationCoords[query]);
+        return;
+    }
+
+    setIsSearchingLocation(true);
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tz&limit=1`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+            setCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        } else {
+            setCoords(null); // Invalid
+        }
+    } catch (e) {
+        console.error("Location verification failed", e);
+        setCoords(null);
+    } finally {
+        setIsSearchingLocation(false);
+    }
+  };
+
+  const handleLocationBlur = () => {
+      verifyLocation(location);
+  };
+
   // Update coords when location changes if it matches a known location
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;
     setLocation(newLocation);
+    
+    // If empty, clear coords
+    if (!newLocation) {
+        setCoords(null);
+        return;
+    }
+
+    // Check hardcoded immediately for better UX
     if (locationCoords[newLocation]) {
         setCoords(locationCoords[newLocation]);
+    } else {
+        // Otherwise mark as unverified until blur/search
+        setCoords(null); 
     }
   };
 
@@ -40,6 +83,11 @@ function UpdateTrackingContent() {
     if (!waybill) {
       alert('Please enter a Waybill Number.');
       return;
+    }
+
+    if (!coords) {
+        alert('Please enter a valid location in Tanzania. We need to verify the location to update the map.');
+        return;
     }
 
     setLoading(true);
