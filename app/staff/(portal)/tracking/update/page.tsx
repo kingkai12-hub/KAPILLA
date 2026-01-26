@@ -25,6 +25,8 @@ function UpdateTrackingContent() {
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   const verifyLocation = async (query: string) => {
     if (!query) return;
@@ -53,13 +55,36 @@ function UpdateTrackingContent() {
   };
 
   const handleLocationBlur = () => {
-      verifyLocation(location);
+      // Small delay to allow click on suggestion to fire
+      setTimeout(() => {
+        setShowSuggestions(false);
+        verifyLocation(location);
+      }, 200);
+  };
+
+  const handleSuggestionClick = (place: string) => {
+    setLocation(place);
+    setShowSuggestions(false);
+    if (locationCoords[place]) {
+        setCoords(locationCoords[place]);
+    }
   };
 
   // Update coords when location changes if it matches a known location
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;
     setLocation(newLocation);
+    
+    if (newLocation) {
+        const filtered = Object.keys(locationCoords).filter(loc => 
+            loc.toLowerCase().includes(newLocation.toLowerCase())
+        );
+        setSuggestions(filtered);
+        setShowSuggestions(true);
+    } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+    }
     
     // If empty, clear coords
     if (!newLocation) {

@@ -95,7 +95,7 @@ export async function PATCH(
   try {
     const { waybill } = await params;
     const body = await req.json();
-    const { status, signature, receivedBy } = body;
+    const { status, signature, receivedBy, location } = body;
 
     const shipment = await db.shipment.findUnique({
       where: { waybillNumber: waybill },
