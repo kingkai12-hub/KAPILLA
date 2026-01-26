@@ -54,7 +54,11 @@ export default function UserManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    console.log('Form submission started');
+    if (isSubmitting) {
+      console.log('Already submitting, ignoring click');
+      return;
+    }
 
     setIsSubmitting(true);
     const isEdit = !!editingUser;
@@ -115,7 +119,14 @@ export default function UserManagement() {
           onClick={() => {
             setNewUserMode(true);
             setEditingUser(null);
-            setFormData({ name: '', email: '', password: '', role: 'STAFF' });
+            setFormData({ 
+              name: '', 
+              email: '', 
+              password: '', 
+              role: 'STAFF',
+              workId: '',
+              phoneNumber: ''
+            });
           }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
