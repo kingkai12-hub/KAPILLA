@@ -51,12 +51,7 @@ export async function POST(req: Request) {
     
     // EXCEPTION: If the shipment is currently PENDING, a tracking update means it has started moving.
     // So we auto-transition it to IN_TRANSIT to avoid it being "stuck" in PENDING on the map.
-    if (shipment.currentStatus === 'PENDING') {
-        await db.shipment.update({
-            where: { id: shipment.id },
-            data: { currentStatus: 'IN_TRANSIT' }
-        });
-    }
+    // We add this to the transaction operations to ensure consistency.
 
     // Transaction operations
     const operations: any[] = [
@@ -69,6 +64,15 @@ export async function POST(req: Request) {
         }
       })
     ];
+
+    if (shipment.currentStatus === 'PENDING') {
+        operations.push(
+            db.shipment.update({
+                where: { id: shipment.id },
+                data: { currentStatus: 'IN_TRANSIT' }
+            })
+        );
+    }
 
     // Add CheckIn if we have coordinates and a trip
     if (latitude && longitude && tripId) {

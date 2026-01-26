@@ -223,20 +223,10 @@ export default function Home() {
                     <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
                        <Map 
                          currentLocation={
-                           // Prioritize the latest Tracking Event with location if available, otherwise fall back to Trip CheckIns
+                           // Prioritize the latest CheckIn for coordinates
                            (() => {
-                               const latestEvent = searchResult.events?.[0]; // Assuming events are ordered desc? If not need to sort.
-                               // Usually events are returned newest first. Let's assume typical sorting or we can check timestamps.
-                               // Actually prisma include events usually doesn't sort by default unless specified. 
-                               // But searchResult likely has logic.
-                               
-                               // Let's look for a valid location in events or checkIns.
-                               // Note: TrackingEvent schema usually doesn't store lat/long unless we added it (we verified it doesn't in schema, but we passed it to API? Wait).
-                               // In the API `app/api/tracking/route.ts`, we saw `db.checkIn.create` using lat/long. 
-                               // So `searchResult.trips[0].checkIns[0]` SHOULD be the latest if the API created a checkIn.
-                               // However, `trips` might not be sorted or `checkIns` might not be sorted by date desc.
-                               
                                const trip = searchResult.trips?.[0];
+                               // Sort checkIns by timestamp descending to get the latest one
                                const latestCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                                
                                if (latestCheckIn) {
@@ -247,6 +237,8 @@ export default function Home() {
                                        timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
                                    };
                                }
+                               
+                               // Fallback: If no checkIns, maybe use origin? No, leave undefined.
                                return undefined;
                            })()
                          }
