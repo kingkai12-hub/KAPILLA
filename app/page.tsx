@@ -95,7 +95,7 @@ export default function Home() {
               href="/staff/login"
               className="px-4 py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
-              Staff Portal
+              Staff Portal v2.1
             </a>
           </div>
         </div>
@@ -227,7 +227,8 @@ export default function Home() {
                            (() => {
                                const trip = searchResult.trips?.[0];
                                // Sort checkIns by timestamp descending to get the latest one
-                               const latestCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                               const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
+                               const latestCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                                
                                if (latestCheckIn) {
                                    return {
@@ -253,7 +254,8 @@ export default function Home() {
                          routePath={
                            (() => {
                              const trip = searchResult.trips?.[0];
-                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
+                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                              const originCoords = locationCoords[searchResult.origin];
                              
                              if (!originCoords) return [];
@@ -272,7 +274,8 @@ export default function Home() {
                          remainingPath={
                            (() => {
                              const trip = searchResult.trips?.[0];
-                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
+                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                              const originCoords = locationCoords[searchResult.origin];
                              const destinationCoords = locationCoords[searchResult.destination];
                              
@@ -293,7 +296,8 @@ export default function Home() {
                          }
                          center={(() => {
                              const trip = searchResult.trips?.[0];
-                             const currentCheckIn = trip?.checkIns?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
+                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
                              if (currentCheckIn) return [currentCheckIn.latitude, currentCheckIn.longitude];
                              return [-6.3690, 34.8888];
                          })()}
