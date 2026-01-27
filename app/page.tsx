@@ -107,7 +107,7 @@ export default function Home() {
       const originCoords = locationCoords[searchResult.origin];
       const destinationCoords = locationCoords[searchResult.destination];
       
-      const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && typeof latestCheckIn.longitude === 'number') 
+      const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude)) 
          ? {
              lat: latestCheckIn.latitude,
              lng: latestCheckIn.longitude,

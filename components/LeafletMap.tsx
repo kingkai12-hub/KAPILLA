@@ -32,18 +32,29 @@ interface MapProps {
 }
 
 function MapUpdater({ center, zoom, routePath, remainingPath }: { center: [number, number]; zoom: number; routePath?: [number, number][]; remainingPath?: [number, number][] }) {
-  const map = useMap();
-  useEffect(() => {
-    const allPoints = [...(routePath || []), ...(remainingPath || [])];
-    if (allPoints.length > 1) {
-      const bounds = L.latLngBounds(allPoints);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } else {
-      map.setView(center, zoom);
-    }
-  }, [center, zoom, map, routePath, remainingPath]);
-  return null;
-}
+    const map = useMap();
+    useEffect(() => {
+      // Filter out invalid points
+      const validRoutePath = (routePath || []).filter(p => Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && !isNaN(p[0]) && typeof p[1] === 'number' && !isNaN(p[1]));
+      const validRemainingPath = (remainingPath || []).filter(p => Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && !isNaN(p[0]) && typeof p[1] === 'number' && !isNaN(p[1]));
+      
+      const allPoints = [...validRoutePath, ...validRemainingPath];
+      
+      if (allPoints.length > 1) {
+        try {
+          const bounds = L.latLngBounds(allPoints);
+          if (bounds.isValid()) {
+             map.fitBounds(bounds, { padding: [50, 50] });
+          }
+        } catch (e) {
+          console.error("Error fitting bounds:", e);
+        }
+      } else {
+        map.setView(center, zoom);
+      }
+    }, [center, zoom, map, routePath, remainingPath]);
+    return null;
+  }
 
 export default function LeafletMap({ 
   center = [-6.3690, 34.8888], // Tanzania Center
