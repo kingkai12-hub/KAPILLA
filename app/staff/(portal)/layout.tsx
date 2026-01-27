@@ -46,7 +46,9 @@ export default function StaffPortalLayout({
     // Check for session
     const storedUser = localStorage.getItem('kapilla_user');
     if (!storedUser) {
-      router.push('/staff/login');
+      // Redirect to Home Page instead of Login
+      // This ensures that if a staff link is shared with a customer, they land on the customer home page.
+      router.push('/');
     } else {
       setUser(JSON.parse(storedUser));
     }
