@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X } from 'lucide-react';
+import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X, Plane, Ship, FileText, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -471,26 +471,59 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Features Grid */}
-      <section className="py-10 bg-white">
+      {/* Services & Features Grid */}
+      <section className="py-16 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-slate-50/50 skew-y-3 transform origin-bottom-left -z-10" />
+        
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Why Kapilla Group?</h2>
-            <p className="text-slate-600 text-sm">We don't just move boxes; we deliver promises. Experience logistics re-imagined for the modern world.</p>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">
+              Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Global Services</span>
+            </h2>
+            <p className="text-slate-600 text-lg">
+              In the line of our Global Network, Real Tracking, and ADC Express, we now offer a comprehensive suite of logistics solutions tailored to your needs.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Globe, title: 'Global Network', desc: 'Seamless shipping to over 200 countries with integrated customs handling.' },
-              { icon: Clock, title: 'Real-Time Tracking', desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates.' },
-              { icon: Truck, title: 'Express Fleet', desc: 'From bikes to cargo planes, we have the right vehicle for every speed.' },
+              { 
+                icon: Package, 
+                title: 'Courier Services', 
+                desc: 'Fast, reliable delivery for documents and parcels. We ensure your important items reach their destination safely and on time, whether across town or across the globe.' 
+              },
+              { 
+                icon: Truck, 
+                title: 'Transportation Services', 
+                desc: 'Comprehensive multi-modal logistics solutions. From road and rail to air and sea freight, we move your cargo efficiently with our extensive transportation fleet.' 
+              },
+              { 
+                icon: FileText, 
+                title: 'Clearing & Forwarding', 
+                desc: 'Expert customs brokerage and freight forwarding. We navigate complex regulations to ensure smooth border crossings and hassle-free documentation for your shipments.' 
+              },
+              { 
+                icon: Zap, 
+                title: 'ADC Express', 
+                desc: 'Premium express delivery service for your most urgent shipments. Experience lightning-fast transit times with priority handling and dedicated support.' 
+              },
+              { 
+                icon: Clock, 
+                title: 'Real-Time Tracking', 
+                desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates. Get instant visibility into your cargo\'s location and status at every step of the journey.' 
+              },
+              { 
+                icon: Globe, 
+                title: 'Global Network', 
+                desc: 'Seamless shipping to over 200 countries. Leverage our integrated international network and local expertise to expand your business reach worldwide.' 
+              },
             ].map((feature, i) => (
-              <div key={i} className="p-5 rounded-2xl bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-5 h-5 text-blue-600" />
+              <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group hover:-translate-y-1">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 text-blue-600">
+                  <feature.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed text-xs">{feature.desc}</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">{feature.desc}</p>
               </div>
             ))}
           </div>
