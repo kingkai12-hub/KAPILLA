@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function StaffLogin() {
   const [email, setEmail] = useState('');
@@ -28,8 +29,7 @@ export default function StaffLogin() {
         router.push('/staff/dashboard');
       } else {
         const data = await res.json();
-        // Show detailed error if available
-        alert(data.details || data.error || 'Login failed');
+        alert(data.error || 'Login failed');
       }
     } catch (error) {
       console.error(error);
@@ -44,7 +44,7 @@ export default function StaffLogin() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="bg-white p-2 rounded-xl shadow-sm">
-            <img src="/logo.png" alt="Kapilla Logo" className="w-24 h-24 object-contain" />
+            <Image src="/logo.png" alt="Kapilla Logo" width={96} height={96} className="w-24 h-24 object-contain" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

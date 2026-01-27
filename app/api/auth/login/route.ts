@@ -17,7 +17,6 @@ export async function POST(req: Request) {
         
         if (!adminUser) {
           // Create Admin if missing
-          console.log("Auto-Creating Admin User...");
           const newUser = await db.user.create({
             data: {
               email: 'admin@kapilla.com',
@@ -30,7 +29,6 @@ export async function POST(req: Request) {
           return NextResponse.json(userWithoutPassword);
         } else if (adminUser.password !== 'admin123') {
            // Reset Password if wrong
-           console.log("Resetting Admin Password...");
            const updatedUser = await db.user.update({
              where: { email },
              data: { password: 'admin123' }
@@ -61,11 +59,8 @@ export async function POST(req: Request) {
     return NextResponse.json(userWithoutPassword);
   } catch (error: any) {
     console.error('[AUTH_LOGIN]', error);
-    // Return detailed error for debugging (REMOVE IN PRODUCTION AFTER FIX)
     return NextResponse.json({ 
-      error: 'Internal Server Error', 
-      details: error.message,
-      stack: error.stack 
+      error: 'Internal Server Error'
     }, { status: 500 });
   }
 }

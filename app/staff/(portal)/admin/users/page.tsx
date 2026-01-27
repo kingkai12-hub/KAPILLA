@@ -54,9 +54,7 @@ export default function UserManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submission started');
     if (isSubmitting) {
-      console.log('Already submitting, ignoring click');
       return;
     }
 
@@ -67,7 +65,6 @@ export default function UserManagement() {
     const body = isEdit ? { ...formData, id: editingUser.id } : formData;
 
     try {
-      console.log('Submitting user data:', body);
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
