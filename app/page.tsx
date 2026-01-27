@@ -69,6 +69,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
+  // Clear staff session when visiting home page to ensure security
+  useEffect(() => {
+    localStorage.removeItem('kapilla_user');
+  }, []);
+
   const latestEvent = searchResult?.events?.[0];
   let latestEta: string | null = null;
   let latestMode: string | null = null;
