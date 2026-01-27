@@ -152,42 +152,55 @@ export default function Home() {
       const latestCheckIn = sortedCheckIns[0];
       const originCoords = locationCoords[searchResult.origin];
       const destinationCoords = locationCoords[searchResult.destination];
+      const isDelivered = searchResult.currentStatus === 'DELIVERED';
       
-      const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude)) 
-         ? {
-             lat: latestCheckIn.latitude,
-             lng: latestCheckIn.longitude,
-             label: latestCheckIn.location,
-             timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
-         } 
-         : undefined;
+      // Determine the effective "current" location
+      // If delivered, snap to destination
+      const activeLocation = (isDelivered && destinationCoords)
+          ? {
+              lat: destinationCoords.lat,
+              lng: destinationCoords.lng,
+              label: searchResult.destination,
+              timestamp: latestCheckIn?.timestamp || new Date().toISOString()
+            }
+          : (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude)) 
+            ? {
+                 lat: latestCheckIn.latitude,
+                 lng: latestCheckIn.longitude,
+                 label: latestCheckIn.location,
+                 timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
+             } 
+            : undefined;
          
       const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
       const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
       
       // Route Path logic
       let routePath: [number, number][] = [];
-      if (originCoords && currentLocation) {
-         routePath = [[originCoords.lat, originCoords.lng], [currentLocation.lat, currentLocation.lng]];
+      if (originCoords && activeLocation) {
+         routePath = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
       }
       
       // Remaining Path logic
       let remainingPath: [number, number][] = [];
-      const remainingStart = currentLocation ? { lat: currentLocation.lat, lng: currentLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
-      
-      if (remainingStart && destinationCoords) {
-         remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
+      // If NOT delivered, show remaining path
+      if (!isDelivered) {
+        const remainingStart = activeLocation ? { lat: activeLocation.lat, lng: activeLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
+        
+        if (remainingStart && destinationCoords) {
+           remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
+        }
       }
       
       let center: [number, number] = [-6.3690, 34.8888];
-      if (currentLocation) {
-          center = [currentLocation.lat, currentLocation.lng];
+      if (activeLocation) {
+          center = [activeLocation.lat, activeLocation.lng];
       }
       
-      const zoom = (checkIns.length > 0) ? 10 : 6;
+      const zoom = (checkIns.length > 0 || isDelivered) ? 10 : 6;
       
       return {
-          currentLocation,
+          currentLocation: activeLocation,
           startPoint,
           endPoint,
           routePath,
