@@ -32,6 +32,19 @@ function SearchParamsHandler({ onSearch }: { onSearch: (term: string) => void })
   return null;
 }
 
+// Safe date formatter helper
+const safeFormatDate = (dateStr: any) => {
+  try {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return String(dateStr);
+    return date.toLocaleString();
+  } catch (e) {
+    console.error("Date formatting error:", e);
+    return String(dateStr);
+  }
+};
+
 export default function Home() {
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
@@ -43,25 +56,37 @@ export default function Home() {
   let latestEta: string | null = null;
   let latestMode: string | null = null;
 
-  if (latestEvent?.remarks) {
-    const etaMatch = latestEvent.remarks.match(/ETA:\s*([0-9-]+)(?:\s+([0-9:]+))?/i);
-    const modeMatch = latestEvent.remarks.match(/Mode:\s*([A-Z]+)/i);
+  try {
+    if (latestEvent?.remarks && typeof latestEvent.remarks === 'string') {
+      const etaMatch = latestEvent.remarks.match(/ETA:\s*([0-9-]+)(?:\s+([0-9:]+))?/i);
+      const modeMatch = latestEvent.remarks.match(/Mode:\s*([A-Z]+)/i);
 
-    if (etaMatch) {
-      const date = new Date(etaMatch[1]);
-      latestEta = isNaN(date.getTime()) ? etaMatch[1] : date.toLocaleDateString();
-      if (etaMatch[2]) {
-        latestEta += ` ${etaMatch[2]}`;
+      if (etaMatch) {
+        const dateStr = etaMatch[1] + (etaMatch[2] ? ` ${etaMatch[2]}` : '');
+        const date = new Date(etaMatch[1]); // Parse date part only for safety check
+        if (!isNaN(date.getTime())) {
+             latestEta = dateStr; // Keep original string if valid
+             // Or better: try to format if possible, but keeping original string is safer for "2023-10-10"
+             // Let's try to make it pretty only if full date is valid
+             const fullDate = new Date(dateStr);
+             if (!isNaN(fullDate.getTime())) {
+                 latestEta = fullDate.toLocaleDateString() + (etaMatch[2] ? ` ${etaMatch[2]}` : '');
+             }
+        } else {
+             latestEta = dateStr;
+        }
+      }
+
+      if (modeMatch) {
+        const mode = modeMatch[1].toUpperCase();
+        if (mode === 'AIR') latestMode = 'Air';
+        else if (mode === 'WATER') latestMode = 'Water';
+        else if (mode === 'LAND') latestMode = 'Land';
+        else latestMode = mode;
       }
     }
-
-    if (modeMatch) {
-      const mode = modeMatch[1].toUpperCase();
-      if (mode === 'AIR') latestMode = 'Air';
-      else if (mode === 'WATER') latestMode = 'Water';
-      else if (mode === 'LAND') latestMode = 'Land';
-      else latestMode = mode;
-    }
+  } catch (e) {
+    console.error("Error parsing remarks:", e);
   }
 
   const performSearch = async (wb: string) => {
