@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   PackagePlus,
-  Package, 
-  ScanLine, 
-  LogOut, 
-  Menu, 
+  Boxes,
+  ScanBarcode,
+  LogOut,
+  Menu,
   X,
-  User,
+  UserCircle,
+  UserCog,
   ShieldAlert,
   ChevronRight,
   Truck,
