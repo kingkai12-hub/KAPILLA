@@ -209,7 +209,7 @@ export default function UserManagement() {
                 >
                   <option value="STAFF">Staff (General)</option>
                   <option value="DRIVER">Driver</option>
-                  <option value="OPERATION_OFFICER">Operation Officer</option>
+                  <option value="OPERATION_MANAGER">Operation Manager</option>
                   <option value="MANAGER">Manager</option>
                   <option value="ADMIN">Admin</option>
                 </select>

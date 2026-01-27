@@ -101,13 +101,13 @@ export default function StaffPortalLayout({
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
-    { name: 'All Shipments', href: '/staff/shipments', icon: Boxes, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
-    { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
-    { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanBarcode, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
-    { name: 'Pickup Requests', href: '/staff/pickup-requests', icon: Truck, roles: ['ADMIN', 'STAFF', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER'] },
+    { name: 'All Shipments', href: '/staff/shipments', icon: Boxes, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER'] },
+    { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER'] },
+    { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanBarcode, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER'] },
+    { name: 'Pickup Requests', href: '/staff/pickup-requests', icon: Truck, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER'] },
     { name: 'User Management', href: '/staff/admin/users', icon: UserCog, roles: ['ADMIN'] },
-    { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_OFFICER', 'MANAGER'] },
+    { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER'] },
   ];
 
   if (!user) return (
