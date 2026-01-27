@@ -236,7 +236,7 @@ export default function Home() {
             <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla <span className="text-blue-600">Group Ltd</span></span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-slate-500">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors p-2 hover:bg-pink-50 rounded-full">
+            <a href="https://www.instagram.com/kapilla.group_ltd/" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors p-2 hover:bg-pink-50 rounded-full">
               <Instagram className="w-5 h-5" />
             </a>
             <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-full">
