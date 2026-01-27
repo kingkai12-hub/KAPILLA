@@ -38,6 +38,28 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
+  const latestEvent = searchResult?.events?.[0];
+  let latestEta: string | null = null;
+  let latestMode: string | null = null;
+
+  if (latestEvent?.remarks) {
+    const etaMatch = latestEvent.remarks.match(/ETA:\s*([0-9-]+)/i);
+    const modeMatch = latestEvent.remarks.match(/Mode:\s*([A-Z]+)/i);
+
+    if (etaMatch) {
+      const date = new Date(etaMatch[1]);
+      latestEta = isNaN(date.getTime()) ? etaMatch[1] : date.toLocaleDateString();
+    }
+
+    if (modeMatch) {
+      const mode = modeMatch[1].toUpperCase();
+      if (mode === 'AIR') latestMode = 'Air';
+      else if (mode === 'WATER') latestMode = 'Water';
+      else if (mode === 'LAND') latestMode = 'Land';
+      else latestMode = mode;
+    }
+  }
+
   const performSearch = async (wb: string) => {
     setWaybill(wb);
     setLoading(true);
@@ -211,11 +233,15 @@ export default function Home() {
                       </div>
                       <div className="space-y-1">
                         <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
-                        <div className="font-semibold text-slate-900 text-base">Oct 24, 2026</div>
+                      <div className="font-semibold text-slate-900 text-base">
+                        {latestEta || 'Not available'}
+                      </div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Service Type</div>
-                        <div className="font-semibold text-slate-900 text-base">Standard Ground</div>
+                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Transport Type</div>
+                      <div className="font-semibold text-slate-900 text-base">
+                        {latestMode || 'Not available'}
+                      </div>
                       </div>
                     </div>
 
