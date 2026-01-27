@@ -22,6 +22,8 @@ function UpdateTrackingContent() {
   const [location, setLocation] = useState('Dar es Salaam Hub');
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(locationCoords['Dar es Salaam'] || null);
   const [remarks, setRemarks] = useState('');
+  const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
+  const [transportType, setTransportType] = useState<'AIR' | 'WATER' | 'LAND' | ''>('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
@@ -55,7 +57,6 @@ function UpdateTrackingContent() {
   };
 
   const handleLocationBlur = () => {
-      // Small delay to allow click on suggestion to fire
       setTimeout(() => {
         setShowSuggestions(false);
         verifyLocation(location);
@@ -67,6 +68,25 @@ function UpdateTrackingContent() {
     setShowSuggestions(false);
     if (locationCoords[place]) {
         setCoords(locationCoords[place]);
+    }
+  };
+
+  const handleLocationFocus = () => {
+    const allLocations = Object.keys(locationCoords);
+
+    if (!location) {
+      setSuggestions(allLocations);
+    } else {
+      const filtered = allLocations.filter(loc =>
+        loc.toLowerCase().includes(location.toLowerCase())
+      );
+      setSuggestions(filtered);
+    }
+
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    } else if (!location) {
+      setShowSuggestions(true);
     }
   };
 
@@ -127,7 +147,9 @@ function UpdateTrackingContent() {
           location,
           latitude: coords?.lat,
           longitude: coords?.lng,
-          remarks
+              remarks,
+              estimatedDelivery,
+              transportType
         }),
       });
 
@@ -197,6 +219,7 @@ function UpdateTrackingContent() {
                   type="text"
                   value={location}
                   onChange={handleLocationChange}
+                  onFocus={handleLocationFocus}
                   onBlur={handleLocationBlur}
                   className={`block w-full py-3 px-4 pl-10 border ${!coords && location ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-500'} dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:border-transparent transition-all`}
                   placeholder="Enter village, town, or city in Tanzania..."
@@ -228,6 +251,39 @@ function UpdateTrackingContent() {
               </div>
 
               <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania. System will verify coordinates automatically.</p>
+            </div>
+
+            {/* Estimated Delivery Date */}
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estimated Delivery Date</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="date"
+                  value={estimatedDelivery}
+                  onChange={(e) => setEstimatedDelivery(e.target.value)}
+                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Optional: expected delivery date for this cargo.</p>
+            </div>
+
+            {/* Transport Type */}
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Transport Type</label>
+              <select
+                value={transportType}
+                onChange={(e) => setTransportType(e.target.value as 'AIR' | 'WATER' | 'LAND' | '')}
+                className="block w-full py-3 px-4 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              >
+                <option value="">Select Type</option>
+                <option value="AIR">Air</option>
+                <option value="WATER">Water</option>
+                <option value="LAND">Land</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-1">Optional: choose the transport mode.</p>
             </div>
           </div>
 

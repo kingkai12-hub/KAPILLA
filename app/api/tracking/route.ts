@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { waybillNumber, status, location, remarks, signature, receivedBy, latitude, longitude } = body;
+    const { waybillNumber, status, location, remarks, signature, receivedBy, latitude, longitude, estimatedDelivery, transportType } = body;
 
     if (!waybillNumber || !status || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -54,13 +54,20 @@ export async function POST(req: Request) {
     // We add this to the transaction operations to ensure consistency.
 
     // Transaction operations
+    const composedRemarks = (() => {
+      const parts = [remarks?.trim()].filter(Boolean);
+      if (estimatedDelivery) parts.push(`ETA: ${estimatedDelivery}`);
+      if (transportType) parts.push(`Mode: ${transportType}`);
+      return parts.join(' | ');
+    })();
+
     const operations: any[] = [
       db.trackingEvent.create({
         data: {
           shipmentId: shipment.id,
           status,
           location,
-          remarks
+          remarks: composedRemarks
         }
       })
     ];
