@@ -66,6 +66,7 @@ export default function Home() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
   const latestEvent = searchResult?.events?.[0];
@@ -101,15 +102,23 @@ export default function Home() {
     setLoading(true);
     setHasSearched(true);
     setSearchResult(null);
+    setError(null);
 
     try {
       const res = await fetch(`/api/shipments/${wb}`);
       if (res.ok) {
         const data = await res.json();
         setSearchResult(data);
+      } else {
+        if (res.status === 404) {
+          setSearchResult(null);
+        } else {
+          setError(`Server Error: ${res.status}`);
+        }
       }
     } catch (error) {
       console.error(error);
+      setError("Failed to connect to server. Please try again.");
     } finally {
       setLoading(false);
     }
