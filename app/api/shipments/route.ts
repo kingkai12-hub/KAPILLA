@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         senderName,
         senderPhone,
         senderAddress,
+        senderEmail,
         receiverName,
         receiverPhone,
         receiverAddress,
