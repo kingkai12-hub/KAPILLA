@@ -4,6 +4,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }

@@ -207,9 +207,9 @@ export default function StaffPortalLayout({
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
         {/* Header (Desktop & Mobile) */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-300">
+        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-300">
           <div className="flex items-center justify-between h-16 px-6">
             <div className="flex items-center gap-4">
               <button
