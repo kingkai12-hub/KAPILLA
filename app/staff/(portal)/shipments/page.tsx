@@ -275,6 +275,7 @@ export default function ShipmentsPage() {
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       <div className="font-medium">{shipment.senderName}</div>
+                      {shipment.senderEmail && <div className="text-xs text-blue-500">{shipment.senderEmail}</div>}
                       <div className="text-xs text-slate-400">{shipment.origin}</div>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">

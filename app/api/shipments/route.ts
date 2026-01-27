@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      senderName, senderPhone, senderAddress,
+      senderName, senderPhone, senderAddress, senderEmail,
       receiverName, receiverPhone, receiverAddress,
       origin, destination, weight, price, type, cargoDetails,
       dispatcherName, dispatcherSignature
