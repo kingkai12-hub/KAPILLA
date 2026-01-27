@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(
   req: Request,
@@ -81,6 +82,9 @@ export async function DELETE(
       })
     ]);
 
+    revalidatePath('/staff/dashboard');
+    revalidatePath('/staff/shipments');
+
     return NextResponse.json({ message: 'Shipment deleted' });
   } catch (error) {
     console.error('[DELETE_SHIPMENT]', error);
@@ -129,6 +133,9 @@ export async function PATCH(
       where: { waybillNumber: waybill },
       data: updateData
     });
+
+    revalidatePath('/staff/dashboard');
+    revalidatePath('/staff/shipments');
 
     return NextResponse.json(updatedShipment);
   } catch (error) {

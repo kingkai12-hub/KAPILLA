@@ -55,6 +55,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <div className="blob-extra" />
           <RefreshHandler />
           <IdleLogout />
           {children}

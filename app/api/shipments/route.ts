@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendShipmentCreatedEmail } from '@/lib/mail';
+import { sendShipmentCreatedSMS } from '@/lib/sms';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      senderName, senderPhone, senderAddress, senderEmail,
+      senderName, senderPhone, senderAddress,
       receiverName, receiverPhone, receiverAddress,
       origin, destination, weight, price, type, cargoDetails,
       dispatcherName, dispatcherSignature
@@ -35,7 +36,6 @@ export async function POST(req: Request) {
         senderName,
         senderPhone,
         senderAddress,
-        senderEmail,
         receiverName,
         receiverPhone,
         receiverAddress,
@@ -57,16 +57,19 @@ export async function POST(req: Request) {
       }
     });
 
-    // Send email notification if sender email is provided
-    if (senderEmail) {
-      await sendShipmentCreatedEmail(
-        senderEmail,
+    // Send SMS notification if sender phone is provided
+    if (senderPhone) {
+      await sendShipmentCreatedSMS(
+        senderPhone,
         waybillNumber,
         senderName,
         receiverName,
         destination
       );
     }
+
+    revalidatePath('/staff/dashboard');
+    revalidatePath('/staff/shipments');
 
     return NextResponse.json(shipment, { status: 201 });
   } catch (error) {

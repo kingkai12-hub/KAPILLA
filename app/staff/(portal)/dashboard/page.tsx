@@ -53,78 +53,86 @@ export default async function StaffDashboard() {
   });
 
   const stats = [
-    { name: 'Total Shipments', value: totalShipments.toLocaleString(), icon: Layers, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-100 dark:border-blue-800' },
-    { name: 'In Transit', value: inTransit.toLocaleString(), icon: Truck, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20', border: 'border-yellow-100 dark:border-yellow-800' },
-    { name: 'Pending Delivery', value: pendingDelivery.toLocaleString(), icon: Hourglass, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-100 dark:border-orange-800' },
-    { name: 'Delivered Today', value: deliveredToday.toLocaleString(), icon: CheckCheck, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-100 dark:border-green-800' },
+    { name: 'Total Shipments', value: totalShipments.toLocaleString(), icon: Layers, color: 'text-blue-600 dark:text-blue-100', bg: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40', border: 'border-blue-200 dark:border-blue-700' },
+    { name: 'In Transit', value: inTransit.toLocaleString(), icon: Truck, color: 'text-amber-600 dark:text-amber-100', bg: 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40', border: 'border-amber-200 dark:border-amber-700' },
+    { name: 'Pending Delivery', value: pendingDelivery.toLocaleString(), icon: Hourglass, color: 'text-orange-600 dark:text-orange-100', bg: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/40 dark:to-orange-800/40', border: 'border-orange-200 dark:border-orange-700' },
+    { name: 'Delivered Today', value: deliveredToday.toLocaleString(), icon: CheckCheck, color: 'text-emerald-600 dark:text-emerald-100', bg: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40', border: 'border-emerald-200 dark:border-emerald-700' },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex justify-between items-end relative z-10">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Overview of logistics operations.</p>
+          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tight drop-shadow-sm">Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Overview of logistics operations & performance.</p>
         </div>
         <div className="hidden sm:flex gap-3">
-          <a href="/staff/shipments/create" className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md shadow-blue-600/20 hover:bg-blue-700 transition-colors flex items-center gap-2">
-            <Package className="w-4 h-4" />
+          <a href="/staff/shipments/create" className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-105 transition-all duration-300 flex items-center gap-2">
+            <Package className="w-5 h-5" />
             New Waybill
           </a>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="/staff/shipments/create" className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group">
-          <div className="p-3 bg-blue-600 text-white rounded-full group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg shadow-blue-600/30">
-             <PackagePlus className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Create Waybill</span>
-        </a>
-        <a href="/staff/tracking/update" className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group">
-          <div className="p-3 bg-purple-600 text-white rounded-full group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 shadow-lg shadow-purple-600/30">
-             <ScanLine className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Track Cargo</span>
-        </a>
-        <a href="/staff/profile" className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors group">
-           <div className="p-3 bg-green-600 text-white rounded-full group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg shadow-green-600/30">
-             <User className="w-6 h-6" />
-           </div>
-           <span className="text-sm font-medium text-green-900 dark:text-green-100">My Profile</span>
-        </a>
-        <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors group cursor-pointer">
-           <div className="p-3 bg-orange-600 text-white rounded-full group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 shadow-lg shadow-orange-600/30">
-             <Calendar className="w-6 h-6" />
-           </div>
-           <span className="text-sm font-medium text-orange-900 dark:text-orange-100">Schedule</span>
-        </div>
-      </div>
-
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((item) => (
-          <div key={item.name} className={cn(
-            "relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-sm border transition-all hover:shadow-md group",
-            item.border
-          )}>
-            <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {stats.map((stat) => (
+          <div key={stat.name} className={`relative overflow-hidden rounded-2xl border ${stat.border} ${stat.bg} p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group`}>
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 dark:bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+            <div className="flex items-center justify-between relative z-10">
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{item.name}</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{item.value}</p>
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{stat.name}</p>
+                <p className="mt-2 text-3xl font-black text-slate-900 dark:text-white tracking-tight">{stat.value}</p>
               </div>
-              <div className={cn("p-3 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3", item.bg)}>
-                <item.icon className={cn("h-6 w-6 transition-transform", item.color)} />
+              <div className={`p-3 rounded-xl bg-white/60 dark:bg-black/20 backdrop-blur-sm ${stat.color} shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className="w-6 h-6" />
               </div>
             </div>
-            {/* Decorative gradient blob */}
-            <div className={cn(
-              "absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-10 blur-xl",
-              item.bg.replace('bg-', 'bg-')
-            )} />
           </div>
         ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/staff/shipments/create" className="group relative p-1 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-1">
+          <div className="h-full bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+             <div className="p-3.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-full group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 z-10">
+                <PackagePlus className="w-7 h-7" />
+             </div>
+             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">Create Waybill</span>
+          </div>
+        </a>
+        
+        <a href="/staff/tracking/update" className="group relative p-1 rounded-2xl bg-gradient-to-br from-purple-400 to-fuchsia-400 hover:from-purple-500 hover:to-fuchsia-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:-translate-y-1">
+          <div className="h-full bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent dark:from-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+             <div className="p-3.5 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 rounded-full group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 z-10">
+                <ScanLine className="w-7 h-7" />
+             </div>
+             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">Track Cargo</span>
+          </div>
+        </a>
+
+        <a href="/staff/profile" className="group relative p-1 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-1">
+          <div className="h-full bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-transparent dark:from-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+             <div className="p-3.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-full group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 z-10">
+               <User className="w-7 h-7" />
+             </div>
+             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">My Profile</span>
+          </div>
+        </a>
+
+        <div className="group relative p-1 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:-translate-y-1 cursor-pointer">
+          <div className="h-full bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent dark:from-orange-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+             <div className="p-3.5 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 rounded-full group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 z-10">
+               <Calendar className="w-7 h-7" />
+             </div>
+             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">Schedule</span>
+          </div>
+        </div>
       </div>
 
       <div className="w-full">
