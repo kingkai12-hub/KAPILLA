@@ -236,9 +236,9 @@ export default function LeafletMap({
       {finalRemaining.length > 0 && (
         <Polyline 
           positions={finalRemaining} 
-          color="#94a3b8" 
+          color="#ff0000" 
           weight={5} 
-          opacity={0.5} 
+          opacity={0.6} 
           dashArray="10, 10"
         />
       )}
