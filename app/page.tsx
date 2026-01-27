@@ -472,58 +472,58 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Services & Features Grid */}
-      <section className="py-16 bg-white relative overflow-hidden">
+      <section className="py-8 bg-white relative overflow-hidden">
         <div className="absolute inset-0 bg-slate-50/50 skew-y-3 transform origin-bottom-left -z-10" />
         
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">
+          <div className="text-center max-w-3xl mx-auto mb-8">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 tracking-tight">
               Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Global Services</span>
             </h2>
-            <p className="text-slate-600 text-lg">
+            <p className="text-slate-600 text-sm">
               In the line of our Global Network, Real Tracking, and ADC Express, we now offer a comprehensive suite of logistics solutions tailored to your needs.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4">
             {[
               { 
                 icon: Package, 
                 title: 'Courier Services', 
-                desc: 'Fast, reliable delivery for documents and parcels. We ensure your important items reach their destination safely and on time, whether across town or across the globe.' 
+                desc: 'Fast, reliable delivery for documents and parcels. Important items reach their destination safely and on time.' 
               },
               { 
                 icon: Truck, 
                 title: 'Transportation Services', 
-                desc: 'Comprehensive multi-modal logistics solutions. From road and rail to air and sea freight, we move your cargo efficiently with our extensive transportation fleet.' 
+                desc: 'Comprehensive multi-modal logistics solutions. Road, rail, air and sea freight to move your cargo efficiently.' 
               },
               { 
                 icon: FileText, 
                 title: 'Clearing & Forwarding', 
-                desc: 'Expert customs brokerage and freight forwarding. We navigate complex regulations to ensure smooth border crossings and hassle-free documentation for your shipments.' 
+                desc: 'Expert customs brokerage and freight forwarding. We navigate complex regulations for smooth border crossings.' 
               },
               { 
                 icon: Zap, 
                 title: 'ADC Express', 
-                desc: 'Premium express delivery service for your most urgent shipments. Experience lightning-fast transit times with priority handling and dedicated support.' 
+                desc: 'Premium express delivery service for your most urgent shipments. Lightning-fast transit times with priority handling.' 
               },
               { 
                 icon: Clock, 
                 title: 'Real-Time Tracking', 
-                desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates. Get instant visibility into your cargo\'s location and status at every step of the journey.' 
+                desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates. Instant visibility into your cargo\'s location.' 
               },
               { 
                 icon: Globe, 
                 title: 'Global Network', 
-                desc: 'Seamless shipping to over 200 countries. Leverage our integrated international network and local expertise to expand your business reach worldwide.' 
+                desc: 'Seamless shipping to over 200 countries. Leverage our integrated international network to expand worldwide.' 
               },
             ].map((feature, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group hover:-translate-y-1">
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 text-blue-600">
-                  <feature.icon className="w-6 h-6" />
+              <div key={i} className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-300 group hover:-translate-y-1">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 text-blue-600">
+                  <feature.icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed text-sm">{feature.desc}</p>
+                <h3 className="text-base font-bold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-xs">{feature.desc}</p>
               </div>
             ))}
           </div>
