@@ -90,70 +90,75 @@ export default function Home() {
   };
 
   const mapProps = useMemo(() => {
-    if (!searchResult) return null;
+    try {
+      if (!searchResult) return null;
 
-    const trip = searchResult.trips?.[0];
-    const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
-    
-    // Sort for latest check-in
-    const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
-      const tA = new Date(a.timestamp).getTime();
-      const tB = new Date(b.timestamp).getTime();
-      return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
-    });
-    
-    const latestCheckIn = sortedCheckIns[0];
-    const originCoords = locationCoords[searchResult.origin];
-    const destinationCoords = locationCoords[searchResult.destination];
-    
-    const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && typeof latestCheckIn.longitude === 'number') 
-       ? {
-           lat: latestCheckIn.latitude,
-           lng: latestCheckIn.longitude,
-           label: latestCheckIn.location,
-           timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
-       } 
-       : undefined;
-       
-    const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
-    const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
-    
-    // Route Path logic
-    let routePath: [number, number][] = [];
-    if (originCoords && currentLocation) {
-       routePath = [[originCoords.lat, originCoords.lng], [currentLocation.lat, currentLocation.lng]];
+      const trip = searchResult.trips?.[0];
+      const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
+      
+      // Sort for latest check-in
+      const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
+        const tA = new Date(a.timestamp).getTime();
+        const tB = new Date(b.timestamp).getTime();
+        return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+      });
+      
+      const latestCheckIn = sortedCheckIns[0];
+      const originCoords = locationCoords[searchResult.origin];
+      const destinationCoords = locationCoords[searchResult.destination];
+      
+      const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && typeof latestCheckIn.longitude === 'number') 
+         ? {
+             lat: latestCheckIn.latitude,
+             lng: latestCheckIn.longitude,
+             label: latestCheckIn.location,
+             timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
+         } 
+         : undefined;
+         
+      const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
+      const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
+      
+      // Route Path logic
+      let routePath: [number, number][] = [];
+      if (originCoords && currentLocation) {
+         routePath = [[originCoords.lat, originCoords.lng], [currentLocation.lat, currentLocation.lng]];
+      }
+      
+      // Remaining Path logic
+      let remainingPath: [number, number][] = [];
+      const remainingStart = currentLocation ? { lat: currentLocation.lat, lng: currentLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
+      
+      if (remainingStart && destinationCoords) {
+         remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
+      }
+      
+      let center: [number, number] = [-6.3690, 34.8888];
+      if (currentLocation) {
+          center = [currentLocation.lat, currentLocation.lng];
+      }
+      
+      const zoom = (checkIns.length > 0) ? 10 : 6;
+      
+      return {
+          currentLocation,
+          startPoint,
+          endPoint,
+          routePath,
+          remainingPath,
+          center,
+          zoom,
+          checkIns: checkIns.map((c: any) => ({
+               lat: c.latitude,
+               lng: c.longitude,
+               label: c.location,
+               timestamp: new Date(c.timestamp).toLocaleString()
+          }))
+      };
+    } catch (error) {
+      console.error("Error calculating map props:", error);
+      return null;
     }
-    
-    // Remaining Path logic
-    let remainingPath: [number, number][] = [];
-    const remainingStart = currentLocation ? { lat: currentLocation.lat, lng: currentLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
-    
-    if (remainingStart && destinationCoords) {
-       remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
-    }
-    
-    let center: [number, number] = [-6.3690, 34.8888];
-    if (currentLocation) {
-        center = [currentLocation.lat, currentLocation.lng];
-    }
-    
-    const zoom = (checkIns.length > 0) ? 10 : 6;
-    
-    return {
-        currentLocation,
-        startPoint,
-        endPoint,
-        routePath,
-        remainingPath,
-        center,
-        zoom,
-        checkIns: checkIns.map((c: any) => ({
-             lat: c.latitude,
-             lng: c.longitude,
-             label: c.location,
-             timestamp: new Date(c.timestamp).toLocaleString()
-        }))
-    };
   }, [searchResult]);
 
   return (
@@ -287,7 +292,7 @@ export default function Home() {
                           searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
                           "bg-blue-100 text-blue-700"
                         )}>
-                          {searchResult.currentStatus.replace(/_/g, ' ')}
+                          {(searchResult.currentStatus || 'UNKNOWN').replace(/_/g, ' ')}
                         </div>
                       </div>
                     </div>
