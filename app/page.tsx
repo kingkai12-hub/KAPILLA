@@ -32,17 +32,33 @@ function SearchParamsHandler({ onSearch }: { onSearch: (term: string) => void })
   return null;
 }
 
-// Safe date formatter helper
-const safeFormatDate = (dateStr: any) => {
-  try {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return String(dateStr);
-    return date.toLocaleString();
-  } catch (e) {
-    console.error("Date formatting error:", e);
-    return String(dateStr);
-  }
+// Safe date formatter helper with hydration protection
+const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any, fallback?: string }) => {
+  const [formatted, setFormatted] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!dateStr) {
+      setFormatted(fallback);
+      return;
+    }
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        setFormatted(String(dateStr));
+      } else {
+        setFormatted(date.toLocaleString());
+      }
+    } catch (e) {
+      setFormatted(String(dateStr));
+    }
+  }, [dateStr, fallback]);
+
+  // Render a placeholder or the fallback initially to avoid mismatch, 
+  // but for SEO/UX, it's better to match server output if possible.
+  // Since we can't match server locale perfectly, we render nothing or a generic value until mount.
+  if (formatted === null) return <span className="opacity-0">Loading...</span>; // Invisible placeholder to prevent layout shift
+  
+  return <span>{formatted}</span>;
 };
 
 export default function Home() {
@@ -176,8 +192,8 @@ export default function Home() {
           checkIns: checkIns.map((c: any) => ({
                lat: c.latitude,
                lng: c.longitude,
-               label: c.location,
-               timestamp: new Date(c.timestamp).toLocaleString()
+               label: c.location || 'Check-in',
+               timestamp: c.timestamp
           }))
       };
     } catch (error) {
@@ -362,7 +378,7 @@ export default function Home() {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 group"
                             >
-                                <FileCheck className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                 Download Proof of Delivery
                             </a>
                         </div>

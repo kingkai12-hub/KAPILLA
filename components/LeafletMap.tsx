@@ -201,7 +201,11 @@ export default function LeafletMap({
           <Popup>
             <div className="text-center">
               <strong className="block text-blue-600">Current Location</strong>
-              <span className="text-xs text-gray-500">{currentLocation.timestamp}</span>
+              <span className="text-xs text-gray-500">
+                {/* We render raw timestamp here, let the Map component handle formatting if needed, 
+                    but since Map is client-only (ssr: false), direct formatting is safe! */}
+                {new Date(currentLocation.timestamp || '').toLocaleString()}
+              </span>
               <p className="text-sm">{currentLocation.label}</p>
             </div>
           </Popup>
@@ -214,7 +218,7 @@ export default function LeafletMap({
           <Popup>
             <span className="font-bold">Check-in {idx + 1}</span><br/>
             {checkIn.label}<br/>
-            <span className="text-xs">{checkIn.timestamp}</span>
+            <span className="text-xs">{new Date(checkIn.timestamp || '').toLocaleString()}</span>
           </Popup>
         </Marker>
         ) : null
