@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X, Plane, Ship, FileText, Zap, Facebook, Instagram } from 'lucide-react';
+import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X, Plane, Ship, FileText, Zap, Facebook, Instagram, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -227,13 +227,13 @@ export default function Home() {
         <SearchParamsHandler onSearch={performSearch} />
       </Suspense>
       {/* Navigation */}
-      <nav className="absolute w-full z-10 px-6 py-4">
+      <nav className="absolute w-full z-10 px-4 md:px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-1 rounded-lg shadow-sm">
-              <Image src="/logo.png" alt="Kapilla Logo" width={40} height={40} className="w-10 h-10 object-contain" />
+              <Image src="/logo.png" alt="Kapilla Logo" width={40} height={40} className="w-8 h-8 md:w-10 md:h-10 object-contain" />
             </div>
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla <span className="text-blue-600">Group Ltd</span></span>
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla <span className="text-blue-600 hidden sm:inline">Group Ltd</span></span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-slate-500">
             <a href="https://www.instagram.com/kapilla.group_ltd/" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors p-2 hover:bg-pink-50 rounded-full">
@@ -253,19 +253,22 @@ export default function Home() {
               </svg>
             </a>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 md:gap-3">
             <button
               onClick={() => setIsPickupModalOpen(true)}
-              className="cursor-pointer px-4 py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              className="cursor-pointer p-2 md:px-4 md:py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              aria-label="Request Pickup"
             >
-              <Truck className="w-3.5 h-3.5" />
-              Request Pickup
+              <Truck className="w-4 h-4 md:w-3.5 md:h-3.5" />
+              <span className="hidden md:inline">Request Pickup</span>
             </button>
             <a 
               href="/staff/login"
-              className="px-4 py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+              className="p-2 md:px-4 md:py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2"
+              aria-label="Staff Portal"
             >
-              Staff Portal
+              <User className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Staff Portal</span>
             </a>
           </div>
         </div>
