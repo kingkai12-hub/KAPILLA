@@ -298,7 +298,22 @@ export default function Home() {
             className="bg-white border-y border-slate-100 shadow-[inset_0_4px_20px_-12px_rgba(0,0,0,0.1)]"
           >
             <div className="max-w-4xl mx-auto px-6 py-10">
-              {!searchResult ? (
+             <ErrorBoundary>
+              {error ? (
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
+                    <X className="w-7 h-7 text-red-500" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Something went wrong</h3>
+                  <p className="text-slate-500 mt-2 text-sm">{error}</p>
+                  <button 
+                    onClick={() => performSearch(waybill)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : !searchResult ? (
                 <div className="text-center py-8">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
                     <Package className="w-7 h-7 text-red-500" />
@@ -355,9 +370,7 @@ export default function Home() {
 
                     {/* Map Section */}
                     <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                       <ErrorBoundary>
                          {mapProps && <Map {...mapProps} />}
-                       </ErrorBoundary>
                     </div>
 
                     {/* Download POD Button - Only if Delivered */}
