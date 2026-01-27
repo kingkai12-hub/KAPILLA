@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { waybillNumber, status, location, remarks, signature, receivedBy, latitude, longitude, estimatedDelivery, transportType } = body;
+    const { waybillNumber, status, location, remarks, signature, receivedBy, latitude, longitude, estimatedDelivery, estimatedDeliveryTime, transportType } = body;
 
     if (!waybillNumber || !status || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

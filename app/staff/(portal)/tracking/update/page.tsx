@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { ScanLine, MapPin, Navigation, Save, Calendar, Clock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { locationCoords } from '@/lib/locations';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 function UpdateTrackingContent() {
   const searchParams = useSearchParams();
@@ -23,6 +24,7 @@ function UpdateTrackingContent() {
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(locationCoords['Dar es Salaam'] || null);
   const [remarks, setRemarks] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
+  const [estimatedDeliveryTime, setEstimatedDeliveryTime] = useState<string>('');
   const [transportType, setTransportType] = useState<'AIR' | 'WATER' | 'LAND' | ''>('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
@@ -149,6 +151,7 @@ function UpdateTrackingContent() {
           longitude: coords?.lng,
               remarks,
               estimatedDelivery,
+              estimatedDeliveryTime,
               transportType
         }),
       });
@@ -360,7 +363,9 @@ function UpdateTrackingContent() {
 export default function UpdateTrackingPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <UpdateTrackingContent />
+      <ErrorBoundary>
+        <UpdateTrackingContent />
+      </ErrorBoundary>
     </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Map from '@/components/Map';
 import PickupRequestModal from '@/components/PickupRequestModal';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 import { locationCoords } from '@/lib/locations';
 
@@ -87,6 +88,73 @@ export default function Home() {
     if (!waybill.trim()) return;
     performSearch(waybill);
   };
+
+  const mapProps = useMemo(() => {
+    if (!searchResult) return null;
+
+    const trip = searchResult.trips?.[0];
+    const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
+    
+    // Sort for latest check-in
+    const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
+      const tA = new Date(a.timestamp).getTime();
+      const tB = new Date(b.timestamp).getTime();
+      return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+    });
+    
+    const latestCheckIn = sortedCheckIns[0];
+    const originCoords = locationCoords[searchResult.origin];
+    const destinationCoords = locationCoords[searchResult.destination];
+    
+    const currentLocation = (latestCheckIn && typeof latestCheckIn.latitude === 'number' && typeof latestCheckIn.longitude === 'number') 
+       ? {
+           lat: latestCheckIn.latitude,
+           lng: latestCheckIn.longitude,
+           label: latestCheckIn.location,
+           timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
+       } 
+       : undefined;
+       
+    const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
+    const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
+    
+    // Route Path logic
+    let routePath: [number, number][] = [];
+    if (originCoords && currentLocation) {
+       routePath = [[originCoords.lat, originCoords.lng], [currentLocation.lat, currentLocation.lng]];
+    }
+    
+    // Remaining Path logic
+    let remainingPath: [number, number][] = [];
+    const remainingStart = currentLocation ? { lat: currentLocation.lat, lng: currentLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
+    
+    if (remainingStart && destinationCoords) {
+       remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
+    }
+    
+    let center: [number, number] = [-6.3690, 34.8888];
+    if (currentLocation) {
+        center = [currentLocation.lat, currentLocation.lng];
+    }
+    
+    const zoom = (checkIns.length > 0) ? 10 : 6;
+    
+    return {
+        currentLocation,
+        startPoint,
+        endPoint,
+        routePath,
+        remainingPath,
+        center,
+        zoom,
+        checkIns: checkIns.map((c: any) => ({
+             lat: c.latitude,
+             lng: c.longitude,
+             label: c.location,
+             timestamp: new Date(c.timestamp).toLocaleString()
+        }))
+    };
+  }, [searchResult]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-200 via-white to-cyan-200 font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -250,88 +318,9 @@ export default function Home() {
 
                     {/* Map Section */}
                     <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                       <Map 
-                         currentLocation={
-                           // Prioritize the latest CheckIn for coordinates
-                           (() => {
-                               const trip = searchResult.trips?.[0];
-                               // Sort checkIns by timestamp descending to get the latest one
-                               const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
-                               const latestCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                               
-                               if (latestCheckIn) {
-                                   return {
-                                       lat: latestCheckIn.latitude,
-                                       lng: latestCheckIn.longitude,
-                                       label: latestCheckIn.location,
-                                       timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
-                                   };
-                               }
-                               
-                               // Fallback: If no checkIns, maybe use origin? No, leave undefined.
-                               return undefined;
-                           })()
-                         }
-                         startPoint={locationCoords[searchResult.origin] ? {
-                           ...locationCoords[searchResult.origin],
-                           label: searchResult.origin
-                         } : undefined}
-                         endPoint={locationCoords[searchResult.destination] ? {
-                           ...locationCoords[searchResult.destination],
-                           label: searchResult.destination
-                         } : undefined}
-                         routePath={
-                           (() => {
-                             const trip = searchResult.trips?.[0];
-                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
-                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                             const originCoords = locationCoords[searchResult.origin];
-                             
-                             if (!originCoords) return [];
-
-                             // Traveled Path: Origin -> Current Location (if exists)
-                             if (currentCheckIn) {
-                               return [
-                                 [originCoords.lat, originCoords.lng],
-                                 [currentCheckIn.latitude, currentCheckIn.longitude]
-                               ];
-                             }
-                             
-                             return [];
-                           })()
-                         }
-                         remainingPath={
-                           (() => {
-                             const trip = searchResult.trips?.[0];
-                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
-                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                             const originCoords = locationCoords[searchResult.origin];
-                             const destinationCoords = locationCoords[searchResult.destination];
-                             
-                             if (!destinationCoords) return [];
-
-                             // Remaining Path: Current Location (or Origin) -> Destination
-                             const startPoint = currentCheckIn 
-                               ? { lat: currentCheckIn.latitude, lng: currentCheckIn.longitude }
-                               : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
-                             
-                             if (!startPoint) return [];
-
-                             return [
-                               [startPoint.lat, startPoint.lng],
-                               [destinationCoords.lat, destinationCoords.lng]
-                             ];
-                           })()
-                         }
-                         center={(() => {
-                             const trip = searchResult.trips?.[0];
-                             const checkIns = trip?.checkIns ? [...trip.checkIns] : [];
-                             const currentCheckIn = checkIns.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                             if (currentCheckIn) return [currentCheckIn.latitude, currentCheckIn.longitude];
-                             return [-6.3690, 34.8888];
-                         })()}
-                         zoom={searchResult.trips?.[0]?.checkIns?.length > 0 ? 10 : 6}
-                       />
+                       <ErrorBoundary>
+                         {mapProps && <Map {...mapProps} />}
+                       </ErrorBoundary>
                     </div>
 
                     {/* Horizontal Status Line */}

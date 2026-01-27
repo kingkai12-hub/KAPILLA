@@ -173,19 +173,19 @@ export default function LeafletMap({
       
       <MapUpdater center={center} zoom={zoom} routePath={finalTraveled} remainingPath={finalRemaining} />
 
-      {startPoint && (
+      {startPoint && typeof startPoint.lat === 'number' && typeof startPoint.lng === 'number' && (
         <Marker position={[startPoint.lat, startPoint.lng]} icon={defaultIcon}>
           <Popup>Start: {startPoint.label}</Popup>
         </Marker>
       )}
 
-      {endPoint && (
+      {endPoint && typeof endPoint.lat === 'number' && typeof endPoint.lng === 'number' && (
         <Marker position={[endPoint.lat, endPoint.lng]} icon={defaultIcon}>
           <Popup>Destination: {endPoint.label}</Popup>
         </Marker>
       )}
 
-      {currentLocation && (
+      {currentLocation && typeof currentLocation.lat === 'number' && typeof currentLocation.lng === 'number' && (
         <Marker position={[currentLocation.lat, currentLocation.lng]} icon={truckIcon}>
           <Popup>
             <div className="text-center">
@@ -198,6 +198,7 @@ export default function LeafletMap({
       )}
 
       {checkIns.map((checkIn, idx) => (
+        typeof checkIn.lat === 'number' && typeof checkIn.lng === 'number' ? (
         <Marker key={idx} position={[checkIn.lat, checkIn.lng]} icon={defaultIcon} opacity={0.6}>
           <Popup>
             <span className="font-bold">Check-in {idx + 1}</span><br/>
@@ -205,6 +206,7 @@ export default function LeafletMap({
             <span className="text-xs">{checkIn.timestamp}</span>
           </Popup>
         </Marker>
+        ) : null
       ))}
 
       {finalTraveled.length > 0 && (
