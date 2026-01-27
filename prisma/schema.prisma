@@ -34,6 +34,7 @@ model Shipment {
   
   // Sender Details
   senderName     String
+  senderEmail    String?
   senderPhone    String
   senderAddress  String?
   

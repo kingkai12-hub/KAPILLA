@@ -130,7 +130,7 @@ export default function CreateShipment() {
   const handleReset = () => {
     setGeneratedWaybill(null);
     setFormData({
-      senderName: '', senderPhone: '', senderAddress: '',
+      senderName: '', senderPhone: '', senderAddress: '', senderEmail: '',
       receiverName: '', receiverPhone: '', receiverAddress: '',
       origin: 'Dar es Salaam', destination: '',
       weight: '', type: 'Parcel', cargoDetails: ''

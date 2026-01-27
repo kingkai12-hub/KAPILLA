@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { sendShipmentCreatedEmail } from '@/lib/mail';
 
 export async function GET(req: Request) {
   try {
@@ -54,6 +55,17 @@ export async function POST(req: Request) {
         }
       }
     });
+
+    // Send email notification if sender email is provided
+    if (senderEmail) {
+      await sendShipmentCreatedEmail(
+        senderEmail,
+        waybillNumber,
+        senderName,
+        receiverName,
+        destination
+      );
+    }
 
     return NextResponse.json(shipment, { status: 201 });
   } catch (error) {
