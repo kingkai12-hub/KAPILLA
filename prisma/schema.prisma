@@ -70,7 +70,7 @@ model Trip {
   driverId      String
   driver        User      @relation(fields: [driverId], references: [id])
   shipmentId    String?
-  shipment      Shipment? @relation(fields: [shipmentId], references: [id])
+  shipment      Shipment? @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   
   startLocation String
   endLocation   String
@@ -89,7 +89,7 @@ model Trip {
 model CheckIn {
   id        String   @id @default(uuid())
   tripId    String
-  trip      Trip     @relation(fields: [tripId], references: [id])
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
   
   location  String   // Text description
   latitude  Float
@@ -104,7 +104,7 @@ model CheckIn {
 model TrackingEvent {
   id          String         @id @default(uuid())
   shipmentId  String
-  shipment    Shipment       @relation(fields: [shipmentId], references: [id])
+  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   
   status      String
   location    String         // e.g., "Dar es Salaam Hub"

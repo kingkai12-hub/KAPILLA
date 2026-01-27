@@ -62,25 +62,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
     }
 
-    // Delete related events first, then the shipment (transactional)
-    await db.$transaction([
-      db.trackingEvent.deleteMany({
-        where: { shipmentId: shipment.id }
-      }),
-      db.checkIn.deleteMany({
-        where: {
-          trip: {
-            shipmentId: shipment.id
-          }
-        }
-      }),
-      db.trip.deleteMany({
-        where: { shipmentId: shipment.id }
-      }),
-      db.shipment.delete({
-        where: { waybillNumber: waybill }
-      })
-    ]);
+    // Delete shipment directly - Cascade delete in DB handles related records
+    await db.shipment.delete({
+      where: { waybillNumber: waybill }
+    });
 
     revalidatePath('/staff/dashboard');
     revalidatePath('/staff/shipments');
