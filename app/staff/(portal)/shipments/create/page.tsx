@@ -234,6 +234,10 @@ export default function CreateShipment() {
               <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700">Email Address (Optional)</label>
+              <input type="email" name="senderEmail" value={formData.senderEmail} onChange={handleChange} placeholder="For shipment notifications" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Address / Location</label>
               <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
