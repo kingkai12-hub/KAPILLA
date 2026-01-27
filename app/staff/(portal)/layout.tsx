@@ -252,19 +252,30 @@ export default function StaffPortalLayout({
                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{user?.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{user?.role}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => router.push('/staff/profile')}
-                  className="focus:outline-none"
-                >
-                  {user?.image ? (
-                    <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm cursor-pointer">
-                      {user?.name?.charAt(0)}
-                    </div>
-                  )}
-                </button>
+                <div className="flex flex-col items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => router.push('/staff/profile')}
+                    className="focus:outline-none"
+                  >
+                    {user?.image ? (
+                      <img src={user.image} alt="Profile" className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer" />
+                    ) : (
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm cursor-pointer">
+                        {user?.name?.charAt(0)}
+                      </div>
+                    )}
+                  </button>
+                  {/* Mobile Text Under Profile */}
+                  <div className="sm:hidden flex flex-col items-center">
+                    <p className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">
+                        {user?.name?.split(' ').pop()}
+                    </p>
+                    <p className="text-[8px] text-slate-500 dark:text-slate-400 leading-none mt-0.5">
+                        {user?.role}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
