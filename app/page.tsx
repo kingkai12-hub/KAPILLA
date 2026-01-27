@@ -323,6 +323,21 @@ export default function Home() {
                        </ErrorBoundary>
                     </div>
 
+                    {/* Download POD Button - Only if Delivered */}
+                    {searchResult.currentStatus === 'DELIVERED' && (
+                        <div className="mt-4 flex justify-center animate-in fade-in zoom-in duration-500">
+                            <a 
+                                href={`/staff/shipments/${searchResult.waybillNumber}/pod`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 group"
+                            >
+                                <FileCheck className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                Download Proof of Delivery
+                            </a>
+                        </div>
+                    )}
+
                     {/* Horizontal Status Line */}
                     <div className="w-full py-4 px-4">
                       <div className="flex items-center justify-between relative">
