@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { ScanLine, MapPin, Navigation, Save, Calendar } from 'lucide-react';
+import { ScanLine, MapPin, Navigation, Save, Calendar, Clock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { locationCoords } from '@/lib/locations';
 
@@ -253,22 +253,38 @@ function UpdateTrackingContent() {
               <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania. System will verify coordinates automatically.</p>
             </div>
 
-            {/* Estimated Delivery Date */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estimated Delivery Date</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+            {/* Estimated Delivery Date & Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estimated Date</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Calendar className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={estimatedDelivery}
+                    onChange={(e) => setEstimatedDelivery(e.target.value)}
+                    className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
                 </div>
-                <input
-                  type="date"
-                  value={estimatedDelivery}
-                  onChange={(e) => setEstimatedDelivery(e.target.value)}
-                  className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
               </div>
-              <p className="text-xs text-slate-500 mt-1">Optional: expected delivery date for this cargo.</p>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estimated Time</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Clock className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="time"
+                    value={estimatedDeliveryTime}
+                    onChange={(e) => setEstimatedDeliveryTime(e.target.value)}
+                    className="block w-full py-3 px-4 pl-10 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
             </div>
+            <p className="text-xs text-slate-500 -mt-4">Optional: expected delivery date and time.</p>
 
             {/* Transport Type */}
             <div>

@@ -56,7 +56,11 @@ export async function POST(req: Request) {
     // Transaction operations
     const composedRemarks = (() => {
       const parts = [remarks?.trim()].filter(Boolean);
-      if (estimatedDelivery) parts.push(`ETA: ${estimatedDelivery}`);
+      if (estimatedDelivery) {
+        let eta = `ETA: ${estimatedDelivery}`;
+        if (estimatedDeliveryTime) eta += ` ${estimatedDeliveryTime}`;
+        parts.push(eta);
+      }
       if (transportType) parts.push(`Mode: ${transportType}`);
       return parts.join(' | ');
     })();

@@ -43,12 +43,15 @@ export default function Home() {
   let latestMode: string | null = null;
 
   if (latestEvent?.remarks) {
-    const etaMatch = latestEvent.remarks.match(/ETA:\s*([0-9-]+)/i);
+    const etaMatch = latestEvent.remarks.match(/ETA:\s*([0-9-]+)(?:\s+([0-9:]+))?/i);
     const modeMatch = latestEvent.remarks.match(/Mode:\s*([A-Z]+)/i);
 
     if (etaMatch) {
       const date = new Date(etaMatch[1]);
       latestEta = isNaN(date.getTime()) ? etaMatch[1] : date.toLocaleDateString();
+      if (etaMatch[2]) {
+        latestEta += ` ${etaMatch[2]}`;
+      }
     }
 
     if (modeMatch) {
