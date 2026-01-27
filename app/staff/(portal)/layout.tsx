@@ -249,13 +249,19 @@ export default function StaffPortalLayout({
                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{user?.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{user?.role}</p>
                 </div>
-                {user?.image ? (
-                  <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
-                    {user?.name?.charAt(0)}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => router.push('/staff/profile')}
+                  className="focus:outline-none"
+                >
+                  {user?.image ? (
+                    <img src={user.image} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm cursor-pointer">
+                      {user?.name?.charAt(0)}
+                    </div>
+                  )}
+                </button>
               </div>
             </div>
           </div>
