@@ -78,19 +78,10 @@ export default function Home() {
       const modeMatch = latestEvent.remarks.match(/Mode:\s*([A-Z]+)/i);
 
       if (etaMatch) {
-        const dateStr = etaMatch[1] + (etaMatch[2] ? ` ${etaMatch[2]}` : '');
-        const date = new Date(etaMatch[1]); // Parse date part only for safety check
-        if (!isNaN(date.getTime())) {
-             latestEta = dateStr; // Keep original string if valid
-             // Or better: try to format if possible, but keeping original string is safer for "2023-10-10"
-             // Let's try to make it pretty only if full date is valid
-             const fullDate = new Date(dateStr);
-             if (!isNaN(fullDate.getTime())) {
-                 latestEta = fullDate.toLocaleDateString() + (etaMatch[2] ? ` ${etaMatch[2]}` : '');
-             }
-        } else {
-             latestEta = dateStr;
-        }
+        // Store raw date string for hydration-safe rendering
+        const datePart = etaMatch[1];
+        const timePart = etaMatch[2] ? ` ${etaMatch[2]}` : '';
+        latestEta = datePart + timePart;
       }
 
       if (modeMatch) {
@@ -351,7 +342,7 @@ export default function Home() {
                       <div className="space-y-1">
                         <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
                       <div className="font-semibold text-slate-900 text-base">
-                        {latestEta || 'Not available'}
+                        {latestEta ? <FormattedDate dateStr={latestEta} /> : 'Not available'}
                       </div>
                       </div>
                       <div className="space-y-1">
@@ -433,8 +424,8 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-
-              )}
+                )}
+             </ErrorBoundary>
             </div>
           </motion.section>
         )}
