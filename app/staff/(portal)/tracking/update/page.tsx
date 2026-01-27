@@ -20,8 +20,8 @@ function UpdateTrackingContent() {
   // Status is always IN_TRANSIT for tracking updates
   const status = 'IN_TRANSIT'; 
   
-  const [location, setLocation] = useState('Dar es Salaam Hub');
-  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(locationCoords['Dar es Salaam'] || null);
+  const [location, setLocation] = useState('');
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [remarks, setRemarks] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
   const [estimatedDeliveryTime, setEstimatedDeliveryTime] = useState<string>('');
