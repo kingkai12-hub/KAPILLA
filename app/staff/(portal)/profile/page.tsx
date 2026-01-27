@@ -21,15 +21,23 @@ export default function ProfilePage() {
   useEffect(() => {
     const storedUser = localStorage.getItem('kapilla_user');
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setName(parsedUser.name || '');
-      setEmail(parsedUser.email || '');
-      setWorkId(parsedUser.workId || '');
-      setPhoneNumber(parsedUser.phoneNumber || '');
-      setImage(parsedUser.image || '');
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setName(parsedUser.name || '');
+        setEmail(parsedUser.email || '');
+        setWorkId(parsedUser.workId || '');
+        setPhoneNumber(parsedUser.phoneNumber || '');
+        setImage(parsedUser.image || '');
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+        localStorage.removeItem('kapilla_user');
+        router.push('/staff/login');
+      }
+    } else {
+      router.push('/staff/login');
     }
-  }, []);
+  }, [router]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
