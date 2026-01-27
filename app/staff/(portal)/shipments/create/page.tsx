@@ -157,6 +157,12 @@ export default function CreateShipment() {
               <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">From (Sender)</h3>
               <p className="font-bold text-lg text-blue-950">{formData.senderName}</p>
               <p className="text-blue-900">{formData.senderPhone}</p>
+              {formData.senderEmail && (
+                <p className="text-blue-900 text-sm flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full inline-block" title="Notification Sent"></span>
+                  {formData.senderEmail}
+                </p>
+              )}
               <p className="text-blue-900 text-sm">{formData.senderAddress}</p>
             </div>
             <div>
