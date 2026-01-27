@@ -232,7 +232,7 @@ export default function Home() {
             <div className="bg-white p-1 rounded-lg shadow-sm">
               <img src="/logo.png" alt="Kapilla Logo" className="w-10 h-10 object-contain" />
             </div>
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla<span className="text-blue-600">Group</span></span>
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla <span className="text-blue-600">Group Ltd</span></span>
           </div>
           <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <a href="#" className="hover:text-blue-600 transition-colors">Services</a>
@@ -536,7 +536,7 @@ export default function Home() {
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <img src="/logo.png" alt="Kapilla Logo" className="w-8 h-8 object-contain brightness-0 invert" />
-              <span className="text-base font-bold text-white tracking-tight">Kapilla<span className="text-blue-500">Group</span></span>
+              <span className="text-base font-bold text-white tracking-tight">Kapilla <span className="text-blue-500">Group Ltd</span></span>
             </div>
             <p className="max-w-xs text-xs leading-relaxed mb-4">
               Setting the standard for modern logistics in East Africa and beyond. Fast, Secure, Reliable.
