@@ -100,7 +100,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(result[0]); // Return the created event
   } catch (error) {
-    console.error('[TRACKING_POST]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[TRACKING_POST_ERROR]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error', 
+      details: error instanceof Error ? error.message : String(error) 
+    }, { status: 500 });
   }
 }

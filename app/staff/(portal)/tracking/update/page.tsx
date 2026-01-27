@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { ScanLine, MapPin, Navigation, Save } from 'lucide-react';
+import { ScanLine, MapPin, Navigation, Save, Calendar } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { locationCoords } from '@/lib/locations';
 
