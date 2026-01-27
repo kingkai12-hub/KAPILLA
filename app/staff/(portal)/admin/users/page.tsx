@@ -187,7 +187,7 @@ export default function UserManagement() {
                   value={formData.email || ''}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
-                  disabled={!!editingUser} // Prevent email change for simplicity
+                  // disabled={!!editingUser} // Allow email editing
                 />
               </div>
               <div>

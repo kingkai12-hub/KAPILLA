@@ -75,9 +75,9 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, role, password, workId, phoneNumber } = body;
+    const { id, name, email, role, password, workId, phoneNumber } = body;
 
-    const data: any = { name, role, workId, phoneNumber };
+    const data: any = { name, email, role, workId, phoneNumber };
     if (password) data.password = password;
 
     const updatedUser = await db.user.update({
@@ -87,7 +87,10 @@ export async function PUT(req: Request) {
 
     const { password: _, ...userWithoutPassword } = updatedUser;
     return NextResponse.json(userWithoutPassword);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
