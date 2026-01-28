@@ -189,7 +189,7 @@ export default function DocumentsPage() {
             </button>
           )}
           <button
-            onClick={fetchData}
+            onClick={() => fetchData(true)}
             className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
             title="Refresh"
           >
