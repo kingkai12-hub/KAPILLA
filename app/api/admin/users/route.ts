@@ -112,8 +112,8 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (userToDelete.role === 'ADMIN') {
-        return NextResponse.json({ error: 'Cannot delete an ADMIN account' }, { status: 403 });
+    if (['ADMIN', 'MD', 'CEO'].includes(userToDelete.role)) {
+        return NextResponse.json({ error: 'Cannot delete an Executive/Admin account' }, { status: 403 });
     }
 
     await db.user.delete({ where: { id } });
