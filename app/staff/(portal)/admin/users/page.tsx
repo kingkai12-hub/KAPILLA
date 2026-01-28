@@ -211,6 +211,9 @@ export default function UserManagement() {
                   <option value="DRIVER">Driver</option>
                   <option value="OPERATION_MANAGER">Operation Manager</option>
                   <option value="MANAGER">Manager</option>
+                  <option value="ACCOUNTANT">Accountant</option>
+                  <option value="MD">Managing Director (MD)</option>
+                  <option value="CEO">Chief Executive Officer (CEO)</option>
                   <option value="ADMIN">Admin</option>
                 </select>
               </div>
@@ -284,9 +287,11 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-100' :
+                        ['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'bg-purple-50 text-purple-700 border-purple-100' :
                         user.role === 'DRIVER' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
                         user.role === 'MANAGER' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                        user.role === 'OPERATION_MANAGER' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                        user.role === 'ACCOUNTANT' ? 'bg-teal-50 text-teal-700 border-teal-100' :
                         'bg-slate-100 text-slate-700 border-slate-200'
                       }`}>
                         {user.role}
@@ -305,9 +310,9 @@ export default function UserManagement() {
                       </button>
                       <button 
                         onClick={() => handleDelete(user.id)}
-                        className={`p-1 rounded ${user.role === 'ADMIN' ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
-                        title={user.role === 'ADMIN' ? "Cannot delete Admin" : "Delete"}
-                        disabled={user.role === 'ADMIN'}
+                        className={`p-1 rounded ${['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
+                        title={['ADMIN', 'MD', 'CEO'].includes(user.role) ? "Cannot delete Executive/Admin" : "Delete"}
+                        disabled={['ADMIN', 'MD', 'CEO'].includes(user.role)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
