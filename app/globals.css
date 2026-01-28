@@ -113,3 +113,25 @@ input[type="button"],
 a {
   cursor: pointer;
 }
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+  
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: none !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure content fits */
+  html, body {
+    height: auto;
+    width: 100%;
+    overflow: visible;
+  }
+}

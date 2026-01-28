@@ -74,7 +74,7 @@ export default function LabelPage() {
       </button>
 
       {/* A4 Document Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl print:shadow-none print:w-[210mm] print:h-auto print:min-h-0 box-border relative text-black font-sans text-sm mx-auto">
+      <div className="bg-white w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl print:shadow-none print:w-full print:max-w-[210mm] print:h-auto print:min-h-0 box-border relative text-black font-sans text-sm mx-auto print:p-[5mm] print:m-0">
         
         {/* Header Section */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
