@@ -362,8 +362,9 @@ export default function DocumentsPage() {
                 </>
               )}
             </div>
-          ))}
-        </div>
+          )))
+        }
+      </div>
       )}
 
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
