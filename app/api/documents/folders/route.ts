@@ -41,9 +41,30 @@ export async function POST(req: Request) {
       }
     })
 
+    // Retroactive assignment: Move existing unassigned documents that match the new folder
+    if (folder.name.length >= 3) {
+      const prefix = folder.name.substring(0, 3)
+      await prisma.document.updateMany({
+        where: {
+          folderId: null,
+          name: {
+            startsWith: prefix,
+            mode: 'insensitive'
+          }
+        },
+        data: {
+          folderId: folder.id
+        }
+      })
+    }
+
     return NextResponse.json(folder)
   } catch (error: any) {
     console.error('Folder creation error:', error)
+    // Handle Prisma unique constraint violation
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Folder name already exists' }, { status: 409 })
+    }
     return NextResponse.json({ error: error?.message || 'Failed to create folder' }, { status: 500 })
   }
 }

@@ -56,6 +56,7 @@ export default function DocumentsPage() {
       setNewFolderName('')
       setShowCreateFolder(false)
       fetchFolders()
+      fetchDocs() // Refresh docs to reflect auto-assignment
     } else {
       const err = await res.json().catch(() => ({}))
       alert(err?.error || 'Failed to create folder')
