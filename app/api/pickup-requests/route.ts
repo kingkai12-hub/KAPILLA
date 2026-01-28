@@ -42,14 +42,6 @@ export async function GET(req: Request) {
     const requests = await db.pickupRequest.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        status: true,
-        senderName: true,
-        destination: true,
-        createdAt: true,
-        // Only select needed fields to reduce payload size
-      }
     });
     return NextResponse.json(requests);
   } catch (error) {
