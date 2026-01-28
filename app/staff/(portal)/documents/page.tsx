@@ -16,38 +16,52 @@ export default function DocumentsPage() {
   const [newFolderName, setNewFolderName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
+  const [renameFolderValue, setRenameFolderValue] = useState('')
+
   useEffect(() => {
     const u = localStorage.getItem('kapilla_user')
     if (u) setCurrentUser(JSON.parse(u))
-    fetchData()
+  }, [])
 
+  useEffect(() => {
+    fetchData()
     const interval = setInterval(() => {
       fetchData(false)
     }, 5000)
-
     return () => clearInterval(interval)
-  }, [])
+  }, [currentFolder])
 
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true)
-    await Promise.all([fetchDocs(), fetchFolders()])
+    // Pass current folder ID to fetchDocs to optimize and fix "Ghost Doc" issue
+    await Promise.all([fetchDocs(currentFolder?.id), fetchFolders()])
     if (showLoading) setLoading(false)
   }
 
   const fetchFolders = async () => {
-    const res = await fetch(`/api/documents/folders?ts=${Date.now()}`, { cache: 'no-store' })
-    if (res.ok) setFolders(await res.json())
+    try {
+      const res = await fetch(`/api/documents/folders?ts=${Date.now()}`, { cache: 'no-store' })
+      if (res.ok) setFolders(await res.json())
+    } catch (e) {
+      console.error('Failed to fetch folders', e)
+    }
   }
 
-  const fetchDocs = async () => {
+  const fetchDocs = async (folderId?: string) => {
     try {
-      const res = await fetch(`/api/documents?ts=${Date.now()}`, { cache: 'no-store' })
+      // Use query param to filter on server side
+      const url = folderId 
+        ? `/api/documents?folderId=${folderId}&ts=${Date.now()}`
+        : `/api/documents?folderId=null&ts=${Date.now()}`
+      
+      const res = await fetch(url, { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setDocs(data)
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      console.error('Failed to fetch docs', e)
     }
   }
 
@@ -62,10 +76,47 @@ export default function DocumentsPage() {
       setNewFolderName('')
       setShowCreateFolder(false)
       fetchFolders()
-      fetchDocs() // Refresh docs to reflect auto-assignment
+      fetchDocs(currentFolder?.id)
     } else {
       const err = await res.json().catch(() => ({}))
       alert(err?.error || 'Failed to create folder')
+    }
+  }
+
+  const deleteFolder = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this folder? Documents will be moved to the main list.')) return
+    
+    const res = await fetch(`/api/documents/folders/delete?id=${id}&userId=${currentUser?.id}`, { method: 'DELETE' })
+    if (res.ok) {
+      fetchFolders()
+      if (currentFolder?.id === id) setCurrentFolder(null)
+    } else {
+      alert('Failed to delete folder')
+    }
+  }
+
+  const startRenameFolder = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRenamingFolderId(id)
+    setRenameFolderValue(name)
+  }
+
+  const saveRenameFolder = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!renamingFolderId || !renameFolderValue.trim()) return
+    
+    const res = await fetch('/api/documents/folders/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: renamingFolderId, name: renameFolderValue.trim() })
+    })
+
+    if (res.ok) {
+      setRenamingFolderId(null)
+      fetchFolders()
+    } else {
+      alert('Failed to rename folder')
     }
   }
 
@@ -117,7 +168,7 @@ export default function DocumentsPage() {
       }
       
       // Success - fetch fresh data to get real ID and finalized state
-      fetchDocs()
+      fetchDocs(currentFolder?.id)
       fetchFolders()
     } finally {
       setUploading(false)
@@ -153,7 +204,7 @@ export default function DocumentsPage() {
     if (res.ok) {
       setRenamingId(null)
       setRenameValue('')
-      fetchDocs()
+      fetchDocs(currentFolder?.id)
       fetchFolders()
     }
   }
@@ -175,9 +226,7 @@ export default function DocumentsPage() {
     }
   }
 
-  const filteredDocs = currentFolder 
-    ? docs.filter(d => d.folderId === currentFolder.id) 
-    : docs.filter(d => !d.folderId)
+  const filteredDocs = docs
 
   return (
     <div className="space-y-6">
