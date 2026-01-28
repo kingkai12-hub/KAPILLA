@@ -19,7 +19,7 @@ export default function DocumentsPage() {
 
   const fetchDocs = async () => {
     try {
-      const res = await fetch('/api/documents')
+      const res = await fetch(`/api/documents?ts=${Date.now()}`, { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setDocs(data)
