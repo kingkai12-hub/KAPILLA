@@ -11,17 +11,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const folderId = searchParams.get('folderId')
-
-    const whereClause = folderId 
-      ? { folderId } 
-      : (folderId === null ? undefined : { folderId: null }) 
-      
-    // If folderId is 'all', fetch everything (legacy behavior support if needed, or for search)
-    // But better to be explicit. 
-    // Let's refine: 
-    // if ?folderId=xxx -> fetch docs in that folder
-    // if ?folderId=null (string) -> fetch docs with NO folder
-    // if no param -> fetch ALL docs (current behavior, but slow) -> let's default to ALL for safety but UI should use params
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     let where: any = {}
     if (folderId === 'null') {
@@ -30,23 +22,36 @@ export async function GET(request: Request) {
       where = { folderId }
     }
 
-    const docs = await prisma.document.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        mimeType: true,
-        createdAt: true,
-        updatedAt: true,
-        uploaderId: true,
-        folderId: true,
-        uploader: { select: { id: true, name: true, role: true } },
-        folder: true
-        // Exclude 'data' field to drastically improve performance
+    const [docs, total] = await Promise.all([
+      prisma.document.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: skip,
+        select: {
+          id: true,
+          name: true,
+          mimeType: true,
+          createdAt: true,
+          updatedAt: true,
+          uploaderId: true,
+          folderId: true,
+          uploader: { select: { id: true, name: true, role: true } },
+          folder: true
+        }
+      }),
+      prisma.document.count({ where })
+    ])
+    
+    return NextResponse.json({
+      docs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
       }
     })
-    return NextResponse.json(docs)
   } catch {
     return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
   }
@@ -54,16 +59,43 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { uploaderId, name, data, mimeType, folderId: providedFolderId } = body
+    // Support both JSON (legacy) and FormData (new)
+    const contentType = request.headers.get('content-type') || ''
+    
+    let uploaderId, name, data, mimeType, folderId
+
+    if (contentType.includes('application/json')) {
+      const body = await request.json()
+      uploaderId = body.uploaderId
+      name = body.name
+      data = body.data
+      mimeType = body.mimeType
+      folderId = body.folderId
+    } else if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      uploaderId = formData.get('uploaderId') as string
+      name = formData.get('name') as string
+      const file = formData.get('file') as File
+      folderId = formData.get('folderId') as string
+      
+      if (file) {
+        mimeType = file.type
+        // Convert File to Base64
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        data = `data:${file.type};base64,${buffer.toString('base64')}`
+      }
+    }
+
     if (!uploaderId || !name || !data || !mimeType) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
-    let folderId = providedFolderId || null
+    const effectiveFolderId = (folderId === 'null' || !folderId) ? null : folderId
 
     // Auto-assign folder if first 3 chars match AND no folderId was provided
-    if (!folderId && name.length >= 3) {
+    let finalFolderId = effectiveFolderId
+    if (!finalFolderId && name.length >= 3) {
       const prefix = name.substring(0, 3)
       const folder = await prisma.documentFolder.findFirst({
         where: {
@@ -71,15 +103,22 @@ export async function POST(request: Request) {
         }
       })
       if (folder) {
-        folderId = folder.id
+        finalFolderId = folder.id
       }
     }
 
     const doc = await prisma.document.create({
-      data: { uploaderId, name, data, mimeType, folderId },
+      data: { 
+        uploaderId, 
+        name, 
+        data, 
+        mimeType, 
+        folderId: finalFolderId 
+      },
     })
     return NextResponse.json(doc)
-  } catch {
+  } catch (error) {
+    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Failed to save document' }, { status: 500 })
   }
 }
