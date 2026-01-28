@@ -1,5 +1,0 @@
-[33mcommit 598d48dc13c6cf60e390741dc5b18faa914b7a59[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
-Author: Kapilla Dev <dev@kapilla.com>
-Date:   Mon Jan 26 18:00:15 2026 +0300
-
-    Enhance map route splitting and fix visualization

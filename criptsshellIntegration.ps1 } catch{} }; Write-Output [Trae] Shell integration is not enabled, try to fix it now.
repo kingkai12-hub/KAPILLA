@@ -1,5 +1,0 @@
-[33mcommit 562ddfa07c420a21a85025e9c1ea528ba28e00e8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
-Author: Kapilla Dev <dev@kapilla.com>
-Date:   Mon Jan 26 15:50:12 2026 +0300
-
-    Refine tracking update UI and restrict shipment status updates
