@@ -168,6 +168,29 @@ export default function DocumentsPage() {
     }
   }
 
+  // Delete Folder
+  const handleDeleteFolder = async (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!currentUser) return
+    if (!['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) {
+      alert('Only Admins can delete folders')
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete folder "${folder.name}"? Documents inside will be moved to the main library.`)) return
+
+    try {
+      const res = await fetch(`/api/documents/folders/delete?id=${folder.id}&userId=${currentUser.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setFolders(prev => prev.filter(f => f.id !== folder.id))
+      } else {
+        alert('Failed to delete folder')
+      }
+    } catch {
+      alert('Error deleting folder')
+    }
+  }
+
   // Rename Document
   const handleRename = async (doc: Document) => {
     const newName = prompt('Enter new name:', doc.name)
@@ -249,6 +272,15 @@ export default function DocumentsPage() {
                 <div className="absolute top-2 right-2 text-amber-500" title="Locked Folder">
                   <Lock className="w-4 h-4" />
                 </div>
+              )}
+              {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
+                 <button 
+                   onClick={(e) => handleDeleteFolder(folder, e)}
+                   className="absolute top-2 right-8 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                   title="Delete Folder"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
               )}
               <div className="flex items-center gap-3">
                 <Folder className={`w-10 h-10 ${folder.isLocked ? 'text-amber-500 fill-amber-100' : 'text-yellow-500 fill-yellow-500'}`} />
