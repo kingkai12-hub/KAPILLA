@@ -29,6 +29,6 @@ export async function POST(req: Request) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Folder name already exists' }, { status: 409 })
     }
-    return NextResponse.json({ error: 'Failed to rename folder' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Failed to rename folder' }, { status: 500 })
   }
 }

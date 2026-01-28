@@ -338,7 +338,7 @@ export default function DocumentsPage() {
                     <span className="text-xs text-slate-500">{folder._count?.documents || 0} docs</span>
                   </div>
 
-                  {currentUser && ['ADMIN', 'OPERATION_MANAGER'].includes(currentUser.role) && (
+                  {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
                     <div className="absolute top-1 right-1 flex gap-1">
                       <button
                         onClick={(e) => startRenameFolder(folder.id, folder.name, e)}
