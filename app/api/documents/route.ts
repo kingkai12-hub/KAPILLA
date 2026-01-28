@@ -47,14 +47,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { uploaderId, name, data, mimeType } = body
+    const { uploaderId, name, data, mimeType, folderId: providedFolderId } = body
     if (!uploaderId || !name || !data || !mimeType) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
-    // Auto-assign folder if first 3 chars match
-    let folderId = null
-    if (name.length >= 3) {
+    let folderId = providedFolderId || null
+
+    // Auto-assign folder if first 3 chars match AND no folderId was provided
+    if (!folderId && name.length >= 3) {
       const prefix = name.substring(0, 3)
       const folder = await prisma.documentFolder.findFirst({
         where: {

@@ -157,7 +157,13 @@ export default function DocumentsPage() {
       const res = await fetch('/api/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploaderId: currentUser.id, name, data, mimeType }),
+        body: JSON.stringify({ 
+          uploaderId: currentUser.id, 
+          name, 
+          data, 
+          mimeType,
+          folderId: currentFolder?.id || null 
+        }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -368,9 +374,24 @@ export default function DocumentsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {loading ? (
-                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
+                // Skeleton loading state
+                [...Array(3)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div></td>
+                    <td className="px-6 py-4"><div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-full"></div></td>
+                  </tr>
+                ))
               ) : filteredDocs.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">No documents in this location</td></tr>
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+                    <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p>No documents found in this location</p>
+                  </td>
+                </tr>
               ) : (
                 filteredDocs.map(doc => (
                   <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
