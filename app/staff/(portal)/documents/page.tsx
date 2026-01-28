@@ -287,17 +287,70 @@ export default function DocumentsPage() {
       {!currentFolder && folders.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {folders.map(folder => (
-            <button
+            <div
               key={folder.id}
               onClick={() => setCurrentFolder(folder)}
-              className="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="relative group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
-              <svg className="w-12 h-12 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
-              </svg>
-              <span className="font-medium text-slate-700 dark:text-slate-200">{folder.name}</span>
-              <span className="text-xs text-slate-500">{folder._count?.documents || 0} docs</span>
-            </button>
+              {renamingFolderId === folder.id ? (
+                <div className="p-4 flex flex-col gap-2" onClick={e => e.stopPropagation()}>
+                  <input
+                    value={renameFolderValue}
+                    onChange={e => setRenameFolderValue(e.target.value)}
+                    className="w-full px-2 py-1 border rounded text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    autoFocus
+                    placeholder="Folder Name"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button 
+                      onClick={saveRenameFolder} 
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
+                      Save
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setRenamingFolderId(null); }} 
+                      className="text-xs border px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="p-4 flex flex-col items-center gap-2">
+                    <svg className="w-12 h-12 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                    </svg>
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{folder.name}</span>
+                    <span className="text-xs text-slate-500">{folder._count?.documents || 0} docs</span>
+                  </div>
+
+                  {currentUser && currentUser.role === 'ADMIN' && (
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <button
+                        onClick={(e) => startRenameFolder(folder.id, folder.name, e)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
+                        title="Rename Folder"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => deleteFolder(folder.id, e)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+                        title="Delete Folder"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           ))}
         </div>
       )}
