@@ -290,9 +290,14 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {!currentFolder && folders.length > 0 && (
+      {!currentFolder && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {folders.map(folder => (
+          {folders.length === 0 && !loading ? (
+             <div className="col-span-full text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+               <p className="text-slate-500">No folders created yet</p>
+             </div>
+          ) : (
+            folders.map(folder => (
             <div
               key={folder.id}
               onClick={() => setCurrentFolder(folder)}
