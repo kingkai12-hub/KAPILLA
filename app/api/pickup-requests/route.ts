@@ -34,8 +34,22 @@ export async function POST(req: Request) {
 // Since this is called from the staff portal which is protected, it's "okay" for this MVP.
 export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get('status');
+
+    const where = status ? { status } : {};
+
     const requests = await db.pickupRequest.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        status: true,
+        senderName: true,
+        destination: true,
+        createdAt: true,
+        // Only select needed fields to reduce payload size
+      }
     });
     return NextResponse.json(requests);
   } catch (error) {

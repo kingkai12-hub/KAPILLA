@@ -57,13 +57,23 @@ export default function StaffPortalLayout({
     // Fetch pending pickup requests count
     const fetchPendingCount = async () => {
       try {
-        const res = await fetch('/api/pickup-requests');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout for layout items
+        
+        // Optimize: Only fetch pending requests to reduce load
+        const res = await fetch('/api/pickup-requests?status=PENDING', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const data = await res.json();
-          const pending = data.filter((req: any) => req.status === 'PENDING').length;
-          setPendingPickupCount(pending);
+          // Safety check if data is array
+          if (Array.isArray(data)) {
+            // Since we filtered by status=PENDING in API, data.length is the count
+            setPendingPickupCount(data.length);
+          }
         }
       } catch (error) {
+        // Silently fail for layout counters
         console.error("Failed to fetch pending requests", error);
       }
     };

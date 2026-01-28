@@ -37,42 +37,65 @@ export default function DocumentsPage() {
       setLoading(true)
       setError(null)
     }
+    
+    // Fetch independently to prevent one failure from blocking the other
+    const folderPromise = fetchFolders().catch(e => {
+      console.error('Folder fetch failed', e)
+      return null // Continue even if folders fail
+    })
+    
+    const docPromise = fetchDocs(currentFolder?.id).catch(e => {
+      console.error('Doc fetch failed', e)
+      throw e // Re-throw doc error to trigger error state
+    })
+
     try {
-      // Pass current folder ID to fetchDocs to optimize and fix "Ghost Doc" issue
-      await Promise.all([fetchDocs(currentFolder?.id), fetchFolders()])
+      await Promise.all([folderPromise, docPromise])
     } catch (err) {
       console.error('Fetch error:', err)
-      if (showLoading) setError('Failed to load data. Please check your connection.')
+      if (showLoading) setError('Failed to load documents. Please check your connection.')
     } finally {
       if (showLoading) setLoading(false)
     }
   }
 
+  const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 15000) => {
+    const controller = new AbortController()
+    const id = setTimeout(() => controller.abort(), timeout)
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal })
+      clearTimeout(id)
+      return res
+    } catch (e) {
+      clearTimeout(id)
+      throw e
+    }
+  }
+
   const fetchFolders = async () => {
     try {
-      const res = await fetch(`/api/documents/folders?ts=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetchWithTimeout(`/api/documents/folders?ts=${Date.now()}`, { cache: 'no-store' })
       if (!res.ok) throw new Error('Failed to fetch folders')
       setFolders(await res.json())
     } catch (e) {
       console.error('Failed to fetch folders', e)
-      throw e // Propagate to fetchData
+      throw e 
     }
   }
 
   const fetchDocs = async (folderId?: string) => {
     try {
-      // Use query param to filter on server side
       const url = folderId 
         ? `/api/documents?folderId=${folderId}&ts=${Date.now()}`
         : `/api/documents?folderId=null&ts=${Date.now()}`
       
-      const res = await fetch(url, { cache: 'no-store' })
+      const res = await fetchWithTimeout(url, { cache: 'no-store' })
       if (!res.ok) throw new Error('Failed to fetch docs')
       const data = await res.json()
       setDocs(data)
     } catch (e) {
       console.error('Failed to fetch docs', e)
-      throw e // Propagate to fetchData
+      throw e
     }
   }
 
