@@ -26,8 +26,8 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const { name, userId } = await req.json()
-    if (!name || !userId) {
-      return NextResponse.json({ error: 'Name and userId required' }, { status: 400 })
+    if (!name || typeof name !== 'string' || !userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'Valid name and userId required' }, { status: 400 })
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } })

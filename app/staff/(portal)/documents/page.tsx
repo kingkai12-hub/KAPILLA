@@ -85,6 +85,7 @@ export default function DocumentsPage() {
 
   const deleteFolder = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!currentUser?.id) return
     if (!confirm('Are you sure you want to delete this folder? Documents will be moved to the main list.')) return
     
     const res = await fetch(`/api/documents/folders/delete?id=${id}&userId=${currentUser?.id}`, { method: 'DELETE' })
