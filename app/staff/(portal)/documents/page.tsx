@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from 'react'
-import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Pencil } from 'lucide-react'
 
 // Types
 interface Document {
@@ -155,6 +155,30 @@ export default function DocumentsPage() {
     }
   }
 
+  // Rename Document
+  const handleRename = async (doc: Document) => {
+    const newName = prompt('Enter new name:', doc.name)
+    if (!newName || newName === doc.name || !currentUser) return
+
+    try {
+      const res = await fetch('/api/documents/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: doc.id, name: newName, userId: currentUser.id })
+      })
+      if (res.ok) {
+        // Optimistic update
+        setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, name: newName } : d))
+        fetchFolders() // Folder counts might change due to auto-assign
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Failed to rename document')
+      }
+    } catch {
+      alert('Error renaming document')
+    }
+  }
+
   // Render
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -230,62 +254,79 @@ export default function DocumentsPage() {
 
       {/* Documents List */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-slate-50 text-slate-500 border-b">
-            <tr>
-              <th className="px-6 py-3 font-medium">Name</th>
-              <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium">Uploaded By</th>
-              <th className="px-6 py-3 font-medium">Date</th>
-              <th className="px-6 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {loading ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 text-slate-500 border-b">
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
-                  Loading documents...
-                </td>
+                <th className="px-6 py-3 font-medium">Name</th>
+                <th className="px-6 py-3 font-medium hidden md:table-cell">Type</th>
+                <th className="px-6 py-3 font-medium hidden md:table-cell">Uploaded By</th>
+                <th className="px-6 py-3 font-medium hidden md:table-cell">Date</th>
+                <th className="px-6 py-3 font-medium text-right">Actions</th>
               </tr>
-            ) : documents.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                  No documents found in this folder.
-                </td>
-              </tr>
-            ) : (
-              documents.map(doc => (
-                <tr key={doc.id} className="hover:bg-slate-50 group">
-                  <td className="px-6 py-4 font-medium flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-slate-400" />
-                    <span className="truncate max-w-[200px]" title={doc.name}>{doc.name}</span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
-                  <td className="px-6 py-4 text-slate-500">{doc.uploader?.name || 'Unknown'}</td>
-                  <td className="px-6 py-4 text-slate-500">{new Date(doc.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    <a 
-                      href={`/api/documents/download?id=${doc.id}`} 
-                      target="_blank"
-                      className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                      title="View/Download"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </a>
-                    <button 
-                      onClick={() => handleDelete(doc.id)}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            </thead>
+            <tbody className="divide-y">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
+                    Loading documents...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : documents.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                    No documents found in this folder.
+                  </td>
+                </tr>
+              ) : (
+                documents.map(doc => (
+                  <tr key={doc.id} className="hover:bg-slate-50 group">
+                    <td className="px-6 py-4 font-medium">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <span className="truncate max-w-[150px] md:max-w-[300px]" title={doc.name}>{doc.name}</span>
+                      </div>
+                      {/* Mobile-only details */}
+                      <div className="md:hidden text-xs text-slate-500 mt-1 pl-6">
+                        {new Date(doc.createdAt).toLocaleDateString()} • {doc.uploader?.name || 'Unknown'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
+                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.uploader?.name || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{new Date(doc.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <a 
+                          href={`/api/documents/download?id=${doc.id}`} 
+                          target="_blank"
+                          className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                          title="View/Download"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </a>
+                        <button 
+                          onClick={() => handleRename(doc)}
+                          className="p-2 hover:bg-amber-50 text-amber-600 rounded-lg transition-colors"
+                          title="Rename"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(doc.id)}
+                          className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
