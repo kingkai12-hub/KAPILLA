@@ -33,18 +33,29 @@ export default function DocumentsPage() {
   }, [currentFolder])
 
   const fetchData = async (showLoading = true) => {
-    if (showLoading) setLoading(true)
-    // Pass current folder ID to fetchDocs to optimize and fix "Ghost Doc" issue
-    await Promise.all([fetchDocs(currentFolder?.id), fetchFolders()])
-    if (showLoading) setLoading(false)
+    if (showLoading) {
+      setLoading(true)
+      setError(null)
+    }
+    try {
+      // Pass current folder ID to fetchDocs to optimize and fix "Ghost Doc" issue
+      await Promise.all([fetchDocs(currentFolder?.id), fetchFolders()])
+    } catch (err) {
+      console.error('Fetch error:', err)
+      if (showLoading) setError('Failed to load data. Please check your connection.')
+    } finally {
+      if (showLoading) setLoading(false)
+    }
   }
 
   const fetchFolders = async () => {
     try {
       const res = await fetch(`/api/documents/folders?ts=${Date.now()}`, { cache: 'no-store' })
-      if (res.ok) setFolders(await res.json())
+      if (!res.ok) throw new Error('Failed to fetch folders')
+      setFolders(await res.json())
     } catch (e) {
       console.error('Failed to fetch folders', e)
+      throw e // Propagate to fetchData
     }
   }
 
@@ -56,12 +67,12 @@ export default function DocumentsPage() {
         : `/api/documents?folderId=null&ts=${Date.now()}`
       
       const res = await fetch(url, { cache: 'no-store' })
-      if (res.ok) {
-        const data = await res.json()
-        setDocs(data)
-      }
+      if (!res.ok) throw new Error('Failed to fetch docs')
+      const data = await res.json()
+      setDocs(data)
     } catch (e) {
       console.error('Failed to fetch docs', e)
+      throw e // Propagate to fetchData
     }
   }
 
@@ -88,12 +99,19 @@ export default function DocumentsPage() {
     if (!currentUser?.id) return
     if (!confirm('Are you sure you want to delete this folder? Documents will be moved to the main list.')) return
     
-    const res = await fetch(`/api/documents/folders/delete?id=${id}&userId=${currentUser?.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      fetchFolders()
+    // Optimistic remove
+    const prevFolders = folders
+    setFolders(folders.filter(f => f.id !== id))
+
+    try {
+      const res = await fetch(`/api/documents/folders/delete?id=${id}&userId=${currentUser?.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        throw new Error('Failed to delete')
+      }
       if (currentFolder?.id === id) setCurrentFolder(null)
-    } else {
+    } catch {
       alert('Failed to delete folder')
+      setFolders(prevFolders) // Rollback
     }
   }
 
@@ -270,7 +288,7 @@ export default function DocumentsPage() {
               onClick={() => setShowCreateFolder(true)}
               className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
             >
-              Create File
+              Create Folder
             </button>
           )}
           <button
@@ -302,14 +320,25 @@ export default function DocumentsPage() {
 
       {!currentFolder && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {loading && folders.length === 0 ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-3 min-h-[160px]">
-                <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-              </div>
-            ))
+          {error ? (
+            <div className="col-span-full text-center py-8 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+              <p className="text-red-600 dark:text-red-400 mb-2">{error}</p>
+              <button 
+                onClick={() => fetchData(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
+             // Folder Skeletons
+             [...Array(4)].map((_, i) => (
+               <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col items-center gap-2">
+                 <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+                 <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-12"></div>
+               </div>
+             ))
           ) : folders.length === 0 ? (
              <div className="col-span-full text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                <p className="text-slate-500">No folders created yet</p>
