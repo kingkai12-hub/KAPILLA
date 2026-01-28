@@ -27,6 +27,7 @@ model User {
   
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  documents        Document[]
 
   @@map("User")
 }
@@ -44,6 +45,19 @@ model Message {
   createdAt     DateTime  @default(now())
 
   @@map("Message")
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  name       String
+  data       String
+  mimeType   String
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("Document")
 }
 
 model Shipment {
