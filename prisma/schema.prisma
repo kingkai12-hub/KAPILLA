@@ -24,8 +24,26 @@ model User {
   updatedAt DateTime @updatedAt
 
   trips     Trip[]
+  
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 
   @@map("User")
+}
+
+model Message {
+  id            String    @id @default(uuid())
+  senderId      String
+  sender        User      @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId    String
+  receiver      User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content       String?
+  attachment    String?   // Base64 string for low-size storage
+  attachmentType String?  // 'IMAGE'
+  isRead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  @@map("Message")
 }
 
 model Shipment {

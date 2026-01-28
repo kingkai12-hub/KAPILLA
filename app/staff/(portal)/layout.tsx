@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Truck,
   Sun,
-  Moon
+  Moon,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -106,6 +107,7 @@ export default function StaffPortalLayout({
     { name: 'Create Shipment', href: '/staff/shipments/create', icon: PackagePlus, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'Update Tracking', href: '/staff/tracking/update', icon: ScanBarcode, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'Pickup Requests', href: '/staff/pickup-requests', icon: Truck, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
+    { name: 'Communication', href: '/staff/communication', icon: MessageSquare, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'User Management', href: '/staff/admin/users', icon: UserCog, roles: ['ADMIN'] },
     { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
