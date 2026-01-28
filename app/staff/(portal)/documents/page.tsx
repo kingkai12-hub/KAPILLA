@@ -57,7 +57,8 @@ export default function DocumentsPage() {
       setShowCreateFolder(false)
       fetchFolders()
     } else {
-      alert('Failed to create folder')
+      const err = await res.json().catch(() => ({}))
+      alert(err?.error || 'Failed to create folder')
     }
   }
 
