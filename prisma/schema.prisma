@@ -28,8 +28,20 @@ model User {
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
   documents        Document[]
+  createdFolders   DocumentFolder[]
 
   @@map("User")
+}
+
+model DocumentFolder {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  creatorId String
+  creator   User       @relation(fields: [creatorId], references: [id])
+  createdAt DateTime   @default(now())
+  documents Document[]
+
+  @@map("DocumentFolder")
 }
 
 model Message {
@@ -54,6 +66,8 @@ model Document {
   mimeType   String
   uploaderId String
   uploader   User     @relation(fields: [uploaderId], references: [id])
+  folderId   String?
+  folder     DocumentFolder? @relation(fields: [folderId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

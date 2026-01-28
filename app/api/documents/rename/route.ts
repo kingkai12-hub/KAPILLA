@@ -12,9 +12,24 @@ export async function POST(request: Request) {
     if (!id || !name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+
+    // Auto-assign folder if first 3 chars match
+    let folderId = null
+    if (name.length >= 3) {
+      const prefix = name.substring(0, 3)
+      const folder = await prisma.documentFolder.findFirst({
+        where: {
+          name: { startsWith: prefix, mode: 'insensitive' }
+        }
+      })
+      if (folder) {
+        folderId = folder.id
+      }
+    }
+
     const doc = await prisma.document.update({
       where: { id },
-      data: { name },
+      data: { name, folderId },
     })
     return NextResponse.json(doc)
   } catch {

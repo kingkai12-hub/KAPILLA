@@ -10,7 +10,10 @@ export async function GET() {
   try {
     const docs = await prisma.document.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { uploader: { select: { id: true, name: true, role: true } } },
+      include: { 
+        uploader: { select: { id: true, name: true, role: true } },
+        folder: true
+      },
     })
     return NextResponse.json(docs)
   } catch {
@@ -25,8 +28,23 @@ export async function POST(request: Request) {
     if (!uploaderId || !name || !data || !mimeType) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+
+    // Auto-assign folder if first 3 chars match
+    let folderId = null
+    if (name.length >= 3) {
+      const prefix = name.substring(0, 3)
+      const folder = await prisma.documentFolder.findFirst({
+        where: {
+          name: { startsWith: prefix, mode: 'insensitive' }
+        }
+      })
+      if (folder) {
+        folderId = folder.id
+      }
+    }
+
     const doc = await prisma.document.create({
-      data: { uploaderId, name, data, mimeType },
+      data: { uploaderId, name, data, mimeType, folderId },
     })
     return NextResponse.json(doc)
   } catch {
