@@ -20,12 +20,18 @@ export default function DocumentsPage() {
     const u = localStorage.getItem('kapilla_user')
     if (u) setCurrentUser(JSON.parse(u))
     fetchData()
+
+    const interval = setInterval(() => {
+      fetchData(false)
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     await Promise.all([fetchDocs(), fetchFolders()])
-    setLoading(false)
+    if (showLoading) setLoading(false)
   }
 
   const fetchFolders = async () => {
@@ -87,6 +93,16 @@ export default function DocumentsPage() {
     if (!currentUser) return
     setUploading(true)
     try {
+      // Optimistic update
+      const tempDoc = {
+        id: 'temp-' + Date.now(),
+        name,
+        createdAt: new Date().toISOString(),
+        uploader: { name: currentUser.name },
+        folderId: currentFolder?.id || null
+      }
+      setDocs(prev => [tempDoc, ...prev])
+
       const res = await fetch('/api/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,8 +111,12 @@ export default function DocumentsPage() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         alert(err?.error || 'Failed to save document')
+        // Rollback optimistic update if failed
+        setDocs(prev => prev.filter(d => d.id !== tempDoc.id))
         return
       }
+      
+      // Success - fetch fresh data to get real ID and finalized state
       fetchDocs()
       fetchFolders()
     } finally {
