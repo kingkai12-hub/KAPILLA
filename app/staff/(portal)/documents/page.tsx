@@ -175,7 +175,8 @@ export default function DocumentsPage() {
         name,
         createdAt: new Date().toISOString(),
         uploader: { name: currentUser.name },
-        folderId: currentFolder?.id || null
+        folderId: currentFolder?.id || null,
+        data // Store locally for immediate preview
       }
       setDocs(prev => [tempDoc, ...prev])
 

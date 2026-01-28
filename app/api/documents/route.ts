@@ -33,10 +33,18 @@ export async function GET(request: Request) {
     const docs = await prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { 
+      select: {
+        id: true,
+        name: true,
+        mimeType: true,
+        createdAt: true,
+        updatedAt: true,
+        uploaderId: true,
+        folderId: true,
         uploader: { select: { id: true, name: true, role: true } },
         folder: true
-      },
+        // Exclude 'data' field to drastically improve performance
+      }
     })
     return NextResponse.json(docs)
   } catch {
