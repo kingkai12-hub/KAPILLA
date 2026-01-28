@@ -5,9 +5,27 @@ import { db as prisma } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url)
+    const userId = searchParams.get('userId')
+    
+    let whereClause = {}
+
+    if (userId) {
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      // If user is not found or is a basic staff/driver, hide locked folders
+      // Allowed roles to see locked folders: ADMIN, MD, CEO, MANAGER, OPERATION_MANAGER
+      if (!user || ['STAFF', 'DRIVER'].includes(user.role)) {
+        whereClause = { isLocked: false }
+      }
+    } else {
+      // If no user ID provided, default to secure (hide locked)
+      whereClause = { isLocked: false }
+    }
+
     const folders = await prisma.documentFolder.findMany({
+      where: whereClause,
       orderBy: { name: 'asc' },
       include: {
         _count: {
@@ -23,7 +41,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name, userId } = await req.json()
+    const { name, userId, isLocked } = await req.json()
     if (!name || typeof name !== 'string' || !userId || typeof userId !== 'string') {
       return NextResponse.json({ error: 'Valid name and userId required' }, { status: 400 })
     }
@@ -36,7 +54,8 @@ export async function POST(req: Request) {
     const folder = await prisma.documentFolder.create({
       data: {
         name: name.trim(),
-        creatorId: userId
+        creatorId: userId,
+        isLocked: !!isLocked
       }
     })
 

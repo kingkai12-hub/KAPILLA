@@ -8,16 +8,37 @@ export const revalidate = 0
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
     const folderId = searchParams.get('folderId')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
+
+    // Check authorization
+    let isAuthorized = false
+    if (userId) {
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (user && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(user.role)) {
+        isAuthorized = true
+      }
+    }
 
     let where: any = {}
     if (folderId === 'null') {
       where = { folderId: null }
     } else if (folderId) {
       where = { folderId }
+    }
+
+    // If not authorized, exclude documents from locked folders
+    if (!isAuthorized) {
+      where = {
+        ...where,
+        OR: [
+          { folderId: null },
+          { folder: { isLocked: false } }
+        ]
+      }
     }
 
     const [docs, total] = await Promise.all([

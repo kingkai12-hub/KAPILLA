@@ -39,6 +39,7 @@ model DocumentFolder {
   creatorId String
   creator   User       @relation(fields: [creatorId], references: [id])
   createdAt DateTime   @default(now())
+  isLocked  Boolean    @default(false)
   documents Document[]
 
   @@map("DocumentFolder")

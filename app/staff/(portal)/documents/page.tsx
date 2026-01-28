@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from 'react'
-import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Pencil } from 'lucide-react'
+import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Pencil, Lock } from 'lucide-react'
 
 // Types
 interface Document {
@@ -16,6 +16,7 @@ interface Document {
 interface Folder {
   id: string
   name: string
+  isLocked: boolean
   _count: { documents: number }
 }
 
@@ -46,14 +47,17 @@ export default function DocumentsPage() {
 
   // Initial Load
   useEffect(() => {
-    fetchFolders()
-    fetchDocuments(1)
-  }, [currentFolder])
+    if (currentUser) {
+      fetchFolders()
+      fetchDocuments(1)
+    }
+  }, [currentUser, currentFolder])
 
   // Fetch Folders
   const fetchFolders = async () => {
+    if (!currentUser) return
     try {
-      const res = await fetch('/api/documents/folders?ts=' + Date.now(), { cache: 'no-store' })
+      const res = await fetch(`/api/documents/folders?ts=${Date.now()}&userId=${currentUser.id}`, { cache: 'no-store' })
       if (res.ok) setFolders(await res.json())
     } catch (e) {
       console.error('Failed to load folders', e)
@@ -62,11 +66,12 @@ export default function DocumentsPage() {
 
   // Fetch Documents
   const fetchDocuments = async (pageNum: number) => {
+    if (!currentUser) return
     setLoading(true)
     setError(null)
     try {
       const folderParam = currentFolder ? `folderId=${currentFolder.id}` : 'folderId=null'
-      const res = await fetch(`/api/documents?${folderParam}&page=${pageNum}&limit=50&ts=${Date.now()}`)
+      const res = await fetch(`/api/documents?${folderParam}&page=${pageNum}&limit=50&ts=${Date.now()}&userId=${currentUser.id}`)
       
       if (!res.ok) throw new Error('Failed to load documents')
       
@@ -139,11 +144,19 @@ export default function DocumentsPage() {
     const name = prompt('Enter folder name:')
     if (!name || !currentUser) return
 
+    let isLocked = false
+    // Allow admins/managers to lock folders
+    if (['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) {
+      if (confirm('Do you want to LOCK this folder? (Only Admins/Managers will be able to access it)')) {
+        isLocked = true
+      }
+    }
+
     try {
       const res = await fetch('/api/documents/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, userId: currentUser.id })
+        body: JSON.stringify({ name, userId: currentUser.id, isLocked })
       })
       if (res.ok) {
         fetchFolders()
@@ -230,10 +243,15 @@ export default function DocumentsPage() {
             <div 
               key={folder.id}
               onClick={() => setCurrentFolder(folder)}
-              className="bg-white p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group"
+              className="bg-white p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group relative"
             >
+              {folder.isLocked && (
+                <div className="absolute top-2 right-2 text-amber-500" title="Locked Folder">
+                  <Lock className="w-4 h-4" />
+                </div>
+              )}
               <div className="flex items-center gap-3">
-                <Folder className="w-10 h-10 text-yellow-500 fill-yellow-500" />
+                <Folder className={`w-10 h-10 ${folder.isLocked ? 'text-amber-500 fill-amber-100' : 'text-yellow-500 fill-yellow-500'}`} />
                 <div className="overflow-hidden">
                   <h3 className="font-medium truncate" title={folder.name}>{folder.name}</h3>
                   <p className="text-xs text-slate-500">{folder._count?.documents || 0} files</p>
