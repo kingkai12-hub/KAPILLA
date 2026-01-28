@@ -208,23 +208,26 @@ export default function DocumentsPage() {
   }
 
   const saveRename = async () => {
-    if (!renamingId || !renameValue.trim()) return
+    if (!renamingId || !renameValue.trim() || !currentUser?.id) return
     const res = await fetch('/api/documents/rename', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: renamingId, name: renameValue.trim() }),
+      body: JSON.stringify({ id: renamingId, name: renameValue.trim(), userId: currentUser.id }),
     })
     if (res.ok) {
       setRenamingId(null)
       setRenameValue('')
       fetchDocs(currentFolder?.id)
       fetchFolders()
+    } else {
+      const err = await res.json().catch(() => ({}))
+      alert(err.error || 'Failed to rename document')
     }
   }
 
   const canDelete = (doc: any) => {
     if (!currentUser) return false
-    if (currentUser.role === 'ADMIN') return true
+    if (['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) return true
     const owner = doc.uploaderId === currentUser.id
     const withinOneMinute = Date.now() - new Date(doc.createdAt).getTime() < 60000
     return owner && withinOneMinute
@@ -262,7 +265,7 @@ export default function DocumentsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {!currentFolder && currentUser && ['ADMIN', 'OPERATION_MANAGER'].includes(currentUser.role) && (
+          {!currentFolder && currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
             <button
               onClick={() => setShowCreateFolder(true)}
               className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
@@ -299,7 +302,15 @@ export default function DocumentsPage() {
 
       {!currentFolder && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {folders.length === 0 && !loading ? (
+          {loading && folders.length === 0 ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-3 min-h-[160px]">
+                <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+              </div>
+            ))
+          ) : folders.length === 0 ? (
              <div className="col-span-full text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                <p className="text-slate-500">No folders created yet</p>
              </div>

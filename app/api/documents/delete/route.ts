@@ -20,7 +20,7 @@ export async function DELETE(request: Request) {
     const now = Date.now()
     const created = new Date(doc.createdAt).getTime()
     const canOwnerDelete = doc.uploaderId === requesterId && now - created < 60000
-    const canAdminDelete = user.role === 'ADMIN'
+    const canAdminDelete = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(user.role)
     if (!canOwnerDelete && !canAdminDelete) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
