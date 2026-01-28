@@ -8,23 +8,17 @@ export const revalidate = 0
 
 export async function POST(req: Request) {
   try {
-    const { id, name } = await req.json()
+    const { id, name, userId } = await req.json()
     
-    if (!id || !name) {
-      return NextResponse.json({ error: 'ID and name required' }, { status: 400 })
+    if (!id || !name || !userId) {
+      return NextResponse.json({ error: 'ID, name and userId required' }, { status: 400 })
     }
 
-    // Check permissions? The UI restricts to ADMIN/Manager. 
-    // Ideally we check session/user here too, but for speed we rely on frontend + basic checks if needed.
-    // For safety, let's verify the user exists if we passed userId, but the request might not have it.
-    // We'll assume the frontend handles auth context. 
-    // But wait, the previous routes checked userId.
-    // Let's check userId if passed, or just allow it if we trust the internal API usage.
-    // The user context is in the body usually.
-    
-    // Let's updated to accept userId for auth check
-    // Actually, let's just do the update.
-    
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user || !['ADMIN', 'OPERATION_MANAGER'].includes(user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
     const folder = await prisma.documentFolder.update({
       where: { id },
       data: { name: name.trim() }

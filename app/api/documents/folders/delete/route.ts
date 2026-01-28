@@ -17,7 +17,7 @@ export async function DELETE(req: Request) {
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !['ADMIN', 'OPERATION_MANAGER'].includes(user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
