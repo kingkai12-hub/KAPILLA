@@ -58,9 +58,12 @@ export default function DocumentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uploaderId: currentUser.id, name, data, mimeType }),
       })
-      if (res.ok) {
-        await fetchDocs()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err?.error || 'Failed to save document')
+        return
       }
+      await fetchDocs()
     } finally {
       setUploading(false)
     }
@@ -69,7 +72,15 @@ export default function DocumentsPage() {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     if (!f) return
-    compressAndUpload(f)
+    try {
+      compressAndUpload(f)
+    } catch {
+      const reader = new FileReader()
+      reader.readAsDataURL(f)
+      reader.onload = async () => {
+        await uploadDoc(reader.result as string, f.name, f.type || 'image/jpeg')
+      }
+    }
   }
 
   const startRename = (id: string, name: string) => {
