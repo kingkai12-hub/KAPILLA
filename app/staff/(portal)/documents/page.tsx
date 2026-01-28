@@ -105,19 +105,25 @@ export default function DocumentsPage() {
 
   const saveRenameFolder = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!renamingFolderId || !renameFolderValue.trim()) return
+    if (!renamingFolderId || !renameFolderValue.trim() || !currentUser?.id) return
     
-    const res = await fetch('/api/documents/folders/rename', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: renamingFolderId, name: renameFolderValue.trim() })
-    })
+    setIsRenaming(true)
+    try {
+      const res = await fetch('/api/documents/folders/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: renamingFolderId, name: renameFolderValue.trim(), userId: currentUser.id })
+      })
 
-    if (res.ok) {
-      setRenamingFolderId(null)
-      fetchFolders()
-    } else {
-      alert('Failed to rename folder')
+      if (res.ok) {
+        setRenamingFolderId(null)
+        fetchFolders()
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to rename folder')
+      }
+    } finally {
+      setIsRenaming(false)
     }
   }
 
