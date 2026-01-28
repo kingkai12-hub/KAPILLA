@@ -63,7 +63,6 @@ export async function POST(req: Request) {
         senderPhone,
         waybillNumber,
         senderName,
-        receiverName,
         destination
       );
     }

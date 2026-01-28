@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+export const runtime = 'nodejs'
+
 export async function GET() {
   try {
     const docs = await prisma.document.findMany({

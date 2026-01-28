@@ -1,4 +1,4 @@
-\"use client\"
+"use client"
 
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -113,24 +113,24 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className=\"space-y-6\">
-      <div className=\"flex items-center justify-between\">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className=\"text-3xl font-bold text-slate-900 dark:text-white\">Documents</h1>
-          <p className=\"text-slate-500 dark:text-slate-400 mt-1\">Scan and share documents to the team.</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Documents</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Scan and share documents to the team.</p>
         </div>
-        <div className=\"flex items-center gap-2\">
+        <div className="flex items-center gap-2">
           <input
             ref={fileInputRef}
-            type=\"file\"
-            accept=\"image/*\"
-            capture=\"environment\"
+            type="file"
+            accept="image/*"
+            capture="environment"
             onChange={onFileChange}
-            className=\"hidden\"
+            className="hidden"
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className=\"px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50\"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             disabled={uploading}
           >
             {uploading ? 'Uploading...' : 'Scan Document'}
@@ -138,55 +138,55 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <div className=\"bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden\">
-        <div className=\"overflow-x-auto\">
-          <table className=\"min-w-full divide-y divide-slate-100 dark:divide-slate-700\">
-            <thead className=\"bg-slate-50 dark:bg-slate-900/50\">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className=\"px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase\">Name</th>
-                <th className=\"px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase\">Uploaded By</th>
-                <th className=\"px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase\">Date</th>
-                <th className=\"px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase\">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Uploaded By</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className=\"divide-y divide-slate-100 dark:divide-slate-700\">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {loading ? (
-                <tr><td colSpan={4} className=\"px-6 py-8 text-center text-slate-500\">Loading...</td></tr>
+                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
               ) : docs.length === 0 ? (
-                <tr><td colSpan={4} className=\"px-6 py-8 text-center text-slate-500\">No documents</td></tr>
+                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">No documents</td></tr>
               ) : (
                 docs.map(doc => (
-                  <tr key={doc.id} className=\"hover:bg-slate-50 dark:hover:bg-slate-700/50\">
-                    <td className=\"px-6 py-4\">
+                  <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <td className="px-6 py-4">
                       {renamingId === doc.id ? (
-                        <div className=\"flex items-center gap-2\">
+                        <div className="flex items-center gap-2">
                           <input
                             value={renameValue}
                             onChange={e => setRenameValue(e.target.value)}
-                            className=\"px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600\"
+                            className="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600"
                           />
-                          <button onClick={saveRename} className=\"px-3 py-2 bg-blue-600 text-white rounded-lg\">Save</button>
-                          <button onClick={() => setRenamingId(null)} className=\"px-3 py-2 border rounded-lg\">Cancel</button>
+                          <button onClick={saveRename} className="px-3 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+                          <button onClick={() => setRenamingId(null)} className="px-3 py-2 border rounded-lg">Cancel</button>
                         </div>
                       ) : (
-                        <div className=\"flex items-center gap-2\">
-                          <a href={`/api/documents/download?id=${doc.id}`} target=\"_blank\" className=\"font-medium text-blue-600 dark:text-blue-400 hover:underline\">
+                        <div className="flex items-center gap-2">
+                          <a href={`/api/documents/download?id=${doc.id}`} target="_blank" className="font-medium text-blue-600 dark:text-blue-400 hover:underline">
                             {doc.name}
                           </a>
-                          <button onClick={() => startRename(doc.id, doc.name)} className=\"text-slate-500 hover:text-slate-700\">Rename</button>
+                          <button onClick={() => startRename(doc.id, doc.name)} className="text-slate-500 hover:text-slate-700">Rename</button>
                         </div>
                       )}
                     </td>
-                    <td className=\"px-6 py-4 text-sm text-slate-700 dark:text-slate-200\">
+                    <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-200">
                       {doc.uploader?.name || 'Unknown'}
                     </td>
-                    <td className=\"px-6 py-4 text-sm text-slate-500\">
+                    <td className="px-6 py-4 text-sm text-slate-500">
                       {new Date(doc.createdAt).toLocaleString()}
                     </td>
-                    <td className=\"px-6 py-4 text-right flex justify-end gap-2\">
-                      <button onClick={() => copyLink(doc.id)} className=\"px-3 py-2 border rounded-lg\">Copy Link</button>
+                    <td className="px-6 py-4 text-right flex justify-end gap-2">
+                      <button onClick={() => copyLink(doc.id)} className="px-3 py-2 border rounded-lg">Copy Link</button>
                       {canDelete(doc) && (
-                        <button onClick={() => deleteDoc(doc.id)} className=\"px-3 py-2 bg-red-600 text-white rounded-lg\">Delete</button>
+                        <button onClick={() => deleteDoc(doc.id)} className="px-3 py-2 bg-red-600 text-white rounded-lg">Delete</button>
                       )}
                     </td>
                   </tr>
