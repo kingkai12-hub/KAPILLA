@@ -109,7 +109,7 @@ export default function UserManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Admin Role</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">User Management</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Create, edit, and manage staff access.</p>
         </div>
         <button 
