@@ -90,6 +90,8 @@ export default function LeafletMap({
 
     const fetchRoute = async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         let url = '';
         if (currentLocation) {
             // Fetch route with intermediate waypoint: Start -> Current -> End
@@ -99,7 +101,8 @@ export default function LeafletMap({
             url = `https://router.project-osrm.org/route/v1/driving/${startPoint.lng},${startPoint.lat};${endPoint.lng},${endPoint.lat}?overview=full&geometries=geojson`;
         }
 
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await response.json();
         
         if (data.routes && data.routes[0]) {
@@ -145,6 +148,9 @@ export default function LeafletMap({
     };
 
     fetchRoute();
+    return () => {
+      // nothing specific to clean, controller is scoped per call
+    }
   }, [startPoint, endPoint, currentLocation]);
 
   // Use internal route segments if available, otherwise fall back to props

@@ -69,6 +69,7 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Clear staff session when visiting home page to ensure security
   useEffect(() => {
@@ -111,7 +112,13 @@ export default function Home() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/shipments/${wb}`);
+      // Abort any previous in-flight request
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`/api/shipments/${wb}`, { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         setSearchResult(data);

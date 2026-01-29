@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useDeferredValue } from 'react';
 import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2, XCircle, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ export default function PickupRequests() {
   const [search, setSearch] = useState('');
   const [userRole, setUserRole] = useState<string>('');
   const router = useRouter();
+  const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     fetchRequests();
@@ -23,7 +24,10 @@ export default function PickupRequests() {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('/api/pickup-requests');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch('/api/pickup-requests', { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         setRequests(data);
@@ -95,11 +99,15 @@ export default function PickupRequests() {
     }
   };
 
-  const filteredRequests = requests.filter(req => 
-    req.senderName.toLowerCase().includes(search.toLowerCase()) ||
-    req.senderPhone.includes(search) ||
-    req.pickupAddress.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRequests = useMemo(() => {
+    const term = deferredSearch.toLowerCase();
+    if (!term) return requests;
+    return requests.filter(req =>
+      (req.senderName || '').toLowerCase().includes(term) ||
+      (req.senderPhone || '').includes(deferredSearch) ||
+      (req.pickupAddress || '').toLowerCase().includes(term)
+    );
+  }, [requests, deferredSearch]);
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto">
