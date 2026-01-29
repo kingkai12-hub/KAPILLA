@@ -98,6 +98,32 @@ export async function POST(request: Request) {
       folderId = formData.get('folderId') as string
       
       if (file) {
+        // SECURITY: Validate File Size (Max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          return NextResponse.json({ error: 'File size too large (Max 10MB)' }, { status: 413 })
+        }
+
+        // SECURITY: Validate MIME Type
+        const ALLOWED_MIME_TYPES = [
+          'application/pdf',
+          'image/jpeg', 
+          'image/png', 
+          'image/webp',
+          'text/plain',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+          'application/vnd.rar',
+          'application/zip',
+          'application/x-zip-compressed',
+          'application/octet-stream' // Be careful with this, but sometimes needed for binary
+        ]
+        
+        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+          return NextResponse.json({ error: 'Invalid file type' }, { status: 415 })
+        }
+
         mimeType = file.type
         // Convert File to Base64
         const arrayBuffer = await file.arrayBuffer()

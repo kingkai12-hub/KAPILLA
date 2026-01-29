@@ -27,15 +27,9 @@ export async function POST(req: Request) {
           });
           const { password: _, ...userWithoutPassword } = newUser;
           return NextResponse.json(userWithoutPassword);
-        } else if (adminUser.password !== 'admin123') {
-           // Reset Password if wrong
-           const updatedUser = await db.user.update({
-             where: { email },
-             data: { password: 'admin123' }
-           });
-           const { password: _, ...userWithoutPassword } = updatedUser;
-           return NextResponse.json(userWithoutPassword);
-        }
+        } 
+        // SECURITY FIX: Removed auto-reset of password to prevent backdoor access.
+        // If admin exists but password is wrong, fall through to normal check.
       } catch (e) {
         console.error("Auto-heal failed:", e);
         // Continue to normal login flow if this fails
