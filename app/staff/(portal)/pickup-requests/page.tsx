@@ -207,6 +207,15 @@ export default function PickupRequests() {
                         <PackagePlus className="w-4 h-4" />
                         Issue Waybill
                       </button>
+                      {['ADMIN', 'OPERATION_MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                        <button
+                          onClick={() => handleDelete(req.id)}
+                          className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"
+                          title="Delete Request"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ) : req.status === 'ISSUED' ? (
                     <div className="flex items-center gap-2">

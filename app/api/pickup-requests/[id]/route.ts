@@ -41,9 +41,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Not Found' }, { status: 404 });
     }
 
-    if (!['ISSUED', 'REJECTED'].includes(String(request.status))) {
-      return NextResponse.json({ error: 'Only ISSUED or REJECTED can be deleted' }, { status: 400 });
-    }
+    // if (!['ISSUED', 'REJECTED'].includes(String(request.status))) {
+    //   return NextResponse.json({ error: 'Only ISSUED or REJECTED can be deleted' }, { status: 400 });
+    // }
 
     await db.pickupRequest.delete({ where: { id } });
     return NextResponse.json({ message: 'Deleted successfully' });
