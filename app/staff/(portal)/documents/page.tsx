@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from 'react'
-import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Pencil, Lock } from 'lucide-react'
+import { FileText, Folder, Plus, Upload, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Pencil, Lock, Unlock } from 'lucide-react'
 
 // Types
 interface Document {
@@ -35,6 +35,11 @@ export default function DocumentsPage() {
   // Pagination
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+
+  // Modals
+  const [showCreateFolder, setShowCreateFolder] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [newFolderLocked, setNewFolderLocked] = useState(false)
 
   // Upload
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -139,32 +144,64 @@ export default function DocumentsPage() {
     }
   }
 
-  // Create Folder
-  const handleCreateFolder = async () => {
-    const name = prompt('Enter folder name:')
-    if (!name || !currentUser) return
-
-    let isLocked = false
-    // Allow admins/managers to lock folders
-    if (['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) {
-      if (confirm('Do you want to LOCK this folder? (Only Admins/Managers will be able to access it)')) {
-        isLocked = true
-      }
-    }
+  // Create Folder (Submit)
+  const submitCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newFolderName || !currentUser) return
 
     try {
       const res = await fetch('/api/documents/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, userId: currentUser.id, isLocked })
+        body: JSON.stringify({ 
+          name: newFolderName, 
+          userId: currentUser.id, 
+          isLocked: newFolderLocked 
+        })
       })
       if (res.ok) {
         fetchFolders()
+        setShowCreateFolder(false)
+        setNewFolderName('')
+        setNewFolderLocked(false)
       } else {
-        alert('Failed to create folder')
+        const data = await res.json()
+        alert(data.error || 'Failed to create folder')
       }
     } catch {
       alert('Error creating folder')
+    }
+  }
+
+  // Toggle Lock
+  const handleToggleLock = async (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!currentUser) return
+    
+    // Check Permissions
+    if (!['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) {
+       alert('Only Admins can lock/unlock folders')
+       return
+    }
+
+    const newLockState = !folder.isLocked
+    if (!confirm(`Are you sure you want to ${newLockState ? 'LOCK' : 'UNLOCK'} this folder?`)) return
+
+    try {
+       const res = await fetch('/api/documents/folders/lock', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ folderId: folder.id, userId: currentUser.id, isLocked: newLockState })
+       })
+
+       if (res.ok) {
+         // Optimistic Update
+         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, isLocked: newLockState } : f))
+       } else {
+         alert('Failed to update lock status')
+       }
+    } catch {
+       alert('Error updating lock status')
     }
   }
 
@@ -232,11 +269,11 @@ export default function DocumentsPage() {
           <p className="text-slate-500 text-sm">Manage and organize your digital files</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {!currentFolder && (
             <button 
-              onClick={handleCreateFolder}
-              className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-slate-50 text-sm font-medium"
+              onClick={() => setShowCreateFolder(true)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-slate-50 text-sm font-medium whitespace-nowrap"
             >
               <Plus className="w-4 h-4" /> New Folder
             </button>
@@ -251,13 +288,72 @@ export default function DocumentsPage() {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 whitespace-nowrap"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {uploading ? 'Uploading...' : 'Upload File'}
           </button>
         </div>
       </div>
+
+      {/* Create Folder Modal */}
+      {showCreateFolder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b font-medium flex justify-between items-center">
+              <h3>Create New Folder</h3>
+              <button onClick={() => setShowCreateFolder(false)} className="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <form onSubmit={submitCreateFolder} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Folder Name</label>
+                <input 
+                  type="text" 
+                  autoFocus
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Invoices 2024"
+                  required
+                />
+              </div>
+              
+              {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <input 
+                    type="checkbox" 
+                    id="lockFolder"
+                    checked={newFolderLocked}
+                    onChange={(e) => setNewFolderLocked(e.target.checked)}
+                    className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                  />
+                  <label htmlFor="lockFolder" className="text-sm text-amber-800 flex items-center gap-1 cursor-pointer">
+                    <Lock className="w-3 h-3" />
+                    Lock Folder (Admin Only Access)
+                  </label>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setShowCreateFolder(false)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={!newFolderName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                >
+                  Create Folder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Folders Grid (Only on Root) */}
       {!currentFolder && (
@@ -268,19 +364,31 @@ export default function DocumentsPage() {
               onClick={() => setCurrentFolder(folder)}
               className="bg-white p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group relative"
             >
-              {folder.isLocked && (
+              {/* Lock Indicator (Non-Admins) */}
+              {folder.isLocked && (!currentUser || !['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) && (
                 <div className="absolute top-2 right-2 text-amber-500" title="Locked Folder">
                   <Lock className="w-4 h-4" />
                 </div>
               )}
+
+              {/* Admin Controls */}
               {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
-                 <button 
-                   onClick={(e) => handleDeleteFolder(folder, e)}
-                   className="absolute top-2 right-8 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                   title="Delete Folder"
-                 >
-                   <Trash2 className="w-4 h-4" />
-                 </button>
+                 <div className={`absolute top-2 right-2 flex gap-1 transition-opacity bg-white/90 rounded-lg shadow-sm border p-1 z-10 ${folder.isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                   <button 
+                     onClick={(e) => handleToggleLock(folder, e)}
+                     className={`p-1 rounded hover:bg-amber-50 ${folder.isLocked ? 'text-amber-600' : 'text-slate-400 hover:text-amber-600'}`}
+                     title={folder.isLocked ? "Unlock Folder" : "Lock Folder"}
+                   >
+                     {folder.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                   </button>
+                   <button 
+                     onClick={(e) => handleDeleteFolder(folder, e)}
+                     className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"
+                     title="Delete Folder"
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </button>
+                 </div>
               )}
               <div className="flex items-center gap-3">
                 <Folder className={`w-10 h-10 ${folder.isLocked ? 'text-amber-500 fill-amber-100' : 'text-yellow-500 fill-yellow-500'}`} />
