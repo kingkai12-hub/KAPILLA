@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+async function generateWorkId() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  for (let i = 0; i < 5; i++) {
+    const suffix = String(Math.floor(1000 + Math.random() * 9000));
+    const candidate = `KPL-WRK-${yy}${mm}-${suffix}`;
+    const exists = await db.user.findUnique({ where: { workId: candidate } });
+    if (!exists) return candidate;
+  }
+  return `KPL-WRK-${Date.now().toString().slice(-6)}`;
+}
+
 // GET: List all users
 export async function GET() {
   try {
@@ -46,13 +59,15 @@ export async function POST(req: Request) {
       }
     }
 
+    const finalWorkId = workId || await generateWorkId();
+
     const newUser = await db.user.create({
       data: {
         name,
         email,
         password, // In production, hash this!
         role: role || 'STAFF',
-        workId: workId || null,
+        workId: finalWorkId,
         phoneNumber: phoneNumber || null
       }
     });

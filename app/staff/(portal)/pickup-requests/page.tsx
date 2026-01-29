@@ -10,6 +10,7 @@ export default function PickupRequests() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [userRole, setUserRole] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
   const router = useRouter();
   const deferredSearch = useDeferredValue(search);
 
@@ -19,6 +20,7 @@ export default function PickupRequests() {
     if (userStr) {
       const user = JSON.parse(userStr);
       setUserRole(user.role || '');
+      setUserId(user.id || '');
     }
   }, []);
 
@@ -80,11 +82,13 @@ export default function PickupRequests() {
   };
 
   const handleDelete = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this rejected request? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this request? This action cannot be undone.')) return;
 
     try {
       const res = await fetch(`/api/pickup-requests/${requestId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
       });
 
       if (res.ok) {
@@ -205,9 +209,20 @@ export default function PickupRequests() {
                       </button>
                     </div>
                   ) : req.status === 'ISSUED' ? (
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-500 font-medium px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <CheckCircle className="w-5 h-5" />
-                      Waybill Issued
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-green-600 dark:text-green-500 font-medium px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <CheckCircle className="w-5 h-5" />
+                        Waybill Issued
+                      </div>
+                      {['ADMIN', 'OPERATION_MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                        <button
+                          onClick={() => handleDelete(req.id)}
+                          className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"
+                          title="Delete Request"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
