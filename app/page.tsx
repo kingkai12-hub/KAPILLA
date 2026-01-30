@@ -112,6 +112,15 @@ export default function Home() {
         }
       })
       .catch(err => console.error('Failed to fetch services:', err));
+
+    fetch('/api/executives', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setExecutives(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch executives:', err));
   }, []);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -643,6 +652,51 @@ export default function Home() {
                 <h3 className="text-base font-bold text-slate-900 mb-2">{feature.title}</h3>
                 <p className="text-slate-600 leading-relaxed text-xs">{feature.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Executive Leadership */}
+      <section className="py-16 bg-slate-50 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 tracking-tight">
+              Executive <span className="text-blue-600">Leadership</span>
+            </h2>
+            <p className="text-slate-600 text-sm">
+              Meet the visionaries driving Kapilla Group towards excellence and global standards.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {executives.map((exec, index) => (
+              <motion.div
+                key={exec.id || index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 flex flex-col md:flex-row"
+              >
+                <div className="relative w-full md:w-48 h-64 md:h-auto shrink-0 bg-slate-100">
+                  <Image
+                    src={exec.imageUrl}
+                    alt={exec.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-6 flex flex-col justify-center">
+                  <div className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    {exec.role}
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{exec.name}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {exec.bio}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>

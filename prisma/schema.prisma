@@ -192,3 +192,15 @@ model ServiceShowcase {
 
   @@map("ServiceShowcase")
 }
+
+model Executive {
+  id          String   @id @default(uuid())
+  name        String
+  role        String   // 'CEO', 'MD', etc.
+  bio         String
+  imageUrl    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("Executive")
+}
