@@ -69,6 +69,22 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const [executives, setExecutives] = useState<any[]>([
+    {
+      id: 'ceo',
+      name: 'Sarah Kapilla',
+      role: 'CEO & Founder',
+      bio: 'Visionary leader with 15+ years in global logistics and supply chain management. Dedicated to transforming African logistics.',
+      imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800'
+    },
+    {
+      id: 'md',
+      name: 'James Wilson',
+      role: 'Managing Director',
+      bio: 'Expert in operational efficiency and strategic business development. Driving growth through innovation and excellence.',
+      imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800'
+    }
+  ]);
   const [services, setServices] = useState<any[]>([
     {
       title: "Land Transportation",
