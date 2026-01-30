@@ -338,6 +338,79 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Services & Fleet Showcase */}
+      <section className="py-16 bg-white relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Global Logistics Infrastructure</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto">
+              Our comprehensive network of land, sea, and air transportation ensures your cargo reaches its destination safely and on time.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: "Land Transportation",
+                desc: "Modern fleet for reliable ground delivery",
+                img: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&q=80&w=800",
+                icon: Truck
+              },
+              {
+                title: "Ocean Freight",
+                desc: "Efficient global maritime shipping",
+                img: "https://images.unsplash.com/photo-1494412651409-ae1c40237cdd?auto=format&fit=crop&q=80&w=800",
+                icon: Ship
+              },
+              {
+                title: "Air Cargo",
+                desc: "Express international delivery",
+                img: "https://images.unsplash.com/photo-1519882189396-71f93cb4714b?auto=format&fit=crop&q=80&w=800",
+                icon: Plane
+              },
+              {
+                title: "Warehousing",
+                desc: "Secure storage and distribution",
+                img: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&q=80&w=800",
+                icon: Package
+              }
+            ].map((service, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
+              >
+                <Image
+                  src={service.img}
+                  alt={service.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute bottom-0 left-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="bg-blue-600/90 p-2 rounded-lg w-fit mb-3 backdrop-blur-sm">
+                    <service.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-1">{service.title}</h3>
+                  <p className="text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                    {service.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Tracking Results */}
       <AnimatePresence>
         {hasSearched && (
