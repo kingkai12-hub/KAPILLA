@@ -104,7 +104,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetch('/api/services')
+    fetch('/api/services', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -400,34 +400,11 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: "Land Transportation",
-                desc: "Modern fleet for reliable ground delivery",
-                img: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&q=80&w=800",
-                icon: Truck
-              },
-              {
-                title: "Ocean Freight",
-                desc: "Efficient global maritime shipping",
-                img: "https://images.unsplash.com/photo-1494412651409-ae1c40237cdd?auto=format&fit=crop&q=80&w=800",
-                icon: Ship
-              },
-              {
-                title: "Air Cargo",
-                desc: "Express international delivery",
-                img: "https://images.unsplash.com/photo-1519882189396-71f93cb4714b?auto=format&fit=crop&q=80&w=800",
-                icon: Plane
-              },
-              {
-                title: "Warehousing",
-                desc: "Secure storage and distribution",
-                img: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&q=80&w=800",
-                icon: Package
-              }
-            ].map((service, index) => (
+            {services.map((service, index) => {
+              const IconComponent = iconMap[service.icon] || Truck;
+              return (
               <motion.div
-                key={index}
+                key={service.id || index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -435,7 +412,7 @@ export default function Home() {
                 className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
               >
                 <Image
-                  src={service.img}
+                  src={service.imageUrl}
                   alt={service.title}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -443,15 +420,15 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                 <div className="absolute bottom-0 left-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                   <div className="bg-blue-600/90 p-2 rounded-lg w-fit mb-3 backdrop-blur-sm">
-                    <service.icon className="w-5 h-5" />
+                    <IconComponent className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold mb-1">{service.title}</h3>
                   <p className="text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                    {service.desc}
+                    {service.description}
                   </p>
                 </div>
               </motion.div>
-            ))}
+            )})}
           </div>
         </div>
       </section>

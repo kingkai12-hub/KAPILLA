@@ -228,28 +228,62 @@ export default function ServiceManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Image URL</label>
-                <div className="flex gap-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Image Source</label>
+                
+                <div className="space-y-3">
+                  {/* Image Preview */}
+                  {formData.imageUrl && (
+                    <div className="relative w-full h-40 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                        className="absolute top-2 right-2 p-1 bg-white/80 rounded-full text-red-500 hover:bg-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Upload or URL Toggle */}
+                  <div className="flex gap-2 mb-2">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-500 cursor-pointer">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                              alert("File size too large. Max 5MB.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setFormData({ ...formData, imageUrl: reader.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <span className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4" />
+                        Upload Image
+                      </span>
+                    </label>
+                    <span className="text-xs flex items-center text-slate-400">or paste URL below</span>
+                  </div>
+
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={formData.imageUrl}
                     onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
-                    placeholder="https://..."
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white text-sm"
+                    placeholder="https://... or data:image/..."
                   />
-                  {formData.imageUrl && (
-                    <a 
-                      href={formData.imageUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-600 hover:text-blue-600"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                  )}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Recommended: Unsplash URL or hosted image.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
