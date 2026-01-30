@@ -69,6 +69,51 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const [services, setServices] = useState<any[]>([
+    {
+      title: "Land Transportation",
+      description: "Modern fleet for reliable ground delivery",
+      imageUrl: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&q=80&w=800",
+      icon: "Truck"
+    },
+    {
+      title: "Ocean Freight",
+      description: "Efficient global maritime shipping",
+      imageUrl: "https://images.unsplash.com/photo-1494412651409-ae1c40237cdd?auto=format&fit=crop&q=80&w=800",
+      icon: "Ship"
+    },
+    {
+      title: "Air Cargo",
+      description: "Express international delivery",
+      imageUrl: "https://images.unsplash.com/photo-1519882189396-71f93cb4714b?auto=format&fit=crop&q=80&w=800",
+      icon: "Plane"
+    },
+    {
+      title: "Warehousing",
+      description: "Secure storage and distribution",
+      imageUrl: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&q=80&w=800",
+      icon: "Package"
+    }
+  ]);
+
+  const iconMap: Record<string, any> = {
+    Truck,
+    Ship,
+    Plane,
+    Package
+  };
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setServices(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch services:', err));
+  }, []);
+
   const abortRef = useRef<AbortController | null>(null);
 
   // Clear staff session when visiting home page to ensure security

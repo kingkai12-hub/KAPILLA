@@ -119,6 +119,7 @@ export default function StaffPortalLayout({
     { name: 'Pickup Requests', href: '/staff/pickup-requests', icon: Truck, roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'Documents', href: '/staff/documents', icon: FileText, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'User Management', href: '/staff/admin/users', icon: UserCog, roles: ['ADMIN'] },
+    { name: 'Services Showcase', href: '/staff/admin/services', icon: LayoutTemplate, roles: ['ADMIN'] },
     { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 

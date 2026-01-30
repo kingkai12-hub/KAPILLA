@@ -178,3 +178,17 @@ model PickupRequest {
 
   @@map("PickupRequest")
 }
+
+model ServiceShowcase {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  imageUrl    String
+  icon        String   // e.g., 'Truck', 'Ship', 'Plane', 'Package'
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("ServiceShowcase")
+}
