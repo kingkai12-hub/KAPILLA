@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
   // 1. RATE LIMITING
   // Apply only to API routes to prevent abuse
   if (request.nextUrl.pathname.startsWith('/api')) {
-    const ip = request.ip || '127.0.0.1';
+    const ip = (request as any).ip || '127.0.0.1';
     const currentWindow = ratelimit.get(ip) || { count: 0, startTime: Date.now() };
 
     // Reset window if time passed
