@@ -285,7 +285,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-1 rounded-lg shadow-sm">
-              <Image src="/logo.png" alt="Kapilla Logo" width={40} height={40} className="w-8 h-8 md:w-10 md:h-10 object-contain" />
+              <Image src="/logo.png" alt="Kapilla Logo" width={40} height={40} className="w-8 h-8 md:w-10 md:h-10 object-contain" priority />
             </div>
             <span className="text-lg font-bold text-slate-900 tracking-tight">Kapilla <span className="text-blue-600 hidden sm:inline">Group Ltd</span></span>
           </div>
@@ -382,6 +382,86 @@ export default function Home() {
               </div>
             </form>
           </motion.div>
+          
+          <AnimatePresence>
+            {hasSearched && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="max-w-4xl mx-auto mt-6 text-left"
+              >
+                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
+                  {error ? (
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-2">
+                        <X className="w-6 h-6 text-red-500" />
+                      </div>
+                      <div className="font-bold text-slate-900">Something went wrong</div>
+                      <div className="text-slate-500 text-sm mt-1">{error}</div>
+                      <button 
+                        onClick={() => performSearch(waybill)}
+                        className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : !searchResult ? (
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-2">
+                        <Package className="w-6 h-6 text-red-500" />
+                      </div>
+                      <div className="font-bold text-slate-900">Shipment Not Found</div>
+                      <div className="text-slate-500 text-sm mt-1">
+                        We couldn't find any shipment with that Waybill Number.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <div className="text-xs text-slate-500 font-medium mb-1">Waybill Number</div>
+                          <div className="text-xl md:text-2xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
+                        </div>
+                        <div className="flex flex-col md:items-end">
+                          <div className="text-xs text-slate-500 font-medium mb-1">Current Status</div>
+                          <div className={cn(
+                            "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm",
+                            searchResult.currentStatus === 'DELIVERED' ? "bg-green-100 text-green-700" :
+                            searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
+                            "bg-blue-100 text-blue-700"
+                          )}>
+                            {(searchResult.currentStatus || 'UNKNOWN').replace(/_/g, ' ')}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Origin</div>
+                          <div className="font-semibold text-slate-900 text-base">{searchResult.origin}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Destination</div>
+                          <div className="font-semibold text-slate-900 text-base">{searchResult.destination}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ETA</div>
+                          <div className="font-semibold text-slate-900 text-base">
+                            {latestEta ? <FormattedDate dateStr={latestEta} /> : 'Not available'}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mode</div>
+                          <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
