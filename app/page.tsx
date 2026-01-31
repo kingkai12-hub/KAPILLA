@@ -390,7 +390,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="max-w-4xl mx-auto mt-6 text-left"
+                className="max-w-xl md:max-w-5xl mx-auto mt-4 md:mt-6 text-left"
               >
                 <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
                   {error ? (
@@ -456,7 +456,7 @@ export default function Home() {
                           <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
                         </div>
                       </div>
-                      <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                      <div className="w-full h-48 md:h-72 rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
                         {mapProps && <Map {...mapProps} />}
                       </div>
                       {searchResult.currentStatus === 'DELIVERED' && (
@@ -496,13 +496,13 @@ export default function Home() {
                             return (
                               <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
                                 <div className={cn(
-                                  "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                                  "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                                   isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
                                 )}>
-                                  <step.icon className="w-5 h-5" />
+                                  <step.icon className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
                                 <span className={cn(
-                                  "text-xs font-bold transition-colors duration-300",
+                                  "text-[11px] md:text-sm font-bold transition-colors duration-300",
                                   isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
                                 )}>
                                   {step.label}
