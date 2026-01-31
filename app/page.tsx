@@ -96,6 +96,87 @@ export default function Home() {
     Package
   };
 
+  const ServicesGrid = React.memo(function ServicesGrid({
+    services,
+    iconMap,
+  }: {
+    services: any[];
+    iconMap: Record<string, any>;
+  }) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {services.map((service, index) => {
+          const IconComponent = iconMap[service.icon] || Truck;
+          return (
+            <motion.div
+              key={service.id || index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
+            >
+              <Image
+                src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
+                alt={service.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                priority={index < 2}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              <div className="absolute bottom-0 left-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <div className="bg-blue-600/90 p-2 rounded-lg w-fit mb-3 backdrop-blur-sm">
+                  <IconComponent className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-bold mb-1">{service.title}</h3>
+                <p className="text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                  {service.description}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  });
+
+  const ExecSection = React.memo(function ExecSection({ executives }: { executives: any[] }) {
+    return (
+      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {executives.map((exec, index) => (
+          <motion.div
+            key={exec.id || index}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.2 }}
+            className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 flex flex-col md:flex-row"
+          >
+            <div className="relative w-full md:w-48 h-64 md:h-64 shrink-0 bg-slate-100">
+              <Image
+                src={exec.imageUrl || '/logo.png'}
+                alt={exec.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 192px"
+                className="object-cover"
+              />
+            </div>
+            <div className="p-6 flex flex-col justify-center">
+              <div className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                {exec.role}
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">{exec.name}</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                {exec.bio}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  });
+
   useEffect(() => {
     fetch('/api/services', { cache: 'no-store' })
       .then(res => res.json())
@@ -331,8 +412,8 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative pt-20 pb-8 lg:pt-28 lg:pb-16 overflow-hidden">
         {/* Background Blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-100/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-yellow-50/50 rounded-full blur-3xl -z-10 opacity-60 mix-blend-multiply filter pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-blue-100/40 rounded-full blur-xl -z-10 opacity-60 mix-blend-normal pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[700px] h-[520px] bg-yellow-50/40 rounded-full blur-xl -z-10 opacity-50 mix-blend-normal pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.div
@@ -537,38 +618,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service, index) => {
-              const IconComponent = iconMap[service.icon] || Truck;
-              return (
-              <motion.div
-                key={service.id || index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
-              >
-                <Image
-                  src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
-                  alt={service.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                <div className="absolute bottom-0 left-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  <div className="bg-blue-600/90 p-2 rounded-lg w-fit mb-3 backdrop-blur-sm">
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-1">{service.title}</h3>
-                  <p className="text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                    {service.description}
-                  </p>
-                </div>
-              </motion.div>
-            )})}
-          </div>
+          <ServicesGrid services={services} iconMap={iconMap} />
         </div>
       </section>
 
@@ -644,37 +694,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {executives.map((exec, index) => (
-              <motion.div
-                key={exec.id || index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 flex flex-col md:flex-row"
-              >
-                <div className="relative w-full md:w-48 h-64 md:h-64 shrink-0 bg-slate-100">
-                  <Image
-                    src={exec.imageUrl || '/logo.png'}
-                    alt={exec.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 192px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-6 flex flex-col justify-center">
-                  <div className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
-                    {exec.role}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{exec.name}</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
-                    {exec.bio}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <ExecSection executives={executives} />
         </div>
       </section>
 
