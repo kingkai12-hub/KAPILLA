@@ -30,6 +30,8 @@ model User {
   documents        Document[]
   createdFolders   DocumentFolder[]
 
+  @@index([role])
+  @@index([email])
   @@map("User")
 }
 
@@ -176,6 +178,7 @@ model PickupRequest {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([status])
   @@map("PickupRequest")
 }
 
