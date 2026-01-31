@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 async function generateWorkId() {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
