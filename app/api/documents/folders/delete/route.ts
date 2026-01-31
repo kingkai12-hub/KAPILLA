@@ -3,6 +3,7 @@ import { db as prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+export const runtime = 'nodejs'
 
 export async function DELETE(req: Request) {
   try {

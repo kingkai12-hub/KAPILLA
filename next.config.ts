@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   compress: true, // Enable gzip compression
   poweredByHeader: false, // Security + Performance (remove extra header)
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

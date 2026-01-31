@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function POST(req: Request) {
   try {
     const { folderId, userId, isLocked } = await req.json()
