@@ -5,6 +5,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import RefreshHandler from '@/components/RefreshHandler';
 import IdleLogout from '@/components/IdleLogout';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
