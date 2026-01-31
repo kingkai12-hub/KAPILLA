@@ -456,6 +456,62 @@ export default function Home() {
                           <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
                         </div>
                       </div>
+                      <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
+                        {mapProps && <Map {...mapProps} />}
+                      </div>
+                      {searchResult.currentStatus === 'DELIVERED' && (
+                        <div className="mt-2 flex justify-center">
+                          <a 
+                            href={`/staff/shipments/${searchResult.waybillNumber}/pod`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20"
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                            Download Proof of Delivery
+                          </a>
+                        </div>
+                      )}
+                      <div className="w-full py-2 px-2">
+                        <div className="flex items-center justify-between relative">
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
+                          <div 
+                            className={cn(
+                              "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
+                              searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
+                              searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
+                              "w-[100%]"
+                            )} 
+                          />
+                          {[
+                            { id: 'PENDING', label: 'Pending', icon: Package },
+                            { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
+                            { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
+                          ].map((step) => {
+                            const isCompleted = 
+                              (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                              (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
+                              (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
+                            const isCurrent = step.id === searchResult.currentStatus;
+                            return (
+                              <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                                  isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
+                                )}>
+                                  <step.icon className="w-5 h-5" />
+                                </div>
+                                <span className={cn(
+                                  "text-xs font-bold transition-colors duration-300",
+                                  isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
+                                )}>
+                                  {step.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -516,185 +572,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tracking Results */}
-      <AnimatePresence>
-        {hasSearched && (
-          <motion.section
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white border-y border-slate-100 shadow-[inset_0_4px_20px_-12px_rgba(0,0,0,0.1)]"
-          >
-            <div className="max-w-4xl mx-auto px-6 py-10">
-             <ErrorBoundary fallback={
-               <div className="text-center py-8">
-                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
-                   <X className="w-7 h-7 text-red-500" />
-                 </div>
-                 <h3 className="text-lg font-bold text-slate-900">Unable to load tracking section</h3>
-                 <p className="text-slate-500 mt-2 text-sm">
-                   An unexpected error occurred while rendering tracking results.
-                 </p>
-                 <div className="mt-4 flex items-center justify-center gap-3">
-                   <button
-                     onClick={() => window.location.reload()}
-                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                   >
-                     Reload Page
-                   </button>
-                   <a
-                     href="/"
-                     className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                   >
-                     Go Home
-                   </a>
-                 </div>
-               </div>
-             }>
-              {error ? (
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
-                    <X className="w-7 h-7 text-red-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">Something went wrong</h3>
-                  <p className="text-slate-500 mt-2 text-sm">{error}</p>
-                  <button 
-                    onClick={() => performSearch(waybill)}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              ) : !searchResult ? (
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
-                    <Package className="w-7 h-7 text-red-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">Shipment Not Found</h3>
-                  <p className="text-slate-500 mt-2 text-sm">
-                    We couldn't find any shipment with that Waybill Number.
-                  </p>
-                </div>
-              ) : (
-                  <div className="space-y-8">
-                    {/* Status Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Waybill Number</div>
-                        <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">{searchResult.waybillNumber}</div>
-                      </div>
-                      <div className="flex flex-col md:items-end">
-                        <div className="text-xs text-slate-500 font-medium mb-1">Current Status</div>
-                        <div className={cn(
-                          "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm",
-                          searchResult.currentStatus === 'DELIVERED' ? "bg-green-100 text-green-700" :
-                          searchResult.currentStatus === 'PENDING' ? "bg-slate-100 text-slate-700" :
-                          "bg-blue-100 text-blue-700"
-                        )}>
-                          {(searchResult.currentStatus || 'UNKNOWN').replace(/_/g, ' ')}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Route Info */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-1">
-                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Origin</div>
-                        <div className="font-semibold text-slate-900 text-base">{searchResult.origin}</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Destination</div>
-                        <div className="font-semibold text-slate-900 text-base">{searchResult.destination}</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estimated Delivery</div>
-                      <div className="font-semibold text-slate-900 text-base">
-                        {latestEta ? <FormattedDate dateStr={latestEta} /> : 'Not available'}
-                      </div>
-                      </div>
-                      <div className="space-y-1">
-                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Transport Type</div>
-                      <div className="font-semibold text-slate-900 text-base">
-                        {latestMode || 'Not available'}
-                      </div>
-                      </div>
-                    </div>
-
-                    {/* Map Section */}
-                    <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                         {mapProps && <Map {...mapProps} />}
-                    </div>
-
-                    {/* Download POD Button - Only if Delivered */}
-                    {searchResult.currentStatus === 'DELIVERED' && (
-                        <div className="mt-4 flex justify-center animate-in fade-in zoom-in duration-500">
-                            <a 
-                                href={`/staff/shipments/${searchResult.waybillNumber}/pod`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 group"
-                            >
-                                <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                Download Proof of Delivery
-                            </a>
-                        </div>
-                    )}
-
-                    {/* Horizontal Status Line */}
-                    <div className="w-full py-4 px-4">
-                      <div className="flex items-center justify-between relative">
-                        {/* Progress Bar Background */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
-                        
-                        {/* Active Progress Bar */}
-                        <div 
-                          className={cn(
-                            "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
-                            searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
-                            searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
-                            "w-[100%]"
-                          )} 
-                        />
-
-                        {/* Steps */}
-                        {[
-                          { id: 'PENDING', label: 'Pending', icon: Package },
-                          { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
-                          { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
-                        ].map((step, index) => {
-                          const isCompleted = 
-                            (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                            (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                            (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
-
-                          const isCurrent = step.id === searchResult.currentStatus;
-
-                          return (
-                            <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
-                              <div className={cn(
-                                "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                                isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
-                              )}>
-                                <step.icon className="w-6 h-6" />
-                              </div>
-                              <span className={cn(
-                                "text-sm font-bold transition-colors duration-300",
-                                isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
-                              )}>
-                                {step.label}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-             </ErrorBoundary>
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
 
       {/* Services & Features Grid */}
       <section className="py-8 bg-white relative overflow-hidden">
