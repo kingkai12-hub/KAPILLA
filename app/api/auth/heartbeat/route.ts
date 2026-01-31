@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { userId } = body;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    const { userId } = await req.json();
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
     await db.user.update({
@@ -15,9 +17,9 @@ export async function POST(req: Request) {
       data: { lastActive: new Date() }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('[HEARTBEAT_ERROR]', error);
-    return NextResponse.json({ error: 'Failed to update heartbeat' }, { status: 500 });
+    console.error('[AUTH_HEARTBEAT]', error);
+    return NextResponse.json({ ok: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
