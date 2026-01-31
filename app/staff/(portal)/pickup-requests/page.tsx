@@ -85,17 +85,18 @@ export default function PickupRequests() {
     if (!confirm('Are you sure you want to delete this request? This action cannot be undone.')) return;
 
     try {
-      const res = await fetch(`/api/pickup-requests/${requestId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
+      if (!userId) {
+        alert('You must be logged in to delete requests');
+        return;
+      }
+      const res = await fetch(`/api/pickup-requests/${requestId}?userId=${userId}`, { method: 'DELETE' });
 
       if (res.ok) {
         setRequests(requests.filter(req => req.id !== requestId));
         alert('Request deleted successfully');
       } else {
-        alert('Failed to delete request');
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to delete request');
       }
     } catch (error) {
       console.error(error);
@@ -207,7 +208,7 @@ export default function PickupRequests() {
                         <PackagePlus className="w-4 h-4" />
                         Issue Waybill
                       </button>
-                      {['ADMIN', 'OPERATION_MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"
@@ -223,7 +224,7 @@ export default function PickupRequests() {
                         <CheckCircle className="w-5 h-5" />
                         Waybill Issued
                       </div>
-                      {['ADMIN', 'OPERATION_MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"
@@ -251,7 +252,7 @@ export default function PickupRequests() {
                       </button>
 
                       {/* Delete Option - Admin/Manager/MD/CEO Only */}
-                      {['ADMIN', 'OPERATION_MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-lg font-medium transition-colors"

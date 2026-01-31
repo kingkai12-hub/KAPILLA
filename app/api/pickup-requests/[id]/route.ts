@@ -25,8 +25,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(req.url);
+    const userIdQuery = searchParams.get('userId');
     const body = await req.json().catch(() => ({}));
-    const { userId } = body as { userId?: string };
+    const { userId: userIdBody } = body as { userId?: string };
+    const userId = userIdQuery || userIdBody;
 
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
