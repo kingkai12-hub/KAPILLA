@@ -1,37 +1,16 @@
 Starting Robust Sync Process...
-[2026-01-31T04:04:49.950Z] Executing: git --no-pager status
-[2026-01-31T04:04:50.443Z] Output:
+[2026-01-31T04:22:54.118Z] Executing: git --no-pager status
+[2026-01-31T04:22:54.356Z] Output:
 On branch main
 Your branch is up to date with 'origin/main'.
-
-Changes to be committed:
-  (use "git restore --staged <file>..." to unstage)
-	modified:   "Traeresourcesappoutvsworkbenchcontribterminalcommonscriptssafe_rm_aliases.ps1\357\200\242 } catch{} ; Write-Output \357\200\242[Trae] Safe Rm alias is not enabled, try to fix it now.\357\200\242"
-	modified:   app/api/admin/services/route.ts
-	new file:   app/staff/(portal)/admin/executives/page.tsx
-	modified:   app/staff/(portal)/admin/services/page.tsx
-	modified:   app/staff/(portal)/layout.tsx
-	deleted:    push_changes.cmd
 
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-	modified:   app/api/admin/executives/[id]/route.ts
-	modified:   app/api/admin/services/[id]/route.ts
-	modified:   app/page.tsx
 	modified:   app/staff/(portal)/admin/executives/page.tsx
 	modified:   app/staff/(portal)/admin/services/page.tsx
-	modified:   package.json
+	modified:   sync_debug_log.txt
 
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	debug_git.js
-	debug_sync.ps1
-	git_diag.ps1
-	public/sync-check-final.txt
-	robust-sync.js
-	sync_check.txt
-	sync_debug_log.txt
+no changes added to commit (use "git add" and/or "git commit -a")
 
-
-[2026-01-31T04:04:50.455Z] Executing: git add .
+[2026-01-31T04:22:54.360Z] Executing: git add .

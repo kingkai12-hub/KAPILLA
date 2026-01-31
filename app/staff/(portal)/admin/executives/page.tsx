@@ -53,18 +53,59 @@ export default function ExecutiveManagement() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7)); // Compress to 70% quality
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert("File too large. Max 2MB.");
+      if (file.size > 5 * 1024 * 1024) { // Increased limit to 5MB since we compress
+        alert("File too large. Max 5MB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      try {
+        const compressedBase64 = await compressImage(file);
+        setFormData({ ...formData, imageUrl: compressedBase64 });
+      } catch (error) {
+        console.error("Error compressing image:", error);
+        alert("Failed to process image. Please try another file.");
+      }
     }
   };
 
@@ -146,7 +187,23 @@ export default function ExecutiveManagement() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12">Loading...</div>
+        // Skeleton Loader
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
+              <div className="h-48 bg-slate-200"></div>
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-blue-100 rounded w-1/3"></div>
+                <div className="h-6 bg-slate-200 rounded w-3/4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-slate-100 rounded w-full"></div>
+                  <div className="h-3 bg-slate-100 rounded w-5/6"></div>
+                  <div className="h-3 bg-slate-100 rounded w-4/6"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {executives.map((exec) => (
