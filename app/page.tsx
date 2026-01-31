@@ -22,6 +22,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 function withVersion(url: string, v?: any) {
   try {
     if (!url) return url;
+    if (url.startsWith('data:') || url.startsWith('blob:')) return url;
     const sep = url.includes('?') ? '&' : '?';
     const ver =
       typeof v === 'string' ? v :
@@ -413,9 +414,10 @@ export default function Home() {
                 className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
               >
                 <Image
-                  src={withVersion(service.imageUrl, service.updatedAt)}
+                  src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
                   alt={service.title}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -695,11 +697,12 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: index * 0.2 }}
                 className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 flex flex-col md:flex-row"
               >
-                <div className="relative w-full md:w-48 h-64 md:h-auto shrink-0 bg-slate-100">
+                <div className="relative w-full md:w-48 h-64 md:h-64 shrink-0 bg-slate-100">
                   <Image
-                    src={exec.imageUrl}
+                    src={exec.imageUrl || '/logo.png'}
                     alt={exec.name}
                     fill
+                    sizes="(max-width: 768px) 100vw, 192px"
                     className="object-cover"
                   />
                 </div>
