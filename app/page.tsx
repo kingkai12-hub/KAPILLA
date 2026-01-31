@@ -19,6 +19,20 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
+function withVersion(url: string, v?: any) {
+  try {
+    if (!url) return url;
+    const sep = url.includes('?') ? '&' : '?';
+    const ver =
+      typeof v === 'string' ? v :
+      v instanceof Date ? v.toISOString() :
+      (typeof v === 'number' ? v : Date.now());
+    return `${url}${sep}v=${encodeURIComponent(ver)}`;
+  } catch {
+    return url;
+  }
+}
+
 function SearchParamsHandler({ onSearch }: { onSearch: (term: string) => void }) {
   const searchParams = useSearchParams();
   const initialized = useRef(false);
@@ -71,48 +85,8 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
-  const [executives, setExecutives] = useState<any[]>([
-    {
-      id: 'ceo',
-      name: 'Sarah Kapilla',
-      role: 'CEO & Founder',
-      bio: 'Visionary leader with 15+ years in global logistics and supply chain management. Dedicated to transforming African logistics.',
-      imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'md',
-      name: 'James Wilson',
-      role: 'Managing Director',
-      bio: 'Expert in operational efficiency and strategic business development. Driving growth through innovation and excellence.',
-      imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800'
-    }
-  ]);
-  const [services, setServices] = useState<any[]>([
-    {
-      title: "Land Transportation",
-      description: "Modern fleet for reliable ground delivery",
-      imageUrl: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&q=80&w=800",
-      icon: "Truck"
-    },
-    {
-      title: "Ocean Freight",
-      description: "Efficient global maritime shipping",
-      imageUrl: "https://images.unsplash.com/photo-1494412651409-ae1c40237cdd?auto=format&fit=crop&q=80&w=800",
-      icon: "Ship"
-    },
-    {
-      title: "Air Cargo",
-      description: "Express international delivery",
-      imageUrl: "https://images.unsplash.com/photo-1519882189396-71f93cb4714b?auto=format&fit=crop&q=80&w=800",
-      icon: "Plane"
-    },
-    {
-      title: "Warehousing",
-      description: "Secure storage and distribution",
-      imageUrl: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&q=80&w=800",
-      icon: "Package"
-    }
-  ]);
+  const [executives, setExecutives] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
 
   const iconMap: Record<string, any> = {
     Truck,
@@ -439,7 +413,7 @@ export default function Home() {
                 className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
               >
                 <Image
-                  src={service.imageUrl}
+                  src={withVersion(service.imageUrl, service.updatedAt)}
                   alt={service.title}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
