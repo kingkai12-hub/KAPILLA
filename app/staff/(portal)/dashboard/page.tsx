@@ -26,31 +26,39 @@ function timeAgo(date: Date) {
 }
 
 export default async function StaffDashboard() {
-  // Fetch real stats
-  const totalShipments = await db.shipment.count();
-  const inTransit = await db.shipment.count({ where: { currentStatus: 'IN_TRANSIT' } });
-  const pendingDelivery = await db.shipment.count({ where: { currentStatus: 'PENDING' } });
-  
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const deliveredToday = await db.shipment.count({ 
-    where: { 
-      currentStatus: 'DELIVERED',
-      updatedAt: { gte: startOfToday }
-    } 
-  });
+  let totalShipments = 0;
+  let inTransit = 0;
+  let pendingDelivery = 0;
+  let deliveredToday = 0;
+  let recentShipments: { waybillNumber: string; destination: string; currentStatus: string; createdAt: Date }[] = [];
 
-  // Fetch recent shipments
-  const recentShipments = await db.shipment.findMany({
-    take: 5,
-    orderBy: { createdAt: 'desc' },
-    select: {
-      waybillNumber: true,
-      destination: true,
-      currentStatus: true,
-      createdAt: true
-    }
-  });
+  try {
+    totalShipments = await db.shipment.count();
+    inTransit = await db.shipment.count({ where: { currentStatus: 'IN_TRANSIT' } });
+    pendingDelivery = await db.shipment.count({ where: { currentStatus: 'PENDING' } });
+    
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    deliveredToday = await db.shipment.count({ 
+      where: { 
+        currentStatus: 'DELIVERED',
+        updatedAt: { gte: startOfToday }
+      } 
+    });
+
+    recentShipments = await db.shipment.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        waybillNumber: true,
+        destination: true,
+        currentStatus: true,
+        createdAt: true
+      }
+    });
+  } catch (e) {
+    recentShipments = [];
+  }
 
   const stats = [
     { name: 'Total Shipments', value: totalShipments.toLocaleString(), icon: Layers, color: 'text-blue-600 dark:text-blue-100', bg: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40', border: 'border-blue-200 dark:border-blue-700' },
