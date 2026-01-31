@@ -8,16 +8,19 @@ import IdleLogout from '@/components/IdleLogout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://kapilla-logistics.vercel.app'),
+  metadataBase: new URL('https://kapilla-logistics.vercel.app'),
   title: {
     default: 'Kapilla Logistics',
     template: '%s | Kapilla Logistics',
   },
   description: 'Global Logistics & Tracking System - Fast, Reliable, Secure.',
+  alternates: {
+    canonical: 'https://kapilla-logistics.vercel.app',
+  },
   openGraph: {
     title: 'Kapilla Logistics',
     description: 'Track your shipment in real-time across our global network.',
-    url: '/',
+    url: 'https://kapilla-logistics.vercel.app/',
     siteName: 'Kapilla Logistics',
     images: [
       {
