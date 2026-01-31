@@ -33,12 +33,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    console.log(`Attempting to delete service with ID: ${id}`);
+
+    // Check if exists first
+    const existing = await db.serviceShowcase.findUnique({
+      where: { id }
+    });
+
+    if (!existing) {
+      console.log(`Service with ID ${id} not found`);
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
     await db.serviceShowcase.delete({
       where: { id },
     });
+    
+    console.log(`Successfully deleted service ${id}`);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting service:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
   }
 }

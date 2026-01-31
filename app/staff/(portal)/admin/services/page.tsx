@@ -57,10 +57,12 @@ export default function ServiceManagement() {
       if (res.ok) {
         setServices(services.filter(s => s.id !== id));
       } else {
-        alert('Failed to delete service');
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to delete service: ${errorData.error || res.statusText}`);
       }
     } catch (error) {
-      alert('Failed to delete service');
+      console.error("Delete error:", error);
+      alert('Failed to delete service due to network error');
     }
   };
 
