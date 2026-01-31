@@ -20,7 +20,8 @@ import {
   Sun,
   Moon,
   FileText,
-  LayoutTemplate
+  LayoutTemplate,
+  Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -121,6 +122,7 @@ export default function StaffPortalLayout({
     { name: 'Documents', href: '/staff/documents', icon: FileText, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
     { name: 'User Management', href: '/staff/admin/users', icon: UserCog, roles: ['ADMIN'] },
     { name: 'Services Showcase', href: '/staff/admin/services', icon: LayoutTemplate, roles: ['ADMIN'] },
+    { name: 'Executives', href: '/staff/admin/executives', icon: Briefcase, roles: ['ADMIN'] },
     { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 

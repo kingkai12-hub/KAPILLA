@@ -63,6 +63,7 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any, fallb
 };
 
 export default function Home() {
+  // Forced update trigger: 2026-01-31-12-30
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);

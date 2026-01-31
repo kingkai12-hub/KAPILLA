@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, Save, X, Truck, Ship, Plane, Package, ExternalLink, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X, Truck, Ship, Plane, Package, ExternalLink, ImageIcon, Upload } from 'lucide-react';
+import Image from 'next/image';
 
 // Icon mapping for display
 const iconMap: Record<string, any> = {
@@ -33,7 +34,11 @@ export default function ServiceManagement() {
 
   const fetchServices = async () => {
     try {
-      const res = await fetch('/api/admin/services');
+      // Add timestamp to force fresh fetch
+      const res = await fetch(`/api/admin/services?t=${Date.now()}`, { 
+        cache: 'no-store',
+        headers: { 'Pragma': 'no-cache' }
+      });
       if (res.ok) {
         setServices(await res.json());
       }
@@ -56,6 +61,21 @@ export default function ServiceManagement() {
       }
     } catch (error) {
       alert('Failed to delete service');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        alert("File too large. Max 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -147,12 +167,19 @@ export default function ServiceManagement() {
           const Icon = iconMap[service.icon] || Truck;
           return (
             <div key={service.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <div className="relative h-48">
-                <img 
-                  src={service.imageUrl} 
-                  alt={service.title} 
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative h-48 bg-slate-100 dark:bg-slate-700">
+                {service.imageUrl ? (
+                  <Image 
+                    src={service.imageUrl} 
+                    alt={service.title} 
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-slate-400">
+                    <ImageIcon className="w-12 h-12" />
+                  </div>
+                )}
                 <div className="absolute top-2 right-2 flex gap-2">
                   <button 
                     onClick={() => startEdit(service)}
@@ -200,89 +227,77 @@ export default function ServiceManagement() {
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">
                 {editingService ? 'Edit Service' : 'Add New Service'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                <X className="w-5 h-5" />
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-6 h-6" />
               </button>
             </div>
+            
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Service Title</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="e.g. Air Freight"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
                 <textarea
                   required
+                  rows={3}
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
-                  rows={3}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                  placeholder="Service description..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Image Source</label>
-                
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Service Image</label>
                 <div className="space-y-3">
-                  {/* Image Preview */}
-                  {formData.imageUrl && (
-                    <div className="relative w-full h-40 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                        className="absolute top-2 right-2 p-1 bg-white/80 rounded-full text-red-500 hover:bg-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 shrink-0">
+                      {formData.imageUrl ? (
+                        <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          <ImageIcon className="w-6 h-6" />
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Upload or URL Toggle */}
-                  <div className="flex gap-2 mb-2">
-                    <label className="flex items-center gap-2 text-xs font-medium text-slate-500 cursor-pointer">
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                              alert("File size too large. Max 5MB.");
-                              return;
-                            }
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setFormData({ ...formData, imageUrl: reader.result as string });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={formData.imageUrl}
+                        onChange={e => setFormData({...formData, imageUrl: e.target.value})}
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 mb-2"
+                        placeholder="Image URL (https://...)"
                       />
-                      <span className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" />
-                        Upload Image
-                      </span>
-                    </label>
-                    <span className="text-xs flex items-center text-slate-400">or paste URL below</span>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors cursor-pointer border border-slate-200 dark:border-slate-600">
+                          <Upload className="w-3 h-3" />
+                          <span>Upload Image (Max 2MB)</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-                  <input
-                    type="text"
-                    required
-                    value={formData.imageUrl}
-                    onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white text-sm"
-                    placeholder="https://... or data:image/..."
-                  />
+                  <p className="text-[10px] text-slate-500">
+                    Paste a URL or upload a local image. Uploaded images will be converted to Base64 (database storage).
+                  </p>
                 </div>
               </div>
 
@@ -292,7 +307,7 @@ export default function ServiceManagement() {
                   <select
                     value={formData.icon}
                     onChange={e => setFormData({...formData, icon: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
                     <option value="Truck">Truck</option>
                     <option value="Ship">Ship</option>
@@ -300,48 +315,50 @@ export default function ServiceManagement() {
                     <option value="Package">Package</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sort Order</label>
                   <input
                     type="number"
                     value={formData.sortOrder}
                     onChange={e => setFormData({...formData, sortOrder: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
                   onChange={e => setFormData({...formData, isActive: e.target.checked})}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
                 <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Visible on Home Page
+                  Active (Visible on home page)
                 </label>
               </div>
 
-              <div className="pt-4 flex gap-3 justify-end">
+              <div className="pt-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {isSubmitting ? 'Saving...' : (
+                  {isSubmitting ? (
+                    <>Saving...</>
+                  ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Save Changes
+                      Save Service
                     </>
                   )}
                 </button>
