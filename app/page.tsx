@@ -469,7 +469,31 @@ export default function Home() {
             className="bg-white border-y border-slate-100 shadow-[inset_0_4px_20px_-12px_rgba(0,0,0,0.1)]"
           >
             <div className="max-w-4xl mx-auto px-6 py-10">
-             <ErrorBoundary>
+             <ErrorBoundary fallback={
+               <div className="text-center py-8">
+                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
+                   <X className="w-7 h-7 text-red-500" />
+                 </div>
+                 <h3 className="text-lg font-bold text-slate-900">Unable to load tracking section</h3>
+                 <p className="text-slate-500 mt-2 text-sm">
+                   An unexpected error occurred while rendering tracking results.
+                 </p>
+                 <div className="mt-4 flex items-center justify-center gap-3">
+                   <button
+                     onClick={() => window.location.reload()}
+                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                   >
+                     Reload Page
+                   </button>
+                   <a
+                     href="/"
+                     className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                   >
+                     Go Home
+                   </a>
+                 </div>
+               </div>
+             }>
               {error ? (
                 <div className="text-center py-8">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-3">
