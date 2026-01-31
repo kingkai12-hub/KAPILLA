@@ -1,35 +1,39 @@
-'use client';
-
-import { useEffect } from 'react';
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50">
-      <div className="text-center max-w-md">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">Something went wrong!</h2>
-        <p className="text-slate-600 mb-6">
-          We apologize for the inconvenience. An unexpected error has occurred.
-        </p>
-        <button
-          onClick={
-            // Attempt to recover by trying to re-render the segment
-            () => reset()
-          }
-          className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-        >
-          Try again
-        </button>
-      </div>
-    </div>
-  );
-}
+ "use client";
+ 
+ import React from "react";
+ 
+ export default function Error({
+   error,
+   reset,
+ }: {
+   error: Error & { digest?: string };
+   reset: () => void;
+ }) {
+   return (
+     <div className="min-h-screen flex items-center justify-center bg-slate-50">
+       <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-6 text-center space-y-4">
+         <h1 className="text-2xl font-bold">Something went wrong</h1>
+         <p className="text-slate-600">
+           An unexpected error occurred. Please try again.
+         </p>
+         {error?.digest && (
+           <p className="text-xs text-slate-400">Ref: {error.digest}</p>
+         )}
+         <div className="flex gap-3 justify-center">
+           <button
+             onClick={() => reset()}
+             className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+           >
+             Retry
+           </button>
+           <a
+             href="/api/health"
+             className="px-4 py-2 rounded-lg bg-slate-200 text-slate-800 font-semibold hover:bg-slate-300 transition"
+           >
+             System Health
+           </a>
+         </div>
+       </div>
+     </div>
+   );
+ }
