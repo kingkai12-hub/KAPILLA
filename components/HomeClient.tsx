@@ -428,7 +428,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
             className="max-w-lg mx-auto relative z-20"
           >
             <div className="text-center mb-3">
-              <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Track Your Cargo Here</span>
+              <span className="text-sm font-bold text-blue-900 uppercase tracking-wider">Track Your Cargo Here</span>
             </div>
             <form onSubmit={handleSearch} className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
