@@ -89,8 +89,8 @@ export default function ProofOfDeliveryPage() {
               <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
                 <p>DAR ES SALAAM, TANZANIA</p>
-                <p>Tel: +255 123 456 789</p>
-                <p>Email: info@kapilla-group.com</p>
+                <p>Tel: +255 756 656 218 / +255 766 724 062</p>
+                <p>Email: express@kapillagroup.co.tz</p>
               </div>
             </div>
           </div>

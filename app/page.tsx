@@ -10,6 +10,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Map from '@/components/Map';
 import PickupRequestModal from '@/components/PickupRequestModal';
+import HelpCenterModal from '@/components/HelpCenterModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 import { locationCoords } from '@/lib/locations';
@@ -86,6 +87,7 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [executives, setExecutives] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
 
@@ -728,7 +730,14 @@ export default function Home() {
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm">Support</h4>
             <ul className="space-y-1.5 text-xs">
-              <li><a href="#" className="hover:text-blue-400">Help Center</a></li>
+              <li>
+                <button 
+                  onClick={() => setIsHelpCenterOpen(true)} 
+                  className="hover:text-blue-400 text-left"
+                >
+                  Help Center
+                </button>
+              </li>
               <li><a href="#" className="hover:text-blue-400">Terms of Service</a></li>
               <li><a href="#" className="hover:text-blue-400">Privacy Policy</a></li>
             </ul>
@@ -739,6 +748,12 @@ export default function Home() {
       <PickupRequestModal 
         isOpen={isPickupModalOpen} 
         onClose={() => setIsPickupModalOpen(false)} 
+      />
+      
+      {/* Help Center Modal */}
+      <HelpCenterModal 
+        isOpen={isHelpCenterOpen} 
+        onClose={() => setIsHelpCenterOpen(false)} 
       />
     </div>
   );
