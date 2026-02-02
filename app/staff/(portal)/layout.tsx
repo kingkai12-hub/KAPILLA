@@ -108,9 +108,12 @@ export default function StaffPortalLayout({
     return () => clearInterval(interval);
   }, [user]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('kapilla_user');
-    router.push('/staff/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    router.push('/');
   };
 
   const navigation = [

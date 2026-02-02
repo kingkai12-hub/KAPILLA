@@ -43,6 +43,26 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // 2. AUTH GUARD FOR STAFF ROUTES
+  if (request.nextUrl.pathname.startsWith('/staff')) {
+    const auth = request.cookies.get('kapilla_auth');
+    const isLogin = request.nextUrl.pathname === '/staff/login';
+    if (!auth?.value) {
+      if (isLogin) {
+        return NextResponse.next();
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      url.search = '';
+      return NextResponse.redirect(url);
+    } else if (isLogin) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/staff/dashboard';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+  }
+
   const response = NextResponse.next();
 
   // 2. SECURITY HEADERS
@@ -56,5 +76,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/api/:path*', '/staff/:path*'],
 }

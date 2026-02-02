@@ -51,8 +51,15 @@ export async function POST(req: Request) {
 
     // Return user info (excluding password)
     const { password: _, ...userWithoutPassword } = user;
-    
-    return NextResponse.json(userWithoutPassword);
+    const res = NextResponse.json(userWithoutPassword);
+    res.cookies.set('kapilla_auth', '1', {
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 8,
+    });
+    return res;
   } catch (error: any) {
     console.error('[AUTH_LOGIN]', error);
     return NextResponse.json({ 

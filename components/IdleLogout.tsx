@@ -26,12 +26,15 @@ export default function IdleLogout() {
     
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
       const storedUser = localStorage.getItem('kapilla_user');
       
       if (storedUser) {
         // User was logged in, log them out
         localStorage.removeItem('kapilla_user');
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+        } catch {}
         // Force full refresh and go to home
         window.location.href = '/';
       } else {
