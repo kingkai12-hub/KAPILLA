@@ -45,6 +45,15 @@ export function middleware(request: NextRequest) {
 
   // 2. AUTH GUARD FOR STAFF ROUTES
   if (request.nextUrl.pathname.startsWith('/staff')) {
+    const fetchSite = request.headers.get('sec-fetch-site') || '';
+    // If navigation originates outside our site (shared link, external app), force redirect to homepage
+    if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'same-site') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+
     const auth = request.cookies.get('kapilla_auth');
     const isLogin = request.nextUrl.pathname === '/staff/login';
     if (!auth?.value) {
