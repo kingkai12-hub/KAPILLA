@@ -16,6 +16,7 @@ export default function ChatBell({ userId, onOpenChat }: { userId: string; onOpe
   const [latest, setLatest] = useState<Notification | null>(null);
   const esRef = useRef<EventSource | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const dismissTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -32,6 +33,12 @@ export default function ChatBell({ userId, onOpenChat }: { userId: string; onOpe
               content: data.content || null,
               createdAt: data.createdAt,
             });
+            if (dismissTimerRef.current) {
+              clearTimeout(dismissTimerRef.current);
+            }
+            dismissTimerRef.current = window.setTimeout(() => {
+              setLatest(null);
+            }, 20000);
             try {
               if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
               const ctx = audioCtxRef.current!;
@@ -63,6 +70,10 @@ export default function ChatBell({ userId, onOpenChat }: { userId: string; onOpe
     return () => {
       es.close();
       esRef.current = null;
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
     };
   }, [userId]);
 
