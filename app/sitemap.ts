@@ -1,11 +1,13 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = 'https://kapilla-logistics.vercel.app';
+  const now = new Date();
   return [
     {
-      url: 'https://kapilla-logistics.vercel.app',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
+      url: `${baseUrl}/`,
+      lastModified: now,
+      changefreq: 'daily',
       priority: 1,
     },
   ];
