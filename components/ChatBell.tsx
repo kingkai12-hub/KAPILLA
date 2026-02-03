@@ -19,46 +19,47 @@ export default function ChatBell({ userId, onOpenChat }: { userId: string; onOpe
 
   useEffect(() => {
     if (!userId) return;
-    const es = new EventSource(`/api/chat/stream?userId=${encodeURIComponent(userId)}`);
-    es.onmessage = (ev) => {
-      try {
-        const data = JSON.parse(ev.data);
-        if (data?.type === 'message') {
-          setUnread((u) => u + 1);
-          setLatest({
-            id: data.id,
-            senderId: data.senderId,
-            content: data.content || null,
-            createdAt: data.createdAt,
-          });
-          // Play a short beep sound using Web Audio API
-          try {
-            if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const ctx = audioCtxRef.current!;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 880;
-            gain.gain.value = 0.001; // prevent loud sound
-            osc.connect(gain).connect(ctx.destination);
-            osc.start();
-            setTimeout(() => {
-              osc.stop();
-            }, 150);
-          } catch {}
+    const connect = () => {
+      const es = new EventSource(`/api/chat/stream?userId=${encodeURIComponent(userId)}`);
+      es.onmessage = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data?.type === 'message') {
+            setUnread((u) => u + 1);
+            setLatest({
+              id: data.id,
+              senderId: data.senderId,
+              content: data.content || null,
+              createdAt: data.createdAt,
+            });
+            try {
+              if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const ctx = audioCtxRef.current!;
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.value = 880;
+              gain.gain.value = 0.001;
+              osc.connect(gain).connect(ctx.destination);
+              osc.start();
+              setTimeout(() => {
+                osc.stop();
+              }, 150);
+            } catch {}
+          }
+        } catch (e) {
+          console.error('Invalid SSE data', e);
         }
-      } catch (e) {
-        console.error('Invalid SSE data', e);
-      }
+      };
+      es.onerror = () => {
+        try { es.close(); } catch {}
+        setTimeout(() => {
+          connect();
+        }, 5000);
+      };
+      esRef.current = es;
     };
-    es.onerror = () => {
-      // Try reconnect after short delay
-      es.close();
-      setTimeout(() => {
-        esRef.current = new EventSource(`/api/chat/stream?userId=${encodeURIComponent(userId)}`);
-      }, 5000);
-    };
-    esRef.current = es;
+    connect();
     return () => {
       es.close();
       esRef.current = null;
