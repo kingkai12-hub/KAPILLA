@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from 'next-themes';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -318,7 +319,9 @@ export default function StaffPortalLayout({
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth">
           <div className="max-w-7xl mx-auto">
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </div>
         </main>
         {chatOpen && user?.id && chatPeer && (

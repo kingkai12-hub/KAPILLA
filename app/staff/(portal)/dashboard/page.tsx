@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, TrendingUp, AlertTriangle, CheckCircle, Activity, Map, Truck, Clock, User, Calendar, ScanLine, PackagePlus, CheckCheck, Hourglass, Layers } from 'lucide-react';
+import { Package, TrendingUp, AlertTriangle, CheckCircle, Activity, Map, Truck, Clock, User, Calendar, ScanLine, PackagePlus, CheckCheck, Hourglass, Layers, MessageSquare } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { db } from '@/lib/db';
@@ -132,15 +132,15 @@ export default async function StaffDashboard() {
           </div>
         </a>
 
-        <div className="group relative p-1 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:-translate-y-1 cursor-pointer">
+        <a href="/staff/chat" className="group relative p-1 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:-translate-y-1">
           <div className="h-full bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent dark:from-orange-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
              <div className="p-3.5 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 rounded-full group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 z-10">
-               <Calendar className="w-7 h-7" />
+               <MessageSquare className="w-7 h-7" />
              </div>
-             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">Schedule</span>
+             <span className="text-sm font-bold text-slate-700 dark:text-slate-200 z-10">Chat</span>
           </div>
-        </div>
+        </a>
       </div>
 
       <div className="w-full">
