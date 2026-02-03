@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ChatBell from '@/components/ChatBell';
+import ChatModal from '@/components/ChatModal';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -39,6 +41,8 @@ export default function StaffPortalLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatPeer, setChatPeer] = useState<string>('');
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -266,6 +270,17 @@ export default function StaffPortalLayout({
                 </button>
               )}
 
+              {/* Chat Notifications */}
+              {user?.id && (
+                <ChatBell
+                  userId={user.id}
+                  onOpenChat={(peerId) => {
+                    setChatPeer(peerId);
+                    setChatOpen(true);
+                  }}
+                />
+              )}
+
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{user?.name}</p>
@@ -306,6 +321,14 @@ export default function StaffPortalLayout({
             {children}
           </div>
         </main>
+        {chatOpen && user?.id && chatPeer && (
+          <ChatModal
+            isOpen={chatOpen}
+            onClose={() => setChatOpen(false)}
+            userId={user.id}
+            peerId={chatPeer}
+          />
+        )}
       </div>
     </div>
   );
