@@ -186,10 +186,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
   const abortRef = useRef<AbortController | null>(null);
 
-  // Clear staff session when visiting home page to ensure security
-  useEffect(() => {
-    localStorage.removeItem('kapilla_user');
-  }, []);
+  // Removed auto-clearing of staff session to prevent portal loading issues
 
   const latestEvent = searchResult?.events?.[0];
   let latestEta: string | null = null;
