@@ -49,6 +49,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    if (user.isDisabled) {
+      return NextResponse.json({ error: 'Account disabled. Contact admin.' }, { status: 403 });
+    }
+
     // Return user info (excluding password)
     const { password: _, ...userWithoutPassword } = user;
     const res = NextResponse.json(userWithoutPassword);

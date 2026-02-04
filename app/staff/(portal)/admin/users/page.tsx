@@ -52,6 +52,25 @@ export default function UserManagement() {
     }
   };
 
+  const handleToggleDisable = async (user: any) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.id, isDisabled: !user.isDisabled })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isDisabled: updated.isDisabled } : u));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to update status');
+      }
+    } catch {
+      alert('Network error updating status');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) {
@@ -281,6 +300,11 @@ export default function UserManagement() {
                             <span className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-slate-400'}`}>
                               {isOnline ? 'Online' : 'Offline'}
                             </span>
+                            {user.isDisabled && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                Disabled
+                              </span>
+                            )}
                           </div>
                         );
                       })()}
@@ -307,6 +331,14 @@ export default function UserManagement() {
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleToggleDisable(user)}
+                        className={`p-1 rounded ${['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'text-slate-300 cursor-not-allowed' : (user.isDisabled ? 'text-green-600 hover:bg-green-50' : 'text-orange-600 hover:bg-orange-50')}`}
+                        title={['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'Cannot disable Executive/Admin' : (user.isDisabled ? 'Enable User' : 'Disable User')}
+                        disabled={['ADMIN', 'MD', 'CEO'].includes(user.role)}
+                      >
+                        <UserCheck className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(user.id)}

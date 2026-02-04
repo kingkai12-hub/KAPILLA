@@ -29,6 +29,7 @@ export async function GET() {
         role: true,
         workId: true,
         phoneNumber: true,
+        isDisabled: true,
         lastActive: true,
         createdAt: true,
         // Exclude password
@@ -44,7 +45,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, role, workId, phoneNumber } = body;
+    const { name, email, password, role, workId, phoneNumber, isDisabled } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
@@ -71,7 +72,8 @@ export async function POST(req: Request) {
         password, // In production, hash this!
         role: role || 'STAFF',
         workId: finalWorkId,
-        phoneNumber: phoneNumber || null
+        phoneNumber: phoneNumber || null,
+        isDisabled: !!isDisabled
       }
     });
 
@@ -93,10 +95,18 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, email, role, password, workId, phoneNumber } = body;
+    const { id, name, email, role, password, workId, phoneNumber, isDisabled } = body;
 
     const data: any = { name, email, role, workId, phoneNumber };
     if (password) data.password = password;
+    if (typeof isDisabled === 'boolean') {
+      // Prevent disabling executive/admin accounts to avoid lockout
+      const target = await db.user.findUnique({ where: { id } });
+      if (target && ['ADMIN', 'MD', 'CEO'].includes(target.role) && isDisabled) {
+        return NextResponse.json({ error: 'Cannot disable an Executive/Admin account' }, { status: 403 });
+      }
+      data.isDisabled = isDisabled;
+    }
 
     const updatedUser = await db.user.update({
       where: { id },
