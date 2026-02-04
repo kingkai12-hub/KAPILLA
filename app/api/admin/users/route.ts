@@ -123,20 +123,28 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 });
     }
 
-    // Check if user is admin before deleting
     const userToDelete = await db.user.findUnique({ where: { id } });
-    
     if (!userToDelete) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     if (['ADMIN', 'MD', 'CEO'].includes(userToDelete.role)) {
-        return NextResponse.json({ error: 'Cannot delete an Executive/Admin account' }, { status: 403 });
+      return NextResponse.json({ error: 'Cannot delete an Executive/Admin account' }, { status: 403 });
     }
 
-    await db.user.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    try {
+      await db.user.delete({ where: { id } });
+      return NextResponse.json({ success: true });
+    } catch (error: any) {
+      if (error.code === 'P2003') {
+        return NextResponse.json(
+          { error: 'Cannot delete: user has related records (e.g., shipments, documents, requests). Remove or reassign related data first.' },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    return NextResponse.json({ error: 'Failed to delete user', details: error?.message }, { status: 500 });
   }
 }
