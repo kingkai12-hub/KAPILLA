@@ -114,11 +114,14 @@ export default function StaffPortalLayout({
   }, [user]);
 
   const handleLogout = async () => {
-    localStorage.removeItem('kapilla_user');
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {}
-    router.push('/');
+      localStorage.removeItem('kapilla_user');
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch {}
+    } finally {
+      window.location.assign('/');
+    }
   };
 
   const navigation = [

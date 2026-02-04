@@ -30,20 +30,16 @@ export default function IdleLogout() {
       const storedUser = localStorage.getItem('kapilla_user');
       
       if (storedUser) {
-        // User was logged in, log them out
-        localStorage.removeItem('kapilla_user');
         try {
-          await fetch('/api/auth/logout', { method: 'POST' });
-        } catch {}
-        // Force full refresh and go to home
-        window.location.href = '/';
-      } else {
-        // User was not logged in.
-        // If they are not on home page, maybe send them home?
-        // "GO BACK TO THE HOME PAGE"
-        if (pathname !== '/') {
-           window.location.href = '/';
+          localStorage.removeItem('kapilla_user');
+          try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+          } catch {}
+        } finally {
+          window.location.assign('/');
         }
+      } else {
+        if (pathname !== '/') window.location.assign('/');
       }
     };
 
