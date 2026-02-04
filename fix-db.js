@@ -37,7 +37,7 @@ for (const host of regions) {
     const url = `postgresql://postgres.${projectRef}:${encodedPassword}@${host}:6543/postgres`;
     
     // For Direct URL, we can often use the same host on port 5432 with Supavisor, 
-    // or just use the pooler URL for both for now to get it working.
+q    // or just use the pooler URL for both for now to get it working.
     const directUrl = `postgresql://postgres.${projectRef}:${encodedPassword}@${host}:6543/postgres`;
 
     console.log(`\nTesting connection to: \x1b[33m${host}\x1b[0m ...`);
