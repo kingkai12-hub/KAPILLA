@@ -30,35 +30,72 @@ export async function POST(req: Request) {
       dispatcherName, dispatcherSignature
     } = body;
 
-    // Generate unique waybill (Simple random for demo)
-    const waybillNumber = 'KPL-' + Math.floor(10000 + Math.random() * 90000);
-
-    const shipment = await db.shipment.create({
-      data: {
-        waybillNumber,
-        senderName,
-        senderPhone,
-        senderAddress,
-        receiverName,
-        receiverPhone,
-        receiverAddress,
-        origin,
-        destination,
-        weight: weight ? parseFloat(weight) : null,
-        price: price ? parseFloat(price) : null,
-        cargoDetails,
-        currentStatus: 'PENDING',
-        dispatcherName,
-        dispatcherSignature,
-        events: {
-          create: {
-            status: 'PENDING',
-            location: origin,
-            remarks: 'Shipment created'
-          }
-        }
+    async function nextWaybill() {
+      const now = new Date();
+      const yy = String(now.getFullYear());
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const prefix = `KPL-${yy}${mm}-`;
+      const latest = await db.shipment.findFirst({
+        where: { waybillNumber: { startsWith: prefix } },
+        orderBy: { waybillNumber: 'desc' },
+        select: { waybillNumber: true }
+      });
+      let n = 1;
+      if (latest?.waybillNumber?.startsWith(prefix)) {
+        const s = latest.waybillNumber.slice(prefix.length);
+        const v = parseInt(s, 10);
+        if (!Number.isNaN(v)) n = v + 1;
       }
-    });
+      return `${prefix}${String(n).padStart(5, '0')}`;
+    }
+
+    let waybillNumber = await nextWaybill();
+    let shipment: any = null;
+    for (let i = 0; i < 3; i++) {
+      try {
+        shipment = await db.shipment.create({
+          data: {
+            waybillNumber,
+            senderName,
+            senderPhone,
+            senderAddress,
+            receiverName,
+            receiverPhone,
+            receiverAddress,
+            origin,
+            destination,
+            weight: weight ? parseFloat(weight) : null,
+            price: price ? parseFloat(price) : null,
+            cargoDetails,
+            currentStatus: 'PENDING',
+            dispatcherName,
+            dispatcherSignature,
+            events: {
+              create: {
+                status: 'PENDING',
+                location: origin,
+                remarks: 'Shipment created'
+              }
+            }
+          }
+        });
+        break;
+      } catch (e: any) {
+        if (e?.code === 'P2002') {
+          const parts = waybillNumber.split('-');
+          const last = parts[parts.length - 1];
+          const v = parseInt(last, 10);
+          const next = Number.isNaN(v) ? 1 : v + 1;
+          waybillNumber = `${parts.slice(0, -1).join('-')}-${String(next).padStart(5, '0')}`;
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Failed to create shipment' }, { status: 500 });
+    }
 
     // Send SMS notification if sender phone is provided
     if (senderPhone) {
