@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         const v = parseInt(s, 10);
         if (!Number.isNaN(v)) n = v + 1;
       }
-      return `${prefix}${String(n).padStart(2, '0')}`;
+      return `${prefix}${String(n).padStart(4, '0')}`;
     }
 
     let waybillNumber = await nextWaybill();
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
           const numeric = waybillNumber.slice(prefix.length);
           const v = parseInt(numeric, 10);
           const next = Number.isNaN(v) ? 1 : v + 1;
-          waybillNumber = `${prefix}${String(next).padStart(2, '0')}`;
+          waybillNumber = `${prefix}${String(next).padStart(4, '0')}`;
           continue;
         }
         throw e;
