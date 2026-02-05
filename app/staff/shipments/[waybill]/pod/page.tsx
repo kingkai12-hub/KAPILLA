@@ -68,6 +68,20 @@ export default function ProofOfDeliveryPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <style>
+        {`
+          @page {
+            size: A4;
+            margin: 5mm;
+          }
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+        `}
+      </style>
       {/* Print Button */}
       <button
         onClick={handlePrint}
@@ -78,15 +92,15 @@ export default function ProofOfDeliveryPage() {
       </button>
 
       {/* A4 Paper Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl print:shadow-none print:w-full print:max-w-[210mm] print:h-auto print:min-h-0 box-border relative text-black mx-auto print:p-[5mm] print:m-0">
+      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl box-border relative text-black mx-auto">
         
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain print:invert-0" />
+            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
             <div>
               <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1>
-              <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
+              <div className="text-xs font-bold text-gray-600 space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
                 <p>DAR ES SALAAM, TANZANIA</p>
                 <p>Tel: +255 756 656 218 / +255 766 724 062</p>
@@ -135,7 +149,7 @@ export default function ProofOfDeliveryPage() {
         <div className="mb-12">
           <h3 className="text-xs font-bold uppercase text-black mb-4 tracking-wider border-b pb-2">Shipment Details</h3>
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 print:bg-transparent">
+            <thead className="bg-slate-50">
               <tr>
                 <th className="text-left p-3 font-semibold text-black">Description</th>
                 <th className="text-left p-3 font-semibold text-black">Weight</th>
@@ -144,10 +158,10 @@ export default function ProofOfDeliveryPage() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-slate-100 print:border-black">
+              <tr className="border-b border-slate-100">
                 <td className="p-3">
                   <p className="font-bold">{shipment.type}</p>
-                  <p className="text-xs text-gray-600 print:text-black">{shipment.cargoDetails}</p>
+                  <p className="text-xs text-gray-600">{shipment.cargoDetails}</p>
                 </td>
                 <td className="p-3">{shipment.weight} KG</td>
                 <td className="p-3">Standard Ground</td>

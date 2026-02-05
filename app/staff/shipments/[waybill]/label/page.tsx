@@ -63,7 +63,7 @@ export default function LabelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 print:p-0 print:bg-white">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       <style>
         {`
           @page {
@@ -71,15 +71,6 @@ export default function LabelPage() {
             margin: 5mm;
           }
           @media print {
-            .print-fit {
-              transform: scale(0.85);
-              transform-origin: top left;
-            }
-            .print-container {
-              height: 280mm;
-              max-height: 280mm;
-              overflow: hidden;
-            }
             .no-break {
               break-inside: avoid-page;
               page-break-inside: avoid;
@@ -101,15 +92,15 @@ export default function LabelPage() {
       </button>
 
       {/* A4 Document Container */}
-      <div className="bg-white w-[210mm] min-h-0 p-[15mm] shadow-2xl print:shadow-none print:w-full print:max-w-[210mm] box-border relative text-black font-sans text-sm mx-auto print:p-[3mm] print:m-0 print-fit print-container no-break">
+      <div className="bg-white w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl box-border relative text-black font-sans text-sm mx-auto no-break">
         
         {/* Header Section */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
           <div className="flex items-start gap-4">
-            <img src="/logo.png" alt="Logo" className="w-64 h-64 -mt-8 object-contain print:w-20 print:h-20 print:mt-0 print:invert-0" />
+            <img src="/logo.png" alt="Logo" className="w-64 h-64 -mt-8 object-contain" />
             <div className="mt-8">
               {/* <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1> */}
-              <div className="text-xs font-bold text-gray-600 print:text-black space-y-0.5 mt-1">
+              <div className="text-xs font-bold text-gray-600 space-y-0.5 mt-1">
                 <p>P.O. BOX 71729</p>
                 <p>DAR ES SALAAM, TANZANIA</p>
                 <p>Tel: +255 766 724 062</p>
@@ -119,7 +110,7 @@ export default function LabelPage() {
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-2xl print:text-xl font-black text-black uppercase tracking-tighter">WAYBILL</h2>
+            <h2 className="text-2xl font-black text-black uppercase tracking-tighter">WAYBILL</h2>
             <p className="text-xs font-bold uppercase text-black mt-1">Consignment Note</p>
             <div className="mt-2 border-2 border-black p-2 inline-block">
               <p className="text-lg font-mono font-bold">{data.waybillNumber}</p>
@@ -128,11 +119,11 @@ export default function LabelPage() {
         </div>
 
         {/* Barcode / QR Section */}
-        <div className="flex justify-between items-center mb-3 bg-gray-50 print:bg-transparent p-3 border border-gray-200 print:border-black rounded-lg no-break">
+        <div className="flex justify-between items-center mb-3 bg-gray-50 p-3 border border-gray-200 rounded-lg no-break">
           <div className="flex-1">
-            <p className="text-xs font-bold uppercase text-gray-500 print:text-black mb-1">Tracking Number</p>
+            <p className="text-xs font-bold uppercase text-gray-500 mb-1">Tracking Number</p>
             <p className="text-base font-mono font-bold">{data.waybillNumber}</p>
-            <p className="text-xs text-gray-500 print:text-black mt-1">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
+            <p className="text-xs text-gray-500 mt-1">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
           </div>
           <div>
             <QRCodeSVG value={data.waybillNumber} size={56} />
@@ -142,11 +133,11 @@ export default function LabelPage() {
         {/* Route Info */}
         <div className="grid grid-cols-2 gap-0 border-2 border-black mb-3 no-break">
           <div className="p-2 border-r-2 border-black">
-            <p className="text-[10px] font-bold uppercase text-gray-500 print:text-black mb-1">Origin</p>
+            <p className="text-[10px] font-bold uppercase text-gray-500 mb-1">Origin</p>
             <p className="text-lg font-black uppercase">{data.origin}</p>
           </div>
           <div className="p-2">
-            <p className="text-[10px] font-bold uppercase text-gray-500 print:text-black mb-1">Destination</p>
+            <p className="text-[10px] font-bold uppercase text-gray-500 mb-1">Destination</p>
             <p className="text-lg font-black uppercase">{data.destination}</p>
           </div>
         </div>
@@ -154,8 +145,8 @@ export default function LabelPage() {
         {/* Sender & Receiver Details */}
         <div className="grid grid-cols-2 gap-3 mb-3 no-break">
           {/* Sender */}
-          <div className="border border-gray-300 print:border-black rounded p-3">
-            <h3 className="text-xs font-bold uppercase bg-black text-white print:text-black print:bg-transparent print:border print:border-black inline-block px-2 py-0.5 mb-3">From (Sender)</h3>
+          <div className="border border-gray-300 rounded p-3">
+            <h3 className="text-xs font-bold uppercase bg-black text-white inline-block px-2 py-0.5 mb-3">From (Sender)</h3>
             <div className="space-y-1">
               <p className="font-bold text-base">{data.senderName}</p>
               <p className="text-sm">{data.senderPhone}</p>
@@ -164,8 +155,8 @@ export default function LabelPage() {
           </div>
 
           {/* Receiver */}
-          <div className="border border-gray-300 print:border-black rounded p-3">
-            <h3 className="text-xs font-bold uppercase bg-black text-white print:text-black print:bg-transparent print:border print:border-black inline-block px-2 py-0.5 mb-3">To (Receiver)</h3>
+          <div className="border border-gray-300 rounded p-3">
+            <h3 className="text-xs font-bold uppercase bg-black text-white inline-block px-2 py-0.5 mb-3">To (Receiver)</h3>
             <div className="space-y-1">
               <p className="font-bold text-base">{data.receiverName}</p>
               <p className="text-sm">{data.receiverPhone}</p>
@@ -178,7 +169,7 @@ export default function LabelPage() {
         <div className="mb-3 no-break">
           <h3 className="text-xs font-bold uppercase text-black mb-2">Shipment Particulars</h3>
           <table className="w-full border-collapse border border-black text-sm">
-            <thead className="bg-gray-100 print:bg-gray-200">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="border border-black p-2 text-left w-1/4">Type</th>
                 <th className="border border-black p-2 text-center w-1/4">Weight (KG)</th>
@@ -272,7 +263,7 @@ export default function LabelPage() {
         </div>
 
         {/* Footer Terms */}
-        <div className="mt-5 pt-3 border-t border-gray-300 print:border-black text-[9px] text-gray-500 print:text-black text-justify leading-tight no-break">
+        <div className="mt-5 pt-3 border-t border-gray-300 text-[9px] text-gray-500 text-justify leading-tight no-break">
           <p className="font-bold mb-1">TERMS AND CONDITIONS OF CARRIAGE</p>
           <p>
             1. Kapilla Group Limited (hereinafter referred to as "The Carrier") accepts goods for carriage subject to the conditions herein.
