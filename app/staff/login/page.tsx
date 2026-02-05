@@ -40,7 +40,7 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-cyan-300 to-emerald-400 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-sky-600/35 via-white to-blue-800/35 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="bg-white p-2 rounded-xl shadow-sm">
