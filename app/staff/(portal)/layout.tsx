@@ -58,7 +58,20 @@ export default function StaffPortalLayout({
       // Redirect to Login Page to enforce authentication
       router.push('/staff/login');
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsed = JSON.parse(storedUser);
+      setUser(parsed);
+      (async () => {
+        try {
+          const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { cache: 'no-store' });
+          if (res.ok) {
+            const fresh = await res.json();
+            localStorage.setItem('kapilla_user', JSON.stringify(fresh));
+            setUser(fresh);
+          }
+        } catch (e) {
+          console.error('Failed to refresh user profile', e);
+        }
+      })();
     }
 
     // Fetch pending pickup requests count
