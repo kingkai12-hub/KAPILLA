@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     async function nextWaybill() {
       const now = new Date();
-      const yy = String(now.getFullYear());
+      const yy = String(now.getFullYear()).slice(-2);
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const prefix = `KPL-${yy}${mm}`;
       const latest = await db.shipment.findFirst({
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       } catch (e: any) {
         if (e?.code === 'P2002') {
           const now = new Date();
-          const yy = String(now.getFullYear());
+          const yy = String(now.getFullYear()).slice(-2);
           const mm = String(now.getMonth() + 1).padStart(2, '0');
           const prefix = `KPL-${yy}${mm}`;
           const numeric = waybillNumber.slice(prefix.length);
