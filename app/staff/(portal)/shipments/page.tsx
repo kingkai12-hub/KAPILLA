@@ -140,13 +140,13 @@ export default function ShipmentsPage() {
               </button>
             </div>
             
-            <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateStatus} className="p-5 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
                 >
                   <option value="PENDING">PENDING</option>
                   <option value="IN_TRANSIT">IN_TRANSIT</option>
@@ -160,7 +160,7 @@ export default function ShipmentsPage() {
                 <select
                   value={updateLocation}
                   onChange={(e) => setUpdateLocation(e.target.value)}
-                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
                 >
                    {Object.keys(locationCoords).map(city => (
                         <option key={city} value={city}>{city}</option>
@@ -176,7 +176,7 @@ export default function ShipmentsPage() {
                       type="text"
                       value={receivedBy}
                       onChange={(e) => setReceivedBy(e.target.value)}
-                      className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
+                      className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
                       placeholder="Receiver's Name"
                       required
                     />
@@ -184,11 +184,11 @@ export default function ShipmentsPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Signature</label>
-                    <div className="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white">
+                    <div className="border border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden bg-white max-w-full overflow-x-auto">
                       <SignatureCanvas 
                         ref={sigCanvas}
                         penColor="black"
-                        canvasProps={{width: 350, height: 150, className: 'signature-canvas'}} 
+                        canvasProps={{width: 320, height: 140, className: 'signature-canvas'}} 
                       />
                     </div>
                     <button 
@@ -206,7 +206,7 @@ export default function ShipmentsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold disabled:opacity-50"
                 >
                   {isSubmitting ? 'Updating...' : 'Save Changes'}
                 </button>
@@ -216,14 +216,14 @@ export default function ShipmentsPage() {
         </div>
       )}
 
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Shipments</h1>
           <p className="text-slate-500 dark:text-slate-400">Manage and track all shipments</p>
         </div>
         <Link 
           href="/staff/shipments/create"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-semibold w-full sm:w-auto"
         >
           <Package className="w-4 h-4" />
           New Shipment
@@ -239,7 +239,7 @@ export default function ShipmentsPage() {
             placeholder="Search by Waybill, Sender, or Receiver..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-400"
+            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-400"
           />
         </div>
       </div>
@@ -247,15 +247,15 @@ export default function ShipmentsPage() {
       {/* Table */}
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full min-w-[860px] text-sm text-left">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase font-medium">
               <tr>
-                <th className="px-6 py-4">Waybill</th>
-                <th className="px-6 py-4">Sender</th>
-                <th className="px-6 py-4">Receiver</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-3 sm:px-6 py-4 sticky left-0 bg-slate-50 dark:bg-slate-800 z-10">Waybill</th>
+                <th className="px-3 sm:px-6 py-4">Sender</th>
+                <th className="px-3 sm:px-6 py-4">Receiver</th>
+                <th className="px-3 sm:px-6 py-4">Status</th>
+                <th className="px-3 sm:px-6 py-4">Date</th>
+                <th className="px-3 sm:px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -270,18 +270,18 @@ export default function ShipmentsPage() {
               ) : (
                 filteredShipments.map((shipment) => (
                   <tr key={shipment.waybillNumber} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-medium text-slate-900 dark:text-white">
+                    <td className="px-3 sm:px-6 py-4 font-mono font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900">
                       {shipment.waybillNumber}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                    <td className="px-3 sm:px-6 py-4 text-slate-600 dark:text-slate-300">
                       <div className="font-medium">{shipment.senderName}</div>
                       <div className="text-xs text-slate-400">{shipment.origin}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                    <td className="px-3 sm:px-6 py-4 text-slate-600 dark:text-slate-300">
                       <div className="font-medium">{shipment.receiverName}</div>
                       <div className="text-xs text-slate-400">{shipment.destination}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
                         ${shipment.currentStatus === 'DELIVERED' 
                           ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
@@ -291,10 +291,10 @@ export default function ShipmentsPage() {
                         {shipment.currentStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
+                    <td className="px-3 sm:px-6 py-4 text-slate-500 dark:text-slate-400">
                       {new Date(shipment.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {/* Edit Status - New (Disabled if Delivered) */}
                         {shipment.currentStatus !== 'DELIVERED' && (

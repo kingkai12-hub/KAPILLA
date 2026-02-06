@@ -139,73 +139,73 @@ export default function CreateShipment() {
 
   if (generatedWaybill) {
     return (
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="bg-green-50 p-6 border-b border-green-100 flex items-center justify-between">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 shadow-lg rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+        <div className="bg-green-50 dark:bg-green-900/20 p-5 sm:p-6 border-b border-green-100 dark:border-green-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-green-800">Shipment Created!</h2>
-            <p className="text-green-600">Waybill generated successfully.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-200">Shipment Created!</h2>
+            <p className="text-green-600 dark:text-green-300 text-sm">Waybill generated successfully.</p>
           </div>
-          <div className="text-right">
-            <span className="block text-sm text-blue-900">Waybill Number</span>
-            <span className="block text-3xl font-mono font-bold text-blue-950">{generatedWaybill}</span>
+          <div className="sm:text-right">
+            <span className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Waybill Number</span>
+            <span className="block text-2xl sm:text-3xl font-mono font-black text-slate-950 dark:text-white tracking-wider overflow-x-auto whitespace-nowrap">{generatedWaybill}</span>
           </div>
         </div>
 
-        <div className="p-8 space-y-6">
-          <div className="grid grid-cols-2 gap-8">
+        <div className="p-5 sm:p-8 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <div>
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">From (Sender)</h3>
-              <p className="font-bold text-lg text-blue-950">{formData.senderName}</p>
-              <p className="text-blue-900">{formData.senderPhone}</p>
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider mb-1">From (Sender)</h3>
+              <p className="font-bold text-base sm:text-lg text-slate-950 dark:text-white">{formData.senderName}</p>
+              <p className="text-slate-700 dark:text-slate-300">{formData.senderPhone}</p>
               {formData.senderEmail && (
-                <p className="text-blue-900 text-sm flex items-center gap-1">
+                <p className="text-slate-700 dark:text-slate-300 text-sm flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full inline-block" title="Notification Sent"></span>
                   {formData.senderEmail}
                 </p>
               )}
-              <p className="text-blue-900 text-sm">{formData.senderAddress}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{formData.senderAddress}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">To (Receiver)</h3>
-              <p className="font-bold text-lg text-blue-950">{formData.receiverName}</p>
-              <p className="text-blue-900">{formData.receiverPhone}</p>
-              <p className="text-blue-900 text-sm">{formData.receiverAddress}</p>
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider mb-1">To (Receiver)</h3>
+              <p className="font-bold text-base sm:text-lg text-slate-950 dark:text-white">{formData.receiverName}</p>
+              <p className="text-slate-700 dark:text-slate-300">{formData.receiverPhone}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{formData.receiverAddress}</p>
             </div>
           </div>
 
-          <div className="border-t pt-6 grid grid-cols-3 gap-4">
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Origin</h3>
-              <p className="font-medium text-blue-950">{formData.origin}</p>
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider">Origin</h3>
+              <p className="font-medium text-slate-950 dark:text-white">{formData.origin}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Destination</h3>
-              <p className="font-medium text-blue-950">{formData.destination}</p>
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider">Destination</h3>
+              <p className="font-medium text-slate-950 dark:text-white">{formData.destination}</p>
             </div>
             <div>
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Weight / Type</h3>
-              <p className="font-medium text-blue-950">{formData.weight} kg / {formData.type}</p>
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider">Weight / Type</h3>
+              <p className="font-medium text-slate-950 dark:text-white">{formData.weight} kg / {formData.type}</p>
             </div>
           </div>
 
           {formData.cargoDetails && (
-            <div className="border-t pt-6">
-              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">Cargo Details</h3>
-              <p className="text-blue-950">{formData.cargoDetails}</p>
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
+              <h3 className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider mb-1">Cargo Details</h3>
+              <p className="text-slate-950 dark:text-white">{formData.cargoDetails}</p>
             </div>
           )}
 
-          <div className="mt-8 flex gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button 
               onClick={() => window.open(`/staff/shipments/${generatedWaybill}/label`, '_blank')}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white py-3 rounded-md hover:bg-gray-900 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white py-3 rounded-xl hover:bg-slate-950 transition-colors font-semibold"
             >
               <Printer className="w-5 h-5" />
               Print Waybill / POD
             </button>
             <button 
               onClick={handleReset}
-              className="flex items-center justify-center gap-2 px-6 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors font-semibold text-slate-900 dark:text-white"
             >
               <RefreshCw className="w-5 h-5" />
               New Shipment
@@ -218,52 +218,55 @@ export default function CreateShipment() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Shipment</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create New Shipment</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Fill the sender, receiver, and package details to generate a waybill.</p>
+      </div>
       
-      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 shadow-sm rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Sender Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Sender Details</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">Sender Details</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input required type="text" name="senderName" value={formData.senderName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+              <input required type="text" name="senderName" value={formData.senderName} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
+              <input required type="tel" name="senderPhone" value={formData.senderPhone} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address / Location</label>
-              <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Address / Location</label>
+              <textarea name="senderAddress" value={formData.senderAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
           </div>
 
           {/* Receiver Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Receiver Details</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">Receiver Details</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input required type="text" name="receiverName" value={formData.receiverName} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+              <input required type="text" name="receiverName" value={formData.receiverName} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input required type="tel" name="receiverPhone" value={formData.receiverPhone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
+              <input required type="tel" name="receiverPhone" value={formData.receiverPhone} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address / Location</label>
-              <textarea name="receiverAddress" value={formData.receiverAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Address / Location</label>
+              <textarea name="receiverAddress" value={formData.receiverAddress} onChange={handleChange} rows={2} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
           </div>
         </div>
 
         {/* Shipment Info */}
         <div className="mt-8 space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Package Information</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">Package Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Origin City</label>
-              <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Origin City</label>
+              <select name="origin" value={formData.origin} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950">
                 <option value="">Select Origin</option>
                 {Object.entries(tanzaniaLocations).map(([category, cities]) => (
                   <optgroup key={category} label={category}>
@@ -275,8 +278,8 @@ export default function CreateShipment() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Destination City</label>
-              <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Destination City</label>
+              <select name="destination" value={formData.destination} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950">
                 <option value="">Select Destination</option>
                 {Object.entries(tanzaniaLocations).map(([category, cities]) => (
                   <optgroup key={category} label={category}>
@@ -288,12 +291,12 @@ export default function CreateShipment() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
-              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Weight (kg)</label>
+              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Type</label>
-              <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Type</label>
+              <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950">
                 <option>Parcel</option>
                 <option>Document</option>
                 <option>Fragile</option>
@@ -302,15 +305,15 @@ export default function CreateShipment() {
             </div>
           </div>
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Additional Details / Cargo Description</label>
-            <textarea name="cargoDetails" value={formData.cargoDetails} onChange={handleChange} rows={3} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" placeholder="Describe contents, special handling instructions, etc." />
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Additional Details / Cargo Description</label>
+            <textarea name="cargoDetails" value={formData.cargoDetails} onChange={handleChange} rows={3} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950" placeholder="Describe contents, special handling instructions, etc." />
           </div>
         </div>
 
         <div className="mt-8 flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm"
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm"
           >
             <Save className="w-5 h-5" />
             Generate Waybill
