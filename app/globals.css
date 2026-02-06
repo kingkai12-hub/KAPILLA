@@ -48,6 +48,19 @@ body {
   overflow-x: hidden;
 }
 
+.safe-page {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding-left: calc(env(safe-area-inset-left, 0px) + 16px);
+}
+
+.safe-nav {
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+}
+
 /* Animated Blobs - Increased intensity and added a third blob */
 body::before,
 body::after,

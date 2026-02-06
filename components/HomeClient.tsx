@@ -346,7 +346,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         <SearchParamsHandler onSearch={performSearch} />
       </Suspense>
       {/* Navigation */}
-      <nav className="absolute w-full z-10 px-4 md:px-6 py-4">
+      <nav className="absolute w-full z-10 safe-nav">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-1 rounded-lg shadow-sm">
@@ -394,12 +394,12 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-8 lg:pt-28 lg:pb-16 overflow-hidden">
+      <section className="relative pt-24 pb-8 lg:pt-28 lg:pb-16 overflow-hidden">
         {/* Background Blobs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-blue-100/40 rounded-full blur-xl -z-10 opacity-60 mix-blend-normal pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[700px] h-[520px] bg-yellow-50/40 rounded-full blur-xl -z-10 opacity-50 mix-blend-normal pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -412,7 +412,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
             <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
               Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Trusted Partner</span>
             </h1>
-            <p className="text-base text-slate-600 max-w-xl mx-auto mb-6">
+            <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto mb-6">
               Experience the next generation of logistics. Real-time tracking, global reach, and unmatched reliability for your business needs.
             </p>
           </motion.div>
