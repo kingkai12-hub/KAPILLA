@@ -3,9 +3,9 @@ import Link from 'next/link';
 export default async function WaybillDisplayPage({
   params,
 }: {
-  params: Promise<{ waybill: string }>;
+  params: { waybill: string };
 }) {
-  const { waybill } = await params;
+  const { waybill } = params;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
