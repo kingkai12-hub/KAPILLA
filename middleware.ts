@@ -47,7 +47,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/staff')) {
     const fetchSite = request.headers.get('sec-fetch-site') || '';
     // If navigation originates outside our site (shared link, external app), force redirect to homepage
-    if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'same-site') {
+    if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'same-site' && fetchSite !== 'none') {
       const url = request.nextUrl.clone();
       url.pathname = '/';
       url.search = '';

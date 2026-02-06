@@ -95,15 +95,15 @@ export default function LabelPage() {
       </button>
 
       <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
-        <div className="bg-gradient-to-r from-blue-950 to-blue-800 text-white p-5">
+        <div className="bg-white p-5 border-b border-slate-200">
           <div className="flex justify-between items-start gap-6">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="bg-white p-2 rounded-lg shadow-md">
-                <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
+              <div className="bg-white rounded-lg">
+                <img src="/logo.png" alt="Logo" className="w-24 h-24 object-contain" />
               </div>
               <div className="min-w-0">
-                <div className="text-2xl font-bold leading-tight">Kapilla Logistics</div>
-                <div className="text-[11px] leading-snug opacity-90">
+                <div className="text-2xl font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
+                <div className="text-[11px] leading-snug text-slate-700">
                   <div>P.O. BOX 71729, Dar es Salaam, Tanzania</div>
                   <div>Tel: +255 766 724 062 | +255 756 656 218</div>
                   <div>Email: express@kapillagroup.co.tz</div>
@@ -112,9 +112,9 @@ export default function LabelPage() {
             </div>
 
             <div className="text-right shrink-0">
-              <div className="text-[11px] uppercase tracking-wide opacity-90">Waybill / Consignment Note</div>
-              <div className="mt-2 inline-block rounded-lg bg-white text-blue-950 px-4 py-2 border border-white/60">
-                <div className="text-[10px] font-semibold uppercase text-blue-900/70">Tracking No</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-600">Waybill / Consignment Note</div>
+              <div className="mt-2 inline-block rounded-lg bg-slate-50 text-slate-900 px-4 py-2 border border-slate-200">
+                <div className="text-[10px] font-semibold uppercase text-slate-600">Tracking No</div>
                 <div className="text-xl font-mono font-bold leading-tight">{data.waybillNumber}</div>
               </div>
             </div>
