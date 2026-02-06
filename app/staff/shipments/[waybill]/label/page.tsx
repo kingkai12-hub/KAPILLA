@@ -95,7 +95,7 @@ export default function LabelPage() {
       <div className="bg-white w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl box-border relative text-black font-sans text-sm mx-auto no-break">
         
         {/* Header Section */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
+        <div className="flex justify-between items-start border-b-2 border-black pb-2 mb-2">
           <div className="flex items-start gap-4">
             <img src="/logo.png" alt="Logo" className="w-64 h-64 -mt-8 object-contain" />
             <div className="mt-8">
@@ -119,7 +119,7 @@ export default function LabelPage() {
         </div>
 
         {/* Barcode / QR Section */}
-        <div className="flex justify-between items-center mb-3 bg-gray-50 p-3 border border-gray-200 rounded-lg no-break">
+        <div className="flex justify-between items-center mb-2 bg-gray-50 p-3 border border-gray-200 rounded-lg no-break">
           <div className="flex-1">
             <p className="text-xs font-bold uppercase text-gray-500 mb-1">Tracking Number</p>
             <p className="text-base font-mono font-bold">{data.waybillNumber}</p>
@@ -131,7 +131,7 @@ export default function LabelPage() {
         </div>
 
         {/* Route Info */}
-        <div className="grid grid-cols-2 gap-0 border-2 border-black mb-3 no-break">
+        <div className="grid grid-cols-2 gap-0 border-2 border-black mb-2 no-break">
           <div className="p-2 border-r-2 border-black">
             <p className="text-[10px] font-bold uppercase text-gray-500 mb-1">Origin</p>
             <p className="text-lg font-black uppercase">{data.origin}</p>
@@ -143,7 +143,7 @@ export default function LabelPage() {
         </div>
 
         {/* Sender & Receiver Details */}
-        <div className="grid grid-cols-2 gap-3 mb-3 no-break">
+        <div className="grid grid-cols-2 gap-3 mb-2 no-break">
           {/* Sender */}
           <div className="border border-gray-300 rounded p-3">
             <h3 className="text-xs font-bold uppercase bg-black text-white inline-block px-2 py-0.5 mb-3">From (Sender)</h3>
@@ -166,7 +166,7 @@ export default function LabelPage() {
         </div>
 
         {/* Shipment Details Table */}
-        <div className="mb-3 no-break">
+        <div className="mb-2 no-break">
           <h3 className="text-xs font-bold uppercase text-black mb-2">Shipment Particulars</h3>
           <table className="w-full border-collapse border border-black text-sm">
             <thead className="bg-gray-100">
@@ -189,7 +189,7 @@ export default function LabelPage() {
         </div>
 
         {/* Special Instructions */}
-        <div className="mb-4 border border-black p-3 min-h-20 no-break">
+        <div className="mb-3 border border-black p-3 min-h-20 no-break">
           <p className="text-[10px] font-bold uppercase text-black mb-1">Cargo Details / Description</p>
           <p className="text-sm text-black">{data.cargoDetails || 'No additional details provided.'}</p>
           
@@ -263,7 +263,7 @@ export default function LabelPage() {
         </div>
 
         {/* Footer Terms */}
-        <div className="mt-5 pt-3 border-t border-gray-300 text-[9px] text-gray-500 text-justify leading-tight no-break">
+        <div className="mt-3 pt-2 border-t border-gray-300 text-[9px] text-gray-500 text-justify leading-tight no-break">
           <p className="font-bold mb-1">TERMS AND CONDITIONS OF CARRIAGE</p>
           <p>
             1. Kapilla Group Limited (hereinafter referred to as "The Carrier") accepts goods for carriage subject to the conditions herein.
