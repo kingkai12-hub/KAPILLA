@@ -131,7 +131,7 @@ export default function LabelPage() {
               <div className="mt-1 text-xs text-slate-600">Date: {new Date(data.createdAt).toLocaleDateString()}</div>
             </div>
             <div className="bg-white p-2 rounded-md border border-slate-200">
-              <QRCodeSVG value={data.waybillNumber} size={64} />
+              <QRCodeSVG value={`/waybill/${encodeURIComponent(data.waybillNumber)}`} size={64} />
             </div>
           </div>
 
