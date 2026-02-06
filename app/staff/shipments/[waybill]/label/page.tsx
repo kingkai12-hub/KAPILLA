@@ -95,11 +95,11 @@ export default function LabelPage() {
       </button>
 
       <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
-        <div className="bg-white p-4 border-b border-slate-200">
+        <div className="bg-white p-3 border-b border-slate-200">
           <div className="flex justify-between items-start gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="bg-white rounded-lg">
-                <img src="/logo.png" alt="Logo" className="w-32 h-32 object-contain" />
+                <img src="/logo.png" alt="Logo" className="w-36 h-36 object-contain" />
               </div>
               <div className="min-w-0">
                 <div className="text-xl font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
