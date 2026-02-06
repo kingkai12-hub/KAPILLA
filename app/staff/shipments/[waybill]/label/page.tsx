@@ -189,14 +189,9 @@ export default function LabelPage() {
         </div>
 
         {/* Special Instructions */}
-        <div className="mb-3 border border-black p-3 min-h-20 no-break">
+        <div className="mb-3 border border-black p-3 min-h-16 no-break">
           <p className="text-[10px] font-bold uppercase text-black mb-1">Cargo Details / Description</p>
           <p className="text-sm text-black">{data.cargoDetails || 'No additional details provided.'}</p>
-          
-          <div className="mt-4 border-t border-black pt-2">
-            <p className="text-[10px] font-bold uppercase text-black mb-1">Remarks</p>
-            <p className="text-sm italic text-black">{data.remarks || 'None'}</p>
-          </div>
         </div>
 
         {/* Signatures Section */}
