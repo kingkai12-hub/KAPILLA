@@ -144,7 +144,19 @@ export async function sendShipmentCreatedSMS(
   senderName: string,
   destination: string
 ): Promise<boolean> {
-  const message = `Dear ${senderName}, your shipment (Waybill: ${waybillNumber}) to ${destination} has been created successfully. Thank you for choosing Kapilla Logistics! Track: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}`;
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${senderName},\n\nYour shipment has been created!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
+  
+  return await smsProvider.sendSMS(phoneNumber, message);
+}
+
+export async function sendShipmentCreatedToReceiverSMS(
+  phoneNumber: string,
+  waybillNumber: string,
+  receiverName: string,
+  senderName: string,
+  destination: string
+): Promise<boolean> {
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${receiverName},\n\nYou have a shipment from ${senderName}!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
   
   return await smsProvider.sendSMS(phoneNumber, message);
 }
@@ -155,7 +167,7 @@ export async function sendShipmentUpdateSMS(
   status: string,
   customerName: string
 ): Promise<boolean> {
-  const message = `Dear ${customerName}, your shipment ${waybillNumber} status is now: ${status}. Track: kapillagroup.vercel.app/tracking?waybill=${waybillNumber} - Kapilla Logistics`;
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment status updated!\n\n🎫 WAYBILL: ${waybillNumber}\n📊 Status: ${status}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\n- Kapilla Logistics`;
   
   return await smsProvider.sendSMS(phoneNumber, message);
 }
@@ -166,7 +178,7 @@ export async function sendDeliveryConfirmationSMS(
   customerName: string,
   deliveredBy: string
 ): Promise<boolean> {
-  const message = `Dear ${customerName}, your shipment ${waybillNumber} has been successfully delivered by ${deliveredBy}. Thank you for choosing Kapilla Logistics!`;
+  const message = `✅ KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment has been delivered!\n\n🎫 WAYBILL: ${waybillNumber}\n📦 Delivered by: ${deliveredBy}\n\nThank you for choosing Kapilla Logistics!`;
   
   return await smsProvider.sendSMS(phoneNumber, message);
 }

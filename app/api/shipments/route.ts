@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendShipmentCreatedSMS } from '@/lib/sms';
+import { sendShipmentCreatedSMS, sendShipmentCreatedToReceiverSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 
@@ -106,6 +106,17 @@ export async function POST(req: Request) {
       await sendShipmentCreatedSMS(
         senderPhone,
         waybillNumber,
+        senderName,
+        destination
+      );
+    }
+
+    // Also send SMS to receiver with waybill number
+    if (receiverPhone) {
+      await sendShipmentCreatedToReceiverSMS(
+        receiverPhone,
+        waybillNumber,
+        receiverName,
         senderName,
         destination
       );
