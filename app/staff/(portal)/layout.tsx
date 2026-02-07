@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ChatBell from '@/components/ChatBell';
 import ChatModal from '@/components/ChatModal';
+import HelpCenterModal from '@/components/HelpCenterModal';
+import PickupRequestModal from '@/components/PickupRequestModal';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -23,7 +25,10 @@ import {
   Moon,
   FileText,
   LayoutTemplate,
-  Briefcase
+  Briefcase,
+  HelpCircle,
+  HeadphonesIcon,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -44,6 +49,10 @@ export default function StaffPortalLayout({
   const [user, setUser] = useState<any>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPeer, setChatPeer] = useState<string>('');
+  const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -181,6 +190,11 @@ export default function StaffPortalLayout({
     { name: 'My Profile', href: '/staff/profile', icon: UserCircle, roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 
+  const quickActions = [
+    { name: 'Help Center', icon: HelpCircle, onClick: () => setIsHelpCenterOpen(true), roles: ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
+    { name: 'Request Pickup', icon: Truck, onClick: () => setIsPickupModalOpen(true), roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
+  ];
+
   if (!user) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
@@ -262,8 +276,28 @@ export default function StaffPortalLayout({
             })}
           </nav>
 
+          {/* Quick Actions */}
+          <div className="px-4 py-3 border-t border-slate-800">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</h3>
+            <div className="space-y-1">
+              {quickActions.map((action, index) => {
+                if (!user?.role || !action.roles.includes(user.role)) return null;
+                return (
+                  <button
+                    key={index}
+                    onClick={action.onClick}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-200 group"
+                  >
+                    <action.icon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                    <span>{action.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Sidebar Footer */}
-          <div className="p-4 border-t border-slate-800 bg-slate-950">
+          <div className="p-4 border-t border-slate-800 bg-slate-950 mt-auto">
             <button
               onClick={handleLogout}
               className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl transition-all duration-200"
@@ -317,6 +351,53 @@ export default function StaffPortalLayout({
                   {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
               )}
+
+              {/* Notifications */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative"
+                >
+                  <Bell className="w-5 h-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {notifications.length > 9 ? '9+' : notifications.length}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notifications Dropdown */}
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-96 overflow-y-auto"
+                    >
+                      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                      </div>
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                          <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No new notifications</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                          {notifications.map((notif, index) => (
+                            <div key={index} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                              <p className="text-sm font-medium text-slate-900 dark:text-white">{notif.title}</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{notif.message}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">{notif.time}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Chat Notifications */}
               {user?.id && (
@@ -379,6 +460,18 @@ export default function StaffPortalLayout({
             peerId={chatPeer}
           />
         )}
+        
+        {/* Help Center Modal */}
+        <HelpCenterModal
+          isOpen={isHelpCenterOpen}
+          onClose={() => setIsHelpCenterOpen(false)}
+        />
+        
+        {/* Pickup Request Modal */}
+        <PickupRequestModal
+          isOpen={isPickupModalOpen}
+          onClose={() => setIsPickupModalOpen(false)}
+        />
       </div>
     </div>
   );

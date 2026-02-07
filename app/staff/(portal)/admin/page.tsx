@@ -1,6 +1,7 @@
 import React from 'react';
-import { Users, DollarSign, TrendingUp, Package } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Package, Search, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,35 @@ export default async function AdminDashboard() {
       <div>
         <h1 className="text-4xl font-black text-slate-900 dark:text-white">Admin Analytics Dashboard</h1>
         <p className="text-lg text-slate-600 dark:text-slate-400 font-medium mt-2">Restricted Area: Administrators Only</p>
+      </div>
+
+      {/* Quick Tracking Search */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-blue-200 dark:border-blue-800">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex-1 w-full">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Quick Track Shipment</h3>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Enter waybill number..."
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    window.open(`/tracking?waybill=${encodeURIComponent(e.currentTarget.value.trim())}`, '_blank');
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <Link
+            href="/staff/tracking/update"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-colors"
+          >
+            Update Tracking
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
 
       {/* Revenue Stats */}
