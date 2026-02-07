@@ -411,16 +411,16 @@ return (
     )}
 
     {/* Documents List */}
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] text-sm text-left">
-          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+        <table className="w-full min-w-[860px] text-base text-left">
+          <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 text-slate-700 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700">
             <tr>
-              <th className="px-3 sm:px-6 py-3 font-medium sticky left-0 bg-slate-50 dark:bg-slate-800 z-10">Name</th>
-              <th className="px-6 py-3 font-medium hidden md:table-cell">Type</th>
-              <th className="px-6 py-3 font-medium hidden md:table-cell">Uploaded By</th>
-              <th className="px-6 py-3 font-medium hidden md:table-cell">Date</th>
-              <th className="px-3 sm:px-6 py-3 font-medium text-right">Actions</th>
+              <th className="px-4 sm:px-8 py-4 font-bold text-lg sticky left-0 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 z-10">Name</th>
+              <th className="px-8 py-4 font-bold text-lg hidden md:table-cell">Type</th>
+              <th className="px-8 py-4 font-bold text-lg hidden md:table-cell">Uploaded By</th>
+              <th className="px-8 py-4 font-bold text-lg hidden md:table-cell">Date</th>
+              <th className="px-4 sm:px-8 py-4 font-bold text-lg text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -439,43 +439,43 @@ return (
               </tr>
             ) : (
               documents.map(doc => (
-                <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 group">
-                  <td className="px-3 sm:px-6 py-4 font-medium sticky left-0 bg-white dark:bg-slate-900">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                      <span className="truncate max-w-[150px] md:max-w-[300px]" title={doc.name}>{doc.name}</span>
+                <tr key={doc.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-slate-50 dark:hover:from-blue-900/20 dark:hover:to-slate-800/60 group transition-all duration-200">
+                  <td className="px-4 sm:px-8 py-5 font-semibold text-base sticky left-0 bg-white dark:bg-slate-900">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                      <span className="truncate max-w-[180px] md:max-w-[350px] text-slate-900 dark:text-white" title={doc.name}>{doc.name}</span>
                     </div>
                     {/* Mobile-only details */}
                     <div className="md:hidden text-xs text-slate-500 mt-1 pl-6">
                       {new Date(doc.createdAt).toLocaleDateString()} • {doc.uploader?.name || 'Unknown'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
-                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.uploader?.name || 'Unknown'}</td>
-                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{new Date(doc.createdAt).toLocaleDateString()}</td>
+                  <td className="px-8 py-5 text-slate-500 hidden md:table-cell">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
+                  <td className="px-8 py-5 text-slate-500 hidden md:table-cell">{doc.uploader?.name || 'Unknown'}</td>
+                  <td className="px-8 py-5 text-slate-500 hidden md:table-cell">{new Date(doc.createdAt).toLocaleDateString()}</td>
                   <td className="px-3 sm:px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <a 
                         href={`/api/documents/download?id=${doc.id}`} 
                         target="_blank"
-                        className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                        className="p-3 hover:bg-blue-50 text-blue-600 rounded-xl transition-colors"
                         title="View/Download"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-5 h-5" />
                       </a>
                       <button 
                         onClick={() => handleRename(doc)}
-                        className="p-2 hover:bg-amber-50 text-amber-600 rounded-lg transition-colors"
+                        className="p-3 hover:bg-amber-50 text-amber-600 rounded-xl transition-colors"
                         title="Rename"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="w-5 h-5" />
                       </button>
                       <button 
                         onClick={() => handleDelete(doc.id)}
-                        className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                        className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-colors"
                         title="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </td>
