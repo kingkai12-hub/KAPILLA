@@ -252,261 +252,261 @@ export default function DocumentsPage() {
     }
   }
 
-  // Render
-  return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            {currentFolder && (
-              <button onClick={() => setCurrentFolder(null)} className="hover:bg-slate-100 p-1 rounded-full">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-            )}
-            {currentFolder ? currentFolder.name : 'Documents Library'}
-          </h1>
-          <p className="text-slate-500 text-sm">Manage and organize your digital files</p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          {!currentFolder && (
-            <button 
-              onClick={() => setShowCreateFolder(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-slate-50 text-sm font-medium whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" /> New Folder
+// Render
+return (
+  <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+    {/* Header */}
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+          {currentFolder && (
+            <button onClick={() => setCurrentFolder(null)} className="hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-full">
+              <ChevronLeft className="w-6 h-6" />
             </button>
           )}
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            onChange={handleUpload} 
-            accept="image/*,application/pdf"
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 whitespace-nowrap"
-          >
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {uploading ? 'Uploading...' : 'Upload File'}
-          </button>
-        </div>
+          {currentFolder ? currentFolder.name : 'Documents Library'}
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Manage and organize your digital files</p>
       </div>
-
-      {/* Create Folder Modal */}
-      {showCreateFolder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-            <div className="p-4 border-b font-medium flex justify-between items-center">
-              <h3>Create New Folder</h3>
-              <button onClick={() => setShowCreateFolder(false)} className="text-slate-400 hover:text-slate-600">&times;</button>
-            </div>
-            <form onSubmit={submitCreateFolder} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Folder Name</label>
-                <input 
-                  type="text" 
-                  autoFocus
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Invoices 2024"
-                  required
-                />
-              </div>
-              
-              {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
-                <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <input 
-                    type="checkbox" 
-                    id="lockFolder"
-                    checked={newFolderLocked}
-                    onChange={(e) => setNewFolderLocked(e.target.checked)}
-                    className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                  />
-                  <label htmlFor="lockFolder" className="text-sm text-amber-800 flex items-center gap-1 cursor-pointer">
-                    <Lock className="w-3 h-3" />
-                    Lock Folder (Admin Only Access)
-                  </label>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button 
-                  type="button" 
-                  onClick={() => setShowCreateFolder(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={!newFolderName.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
-                >
-                  Create Folder
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Folders Grid (Only on Root) */}
-      {!currentFolder && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {folders.map(folder => (
-            <div 
-              key={folder.id}
-              onClick={() => setCurrentFolder(folder)}
-              className="bg-white p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group relative"
-            >
-              {/* Lock Indicator (Non-Admins) */}
-              {folder.isLocked && (!currentUser || !['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) && (
-                <div className="absolute top-2 right-2 text-amber-500" title="Locked Folder">
-                  <Lock className="w-4 h-4" />
-                </div>
-              )}
-
-              {/* Admin Controls */}
-              {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
-                 <div className={`absolute top-2 right-2 flex gap-1 transition-opacity bg-white/90 rounded-lg shadow-sm border p-1 z-10 ${folder.isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                   <button 
-                     onClick={(e) => handleToggleLock(folder, e)}
-                     className={`p-1 rounded hover:bg-amber-50 ${folder.isLocked ? 'text-amber-600' : 'text-slate-400 hover:text-amber-600'}`}
-                     title={folder.isLocked ? "Unlock Folder" : "Lock Folder"}
-                   >
-                     {folder.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                   </button>
-                   <button 
-                     onClick={(e) => handleDeleteFolder(folder, e)}
-                     className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"
-                     title="Delete Folder"
-                   >
-                     <Trash2 className="w-4 h-4" />
-                   </button>
-                 </div>
-              )}
-              <div className="flex items-center gap-3">
-                <Folder className={`w-10 h-10 ${folder.isLocked ? 'text-amber-500 fill-amber-100' : 'text-yellow-500 fill-yellow-500'}`} />
-                <div className="overflow-hidden">
-                  <h3 className="font-medium truncate" title={folder.name}>{folder.name}</h3>
-                  <p className="text-xs text-slate-500">{folder._count?.documents || 0} files</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center text-sm">
-          {error}
-          <button onClick={() => fetchDocuments(page)} className="ml-2 underline">Retry</button>
-        </div>
-      )}
-
-      {/* Documents List */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 border-b">
-              <tr>
-                <th className="px-6 py-3 font-medium">Name</th>
-                <th className="px-6 py-3 font-medium hidden md:table-cell">Type</th>
-                <th className="px-6 py-3 font-medium hidden md:table-cell">Uploaded By</th>
-                <th className="px-6 py-3 font-medium hidden md:table-cell">Date</th>
-                <th className="px-6 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
-                    Loading documents...
-                  </td>
-                </tr>
-              ) : documents.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                    No documents found in this folder.
-                  </td>
-                </tr>
-              ) : (
-                documents.map(doc => (
-                  <tr key={doc.id} className="hover:bg-slate-50 group">
-                    <td className="px-6 py-4 font-medium">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span className="truncate max-w-[150px] md:max-w-[300px]" title={doc.name}>{doc.name}</span>
-                      </div>
-                      {/* Mobile-only details */}
-                      <div className="md:hidden text-xs text-slate-500 mt-1 pl-6">
-                        {new Date(doc.createdAt).toLocaleDateString()} • {doc.uploader?.name || 'Unknown'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
-                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.uploader?.name || 'Unknown'}</td>
-                    <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{new Date(doc.createdAt).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <a 
-                          href={`/api/documents/download?id=${doc.id}`} 
-                          target="_blank"
-                          className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                          title="View/Download"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </a>
-                        <button 
-                          onClick={() => handleRename(doc)}
-                          className="p-2 hover:bg-amber-50 text-amber-600 rounded-lg transition-colors"
-                          title="Rename"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(doc.id)}
-                          className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t flex justify-between items-center bg-slate-50">
-            <button 
-              disabled={page <= 1}
-              onClick={() => fetchDocuments(page - 1)}
-              className="p-2 border rounded-lg hover:bg-white disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-sm text-slate-600">Page {page} of {totalPages}</span>
-            <button 
-              disabled={page >= totalPages}
-              onClick={() => fetchDocuments(page + 1)}
-              className="p-2 border rounded-lg hover:bg-white disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+      
+      <div className="flex flex-wrap gap-2 w-full md:w-auto">
+        {!currentFolder && (
+          <button 
+            onClick={() => setShowCreateFolder(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-sm font-semibold whitespace-nowrap text-slate-900 dark:text-white"
+          >
+            <Plus className="w-4 h-4" /> New Folder
+          </button>
         )}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          onChange={handleUpload} 
+          accept="image/*,application/pdf"
+        />
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+        >
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {uploading ? 'Uploading...' : 'Upload File'}
+        </button>
       </div>
     </div>
-  )
+
+    {/* Create Folder Modal */}
+    {showCreateFolder && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-medium flex justify-between items-center">
+            <h3 className="text-slate-900 dark:text-white">Create New Folder</h3>
+            <button onClick={() => setShowCreateFolder(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">&times;</button>
+          </div>
+          <form onSubmit={submitCreateFolder} className="p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Folder Name</label>
+              <input 
+                type="text" 
+                autoFocus
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                placeholder="e.g., Invoices 2024"
+                required
+              />
+            </div>
+            
+            {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                <input 
+                  type="checkbox" 
+                  id="lockFolder"
+                  checked={newFolderLocked}
+                  onChange={(e) => setNewFolderLocked(e.target.checked)}
+                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                />
+                <label htmlFor="lockFolder" className="text-sm text-amber-800 flex items-center gap-1 cursor-pointer">
+                  <Lock className="w-3 h-3" />
+                  Lock Folder (Admin Only Access)
+                </label>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setShowCreateFolder(false)}
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-semibold"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={!newFolderName.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-semibold disabled:opacity-50"
+              >
+                Create Folder
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {/* Folders Grid (Only on Root) */}
+    {!currentFolder && (
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {folders.map(folder => (
+          <div 
+            key={folder.id}
+            onClick={() => setCurrentFolder(folder)}
+            className="bg-white dark:bg-slate-900 p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group relative"
+          >
+            {/* Lock Indicator (Non-Admins) */}
+            {folder.isLocked && (!currentUser || !['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role)) && (
+              <div className="absolute top-2 right-2 text-amber-500" title="Locked Folder">
+                <Lock className="w-4 h-4" />
+              </div>
+            )}
+
+            {/* Admin Controls */}
+            {currentUser && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(currentUser.role) && (
+               <div className={`absolute top-2 right-2 flex gap-1 transition-opacity bg-white dark:bg-slate-900 rounded-lg shadow-sm border p-1 z-10 ${folder.isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                 <button 
+                   onClick={(e) => handleToggleLock(folder, e)}
+                   className={`p-1 rounded hover:bg-amber-50 ${folder.isLocked ? 'text-amber-600' : 'text-slate-400 hover:text-amber-600'}`}
+                   title={folder.isLocked ? "Unlock Folder" : "Lock Folder"}
+                 >
+                   {folder.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                 </button>
+                 <button 
+                   onClick={(e) => handleDeleteFolder(folder, e)}
+                   className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"
+                   title="Delete Folder"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+               </div>
+            )}
+            <div className="flex items-center gap-3">
+              <Folder className={`w-10 h-10 ${folder.isLocked ? 'text-amber-500 fill-amber-100' : 'text-yellow-500 fill-yellow-500'}`} />
+              <div className="overflow-hidden">
+                <h3 className="font-medium truncate" title={folder.name}>{folder.name}</h3>
+                <p className="text-xs text-slate-500">{folder._count?.documents || 0} files</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Error Message */}
+    {error && (
+      <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center text-sm">
+        {error}
+        <button onClick={() => fetchDocuments(page)} className="ml-2 underline">Retry</button>
+      </div>
+    )}
+
+    {/* Documents List */}
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[860px] text-sm text-left">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th className="px-3 sm:px-6 py-3 font-medium sticky left-0 bg-slate-50 dark:bg-slate-800 z-10">Name</th>
+              <th className="px-6 py-3 font-medium hidden md:table-cell">Type</th>
+              <th className="px-6 py-3 font-medium hidden md:table-cell">Uploaded By</th>
+              <th className="px-6 py-3 font-medium hidden md:table-cell">Date</th>
+              <th className="px-3 sm:px-6 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
+                  Loading documents...
+                </td>
+              </tr>
+            ) : documents.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                  No documents found in this folder.
+                </td>
+              </tr>
+            ) : (
+              documents.map(doc => (
+                <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 group">
+                  <td className="px-3 sm:px-6 py-4 font-medium sticky left-0 bg-white dark:bg-slate-900">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="truncate max-w-[150px] md:max-w-[300px]" title={doc.name}>{doc.name}</span>
+                    </div>
+                    {/* Mobile-only details */}
+                    <div className="md:hidden text-xs text-slate-500 mt-1 pl-6">
+                      {new Date(doc.createdAt).toLocaleDateString()} • {doc.uploader?.name || 'Unknown'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
+                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{doc.uploader?.name || 'Unknown'}</td>
+                  <td className="px-6 py-4 text-slate-500 hidden md:table-cell">{new Date(doc.createdAt).toLocaleDateString()}</td>
+                  <td className="px-3 sm:px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <a 
+                        href={`/api/documents/download?id=${doc.id}`} 
+                        target="_blank"
+                        className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                        title="View/Download"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </a>
+                      <button 
+                        onClick={() => handleRename(doc)}
+                        className="p-2 hover:bg-amber-50 text-amber-600 rounded-lg transition-colors"
+                        title="Rename"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(doc.id)}
+                        className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+          <button 
+            disabled={page <= 1}
+            onClick={() => fetchDocuments(page - 1)}
+            className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-white dark:hover:bg-slate-900 disabled:opacity-50"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Page {page} of {totalPages}</span>
+          <button 
+            disabled={page >= totalPages}
+            onClick={() => fetchDocuments(page + 1)}
+            className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-white dark:hover:bg-slate-900 disabled:opacity-50"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+);
 }

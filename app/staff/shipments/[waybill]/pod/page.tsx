@@ -92,7 +92,8 @@ export default function ProofOfDeliveryPage() {
       </button>
 
       {/* A4 Paper Container */}
-      <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl box-border relative text-black mx-auto">
+      <div className="w-full overflow-x-auto">
+        <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl box-border relative text-black mx-auto">
         
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
@@ -215,6 +216,7 @@ export default function ProofOfDeliveryPage() {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }

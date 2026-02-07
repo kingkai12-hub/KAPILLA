@@ -126,7 +126,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">User Management</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Create, edit, and manage staff access.</p>
@@ -145,7 +145,7 @@ export default function UserManagement() {
               phoneNumber: ''
             });
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold w-full sm:w-auto"
         >
           <UserPlus className="w-4 h-4" />
           Add User
@@ -172,7 +172,7 @@ export default function UserManagement() {
                   required
                   value={formData.name || ''}
                   onChange={e => setFormData({...formData, name: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -181,7 +181,7 @@ export default function UserManagement() {
                   type="text"
                   value={formData.workId || ''}
                   onChange={e => setFormData({...formData, workId: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   placeholder="EMP-001"
                 />
               </div>
@@ -191,7 +191,7 @@ export default function UserManagement() {
                   type="text"
                   value={formData.phoneNumber || ''}
                   onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10)})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   placeholder="0xxxxxxxxx"
                 />
               </div>
@@ -202,7 +202,7 @@ export default function UserManagement() {
                   required
                   value={formData.email || ''}
                   onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   // disabled={!!editingUser} // Allow email editing
                 />
               </div>
@@ -215,7 +215,7 @@ export default function UserManagement() {
                   required={!editingUser}
                   value={formData.password || ''}
                   onChange={e => setFormData({...formData, password: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   placeholder={editingUser ? "Leave blank to keep current" : ""}
                 />
               </div>
@@ -224,7 +224,7 @@ export default function UserManagement() {
                 <select
                   value={formData.role || 'STAFF'}
                   onChange={e => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                 >
                   <option value="STAFF">Staff (General)</option>
                   <option value="DRIVER">Driver</option>
@@ -240,7 +240,7 @@ export default function UserManagement() {
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -260,10 +260,10 @@ export default function UserManagement() {
       {/* Users List */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
+          <table className="min-w-[980px] w-full divide-y divide-slate-100 dark:divide-slate-700">
             <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 dark:bg-slate-900/50 z-10">User</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Created</th>
@@ -278,7 +278,7 @@ export default function UserManagement() {
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-4 sticky left-0 bg-white dark:bg-slate-800">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
                           {user.name?.[0] || user.email[0]}

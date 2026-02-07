@@ -68,7 +68,9 @@ export default function ChatBell({ userId, onOpenChat }: { userId: string; onOpe
     };
     connect();
     return () => {
-      es.close();
+      try {
+        esRef.current?.close();
+      } catch {}
       esRef.current = null;
       if (dismissTimerRef.current) {
         clearTimeout(dismissTimerRef.current);

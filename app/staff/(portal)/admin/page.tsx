@@ -29,12 +29,14 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Admin Analytics Dashboard</h1>
-      <p className="text-gray-600">Restricted Area: Administrators Only</p>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Analytics Dashboard</h1>
+        <p className="text-slate-500 dark:text-slate-400">Restricted Area: Administrators Only</p>
+      </div>
 
       {/* Revenue Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white dark:bg-slate-900 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -44,8 +46,8 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                  <dd className="text-2xl font-bold text-gray-900">
+                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Total Revenue</dt>
+                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">
                     {new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(totalRevenue)}
                   </dd>
                 </dl>
@@ -54,7 +56,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white dark:bg-slate-900 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -64,15 +66,15 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{totalUsers}</dd>
+                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Total Users</dt>
+                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{totalUsers}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white dark:bg-slate-900 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -82,15 +84,15 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Pending Shipments</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{pendingShipments}</dd>
+                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Pending Shipments</dt>
+                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{pendingShipments}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white dark:bg-slate-900 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -100,8 +102,8 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Shipments</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{totalShipments}</dd>
+                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Total Shipments</dt>
+                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{totalShipments}</dd>
                 </dl>
               </div>
             </div>
@@ -110,30 +112,30 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Recent Users Table */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Users</h3>
+      <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div className="px-4 py-5 border-b border-slate-200 dark:border-slate-800 sm:px-6">
+          <h3 className="text-lg leading-6 font-semibold text-slate-900 dark:text-white">Recent Users</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-[680px] w-full divide-y divide-slate-200 dark:divide-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
               {recentUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">No users found.</td>
+                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-slate-500 dark:text-slate-400">No users found.</td>
                 </tr>
               ) : (
                 recentUsers.map((user) => (
                   <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{user.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{user.role}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{user.email}</td>
                   </tr>
                 ))
               )}

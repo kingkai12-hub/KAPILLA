@@ -190,7 +190,7 @@ function UpdateTrackingContent() {
 
       <div className="bg-white dark:bg-slate-800 shadow-xl rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
         <div className="p-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
-        <form onSubmit={handleScan} className="p-8 space-y-6">
+        <form onSubmit={handleScan} className="p-5 sm:p-8 space-y-6">
           
           {/* Waybill Input */}
           <div>
@@ -257,7 +257,7 @@ function UpdateTrackingContent() {
             </div>
 
             {/* Estimated Delivery Date & Time */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estimated Date</label>
                 <div className="relative">
@@ -331,12 +331,12 @@ function UpdateTrackingContent() {
       {/* Recent Scans List */}
       {recentScans.length > 0 && (
         <div className="bg-white dark:bg-slate-800 shadow-sm rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+          <div className="px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Updates</h3>
           </div>
           <ul className="divide-y divide-slate-100 dark:divide-slate-700">
             {recentScans.map((scan) => (
-              <li key={scan.id} className="px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              <li key={scan.id} className="px-5 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white">{scan.waybill}</p>

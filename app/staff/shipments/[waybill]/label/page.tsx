@@ -94,32 +94,33 @@ export default function LabelPage() {
         Print Waybill
       </button>
 
-      <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
-        <div className="bg-white p-3 border-b border-slate-200">
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="bg-white rounded-lg">
-                <img src="/logo.png" alt="Logo" className="w-36 h-36 object-contain" />
+      <div className="w-full overflow-x-auto">
+        <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
+          <div className="bg-white p-3 border-b border-slate-200">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="bg-white rounded-lg">
+                  <img src="/logo.png" alt="Logo" className="w-36 h-36 object-contain" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xl font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
+                  <div className="text-[11px] font-bold leading-snug text-slate-700">
+                    <div>P.O. BOX 71729, Dar es Salaam, Tanzania</div>
+                    <div>Tel: +255 766 724 062 | +255 756 656 218</div>
+                    <div>Email: express@kapillagroup.co.tz</div>
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-xl font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
-                <div className="text-[11px] font-bold leading-snug text-slate-700">
-                  <div>P.O. BOX 71729, Dar es Salaam, Tanzania</div>
-                  <div>Tel: +255 766 724 062 | +255 756 656 218</div>
-                  <div>Email: express@kapillagroup.co.tz</div>
+
+              <div className="text-right shrink-0">
+                <div className="text-[11px] uppercase tracking-wide text-slate-600">Waybill / Consignment Note</div>
+                <div className="mt-1 inline-block rounded-lg bg-slate-50 text-slate-900 px-3 py-2 border border-slate-200">
+                  <div className="text-[10px] font-semibold uppercase text-slate-600">Tracking No</div>
+                  <div className="text-xl font-mono font-bold leading-tight">{data.waybillNumber}</div>
                 </div>
               </div>
             </div>
-
-            <div className="text-right shrink-0">
-              <div className="text-[11px] uppercase tracking-wide text-slate-600">Waybill / Consignment Note</div>
-              <div className="mt-1 inline-block rounded-lg bg-slate-50 text-slate-900 px-3 py-2 border border-slate-200">
-                <div className="text-[10px] font-semibold uppercase text-slate-600">Tracking No</div>
-                <div className="text-xl font-mono font-bold leading-tight">{data.waybillNumber}</div>
-              </div>
-            </div>
           </div>
-        </div>
 
         <div className="p-5">
           <div className="flex items-center justify-between gap-4 border border-slate-200 rounded-lg p-3 bg-slate-50">
@@ -267,6 +268,7 @@ export default function LabelPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
