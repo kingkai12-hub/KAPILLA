@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { sendEmail, emailTemplates } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,6 +77,52 @@ export async function POST(req: Request) {
         isDisabled: !!isDisabled
       }
     });
+
+    // Send welcome email to new user
+    try {
+      const welcomeTemplate = emailTemplates.welcomeEmail(name, password);
+      await sendEmail({
+        to: email,
+        ...welcomeTemplate
+      });
+      
+      // Also notify admin about new user creation
+      const adminEmail = process.env.ADMIN_EMAIL || 'express@kapillagroup.co.tz';
+      await sendEmail({
+        to: adminEmail,
+        subject: `New Staff Account Created - ${name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">New Staff Account</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Kapilla Group Ltd</p>
+            </div>
+            
+            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-bottom: 20px;">Account Details:</h2>
+              <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0; border-radius: 5px;">
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">Name: ${name}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Email: ${email}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Role: ${role || 'STAFF'}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Work ID: ${finalWorkId}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Phone: ${phoneNumber || 'Not provided'}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #667eea; font-weight: bold;">Status: ${isDisabled ? 'DISABLED' : 'ACTIVE'}</p>
+              </div>
+              
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="https://kapillagroup.vercel.app/staff/admin/users" 
+                   style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
+                  View in Staff Portal
+                </a>
+              </div>
+            </div>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail the user creation if email fails
+    }
 
     const { password: _, ...userWithoutPassword } = newUser;
     return NextResponse.json(userWithoutPassword);

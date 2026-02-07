@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendShipmentCreatedSMS } from '@/lib/sms';
+import { sendEmail, emailTemplates } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 
 export const runtime = 'nodejs';
@@ -108,6 +109,53 @@ export async function POST(req: Request) {
         senderName,
         destination
       );
+    }
+
+    // Send email notification if sender email is provided
+    if (senderPhone && senderPhone.includes('@')) {
+      const emailTemplate = emailTemplates.shipmentUpdate(waybillNumber, 'PENDING', senderName);
+      await sendEmail({
+        to: senderPhone,
+        ...emailTemplate
+      });
+    }
+
+    // Also send email to admin for notification
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || 'express@kapillagroup.co.tz';
+      const adminTemplate = emailTemplates.shipmentUpdate(waybillNumber, 'PENDING', 'Admin');
+      await sendEmail({
+        to: adminEmail,
+        subject: `New Shipment Created - ${waybillNumber}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">New Shipment Alert</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Kapilla Group Ltd</p>
+            </div>
+            
+            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-bottom: 20px;">Shipment Details:</h2>
+              <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0; border-radius: 5px;">
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">Waybill: ${waybillNumber}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Sender: ${senderName}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Receiver: ${receiverName}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Route: ${origin} → ${destination}</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #667eea; font-weight: bold;">Status: PENDING</p>
+              </div>
+              
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="https://kapillagroup.vercel.app/staff/shipments" 
+                   style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
+                  View in Staff Portal
+                </a>
+              </div>
+            </div>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Failed to send admin email:', emailError);
     }
 
     revalidatePath('/staff/dashboard');
