@@ -58,23 +58,31 @@ function AnimatedVehicle({ position, rotation, speed }: AnimatedVehicleProps) {
 
   useEffect(() => {
     // Smooth animation to new position
-    const steps = 20;
+    const steps = 40; // More steps for smoother movement
     let step = 0;
+    const duration = 1500; // 1.5 seconds for smooth transition
+    const stepDuration = duration / steps;
 
     const animate = () => {
       if (step < steps) {
         const progress = step / steps;
+        // Use ease-in-out for more natural movement
+        const easeProgress = progress < 0.5 
+          ? 2 * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
         // Interpolate position
-        const newLat = currentPos[0] + (position[0] - currentPos[0]) * progress;
-        const newLng = currentPos[1] + (position[1] - currentPos[1]) * progress;
-        const newRotation = currentRotation + (rotation - currentRotation) * progress;
+        const newLat = currentPos[0] + (position[0] - currentPos[0]) * easeProgress;
+        const newLng = currentPos[1] + (position[1] - currentPos[1]) * easeProgress;
+        const newRotation = currentRotation + (rotation - currentRotation) * easeProgress;
 
         setCurrentPos([newLat, newLng]);
         setCurrentRotation(newRotation);
 
         step++;
-        animationRef.current = requestAnimationFrame(animate);
+        setTimeout(() => {
+          animationRef.current = requestAnimationFrame(animate);
+        }, stepDuration);
       } else {
         setCurrentPos(position);
         setCurrentRotation(rotation);
@@ -84,101 +92,131 @@ function AnimatedVehicle({ position, rotation, speed }: AnimatedVehicleProps) {
     animate();
   }, [position, rotation]);
 
-  // Professional GPS tracking vehicle design
+  // Modern attractive GPS tracking vehicle design
   const vehicleIcon = L.divIcon({
     html: `
       <div style="
         position: relative;
         transform: rotate(${currentRotation}deg);
-        transition: transform 0.3s ease-out;
-        width: 32px;
-        height: 32px;
+        transition: transform 0.5s ease-in-out;
+        width: 40px;
+        height: 40px;
+        z-index: 1000;
       ">
-        <!-- Vehicle body (truck-like) -->
+        <!-- Modern delivery truck with gradient and shadow -->
         <div style="
           position: absolute;
-          width: 24px;
-          height: 16px;
-          background: linear-gradient(135deg, #2563eb, #1d4ed8);
-          border-radius: 3px;
-          top: 8px;
-          left: 4px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          width: 30px;
+          height: 20px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          border-radius: 6px;
+          top: 12px;
+          left: 5px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3);
           border: 1px solid #1e40af;
         "></div>
 
-        <!-- Vehicle cabin -->
+        <!-- Modern cabin with window -->
         <div style="
           position: absolute;
-          width: 10px;
-          height: 12px;
-          background: #374151;
-          border-radius: 2px 2px 0 0;
-          top: 4px;
-          left: 4px;
-          border: 1px solid #1f2937;
+          width: 12px;
+          height: 14px;
+          background: linear-gradient(135deg, #64748b, #475569);
+          border-radius: 4px 4px 0 0;
+          top: 6px;
+          left: 5px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: 1px solid #334155;
+        "></div>
+        
+        <!-- Cabin window -->
+        <div style="
+          position: absolute;
+          width: 8px;
+          height: 6px;
+          background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+          border-radius: 2px;
+          top: 8px;
+          left: 7px;
+          opacity: 0.8;
         "></div>
 
-        <!-- Wheels -->
+        <!-- Modern wheels with detail -->
         <div style="
           position: absolute;
-          width: 4px;
-          height: 4px;
-          background: #1f2937;
+          width: 6px;
+          height: 6px;
+          background: linear-gradient(135deg, #1f2937, #111827);
           border-radius: 50%;
-          bottom: 2px;
-          left: 2px;
+          bottom: 4px;
+          left: 3px;
+          box-shadow: 0 2px 3px rgba(0,0,0,0.5);
         "></div>
         <div style="
           position: absolute;
-          width: 4px;
-          height: 4px;
-          background: #1f2937;
+          width: 6px;
+          height: 6px;
+          background: linear-gradient(135deg, #1f2937, #111827);
           border-radius: 50%;
-          bottom: 2px;
-          left: 14px;
+          bottom: 4px;
+          left: 17px;
+          box-shadow: 0 2px 3px rgba(0,0,0,0.5);
         "></div>
 
-        <!-- Direction indicator (arrow) -->
+        <!-- Direction indicator (modern arrow) -->
         <div style="
           position: absolute;
           width: 0;
           height: 0;
-          border-left: 4px solid transparent;
-          border-right: 4px solid transparent;
-          border-bottom: 6px solid #ef4444;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-bottom: 10px solid #ef4444;
           top: -2px;
-          left: 10px;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+          left: 12px;
+          filter: drop-shadow(0 2px 4px rgba(239,68,68,0.5));
+          transform: scale(1.1);
         "></div>
 
-        <!-- GPS tracking pulse effect -->
+        <!-- GPS tracking pulse effect (more subtle) -->
         <div style="
           position: absolute;
-          width: 32px;
-          height: 32px;
+          width: 40px;
+          height: 40px;
           border: 2px solid #10b981;
           border-radius: 50%;
           top: 0;
           left: 0;
-          animation: gpsPulse 2s infinite;
-          opacity: 0.6;
+          animation: gentlePulse 3s infinite;
+          opacity: 0.4;
+        "></div>
+        
+        <!-- Inner pulse for depth -->
+        <div style="
+          position: absolute;
+          width: 30px;
+          height: 30px;
+          border: 1px solid #10b981;
+          border-radius: 50%;
+          top: 5px;
+          left: 5px;
+          animation: gentlePulse 3s infinite 0.5s;
+          opacity: 0.3;
         "></div>
       </div>
 
       <style>
-        @keyframes gpsPulse {
+        @keyframes gentlePulse {
           0% {
-            transform: scale(0.8);
-            opacity: 0.8;
+            transform: scale(0.9);
+            opacity: 0.3;
           }
           50% {
-            transform: scale(1.2);
-            opacity: 0.4;
+            transform: scale(1.1);
+            opacity: 0.1;
           }
           100% {
-            transform: scale(0.8);
-            opacity: 0.8;
+            transform: scale(0.9);
+            opacity: 0.3;
           }
         }
       </style>
@@ -357,7 +395,7 @@ export default function AnimatedVehicleMap({
       }
     };
 
-    const movementInterval = setInterval(simulateMovement, 2000);
+    const movementInterval = setInterval(simulateMovement, 3000); // Slower movement for better visibility
     
     return () => {
       clearInterval(movementInterval);
