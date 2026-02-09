@@ -304,7 +304,7 @@ export default function AnimatedVehicleMap({
 
   // Simulate vehicle movement along route
   useEffect(() => {
-    if (!currentLocation || !routePath || routePath.length < 2) {
+    if (!routePath || routePath.length < 2) {
       isSimulatingRef.current = false;
       return;
     }
@@ -334,7 +334,7 @@ export default function AnimatedVehicleMap({
         // Reset traveled path when location is updated
         setTraveledPath(routePath.slice(0, closestIndex + 1));
       } else {
-        // No currentLocation, continue from current position
+        // No currentLocation, continue from current position (don't reset)
         currentIndexRef.current = Math.max(0, currentIndexRef.current);
       }
       
@@ -361,7 +361,8 @@ export default function AnimatedVehicleMap({
         
         // Calculate actual distance in km using haversine formula
         const distanceKm = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-        const simulatedSpeed = Math.max(10, Math.min(80, distanceKm * 1800)); // speed in km/h, assuming 2s interval
+        // Realistic city speed: average 50 km/h with variations
+        const simulatedSpeed = Math.max(20, Math.min(80, distanceKm * 900 + Math.random() * 20)); // City speed 20-80 km/h
         
         setVehicleData({
           position: currentPos,
@@ -511,7 +512,7 @@ export default function AnimatedVehicleMap({
         {/* Remaining Path (Red dotted - where car hasn't passed yet) */}
         {routePath && traveledPath && routePath.length > traveledPath.length && (
           <Polyline 
-            positions={routePath.slice(traveledPath.length - 1).map(coord => [coord[0], coord[1]])} 
+            positions={routePath.slice(traveledPath.length).map(coord => [coord[0], coord[1]])} 
             color="#ff0000" 
             weight={3} 
             opacity={0.7}
