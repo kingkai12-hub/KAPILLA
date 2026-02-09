@@ -284,9 +284,12 @@ export default function AnimatedVehicleMap({
     isMoving: false
   });
 
+  const [traveledPath, setTraveledPath] = useState<[number, number][]>([]);
+
   const currentIndexRef = useRef(0);
   const isSimulatingRef = useRef(false);
   const previousRouteRef = useRef<[number, number][]>([]);
+  const previousLocationRef = useRef<Location | undefined>(undefined);
 
   useEffect(() => {
     setIsClient(true);
@@ -306,22 +309,35 @@ export default function AnimatedVehicleMap({
       return;
     }
 
-    // Check if routePath changed
-    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current)) {
-      // Find the closest point in routePath to currentLocation
-      const currentLocationCoord = [currentLocation.lat, currentLocation.lng] as [number, number];
-      let closestIndex = 0;
-      let minDistance = Infinity;
+    // Check if routePath changed or currentLocation updated
+    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current) || 
+        JSON.stringify(currentLocation) !== JSON.stringify(previousLocationRef.current)) {
       
-      routePath.forEach((point, index) => {
-        const distance = calculateDistance(currentLocationCoord[0], currentLocationCoord[1], point[0], point[1]);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestIndex = index;
-        }
-      });
+      // Store previous location for comparison
+      previousLocationRef.current = currentLocation;
       
-      currentIndexRef.current = closestIndex;
+      // If currentLocation exists (status updated), start from there
+      if (currentLocation) {
+        const currentLocationCoord = [currentLocation.lat, currentLocation.lng] as [number, number];
+        let closestIndex = 0;
+        let minDistance = Infinity;
+        
+        routePath.forEach((point, index) => {
+          const distance = calculateDistance(currentLocationCoord[0], currentLocationCoord[1], point[0], point[1]);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
+          }
+        });
+        
+        currentIndexRef.current = closestIndex;
+        // Reset traveled path when location is updated
+        setTraveledPath(routePath.slice(0, closestIndex + 1));
+      } else {
+        // No currentLocation, continue from current position
+        currentIndexRef.current = Math.max(0, currentIndexRef.current);
+      }
+      
       previousRouteRef.current = routePath;
       isSimulatingRef.current = false;
     }
@@ -341,7 +357,7 @@ export default function AnimatedVehicleMap({
         const angle = Math.atan2(
           nextPos[1] - currentPos[1], // lng diff for x
           nextPos[0] - currentPos[0]  // lat diff for y
-        ) * (180 / Math.PI);
+        ) * (180 / Math.PI) - 90; // Adjust for proper car orientation
         
         // Calculate actual distance in km using haversine formula
         const distanceKm = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
@@ -352,6 +368,15 @@ export default function AnimatedVehicleMap({
           rotation: angle,
           speed: simulatedSpeed,
           isMoving: true
+        });
+        
+        // Update traveled path to show where car has passed
+        setTraveledPath(prev => {
+          const newPath = [...prev, currentPos];
+          // Remove duplicates and keep unique positions
+          return newPath.filter((pos, index, self) => 
+            index === self.findIndex(p => p[0] === pos[0] && p[1] === pos[1])
+          );
         });
         
         currentIndexRef.current++;
@@ -473,33 +498,24 @@ export default function AnimatedVehicleMap({
           ) : null
         ))}
 
-        {/* Route Lines */}
-        {routePath && routePath.length > 1 && (
-          <>
-            <Polyline 
-              positions={routePath.map(coord => [coord[0], coord[1]])} 
-              color="#2563eb" 
-              weight={4} 
-              opacity={0.8} 
-            />
-            <Polyline 
-              positions={routePath.map(coord => [coord[0], coord[1]])} 
-              color="#ffffff" 
-              weight={2} 
-              opacity={0.9}
-              dashArray="10, 5"
-            />
-          </>
+        {/* Traveled Path (Blue - where car has passed) */}
+        {traveledPath && traveledPath.length > 1 && (
+          <Polyline 
+            positions={traveledPath.map(coord => [coord[0], coord[1]])} 
+            color="#2563eb" 
+            weight={4} 
+            opacity={0.8} 
+          />
         )}
 
-        {/* Remaining Path */}
-        {remainingPath && remainingPath.length > 0 && (
+        {/* Remaining Path (Red dotted - where car hasn't passed yet) */}
+        {routePath && traveledPath && routePath.length > traveledPath.length && (
           <Polyline 
-            positions={remainingPath.map(coord => [coord[0], coord[1]])} 
+            positions={routePath.slice(traveledPath.length - 1).map(coord => [coord[0], coord[1]])} 
             color="#ff0000" 
             weight={3} 
-              opacity={0.6} 
-              dashArray="10, 10"
+            opacity={0.7}
+            dashArray="10, 5"
           />
         )}
 
