@@ -20,6 +20,26 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  // Reduce build time by optimizing dependencies
+  experimental: {
+    optimizePackageImports: ['react', 'react-dom', 'leaflet', 'react-leaflet'],
+  },
+  // Turbopack config for faster builds
+  turbopack: {},
+  // Reduce static generation time
+  trailingSlash: false,
+  // Optimize bundle size
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
   async headers() {
     return [
       {
