@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useMemo, Suspense, useRef } from 'react';
+import { useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, Loader2, Calendar, X, Plane, Ship, FileText, Zap, Facebook, Instagram, User } from 'lucide-react';
@@ -255,6 +255,60 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
     performSearch(waybill);
   };
 
+  // Enhanced route fetching with OSRM for realistic road-based routing
+  const fetchRouteFromOSRM = async (start: [number, number], end: [number, number]): Promise<[number, number][]> => {
+    try {
+      // Ensure coordinates are valid numbers
+      if (!start || !end || start.length !== 2 || end.length !== 2 ||
+          isNaN(start[0]) || isNaN(start[1]) || isNaN(end[0]) || isNaN(end[1])) {
+        console.warn('Invalid coordinates for routing, using straight line');
+        return [start, end];
+      }
+
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=false`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.warn('OSRM routing failed with status:', response.status, ', falling back to straight line');
+        return [start, end];
+      }
+
+      const data = await response.json();
+
+      if (data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates) {
+        // Convert OSRM coordinates [lng, lat] to Leaflet [lat, lng] and ensure proper typing
+        const routeCoordinates: [number, number][] = data.routes[0].geometry.coordinates.map((coord: [number, number]) => {
+          if (Array.isArray(coord) && coord.length >= 2 && typeof coord[0] === 'number' && typeof coord[1] === 'number') {
+            return [coord[1], coord[0]] as [number, number];
+          }
+          return [0, 0] as [number, number]; // fallback for invalid coordinates
+        }).filter((coord: [number, number]) => coord[0] !== 0 || coord[1] !== 0); // remove fallback coordinates
+
+        if (routeCoordinates.length >= 2) {
+          console.log('OSRM routing successful, route has', routeCoordinates.length, 'points');
+          return routeCoordinates;
+        }
+      }
+
+      console.warn('OSRM returned invalid route data, falling back to straight line');
+      return [start, end];
+    } catch (error) {
+      console.warn('OSRM routing error, falling back to straight line:', error);
+      return [start, end];
+    }
+  };
+
+  // Routing state
+  const [routePath, setRoutePath] = useState<[number, number][]>([]);
+  const [remainingPath, setRemainingPath] = useState<[number, number][]>([]);
+
   const mapProps = useMemo(() => {
     try {
       if (!searchResult) return null;
@@ -294,31 +348,14 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
          
       const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
       const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
-      
-      // Route Path logic
-      let routePath: [number, number][] = [];
-      if (originCoords && activeLocation) {
-         routePath = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
-      }
-      
-      // Remaining Path logic
-      let remainingPath: [number, number][] = [];
-      // If NOT delivered, show remaining path
-      if (!isDelivered) {
-        const remainingStart = activeLocation ? { lat: activeLocation.lat, lng: activeLocation.lng } : (originCoords ? { lat: originCoords.lat, lng: originCoords.lng } : null);
-        
-        if (remainingStart && destinationCoords) {
-           remainingPath = [[remainingStart.lat, remainingStart.lng], [destinationCoords.lat, destinationCoords.lng]];
-        }
-      }
-      
+
       let center: [number, number] = [-6.3690, 34.8888];
       if (activeLocation) {
           center = [activeLocation.lat, activeLocation.lng];
       }
-      
+
       const zoom = (checkIns.length > 0 || isDelivered) ? 10 : 6;
-      
+
       return {
           currentLocation: activeLocation,
           startPoint,
@@ -338,6 +375,82 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       console.error("Error calculating map props:", error);
       return null;
     }
+  }, [searchResult, routePath, remainingPath]);
+
+  // Load routes asynchronously when searchResult changes
+  useEffect(() => {
+    const loadRoutes = async () => {
+      if (!searchResult) return;
+
+      const trip = searchResult.trips?.[0];
+      const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
+
+      const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
+        const tA = new Date(a.timestamp).getTime();
+        const tB = new Date(b.timestamp).getTime();
+        return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+      });
+
+      const latestCheckIn = sortedCheckIns[0];
+      const originCoords = locationCoords[searchResult.origin];
+      const destinationCoords = locationCoords[searchResult.destination];
+      const isDelivered = searchResult.currentStatus === 'DELIVERED';
+
+      const activeLocation = (isDelivered && destinationCoords)
+          ? {
+              lat: destinationCoords.lat,
+              lng: destinationCoords.lng,
+              label: searchResult.destination,
+              timestamp: latestCheckIn?.timestamp || new Date().toISOString()
+            }
+          : (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude))
+            ? {
+                 lat: latestCheckIn.latitude,
+                 lng: latestCheckIn.longitude,
+                 label: latestCheckIn.location,
+                 timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
+             }
+            : undefined;
+
+      if (!originCoords || !destinationCoords) return;
+
+      try {
+        // Get route from origin to current location (if not delivered)
+        let traveledRoute: [number, number][] = [];
+        if (activeLocation && !isDelivered) {
+          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+        } else if (isDelivered && activeLocation) {
+          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+        }
+
+        // Get remaining route from current location to destination
+        let remainingRoute: [number, number][] = [];
+        if (!isDelivered && activeLocation && destinationCoords) {
+          remainingRoute = await fetchRouteFromOSRM([activeLocation.lat, activeLocation.lng], [destinationCoords.lat, destinationCoords.lng]);
+        }
+
+        setRoutePath(traveledRoute);
+        setRemainingPath(remainingRoute);
+      } catch (error) {
+        console.error('Error loading routes:', error);
+        // Fallback to straight lines
+        let fallbackRoute: [number, number][] = [];
+        let fallbackRemaining: [number, number][] = [];
+
+        if (originCoords && activeLocation) {
+          fallbackRoute = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
+        }
+
+        if (!isDelivered && activeLocation && destinationCoords) {
+          fallbackRemaining = [[activeLocation.lat, activeLocation.lng], [destinationCoords.lat, destinationCoords.lng]];
+        }
+
+        setRoutePath(fallbackRoute);
+        setRemainingPath(fallbackRemaining);
+      }
+    };
+
+    loadRoutes();
   }, [searchResult]);
 
   return (

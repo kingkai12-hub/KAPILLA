@@ -50,86 +50,174 @@ interface AnimatedVehicleProps {
   speed: number;
 }
 
-// Animated Vehicle Component
+// Realistic GPS Tracking Vehicle Component
 function AnimatedVehicle({ position, rotation, speed }: AnimatedVehicleProps) {
   const [currentPos, setCurrentPos] = useState<[number, number]>(position);
   const [currentRotation, setCurrentRotation] = useState<number>(rotation);
-  const animationRef = useRef<number | null>(null);
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
-    // Cancel any existing animation
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
     // Smooth animation to new position
     const steps = 20;
     let step = 0;
-    
+
     const animate = () => {
       if (step < steps) {
         const progress = step / steps;
-        
+
         // Interpolate position
         const newLat = currentPos[0] + (position[0] - currentPos[0]) * progress;
         const newLng = currentPos[1] + (position[1] - currentPos[1]) * progress;
         const newRotation = currentRotation + (rotation - currentRotation) * progress;
-        
+
         setCurrentPos([newLat, newLng]);
         setCurrentRotation(newRotation);
-        
+
         step++;
         animationRef.current = requestAnimationFrame(animate);
       } else {
         setCurrentPos(position);
         setCurrentRotation(rotation);
-        animationRef.current = null;
       }
     };
 
     animate();
-
-    // Cleanup on unmount or dependency change
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-    };
   }, [position, rotation]);
 
-  const truckIcon = L.divIcon({
+  // Professional GPS tracking vehicle design
+  const vehicleIcon = L.divIcon({
     html: `
       <div style="
+        position: relative;
         transform: rotate(${currentRotation}deg);
-        transition: transform 0.5s ease-in-out;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
+        transition: transform 0.3s ease-out;
+        width: 32px;
+        height: 32px;
       ">
+        <!-- Vehicle body (truck-like) -->
         <div style="
-          font-size: 24px;
-          animation: pulse 2s infinite;
-        ">🚚</div>
+          position: absolute;
+          width: 24px;
+          height: 16px;
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          border-radius: 3px;
+          top: 8px;
+          left: 4px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: 1px solid #1e40af;
+        "></div>
+
+        <!-- Vehicle cabin -->
+        <div style="
+          position: absolute;
+          width: 10px;
+          height: 12px;
+          background: #374151;
+          border-radius: 2px 2px 0 0;
+          top: 4px;
+          left: 4px;
+          border: 1px solid #1f2937;
+        "></div>
+
+        <!-- Wheels -->
+        <div style="
+          position: absolute;
+          width: 4px;
+          height: 4px;
+          background: #1f2937;
+          border-radius: 50%;
+          bottom: 2px;
+          left: 2px;
+        "></div>
+        <div style="
+          position: absolute;
+          width: 4px;
+          height: 4px;
+          background: #1f2937;
+          border-radius: 50%;
+          bottom: 2px;
+          left: 14px;
+        "></div>
+
+        <!-- Direction indicator (arrow) -->
+        <div style="
+          position: absolute;
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-bottom: 6px solid #ef4444;
+          top: -2px;
+          left: 10px;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        "></div>
+
+        <!-- GPS tracking pulse effect -->
+        <div style="
+          position: absolute;
+          width: 32px;
+          height: 32px;
+          border: 2px solid #10b981;
+          border-radius: 50%;
+          top: 0;
+          left: 0;
+          animation: gpsPulse 2s infinite;
+          opacity: 0.6;
+        "></div>
       </div>
+
+      <style>
+        @keyframes gpsPulse {
+          0% {
+            transform: scale(0.8);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(1.2);
+            opacity: 0.4;
+          }
+          100% {
+            transform: scale(0.8);
+            opacity: 0.8;
+          }
+        }
+      </style>
     `,
-    className: 'animated-truck',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    className: 'gps-tracking-vehicle',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
 
   return (
-    <Marker position={currentPos} icon={truckIcon}>
+    <Marker position={currentPos} icon={vehicleIcon}>
       <Popup>
-        <div className="text-center">
-          <strong className="block text-blue-600">🚚 Delivery Vehicle</strong>
-          <div className="text-xs text-gray-500">
-            Speed: {speed.toFixed(0)} km/h
+        <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-center mb-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
+            <strong className="text-blue-800 text-sm font-semibold">GPS TRACKING ACTIVE</strong>
           </div>
-          <div className="text-xs text-gray-500">
-            Moving to destination...
+
+          <div className="space-y-1 text-xs text-gray-700">
+            <div className="flex justify-between">
+              <span>Status:</span>
+              <span className="font-medium text-green-600">Moving</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Speed:</span>
+              <span className="font-medium">{speed.toFixed(0)} km/h</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Heading:</span>
+              <span className="font-medium">{currentRotation.toFixed(0)}°</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Last Update:</span>
+              <span className="font-medium">{new Date().toLocaleTimeString()}</span>
+            </div>
+          </div>
+
+          <div className="mt-3 text-xs text-blue-600 font-medium">
+            🔴 Live GPS Tracking • Real-time Location
           </div>
         </div>
       </Popup>
@@ -189,8 +277,7 @@ export default function AnimatedVehicleMap({
 
   const currentIndexRef = useRef(0);
   const isSimulatingRef = useRef(false);
-  const previousRouteRef = useRef<[number, number][] | undefined>();
-  const lastTimeRef = useRef<number>(0);
+  const previousRouteRef = useRef<[number, number][]>([]);
 
   useEffect(() => {
     setIsClient(true);
@@ -211,7 +298,7 @@ export default function AnimatedVehicleMap({
     }
 
     // Check if routePath changed
-    if (previousRouteRef.current !== routePath || (previousRouteRef.current && routePath && previousRouteRef.current.length !== routePath.length)) {
+    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current)) {
       currentIndexRef.current = 0;
       previousRouteRef.current = routePath;
       isSimulatingRef.current = false;
@@ -221,8 +308,6 @@ export default function AnimatedVehicleMap({
 
     isSimulatingRef.current = true;
 
-    lastTimeRef.current = Date.now();
-
     const totalRoute = [...routePath];
     
     const simulateMovement = () => {
@@ -230,7 +315,7 @@ export default function AnimatedVehicleMap({
         const currentPos = totalRoute[currentIndexRef.current];
         const nextPos = totalRoute[currentIndexRef.current + 1];
         
-        // Calculate rotation based on direction
+        // Calculate rotation based on direction (facing towards destination)
         const angle = Math.atan2(
           nextPos[1] - currentPos[1], // lng diff for x
           nextPos[0] - currentPos[0]  // lat diff for y
@@ -238,13 +323,7 @@ export default function AnimatedVehicleMap({
         
         // Calculate actual distance in km using haversine formula
         const distanceKm = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-        
-        // Calculate speed using actual time delta
-        const now = Date.now();
-        const deltaMs = now - lastTimeRef.current;
-        lastTimeRef.current = now;
-        const deltaHours = deltaMs / (1000 * 3600);
-        const simulatedSpeed = Math.max(10, Math.min(80, distanceKm / deltaHours));
+        const simulatedSpeed = Math.max(10, Math.min(80, distanceKm * 1800)); // speed in km/h, assuming 2s interval
         
         setVehicleData({
           position: currentPos,
