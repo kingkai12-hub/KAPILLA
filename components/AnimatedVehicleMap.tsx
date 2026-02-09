@@ -309,10 +309,12 @@ export default function AnimatedVehicleMap({
       return;
     }
 
-    // Only reset if routePath changed, not currentLocation
-    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current)) {
+    // Check if routePath changed or currentLocation updated
+    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current) || 
+        JSON.stringify(currentLocation) !== JSON.stringify(previousLocationRef.current)) {
       
-      // Store previous route for comparison
+      // Store previous location for comparison
+      previousLocationRef.current = currentLocation;
       previousRouteRef.current = routePath;
       
       // If currentLocation exists (status updated), start from there
@@ -364,10 +366,14 @@ export default function AnimatedVehicleMap({
         const speedVariation = (Math.random() - 0.5) * 20; // ±10 km/h variation
         const simulatedSpeed = Math.max(30, Math.min(70, baseSpeed + speedVariation)); // City speed 30-70 km/h
         
+        // Additional speed variation based on road type (simulate traffic/conditions)
+        const trafficFactor = Math.random() * 0.3 + 0.85; // 0.85 to 1.15 (traffic simulation)
+        const finalSpeed = simulatedSpeed * trafficFactor;
+        
         setVehicleData({
           position: currentPos,
           rotation: angle,
-          speed: simulatedSpeed,
+          speed: finalSpeed,
           isMoving: true
         });
         
@@ -514,9 +520,9 @@ export default function AnimatedVehicleMap({
           <Polyline 
             positions={routePath.slice(traveledPath.length - 1).map(coord => [coord[0], coord[1]])} 
             color="#ff0000" 
-            weight={4} 
-            opacity={0.8}
-            dashArray="8, 4"
+            weight={5} 
+            opacity={0.9}
+            dashArray="12, 6"
           />
         )}
 
