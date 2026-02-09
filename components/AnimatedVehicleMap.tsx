@@ -92,114 +92,85 @@ function AnimatedVehicle({ position, rotation, speed }: AnimatedVehicleProps) {
     animate();
   }, [position, rotation]);
 
-  // Modern attractive GPS tracking vehicle design
+  // Simple compact car design (vertical view)
   const vehicleIcon = L.divIcon({
     html: `
       <div style="
         position: relative;
         transform: rotate(${currentRotation}deg);
         transition: transform 0.5s ease-in-out;
-        width: 40px;
-        height: 40px;
+        width: 24px;
+        height: 24px;
         z-index: 1000;
       ">
-        <!-- Modern delivery truck with gradient and shadow -->
+        <!-- Simple car body (vertical view) -->
         <div style="
           position: absolute;
-          width: 30px;
+          width: 16px;
           height: 20px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          border-radius: 6px;
-          top: 12px;
-          left: 5px;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3);
-          border: 1px solid #1e40af;
+          background: linear-gradient(180deg, #ef4444, #dc2626);
+          border-radius: 8px 8px 4px 4px;
+          top: 2px;
+          left: 4px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: 1px solid #b91c1c;
         "></div>
 
-        <!-- Modern cabin with window -->
+        <!-- Car roof/windshield -->
         <div style="
           position: absolute;
           width: 12px;
-          height: 14px;
-          background: linear-gradient(135deg, #64748b, #475569);
-          border-radius: 4px 4px 0 0;
-          top: 6px;
-          left: 5px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          border: 1px solid #334155;
-        "></div>
-        
-        <!-- Cabin window -->
-        <div style="
-          position: absolute;
-          width: 8px;
           height: 6px;
-          background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-          border-radius: 2px;
-          top: 8px;
-          left: 7px;
-          opacity: 0.8;
+          background: linear-gradient(180deg, #1e40af, #1e3a8a);
+          border-radius: 6px 6px 0 0;
+          top: 2px;
+          left: 6px;
+          opacity: 0.9;
         "></div>
 
-        <!-- Modern wheels with detail -->
+        <!-- Wheels -->
         <div style="
           position: absolute;
-          width: 6px;
-          height: 6px;
-          background: linear-gradient(135deg, #1f2937, #111827);
+          width: 3px;
+          height: 3px;
+          background: #1f2937;
           border-radius: 50%;
-          bottom: 4px;
-          left: 3px;
-          box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+          bottom: 2px;
+          left: 2px;
         "></div>
         <div style="
           position: absolute;
-          width: 6px;
-          height: 6px;
-          background: linear-gradient(135deg, #1f2937, #111827);
+          width: 3px;
+          height: 3px;
+          background: #1f2937;
           border-radius: 50%;
-          bottom: 4px;
-          left: 17px;
-          box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+          bottom: 2px;
+          right: 2px;
         "></div>
 
-        <!-- Direction indicator (modern arrow) -->
+        <!-- Direction indicator -->
         <div style="
           position: absolute;
           width: 0;
           height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-bottom: 10px solid #ef4444;
+          border-left: 3px solid transparent;
+          border-right: 3px solid transparent;
+          border-bottom: 6px solid #fbbf24;
           top: -2px;
-          left: 12px;
-          filter: drop-shadow(0 2px 4px rgba(239,68,68,0.5));
-          transform: scale(1.1);
+          left: 7px;
+          filter: drop-shadow(0 1px 2px rgba(251,191,36,0.5));
         "></div>
 
-        <!-- GPS tracking pulse effect (more subtle) -->
+        <!-- Subtle GPS pulse -->
         <div style="
           position: absolute;
-          width: 40px;
-          height: 40px;
-          border: 2px solid #10b981;
+          width: 24px;
+          height: 24px;
+          border: 1px solid #10b981;
           border-radius: 50%;
           top: 0;
           left: 0;
           animation: gentlePulse 3s infinite;
-          opacity: 0.4;
-        "></div>
-        
-        <!-- Inner pulse for depth -->
-        <div style="
-          position: absolute;
-          width: 30px;
-          height: 30px;
-          border: 1px solid #10b981;
-          border-radius: 50%;
-          top: 5px;
-          left: 5px;
-          animation: gentlePulse 3s infinite 0.5s;
           opacity: 0.3;
         "></div>
       </div>
@@ -207,23 +178,23 @@ function AnimatedVehicle({ position, rotation, speed }: AnimatedVehicleProps) {
       <style>
         @keyframes gentlePulse {
           0% {
-            transform: scale(0.9);
-            opacity: 0.3;
+            transform: scale(0.95);
+            opacity: 0.2;
           }
           50% {
-            transform: scale(1.1);
+            transform: scale(1.05);
             opacity: 0.1;
           }
           100% {
-            transform: scale(0.9);
-            opacity: 0.3;
+            transform: scale(0.95);
+            opacity: 0.2;
           }
         }
       </style>
     `,
     className: 'gps-tracking-vehicle',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 
   return (
@@ -385,13 +356,19 @@ export default function AnimatedVehicleMap({
         
         currentIndexRef.current++;
       } else {
-        // Reached destination
+        // Reached destination - continue moving to show active tracking
         setVehicleData(prev => ({
           ...prev,
-          isMoving: false,
-          speed: 0
+          isMoving: true, // Keep moving to show active tracking
+          speed: Math.max(5, Math.min(15, Math.random() * 10 + 5)) // Slow movement at destination
         }));
-        isSimulatingRef.current = false;
+        
+        // Continue simulation at destination
+        setTimeout(() => {
+          if (isSimulatingRef.current) {
+            currentIndexRef.current = 0; // Reset to continue movement
+          }
+        }, 2000);
       }
     };
 
