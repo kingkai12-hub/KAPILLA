@@ -268,8 +268,8 @@ export default function AnimatedVehicleMap({
   const [isClient, setIsClient] = useState(false);
   const [vehicleData, setVehicleData] = useState<{ position: [number, number]; rotation: number; speed: number; isMoving: boolean }>({
     position: currentLocation ? [currentLocation.lat, currentLocation.lng] : 
-             startPoint ? [startPoint.lat, startPoint.lng] : 
-             routePath && routePath.length > 0 ? routePath[0] : [0, 0],
+             routePath && routePath.length > 0 ? routePath[0] : 
+             startPoint ? [startPoint.lat, startPoint.lng] : [0, 0],
     rotation: 0,
     speed: 0,
     isMoving: false
@@ -299,7 +299,20 @@ export default function AnimatedVehicleMap({
 
     // Check if routePath changed
     if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current)) {
-      currentIndexRef.current = 0;
+      // Find the closest point in routePath to currentLocation
+      const currentLocationCoord = [currentLocation.lat, currentLocation.lng] as [number, number];
+      let closestIndex = 0;
+      let minDistance = Infinity;
+      
+      routePath.forEach((point, index) => {
+        const distance = calculateDistance(currentLocationCoord[0], currentLocationCoord[1], point[0], point[1]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      });
+      
+      currentIndexRef.current = closestIndex;
       previousRouteRef.current = routePath;
       isSimulatingRef.current = false;
     }
