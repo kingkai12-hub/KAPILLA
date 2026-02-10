@@ -48,18 +48,20 @@ export default function Map({
   zoom, 
   checkIns 
 }: MapComponentProps) {
-  // Use animated map when there's current location and route
-  if (currentLocation && routePath && routePath.length > 0) {
+  // Use animated map when there's tracking data (currentLocation, routePath, or checkIns)
+  const hasTrackingData = currentLocation || (routePath && routePath.length > 0) || (checkIns && checkIns.length > 0);
+  
+  if (hasTrackingData) {
     return (
       <AnimatedVehicleMap 
         center={center}
         zoom={zoom}
         currentLocation={currentLocation}
-        routePath={routePath}
-        remainingPath={remainingPath}
+        routePath={routePath || []}
+        remainingPath={remainingPath || []}
         startPoint={startPoint}
         endPoint={endPoint}
-        checkIns={checkIns}
+        checkIns={checkIns || []}
       />
     );
   }
