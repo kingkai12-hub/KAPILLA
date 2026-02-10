@@ -8,7 +8,7 @@ import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import Map from '@/components/Map';
+import VehicleTrackingMap from '@/components/VehicleTrackingMap';
 import PickupRequestModal from '@/components/PickupRequestModal';
 import HelpCenterModal from '@/components/HelpCenterModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -638,7 +638,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                         </div>
                       </div>
                       <div className="w-full h-48 md:h-72 rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                        {mapProps && <Map key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />}
+                        {mapProps && <VehicleTrackingMap key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />}
                       </div>
                       {searchResult.currentStatus === 'DELIVERED' && (
                         <div className="mt-2 flex justify-center">
