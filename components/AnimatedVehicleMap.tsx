@@ -309,16 +309,16 @@ export default function AnimatedVehicleMap({
       return;
     }
 
-    // Check if routePath changed or currentLocation updated
-    if (JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current) || 
-        JSON.stringify(currentLocation) !== JSON.stringify(previousLocationRef.current)) {
-      
-      // Store previous location for comparison
-      previousLocationRef.current = currentLocation;
+    // Check if routePath changed or currentLocation updated (status update)
+    const routeChanged = JSON.stringify(routePath) !== JSON.stringify(previousRouteRef.current);
+    const locationChanged = JSON.stringify(currentLocation) !== JSON.stringify(previousLocationRef.current);
+    
+    if (routeChanged || locationChanged) {
+      // Store previous for comparison
       previousRouteRef.current = routePath;
       
-      // If currentLocation exists (status updated), start from there
-      if (currentLocation) {
+      // Only jump position when currentLocation actually changes (status update)
+      if (locationChanged && currentLocation) {
         const currentLocationCoord = [currentLocation.lat, currentLocation.lng] as [number, number];
         let closestIndex = 0;
         let minDistance = Infinity;
@@ -332,13 +332,37 @@ export default function AnimatedVehicleMap({
         });
         
         currentIndexRef.current = closestIndex;
-        // Reset traveled path when location is updated
+        // Update traveled path to include all points up to current location
         setTraveledPath(routePath.slice(0, closestIndex + 1));
-      } else {
-        // No currentLocation, continue from current position (don't reset to 0)
-        // Keep currentIndexRef.current as is to continue from current position
+        
+        // Jump vehicle to current location immediately
+        setVehicleData({
+          position: currentLocationCoord,
+          rotation: vehicleData.rotation, // Keep current rotation for smoothness
+          speed: vehicleData.speed, // Keep current speed
+          isMoving: true
+        });
+      } else if (routeChanged && !locationChanged) {
+        // Route changed but no location update - continue from current position
+        // Find closest point on new route to current position
+        if (vehicleData.position) {
+          let closestIndex = 0;
+          let minDistance = Infinity;
+          
+          routePath.forEach((point, index) => {
+            const distance = calculateDistance(vehicleData.position[0], vehicleData.position[1], point[0], point[1]);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestIndex = index;
+            }
+          });
+          
+          currentIndexRef.current = closestIndex;
+          setTraveledPath(routePath.slice(0, closestIndex + 1));
+        }
       }
       
+      previousLocationRef.current = currentLocation;
       isSimulatingRef.current = false;
     }
 
@@ -361,14 +385,21 @@ export default function AnimatedVehicleMap({
         
         // Calculate actual distance in km using haversine formula
         const distanceKm = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-        // Realistic city speed: average 50 km/h with variations
-        const baseSpeed = 50; // Average city speed
-        const speedVariation = (Math.random() - 0.5) * 20; // ±10 km/h variation
-        const simulatedSpeed = Math.max(30, Math.min(70, baseSpeed + speedVariation)); // City speed 30-70 km/h
         
-        // Additional speed variation based on road type (simulate traffic/conditions)
-        const trafficFactor = Math.random() * 0.3 + 0.85; // 0.85 to 1.15 (traffic simulation)
-        const finalSpeed = simulatedSpeed * trafficFactor;
+        // Realistic city speed behavior
+        const baseSpeed = 50; // Average city speed in km/h
+        
+        // Natural speed variations based on multiple factors
+        const timeOfDayVariation = Math.sin(Date.now() / 10000000) * 5; // Subtle time-based variation
+        const randomVariation = (Math.random() - 0.5) * 20; // ±10 km/h random variation
+        const roadConditionFactor = Math.random() * 0.4 + 0.8; // 0.8 to 1.2 for road conditions
+        
+        // Calculate final speed with all variations
+        let simulatedSpeed = baseSpeed + timeOfDayVariation + randomVariation;
+        simulatedSpeed = simulatedSpeed * roadConditionFactor;
+        
+        // Ensure speed stays within realistic city bounds (30-70 km/h)
+        const finalSpeed = Math.max(30, Math.min(70, simulatedSpeed));
         
         setVehicleData({
           position: currentPos,
@@ -505,24 +536,26 @@ export default function AnimatedVehicleMap({
           ) : null
         ))}
 
-        {/* Traveled Path (Blue - where car has passed) */}
+        {/* Traveled Path (Blue solid line - where car has passed) */}
         {traveledPath && traveledPath.length > 1 && (
           <Polyline 
             positions={traveledPath.map(coord => [coord[0], coord[1]])} 
             color="#2563eb" 
-            weight={4} 
-            opacity={0.8} 
+            weight={5} 
+            opacity={0.9}
+            smoothFactor={1}
           />
         )}
 
-        {/* Remaining Path (Red dotted - where car hasn't passed yet) */}
+        {/* Remaining Path (Red dotted line - where car needs to go) */}
         {routePath && traveledPath && traveledPath.length > 0 && routePath.length > traveledPath.length && (
           <Polyline 
             positions={routePath.slice(traveledPath.length - 1).map(coord => [coord[0], coord[1]])} 
-            color="#ff0000" 
-            weight={5} 
-            opacity={0.9}
-            dashArray="12, 6"
+            color="#dc2626" 
+            weight={4} 
+            opacity={0.7}
+            dashArray="10, 8"
+            smoothFactor={1}
           />
         )}
 
