@@ -119,15 +119,32 @@ function VehicleMarker({ position, speed, rotation }: { position: [number, numbe
   );
 }
 
-function MapController({ center, zoom, vehiclePosition, autoZoom }: { 
+function MapController({ center, zoom, vehiclePosition, autoZoom, manualZoomLevel }: { 
   center?: [number, number]; 
   zoom?: number; 
   vehiclePosition?: [number, number];
   autoZoom?: boolean;
+  manualZoomLevel?: number;
 }) {
   const map = useMap();
   const defaultCenter: [number, number] = [-6.8151812, 39.2864692]; // Office location
   const defaultZoom = 12;
+  const [userHasZoomed, setUserHasZoomed] = useState(false);
+
+  useEffect(() => {
+    if (!map) return;
+
+    // Track when user manually zooms
+    const handleZoomEnd = () => {
+      setUserHasZoomed(true);
+    };
+    
+    map.on('zoomend', handleZoomEnd);
+    
+    return () => {
+      map.off('zoomend', handleZoomEnd);
+    };
+  }, [map]);
 
   useEffect(() => {
     if (!map) return;
@@ -135,14 +152,17 @@ function MapController({ center, zoom, vehiclePosition, autoZoom }: {
     let effectiveCenter = center || defaultCenter;
     let effectiveZoom = zoom ?? defaultZoom;
 
-    // Auto-zoom to vehicle position if enabled and vehicle position exists
-    if (autoZoom && vehiclePosition) {
+    // Only auto-zoom if user hasn't manually zoomed and autoZoom is enabled
+    if (autoZoom && vehiclePosition && !userHasZoomed) {
       effectiveCenter = vehiclePosition;
       effectiveZoom = 14; // Closer zoom for vehicle tracking
+    } else if (userHasZoomed) {
+      // Keep user's manual zoom level
+      effectiveZoom = map.getZoom();
     }
 
     map.setView(effectiveCenter, effectiveZoom, { animate: true });
-  }, [center, zoom, vehiclePosition, autoZoom, map]);
+  }, [center, zoom, vehiclePosition, autoZoom, userHasZoomed, map]);
 
   return null;
 }
@@ -162,7 +182,6 @@ export default function VehicleTrackingMap({
   const [vehiclePosition, setVehiclePosition] = useState<[number, number]>(center);
   const [vehicleSpeed, setVehicleSpeed] = useState(0);
   const [vehicleRotation, setVehicleRotation] = useState(0);
-  const [traveledPath, setTraveledPath] = useState<[number, number][]>([]);
   const [isMoving, setIsMoving] = useState(false);
 
   const movementRef = useRef<NodeJS.Timeout | null>(null);
@@ -181,7 +200,6 @@ export default function VehicleTrackingMap({
     if (currentLocation) {
       // Start from current location if provided
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);
-      setTraveledPath([[currentLocation.lat, currentLocation.lng]]);
       
       // Find closest point in route to current location
       let closestIndex = 0;
@@ -197,7 +215,6 @@ export default function VehicleTrackingMap({
     } else if (fullRoute.length > 0) {
       // Start from beginning of route
       setVehiclePosition(fullRoute[0]);
-      setTraveledPath([fullRoute[0]]);
       currentIndexRef.current = 0;
     }
   }, [currentLocation, routePath, remainingPath]);
@@ -242,15 +259,6 @@ export default function VehicleTrackingMap({
         setVehiclePosition(currentPos);
         setVehicleRotation(angle);
         setVehicleSpeed(calculatedSpeed);
-        
-        // Update traveled path
-        setTraveledPath(prev => {
-          const newPath = [...prev, currentPos];
-          // Remove duplicates
-          return newPath.filter((pos, index, self) => 
-            index === self.findIndex(p => p[0] === pos[0] && p[1] === pos[1])
-          );
-        });
         
         currentIndexRef.current++;
         
@@ -343,10 +351,10 @@ export default function VehicleTrackingMap({
           </Marker>
         ))}
 
-        {/* Traveled Path - Blue Solid Line */}
-        {traveledPath && traveledPath.length > 1 && (
+        {/* Complete Route Path - Blue Solid Line (from origin to destination) */}
+        {routePath && routePath.length > 1 && (
           <Polyline 
-            positions={traveledPath} 
+            positions={routePath} 
             color="#2563eb" 
             weight={4} 
             opacity={0.8}
