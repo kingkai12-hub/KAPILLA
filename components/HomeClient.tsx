@@ -638,7 +638,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                         </div>
                       </div>
                       <div className="w-full h-48 md:h-72 rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                        {mapProps && <Map {...mapProps} />}
+                        {mapProps && <Map key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />}
                       </div>
                       {searchResult.currentStatus === 'DELIVERED' && (
                         <div className="mt-2 flex justify-center">
