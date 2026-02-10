@@ -1,6 +1,6 @@
 export const locationCoords: Record<string, { lat: number, lng: number }> = {
   // Major Cities
-  "Dar es Salaam": { lat: -6.7924, lng: 39.2083 },
+  "Dar es Salaam": { lat: -6.8151812, lng: 39.2864692 },
   "Mwanza": { lat: -2.5164, lng: 32.9175 },
   "Arusha": { lat: -3.3869, lng: 36.6830 },
   "Dodoma": { lat: -6.1630, lng: 35.7516 },
