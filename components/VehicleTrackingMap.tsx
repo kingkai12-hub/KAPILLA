@@ -119,50 +119,23 @@ function VehicleMarker({ position, speed, rotation }: { position: [number, numbe
   );
 }
 
-function MapController({ center, zoom, vehiclePosition, autoZoom, manualZoomLevel }: { 
+function MapController({ center, zoom }: { 
   center?: [number, number]; 
   zoom?: number; 
-  vehiclePosition?: [number, number];
-  autoZoom?: boolean;
-  manualZoomLevel?: number;
 }) {
   const map = useMap();
   const defaultCenter: [number, number] = [-6.8151812, 39.2864692]; // Office location
   const defaultZoom = 12;
-  const [userHasZoomed, setUserHasZoomed] = useState(false);
 
   useEffect(() => {
     if (!map) return;
 
-    // Track when user manually zooms
-    const handleZoomEnd = () => {
-      setUserHasZoomed(true);
-    };
-    
-    map.on('zoomend', handleZoomEnd);
-    
-    return () => {
-      map.off('zoomend', handleZoomEnd);
-    };
-  }, [map]);
+    const effectiveCenter = center || defaultCenter;
+    const effectiveZoom = zoom ?? defaultZoom;
 
-  useEffect(() => {
-    if (!map) return;
-
-    let effectiveCenter = center || defaultCenter;
-    let effectiveZoom = zoom ?? defaultZoom;
-
-    // Only auto-zoom if user hasn't manually zoomed and autoZoom is enabled
-    if (autoZoom && vehiclePosition && !userHasZoomed) {
-      effectiveCenter = vehiclePosition;
-      effectiveZoom = 14; // Closer zoom for vehicle tracking
-    } else if (userHasZoomed) {
-      // Keep user's manual zoom level
-      effectiveZoom = map.getZoom();
-    }
-
-    map.setView(effectiveCenter, effectiveZoom, { animate: true });
-  }, [center, zoom, vehiclePosition, autoZoom, userHasZoomed, map]);
+    // Only set view on initial load, don't interfere with user zoom/pan
+    map.setView(effectiveCenter, effectiveZoom, { animate: false });
+  }, [center, zoom, map]);
 
   return null;
 }
@@ -309,8 +282,6 @@ export default function VehicleTrackingMap({
         <MapController 
           center={center} 
           zoom={zoom} 
-          vehiclePosition={vehiclePosition}
-          autoZoom={true}
         />
         
         {/* Start Point */}
