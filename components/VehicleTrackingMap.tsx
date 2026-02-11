@@ -339,12 +339,15 @@ export default function VehicleTrackingMap({
       setVehicleRotation(angle);
       setVehicleSpeed(calculatedSpeed);
       
-      // Save state periodically (every 5 seconds)
-      if (Math.floor(currentTime / 5000) !== Math.floor((currentTime - deltaTime * 1000) / 5000)) {
+      // Save state more frequently when tab is inactive (every 2 seconds)
+      // and less frequently when active (every 5 seconds)
+      const saveInterval = document.hidden ? 2000 : 5000;
+      if (Math.floor(currentTime / saveInterval) !== Math.floor((currentTime - deltaTime * 1000) / saveInterval)) {
         const stateToSave = {
           currentIndex: currentIndexRef.current,
           segmentProgress: segmentProgressRef.current,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          lastActiveTime: Date.now()
         };
         localStorage.setItem('vehicleTrackingState', JSON.stringify(stateToSave));
       }
@@ -360,6 +363,76 @@ export default function VehicleTrackingMap({
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+    };
+  }, [currentLocation, routePath, remainingPath]);
+
+  // Handle page visibility changes - continue movement in background
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && fullRouteRef.current.length > 1) {
+        // Page became visible - check if we need to update position based on time elapsed
+        const savedState = localStorage.getItem('vehicleTrackingState');
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            const timeSinceLastActive = Date.now() - parsed.lastActiveTime;
+            
+            // If more than 10 seconds have passed, calculate expected position
+            if (timeSinceLastActive > 10000 && parsed.currentIndex < fullRouteRef.current.length - 1) {
+              console.log('Updating position after inactive period:', timeSinceLastActive / 1000, 'seconds');
+              
+              // Calculate how many segments should have been completed
+              const avgSpeed = 50; // Average speed km/h
+              const avgSpeedKmPerSecond = avgSpeed / 3600;
+              
+              let tempIndex = parsed.currentIndex;
+              let tempProgress = parsed.segmentProgress || 0;
+              
+              // Simulate movement during inactive period
+              const simulatedTime = timeSinceLastActive / 1000; // Convert to seconds
+              
+              while (tempIndex < fullRouteRef.current.length - 1) {
+                const currentPos = fullRouteRef.current[tempIndex];
+                const nextPos = fullRouteRef.current[tempIndex + 1];
+                const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+                const timeForSegment = (segmentDistance / avgSpeedKmPerSecond);
+                
+                if (simulatedTime > timeForSegment * (1 - tempProgress)) {
+                  tempIndex++;
+                  tempProgress = 0;
+                } else {
+                  tempProgress += simulatedTime / timeForSegment;
+                  break;
+                }
+              }
+              
+              // Update position if progress was made
+              if (tempIndex > parsed.currentIndex || tempProgress > (parsed.segmentProgress || 0)) {
+                currentIndexRef.current = tempIndex;
+                segmentProgressRef.current = Math.min(tempProgress, 0.99);
+                
+                if (tempIndex < fullRouteRef.current.length - 1) {
+                  const interpolatedPos = interpolatePosition(
+                    fullRouteRef.current[tempIndex],
+                    fullRouteRef.current[tempIndex + 1],
+                    segmentProgressRef.current
+                  );
+                  setVehiclePosition(interpolatedPos);
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to calculate background movement:', error);
+          }
+        }
+      }
+    };
+
+    // Add event listener for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [currentLocation, routePath, remainingPath]);
 
