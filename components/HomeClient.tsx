@@ -329,7 +329,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
       return [start, end];
     } catch (error) {
-      console.log('⚠️ OSRM fetch failed:', error.message);
+      console.log('⚠️ OSRM fetch failed:', error instanceof Error ? error.message : String(error));
       return [start, end];
     }
   };
@@ -482,7 +482,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
             console.log('✅ Enhanced route loaded for', searchResult.waybillNumber, { points: traveledRoute.length });
           }
         } catch (error) {
-          console.log('⚠️ OSRM route failed, using fallback for', searchResult.waybillNumber, ':', error.message);
+          console.log('⚠️ OSRM route failed, using fallback for', searchResult.waybillNumber, ':', error instanceof Error ? error.message : String(error));
           // Fallback is already set, so no action needed
         }
       }

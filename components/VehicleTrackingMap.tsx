@@ -325,6 +325,17 @@ export default function VehicleTrackingMap({
         isInitializedRef.current = true;
       }
     }
+    } catch (error) {
+      console.error('❌ Error initializing vehicle position:', error);
+      // Fallback to start position
+      const fullRoute = [...routePath, ...remainingPath];
+      if (fullRoute.length > 0) {
+        setVehiclePosition(fullRoute[0]);
+        currentIndexRef.current = 0;
+        segmentProgressRef.current = 0;
+        isInitializedRef.current = true;
+      }
+    }
   }, [currentLocation, routePath, remainingPath, center]);
 
   // Smooth vehicle movement animation
@@ -499,6 +510,7 @@ export default function VehicleTrackingMap({
               }
             }
           } catch (error) {
+            console.error('❌ Error in animation loop:', error);
           }
         }
       }

@@ -161,7 +161,7 @@ export default async function AdminDashboard() {
                   <td colSpan={3} className="px-8 py-8 text-center text-base text-slate-500 dark:text-slate-400">No users found.</td>
                 </tr>
               ) : (
-                recentUsers.map((user) => (
+                recentUsers.map((user: any) => (
                   <tr key={user.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-slate-50 dark:hover:from-blue-900/20 dark:hover:to-slate-800/60 transition-all duration-200">
                     <td className="px-8 py-5 whitespace-nowrap text-base font-semibold text-slate-900 dark:text-white">{user.name}</td>
                     <td className="px-8 py-5 whitespace-nowrap text-base text-slate-600 dark:text-slate-400">{user.role}</td>
