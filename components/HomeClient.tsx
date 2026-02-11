@@ -231,6 +231,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
     setError(null);
 
     try {
+      console.log('🔍 Searching for waybill:', wb);
       // Abort any previous in-flight request
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
@@ -238,17 +239,24 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       const res = await fetch(`/api/shipments/${wb}`, { signal: controller.signal, cache: 'no-store' });
       clearTimeout(timeoutId);
+      
+      console.log('📡 API Response Status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log('✅ Search successful:', { waybill: data.waybillNumber, status: data.currentStatus, origin: data.origin, destination: data.destination });
         setSearchResult(data);
       } else {
         if (res.status === 404) {
+          console.log('❌ Shipment not found:', wb);
           setSearchResult(null);
         } else {
+          console.log('❌ Server error:', res.status);
           setError(`Server Error: ${res.status}`);
         }
       }
     } catch (error) {
+      console.error('❌ Search error for', wb, ':', error);
       setError("Failed to connect to server. Please try again.");
     } finally {
       setLoading(false);
@@ -432,7 +440,9 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
         setRoutePath(traveledRoute);
         setRemainingPath(remainingRoute);
+        console.log('✅ Route loaded successfully for', searchResult.waybillNumber, { traveledRoute: traveledRoute.length, remainingRoute: remainingRoute.length });
       } catch (error) {
+        console.error('❌ Route loading error for', searchResult.waybillNumber, ':', error);
         // Fallback to straight lines
         let fallbackRoute: [number, number][] = [];
         let fallbackRemaining: [number, number][] = [];
@@ -449,6 +459,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
         setRoutePath(fallbackRoute);
         setRemainingPath(fallbackRemaining);
+        console.log('🔄 Using fallback route for', searchResult.waybillNumber);
       }
     };
 
