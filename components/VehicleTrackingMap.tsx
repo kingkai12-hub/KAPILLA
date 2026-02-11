@@ -169,6 +169,10 @@ export default function VehicleTrackingMap({
 
   // Set initial vehicle position and restore state from localStorage
   useEffect(() => {
+    // Combine route path and remaining path for full journey
+    const fullRoute = [...routePath, ...remainingPath];
+    fullRouteRef.current = fullRoute;
+    
     // Try to restore saved position from localStorage
     const savedState = localStorage.getItem('vehicleTrackingState');
     let savedIndex = 0;
@@ -216,7 +220,7 @@ export default function VehicleTrackingMap({
       currentIndexRef.current = startIndex;
       isInitializedRef.current = true;
     }
-  }, [currentLocation, routePath, center]);
+  }, [currentLocation, routePath, remainingPath, center]);
 
   // Vehicle movement animation
   useEffect(() => {
@@ -374,9 +378,9 @@ export default function VehicleTrackingMap({
         ))}
 
         {/* Traveled Path - Blue Solid Line (only what vehicle has traveled) */}
-        {routePath && routePath.length > 1 && currentIndexRef.current > 0 && (
+        {fullRouteRef.current.length > 1 && currentIndexRef.current > 0 && (
           <Polyline 
-            positions={routePath.slice(0, currentIndexRef.current + 1)} 
+            positions={fullRouteRef.current.slice(0, currentIndexRef.current + 1)} 
             color="#2563eb" 
             weight={4} 
             opacity={0.8}
@@ -385,9 +389,9 @@ export default function VehicleTrackingMap({
         )}
 
         {/* Remaining Path - Red Dotted Line (what vehicle hasn't traveled yet) */}
-        {remainingPath && remainingPath.length > 1 && (
+        {fullRouteRef.current.length > 1 && currentIndexRef.current < fullRouteRef.current.length - 1 && (
           <Polyline 
-            positions={remainingPath} 
+            positions={fullRouteRef.current.slice(currentIndexRef.current + 1)} 
             color="#dc2626" 
             weight={3} 
             opacity={0.7}
