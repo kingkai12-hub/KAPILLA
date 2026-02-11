@@ -2,8 +2,8 @@
 let prisma: any;
 
 try {
-  if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-    // Only import Prisma in server-side development
+  if (typeof window === 'undefined') {
+    // Import Prisma in server-side environment (development and production)
     const { PrismaClient } = require('@prisma/client');
     
     const globalForPrisma = globalThis as unknown as { prisma: any };
@@ -34,7 +34,7 @@ try {
   }
 } catch (error) {
   console.log('⚠️ Prisma not available, using mock for build');
-  // Mock Prisma for build time
+  // Mock Prisma only for build time
   prisma = {
     $connect: () => Promise.resolve(),
     $disconnect: () => Promise.resolve(),

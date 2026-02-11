@@ -686,17 +686,13 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               </div>
                             </div>
                           }>
-                            {/* Enhanced tracking map with animation and real-time features */}
-                            <EnhancedTrackingMap 
-                              key={`enhanced-map-${searchResult?.waybillNumber}-${Date.now()}`} 
+                            {/* Temporarily using SimpleTestMap to debug the 500 error */}
+                            <SimpleTestMap 
+                              key={`simple-map-${searchResult?.waybillNumber}-${Date.now()}`} 
                               center={mapProps.center} 
                               zoom={mapProps.zoom}
                               startPoint={mapProps.startPoint}
                               endPoint={mapProps.endPoint}
-                              currentLocation={mapProps.currentLocation}
-                              routePath={mapProps.routePath}
-                              remainingPath={mapProps.remainingPath}
-                              checkIns={mapProps.checkIns}
                             />
                           </ErrorBoundary>
                         ) : (
