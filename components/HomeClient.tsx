@@ -278,6 +278,10 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         return [start, end];
       }
 
+      // Add timeout to prevent long delays
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       const response = await fetch(
         `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=false`,
         {
@@ -285,11 +289,14 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           headers: {
             'Accept': 'application/json',
           },
+          signal: controller.signal,
         }
       );
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        return [start, end];
+        throw new Error(`OSRM API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -310,6 +317,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
       return [start, end];
     } catch (error) {
+      console.log('⚠️ OSRM fetch failed:', error.message);
       return [start, end];
     }
   };
@@ -395,6 +403,8 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
     const loadRoutes = async () => {
       if (!searchResult) return;
 
+      console.log('🗺️ Loading map for', searchResult.waybillNumber);
+      
       const trip = searchResult.trips?.[0];
       const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
 
@@ -409,6 +419,9 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       const destinationCoords = locationCoords[searchResult.destination];
       const isDelivered = searchResult.currentStatus === 'DELIVERED';
 
+      console.log('📍 Location check:', { origin: searchResult.origin, destination: searchResult.destination });
+      console.log('📍 Coordinates:', { originCoords: !!originCoords, destinationCoords: !!destinationCoords });
+
       const activeLocation = (isDelivered && destinationCoords)
           ? {
               lat: destinationCoords.lat,
@@ -416,50 +429,50 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
               label: searchResult.destination,
               timestamp: latestCheckIn?.timestamp || new Date().toISOString()
             }
-          : null; // Don't use check-in location for route when not delivered - let vehicle move freely
+          : null;
 
-      if (!originCoords || !destinationCoords) return;
+      // Set immediate fallback route to prevent map loading errors
+      const fallbackRoute: [number, number][] = [];
+      const fallbackRemaining: [number, number][] = [];
 
-      try {
-        // Get full route from origin to destination for vehicle movement
-        let traveledRoute: [number, number][] = [];
-        let remainingRoute: [number, number][] = [];
-        
+      if (originCoords && destinationCoords) {
         if (isDelivered && activeLocation) {
-          // Delivered - show route to destination
-          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
-        } else if (!isDelivered) {
-          // Not delivered - get full route for vehicle to travel along
-          const fullRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+          fallbackRoute.push([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+        } else {
+          fallbackRoute.push([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+        }
+      }
+
+      // Set fallback immediately so map can load
+      setRoutePath(fallbackRoute);
+      setRemainingPath(fallbackRemaining);
+      console.log('🗺️ Fallback route set for', searchResult.waybillNumber);
+
+      // Try to get better routes in background (non-blocking)
+      if (originCoords && destinationCoords) {
+        try {
+          console.log('🛣️ Attempting to fetch OSRM route...');
+          let traveledRoute: [number, number][] = [];
+          let remainingRoute: [number, number][] = [];
           
-          // Split full route into traveled and remaining for display
-          // Vehicle will move along the full route, but we show it as traveled/remaining
-          traveledRoute = fullRoute; // Vehicle moves along full route
-          remainingRoute = []; // No remaining path needed - vehicle moves along traveled route
-        }
-
-        setRoutePath(traveledRoute);
-        setRemainingPath(remainingRoute);
-        console.log('✅ Route loaded successfully for', searchResult.waybillNumber, { traveledRoute: traveledRoute.length, remainingRoute: remainingRoute.length });
-      } catch (error) {
-        console.error('❌ Route loading error for', searchResult.waybillNumber, ':', error);
-        // Fallback to straight lines
-        let fallbackRoute: [number, number][] = [];
-        let fallbackRemaining: [number, number][] = [];
-
-        if (originCoords && destinationCoords) {
           if (isDelivered && activeLocation) {
-            fallbackRoute = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
-          } else {
-            // Full route for vehicle movement
-            fallbackRoute = [[originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]];
-            fallbackRemaining = [];
+            traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+          } else if (!isDelivered) {
+            const fullRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+            traveledRoute = fullRoute;
+            remainingRoute = [];
           }
-        }
 
-        setRoutePath(fallbackRoute);
-        setRemainingPath(fallbackRemaining);
-        console.log('🔄 Using fallback route for', searchResult.waybillNumber);
+          // Only update if we got a better route
+          if (traveledRoute.length > fallbackRoute.length) {
+            setRoutePath(traveledRoute);
+            setRemainingPath(remainingRoute);
+            console.log('✅ Enhanced route loaded for', searchResult.waybillNumber, { points: traveledRoute.length });
+          }
+        } catch (error) {
+          console.log('⚠️ OSRM route failed, using fallback for', searchResult.waybillNumber, ':', error.message);
+          // Fallback is already set, so no action needed
+        }
       }
     };
 
@@ -651,7 +664,26 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                         </div>
                       </div>
                       <div className="w-full h-48 md:h-72 rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                        {mapProps && <VehicleTrackingMap key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />}
+                        {mapProps ? (
+                          <ErrorBoundary fallback={
+                            <div className="flex items-center justify-center h-full bg-slate-100 rounded-xl">
+                              <div className="text-center p-4">
+                                <div className="text-red-500 mb-2">🗺️ Map Error</div>
+                                <div className="text-sm text-slate-600">Unable to load tracking map</div>
+                                <div className="text-xs text-slate-500 mt-1">Route: {searchResult.origin} → {searchResult.destination}</div>
+                              </div>
+                            </div>
+                          }>
+                            <VehicleTrackingMap key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />
+                          </ErrorBoundary>
+                        ) : (
+                          <div className="flex items-center justify-center h-full bg-slate-100 rounded-xl">
+                            <div className="text-center p-4">
+                              <div className="text-slate-500 mb-2">📍</div>
+                              <div className="text-sm text-slate-600">Map data loading...</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {searchResult.currentStatus === 'DELIVERED' && (
                         <div className="mt-2 flex justify-center">
