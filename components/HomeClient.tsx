@@ -311,7 +311,10 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
   const mapProps = useMemo(() => {
     try {
-      if (!searchResult) return null;
+      if (!searchResult) {
+        console.log('No search result, returning null mapProps');
+        return null;
+      }
 
       const trip = searchResult.trips?.[0];
       const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
@@ -327,6 +330,16 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       const originCoords = locationCoords[searchResult.origin];
       const destinationCoords = locationCoords[searchResult.destination];
       const isDelivered = searchResult.currentStatus === 'DELIVERED';
+      
+      console.log('Map props calculation:', {
+        origin: searchResult.origin,
+        destination: searchResult.destination,
+        isDelivered,
+        hasOrigin: !!originCoords,
+        hasDestination: !!destinationCoords,
+        routePathLength: routePath.length,
+        remainingPathLength: remainingPath.length
+      });
       
       // Determine the effective "current" location
       // If delivered, snap to destination
@@ -356,7 +369,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
 
       const zoom = (checkIns.length > 0 || isDelivered) ? 10 : 6;
 
-      return {
+      const props = {
           currentLocation: activeLocation,
           startPoint,
           endPoint,
@@ -371,6 +384,9 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                timestamp: c.timestamp
           }))
       };
+
+      console.log('Final map props:', props);
+      return props;
     } catch (error) {
       console.error("Error calculating map props:", error);
       return null;

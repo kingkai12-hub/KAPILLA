@@ -49,6 +49,7 @@ interface MapProps {
   routePath?: [number, number][];
   remainingPath?: [number, number][];
   checkIns?: Location[];
+  key?: string;
 }
 
 // Vehicle Component with movement animation and rotation
@@ -149,16 +150,16 @@ function MapController({ center, zoom }: {
 }
 
 export default function VehicleTrackingMap({ 
-  center = [-6.8151812, 39.2864692],
-  zoom = 12,
-  startPoint,
-  endPoint,
-  currentLocation,
-  routePath = [],
-  remainingPath = [],
-  checkIns = []
+  center = [-6.3690, 34.8888], 
+  zoom = 6, 
+  startPoint, 
+  endPoint, 
+  currentLocation, 
+  routePath = [], 
+  remainingPath = [], 
+  checkIns = [],
+  key 
 }: MapProps) {
-  
   const [isClient, setIsClient] = useState(false);
   const [vehiclePosition, setVehiclePosition] = useState<[number, number]>(center);
   const [vehicleSpeed, setVehicleSpeed] = useState(0);
@@ -178,6 +179,24 @@ export default function VehicleTrackingMap({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Add error boundary for debugging
+  useEffect(() => {
+    try {
+      console.log('VehicleTrackingMap props:', {
+        center,
+        zoom,
+        hasStartPoint: !!startPoint,
+        hasEndPoint: !!endPoint,
+        hasCurrentLocation: !!currentLocation,
+        routePathLength: routePath.length,
+        remainingPathLength: remainingPath.length,
+        checkInsCount: checkIns.length
+      });
+    } catch (error) {
+      console.error('Error in VehicleTrackingMap debug useEffect:', error);
+    }
+  }, [center, zoom, startPoint, endPoint, currentLocation, routePath, remainingPath, checkIns]);
 
   // Set initial vehicle position and restore state from localStorage
   useEffect(() => {
