@@ -13,6 +13,18 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 import { locationCoords } from '@/lib/locations';
 
+// Haversine formula to calculate distance between two points
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 // Dynamic import for VehicleTrackingMap to prevent SSR issues
 const VehicleTrackingMap = dynamic(() => import('./VehicleTrackingMap'), {
   ssr: false,
@@ -449,22 +461,43 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
             }
           : null;
 
-      // Set immediate fallback route to prevent map loading errors
-      const fallbackRoute: [number, number][] = [];
-      const fallbackRemaining: [number, number][] = [];
+      // Create enhanced route with multiple waypoints for realistic vehicle movement
+      const createEnhancedRoute = (start: [number, number], end: [number, number]): [number, number][] => {
+        const route: [number, number][] = [start];
+        
+        // Add intermediate waypoints for realistic movement
+        const numWaypoints = Math.max(5, Math.floor(calculateDistance(start[0], start[1], end[0], end[1]) * 2));
+        
+        for (let i = 1; i < numWaypoints; i++) {
+          const progress = i / numWaypoints;
+          // Add some realistic curve to the route
+          const lat = start[0] + (end[0] - start[0]) * progress + (Math.random() - 0.5) * 0.01;
+          const lng = start[1] + (end[1] - start[1]) * progress + (Math.random() - 0.5) * 0.01;
+          route.push([lat, lng]);
+        }
+        
+        route.push(end);
+        return route;
+      };
+
+      // Set immediate enhanced route for realistic vehicle tracking
+      const enhancedRoute: [number, number][] = [];
+      const enhancedRemaining: [number, number][] = [];
 
       if (originCoords && destinationCoords) {
         if (isDelivered && activeLocation) {
-          fallbackRoute.push([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+          const deliveredRoute = createEnhancedRoute([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+          enhancedRoute.push(...deliveredRoute);
         } else {
-          fallbackRoute.push([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+          const fullRoute = createEnhancedRoute([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+          enhancedRoute.push(...fullRoute);
         }
       }
 
-      // Set fallback immediately so map can load
-      setRoutePath(fallbackRoute);
-      setRemainingPath(fallbackRemaining);
-      console.log('🗺️ Fallback route set for', searchResult.waybillNumber);
+      // Set enhanced route immediately so map can load with realistic tracking
+      setRoutePath(enhancedRoute);
+      setRemainingPath(enhancedRemaining);
+      console.log('🗺️ Enhanced route set for', searchResult.waybillNumber, { points: enhancedRoute.length });
 
       // Try to get better routes in background (non-blocking)
       if (originCoords && destinationCoords) {
@@ -482,10 +515,12 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           }
 
           // Only update if we got a better route
-          if (traveledRoute.length > fallbackRoute.length) {
+          if (traveledRoute.length > enhancedRoute.length) {
             setRoutePath(traveledRoute);
             setRemainingPath(remainingRoute);
-            console.log('✅ Enhanced route loaded for', searchResult.waybillNumber, { points: traveledRoute.length });
+            console.log('✅ OSRM enhanced route loaded for', searchResult.waybillNumber, { points: traveledRoute.length });
+          } else {
+            console.log('📍 Using enhanced route for', searchResult.waybillNumber, { points: enhancedRoute.length });
           }
         } catch (error) {
           console.log('⚠️ OSRM route failed, using fallback for', searchResult.waybillNumber, ':', error instanceof Error ? error.message : String(error));
