@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy:fix": "node deploy-fix.js",
-    "postinstall": "prisma generate"
+    "deploy:fix": "node deploy-fix.js"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
