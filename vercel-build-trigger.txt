@@ -1,0 +1,1 @@
+Trigger Vercel build - Original vehicle tracking system restored
