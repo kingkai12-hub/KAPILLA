@@ -45,7 +45,7 @@ interface MapProps {
   zoom?: number;
   startPoint?: Location;
   endPoint?: Location;
-  currentLocation?: Location;
+  currentLocation?: Location | null;
   routePath?: [number, number][];
   remainingPath?: [number, number][];
   checkIns?: Location[];
@@ -284,7 +284,7 @@ export default function VehicleTrackingMap({
     const currentLocationKey = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
     const isNewLocation = currentLocationKey !== previousLocationRef.current && currentLocationKey !== '';
     
-    if (isNewLocation) {
+    if (isNewLocation && currentLocation) {
       // New location update - reset and start fresh with proper routes
       console.log('New location update received, resetting position');
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);

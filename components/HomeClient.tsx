@@ -346,6 +346,12 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       let center: [number, number] = [-6.3690, 34.8888];
       if (activeLocation) {
           center = [activeLocation.lat, activeLocation.lng];
+      } else if (originCoords) {
+          // Use origin as center when no active location
+          center = [originCoords.lat, originCoords.lng];
+      } else if (destinationCoords) {
+          // Use destination as fallback center
+          center = [destinationCoords.lat, destinationCoords.lng];
       }
 
       const zoom = (checkIns.length > 0 || isDelivered) ? 10 : 6;
