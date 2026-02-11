@@ -31,6 +31,12 @@ const SimpleTestMap = dynamic(() => import('./SimpleTestMap'), {
   loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
 });
 
+// Dynamic import for AdvancedVehicleTrackingMap with real-time movement
+const AdvancedVehicleTrackingMap = dynamic(() => import('./AdvancedVehicleTrackingMap'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+});
+
 // Dynamic imports for modals to prevent SSR issues
 const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
 const HelpCenterModal = dynamic(() => import('@/components/HelpCenterModal'), { ssr: false });
@@ -686,13 +692,17 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               </div>
                             </div>
                           }>
-                            {/* Temporarily using SimpleTestMap to debug the 500 error */}
-                            <SimpleTestMap 
-                              key={`simple-map-${searchResult?.waybillNumber}-${Date.now()}`} 
+                            {/* Advanced Vehicle Tracking Map with real-time movement */}
+                            <AdvancedVehicleTrackingMap 
+                              key={`advanced-map-${searchResult?.waybillNumber}-${Date.now()}`} 
                               center={mapProps.center} 
                               zoom={mapProps.zoom}
                               startPoint={mapProps.startPoint}
                               endPoint={mapProps.endPoint}
+                              routePath={mapProps.routePath}
+                              remainingPath={mapProps.remainingPath}
+                              currentLocation={mapProps.currentLocation}
+                              checkIns={mapProps.checkIns}
                             />
                           </ErrorBoundary>
                         ) : (
