@@ -160,24 +160,44 @@ export default function VehicleTrackingMap({
   const movementRef = useRef<NodeJS.Timeout | null>(null);
   const currentIndexRef = useRef(0);
   const fullRouteRef = useRef<[number, number][]>([]);
+  const lastLocationUpdateRef = useRef('');
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Combine route path and remaining path for full journey
+  // Set initial vehicle position and restore state from localStorage
   useEffect(() => {
-    const fullRoute = [...routePath, ...remainingPath];
-    fullRouteRef.current = fullRoute;
+    // Try to restore saved position from localStorage
+    const savedState = localStorage.getItem('vehicleTrackingState');
+    let savedIndex = 0;
+    
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        // Check if saved state is recent (within last 24 hours)
+        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          savedIndex = parsed.currentIndex || 0;
+          console.log('Restored vehicle position from saved state, index:', savedIndex);
+        }
+      } catch (error) {
+        console.warn('Failed to parse saved state:', error);
+      }
+    }
+    
+    // Clear any deviated route data - always show proper OSRM routes
+    const currentLocationKey = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
     
     if (currentLocation) {
-      // Start from current location if provided
+      // New location update - reset and start fresh with proper routes
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);
+      lastLocationUpdateRef.current = currentLocationKey;
       
-      // Find closest point in route to current location
+      // Find closest point in route path to current location
       let closestIndex = 0;
       let minDistance = Infinity;
-      fullRoute.forEach((point, index) => {
+      routePath.forEach((point, index) => {
         const distance = calculateDistance(currentLocation.lat, currentLocation.lng, point[0], point[1]);
         if (distance < minDistance) {
           minDistance = distance;
@@ -185,12 +205,18 @@ export default function VehicleTrackingMap({
         }
       });
       currentIndexRef.current = closestIndex;
-    } else if (fullRoute.length > 0) {
-      // Start from beginning of route
-      setVehiclePosition(fullRoute[0]);
-      currentIndexRef.current = 0;
+      isInitializedRef.current = true;
+      
+      // Clear localStorage to ensure fresh start with proper routes
+      localStorage.removeItem('vehicleTrackingState');
+    } else if (routePath.length > 0 && !isInitializedRef.current) {
+      // Start from saved position or beginning of route path
+      const startIndex = savedIndex > 0 && savedIndex < routePath.length ? savedIndex : 0;
+      setVehiclePosition(routePath[startIndex]);
+      currentIndexRef.current = startIndex;
+      isInitializedRef.current = true;
     }
-  }, [currentLocation, routePath, remainingPath]);
+  }, [currentLocation, routePath, center]);
 
   // Vehicle movement animation
   useEffect(() => {
@@ -217,14 +243,32 @@ export default function VehicleTrackingMap({
         // Calculate distance for speed adjustment
         const distance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
         
-        // Variable speed with max 50 km/h
-        const baseSpeed = 40; // Base speed
+        // Determine if this is city or highway area based on distance and route characteristics
+        const isHighway = distance > 5; // Long segments suggest highway
+        const isCity = distance <= 2; // Short segments suggest city
+        
+        // Variable speed based on road type
+        let baseSpeed;
+        if (isHighway) {
+          baseSpeed = 70; // Highway speed: 60-80 km/h
+        } else if (isCity) {
+          baseSpeed = 35; // City speed: 20-50 km/h
+        } else {
+          baseSpeed = 50; // Rural speed: 40-60 km/h
+        }
+        
         const speedVariation = Math.sin(Date.now() / 5000) * 8; // Sine wave variation
         const randomFactor = (Math.random() - 0.5) * 4; // Random variation
         let calculatedSpeed = baseSpeed + speedVariation + randomFactor;
         
-        // Ensure max speed is 50 km/h and minimum is 20 km/h
-        calculatedSpeed = Math.max(20, Math.min(50, calculatedSpeed));
+        // Ensure speed stays within appropriate range
+        if (isHighway) {
+          calculatedSpeed = Math.max(60, Math.min(80, calculatedSpeed));
+        } else if (isCity) {
+          calculatedSpeed = Math.max(20, Math.min(50, calculatedSpeed));
+        } else {
+          calculatedSpeed = Math.max(40, Math.min(60, calculatedSpeed));
+        }
         
         // Adjust movement interval based on speed (slower speed = longer interval)
         const movementInterval = (distance / calculatedSpeed) * 3600000; // Convert to milliseconds
@@ -234,6 +278,13 @@ export default function VehicleTrackingMap({
         setVehicleSpeed(calculatedSpeed);
         
         currentIndexRef.current++;
+        
+        // Save current position to localStorage for persistence
+        const stateToSave = {
+          currentIndex: currentIndexRef.current,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('vehicleTrackingState', JSON.stringify(stateToSave));
         
         // Schedule next movement
         movementRef.current = setTimeout(moveVehicle, Math.max(500, Math.min(3000, movementInterval)));
@@ -322,10 +373,10 @@ export default function VehicleTrackingMap({
           </Marker>
         ))}
 
-        {/* Complete Route Path - Blue Solid Line (from origin to destination) */}
-        {routePath && routePath.length > 1 && (
+        {/* Traveled Path - Blue Solid Line (only what vehicle has traveled) */}
+        {routePath && routePath.length > 1 && currentIndexRef.current > 0 && (
           <Polyline 
-            positions={routePath} 
+            positions={routePath.slice(0, currentIndexRef.current + 1)} 
             color="#2563eb" 
             weight={4} 
             opacity={0.8}
@@ -333,7 +384,7 @@ export default function VehicleTrackingMap({
           />
         )}
 
-        {/* Remaining Path - Red Dotted Line */}
+        {/* Remaining Path - Red Dotted Line (what vehicle hasn't traveled yet) */}
         {remainingPath && remainingPath.length > 1 && (
           <Polyline 
             positions={remainingPath} 
