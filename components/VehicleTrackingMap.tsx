@@ -25,6 +25,14 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;
 }
 
+// Linear interpolation between two points
+function interpolatePosition(start: [number, number], end: [number, number], progress: number): [number, number] {
+  return [
+    start[0] + (end[0] - start[0]) * progress,
+    start[1] + (end[1] - start[1]) * progress
+  ];
+}
+
 interface Location {
   lat: number;
   lng: number;
@@ -158,10 +166,13 @@ export default function VehicleTrackingMap({
   const [isMoving, setIsMoving] = useState(false);
 
   const movementRef = useRef<NodeJS.Timeout | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
   const fullRouteRef = useRef<[number, number][]>([]);
   const lastLocationUpdateRef = useRef('');
   const isInitializedRef = useRef(false);
+  const segmentProgressRef = useRef(0); // Progress within current segment (0-1)
+  const lastUpdateTimeRef = useRef(Date.now());
 
   useEffect(() => {
     setIsClient(true);
@@ -176,6 +187,7 @@ export default function VehicleTrackingMap({
     // Try to restore saved position from localStorage
     const savedState = localStorage.getItem('vehicleTrackingState');
     let savedIndex = 0;
+    let savedProgress = 0;
     
     if (savedState) {
       try {
@@ -183,7 +195,8 @@ export default function VehicleTrackingMap({
         // Check if saved state is recent (within last 24 hours)
         if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
           savedIndex = parsed.currentIndex || 0;
-          console.log('Restored vehicle position from saved state, index:', savedIndex);
+          savedProgress = parsed.segmentProgress || 0;
+          console.log('Restored vehicle position from saved state, index:', savedIndex, 'progress:', savedProgress);
         }
       } catch (error) {
         console.warn('Failed to parse saved state:', error);
@@ -209,20 +222,34 @@ export default function VehicleTrackingMap({
         }
       });
       currentIndexRef.current = closestIndex;
+      segmentProgressRef.current = 0;
       isInitializedRef.current = true;
       
       // Clear localStorage to ensure fresh start with proper routes
       localStorage.removeItem('vehicleTrackingState');
     } else if (routePath.length > 0 && !isInitializedRef.current) {
       // Start from saved position or beginning of route path
-      const startIndex = savedIndex > 0 && savedIndex < routePath.length ? savedIndex : 0;
-      setVehiclePosition(routePath[startIndex]);
+      const startIndex = savedIndex > 0 && savedIndex < fullRoute.length ? savedIndex : 0;
       currentIndexRef.current = startIndex;
+      segmentProgressRef.current = savedProgress;
+      
+      // Set initial position (interpolated if progress > 0)
+      if (startIndex < fullRoute.length - 1 && savedProgress > 0) {
+        const interpolatedPos = interpolatePosition(
+          fullRoute[startIndex],
+          fullRoute[startIndex + 1],
+          savedProgress
+        );
+        setVehiclePosition(interpolatedPos);
+      } else {
+        setVehiclePosition(fullRoute[startIndex]);
+      }
+      
       isInitializedRef.current = true;
     }
   }, [currentLocation, routePath, remainingPath, center]);
 
-  // Vehicle movement animation
+  // Smooth vehicle movement animation
   useEffect(() => {
     const fullRoute = fullRouteRef.current;
     
@@ -232,79 +259,106 @@ export default function VehicleTrackingMap({
     }
 
     setIsMoving(true);
+    lastUpdateTimeRef.current = Date.now();
 
-    const moveVehicle = () => {
-      if (currentIndexRef.current < fullRoute.length - 1) {
-        const currentPos = fullRoute[currentIndexRef.current];
-        const nextPos = fullRoute[currentIndexRef.current + 1];
-        
-        // Calculate rotation for vehicle direction
-        const angle = Math.atan2(
-          nextPos[1] - currentPos[1], // lng diff
-          nextPos[0] - currentPos[0]  // lat diff
-        ) * (180 / Math.PI) - 90;
-        
-        // Calculate distance for speed adjustment
-        const distance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-        
-        // Determine if this is city or highway area based on distance and route characteristics
-        const isHighway = distance > 5; // Long segments suggest highway
-        const isCity = distance <= 2; // Short segments suggest city
-        
-        // Variable speed based on road type
-        let baseSpeed;
-        if (isHighway) {
-          baseSpeed = 70; // Highway speed: 60-80 km/h
-        } else if (isCity) {
-          baseSpeed = 35; // City speed: 20-50 km/h
-        } else {
-          baseSpeed = 50; // Rural speed: 40-60 km/h
-        }
-        
-        const speedVariation = Math.sin(Date.now() / 5000) * 8; // Sine wave variation
-        const randomFactor = (Math.random() - 0.5) * 4; // Random variation
-        let calculatedSpeed = baseSpeed + speedVariation + randomFactor;
-        
-        // Ensure speed stays within appropriate range
-        if (isHighway) {
-          calculatedSpeed = Math.max(60, Math.min(80, calculatedSpeed));
-        } else if (isCity) {
-          calculatedSpeed = Math.max(20, Math.min(50, calculatedSpeed));
-        } else {
-          calculatedSpeed = Math.max(40, Math.min(60, calculatedSpeed));
-        }
-        
-        // Adjust movement interval based on speed (slower speed = longer interval)
-        const movementInterval = (distance / calculatedSpeed) * 3600000; // Convert to milliseconds
-        
-        setVehiclePosition(currentPos);
-        setVehicleRotation(angle);
-        setVehicleSpeed(calculatedSpeed);
-        
+    const animate = () => {
+      const currentTime = Date.now();
+      const deltaTime = (currentTime - lastUpdateTimeRef.current) / 1000; // Convert to seconds
+      lastUpdateTimeRef.current = currentTime;
+
+      const currentPos = fullRoute[currentIndexRef.current];
+      const nextPos = fullRoute[currentIndexRef.current + 1];
+      
+      // Calculate segment distance
+      const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+      
+      // Determine road type and speed
+      const isHighway = segmentDistance > 5;
+      const isCity = segmentDistance <= 2;
+      
+      let baseSpeed;
+      if (isHighway) {
+        baseSpeed = 70; // Highway: 60-80 km/h
+      } else if (isCity) {
+        baseSpeed = 35; // City: 20-50 km/h
+      } else {
+        baseSpeed = 50; // Rural: 40-60 km/h
+      }
+      
+      const speedVariation = Math.sin(Date.now() / 5000) * 8;
+      const randomFactor = (Math.random() - 0.5) * 4;
+      let calculatedSpeed = baseSpeed + speedVariation + randomFactor;
+      
+      // Speed validation
+      if (isHighway) {
+        calculatedSpeed = Math.max(60, Math.min(80, calculatedSpeed));
+      } else if (isCity) {
+        calculatedSpeed = Math.max(20, Math.min(50, calculatedSpeed));
+      } else {
+        calculatedSpeed = Math.max(40, Math.min(60, calculatedSpeed));
+      }
+      
+      // Convert speed to km/s and calculate progress
+      const speedKmPerSecond = calculatedSpeed / 3600;
+      const progressDelta = (speedKmPerSecond * deltaTime) / segmentDistance;
+      
+      segmentProgressRef.current += progressDelta;
+      
+      // Check if we've completed this segment
+      if (segmentProgressRef.current >= 1) {
+        segmentProgressRef.current = 0;
         currentIndexRef.current++;
         
-        // Save current position to localStorage for persistence
+        // Check if we've reached the destination
+        if (currentIndexRef.current >= fullRoute.length - 1) {
+          setIsMoving(false);
+          setVehicleSpeed(0);
+          setVehiclePosition(fullRoute[fullRoute.length - 1]);
+          
+          // Clear saved state when journey is complete
+          localStorage.removeItem('vehicleTrackingState');
+          return;
+        }
+      }
+      
+      // Calculate interpolated position
+      const interpolatedPos = interpolatePosition(
+        fullRoute[currentIndexRef.current],
+        fullRoute[currentIndexRef.current + 1],
+        segmentProgressRef.current
+      );
+      
+      // Calculate rotation based on movement direction
+      const angle = Math.atan2(
+        fullRoute[currentIndexRef.current + 1][1] - fullRoute[currentIndexRef.current][1],
+        fullRoute[currentIndexRef.current + 1][0] - fullRoute[currentIndexRef.current][0]
+      ) * (180 / Math.PI) - 90;
+      
+      // Update vehicle state
+      setVehiclePosition(interpolatedPos);
+      setVehicleRotation(angle);
+      setVehicleSpeed(calculatedSpeed);
+      
+      // Save state periodically (every 5 seconds)
+      if (Math.floor(currentTime / 5000) !== Math.floor((currentTime - deltaTime * 1000) / 5000)) {
         const stateToSave = {
           currentIndex: currentIndexRef.current,
+          segmentProgress: segmentProgressRef.current,
           timestamp: Date.now()
         };
         localStorage.setItem('vehicleTrackingState', JSON.stringify(stateToSave));
-        
-        // Schedule next movement
-        movementRef.current = setTimeout(moveVehicle, Math.max(500, Math.min(3000, movementInterval)));
-      } else {
-        // Reached destination
-        setIsMoving(false);
-        setVehicleSpeed(0);
       }
+      
+      // Continue animation
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    // Start movement
-    moveVehicle();
+    // Start animation
+    animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
-      if (movementRef.current) {
-        clearTimeout(movementRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [currentLocation, routePath, remainingPath]);
@@ -377,10 +431,13 @@ export default function VehicleTrackingMap({
           </Marker>
         ))}
 
-        {/* Traveled Path - Blue Solid Line (only what vehicle has traveled) */}
-        {fullRouteRef.current.length > 1 && currentIndexRef.current > 0 && (
+        {/* Traveled Path - Blue Solid Line (includes current interpolated position) */}
+        {fullRouteRef.current.length > 1 && (currentIndexRef.current > 0 || segmentProgressRef.current > 0) && (
           <Polyline 
-            positions={fullRouteRef.current.slice(0, currentIndexRef.current + 1)} 
+            positions={[
+              ...fullRouteRef.current.slice(0, currentIndexRef.current),
+              vehiclePosition // Include current interpolated position
+            ]} 
             color="#2563eb" 
             weight={4} 
             opacity={0.8}
@@ -388,10 +445,13 @@ export default function VehicleTrackingMap({
           />
         )}
 
-        {/* Remaining Path - Red Dotted Line (what vehicle hasn't traveled yet) */}
+        {/* Remaining Path - Red Dotted Line (from current position to end) */}
         {fullRouteRef.current.length > 1 && currentIndexRef.current < fullRouteRef.current.length - 1 && (
           <Polyline 
-            positions={fullRouteRef.current.slice(currentIndexRef.current + 1)} 
+            positions={[
+              vehiclePosition, // Start from current position
+              ...fullRouteRef.current.slice(currentIndexRef.current + 1)
+            ]} 
             color="#dc2626" 
             weight={3} 
             opacity={0.7}
