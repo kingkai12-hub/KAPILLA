@@ -149,22 +149,23 @@ function MapController({ center, zoom }: {
   return null;
 }
 
-export default function VehicleTrackingMap({ 
-  center = [-6.3690, 34.8888], 
-  zoom = 6, 
-  startPoint, 
-  endPoint, 
-  currentLocation, 
-  routePath = [], 
-  remainingPath = [], 
+export default function VehicleTrackingMap({
+  center,
+  zoom,
+  startPoint,
+  endPoint,
+  currentLocation,
+  routePath = [],
+  remainingPath = [],
   checkIns = [],
   key 
 }: MapProps) {
   const [isClient, setIsClient] = useState(false);
-  const [vehiclePosition, setVehiclePosition] = useState<[number, number]>(center);
+  const [vehiclePosition, setVehiclePosition] = useState<[number, number]>(center || [-6.8151812, 39.2864692]);
   const [vehicleSpeed, setVehicleSpeed] = useState(0);
   const [vehicleRotation, setVehicleRotation] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const movementRef = useRef<NodeJS.Timeout | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -180,33 +181,40 @@ export default function VehicleTrackingMap({
     setIsClient(true);
   }, []);
 
+  // Error boundary wrapper
+  const handleMapError = (error: Error) => {
+    console.error('❌ VehicleTrackingMap error:', error);
+    setMapError(error.message);
+  };
+
   // Set initial vehicle position and restore state from localStorage
   useEffect(() => {
-    // Combine route path and remaining path for full journey
-    const fullRoute = [...routePath, ...remainingPath];
-    fullRouteRef.current = fullRoute;
-    
-    // Try to restore saved position from localStorage
-    const savedState = localStorage.getItem('vehicleTrackingState');
-    let savedIndex = 0;
-    let savedProgress = 0;
-    
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        // Check if saved state is recent (within last 24 hours)
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          savedIndex = parsed.currentIndex || 0;
-          savedProgress = parsed.segmentProgress || 0;
-          
-          // Calculate time elapsed since last save
-          const timeElapsed = Date.now() - parsed.timestamp;
-          
-          // If more than 5 seconds have passed, calculate expected position
-          if (timeElapsed > 5000 && savedIndex < fullRoute.length - 1) {
-            // Calculate expected position based on elapsed time
-            const avgSpeed = 50; // Average speed km/h
-            const avgSpeedKmPerSecond = avgSpeed / 3600;
+    try {
+      // Combine route path and remaining path for full journey
+      const fullRoute = [...routePath, ...remainingPath];
+      fullRouteRef.current = fullRoute;
+      
+      // Try to restore saved position from localStorage
+      const savedState = localStorage.getItem('vehicleTrackingState');
+      let savedIndex = 0;
+      let savedProgress = 0;
+      
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          // Check if saved state is recent (within last 24 hours)
+          if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+            savedIndex = parsed.currentIndex || 0;
+            savedProgress = parsed.segmentProgress || 0;
+            
+            // Calculate time elapsed since last save
+            const timeElapsed = Date.now() - parsed.timestamp;
+            
+            // If more than 5 seconds have passed, calculate expected position
+            if (timeElapsed > 5000 && savedIndex < fullRoute.length - 1) {
+              // Calculate expected position based on elapsed time
+              const avgSpeed = 50; // Average speed km/h
+              const avgSpeedKmPerSecond = avgSpeed / 3600;
             
             let tempIndex = savedIndex;
             let tempProgress = savedProgress;
@@ -273,6 +281,7 @@ export default function VehicleTrackingMap({
           }
         }
       } catch (error) {
+        console.error('❌ Error restoring saved state:', error);
       }
     }
     

@@ -680,7 +680,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               </div>
                             </div>
                           }>
-                            {/* Using SimpleTestMap for debugging */}
+                            {/* Using SimpleTestMap while fixing VehicleTrackingMap */}
                             <SimpleTestMap 
                               key={`simple-map-${searchResult?.waybillNumber}-${Date.now()}`} 
                               center={mapProps.center} 
