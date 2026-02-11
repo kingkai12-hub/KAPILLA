@@ -8,12 +8,20 @@ import { Search, Package, ArrowRight, Truck, Globe, Clock, CheckCircle, MapPin, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import VehicleTrackingMap from './VehicleTrackingMap';
-import PickupRequestModal from '@/components/PickupRequestModal';
-import HelpCenterModal from '@/components/HelpCenterModal';
+import dynamic from 'next/dynamic';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 import { locationCoords } from '@/lib/locations';
+
+// Dynamic import for VehicleTrackingMap to prevent SSR issues
+const VehicleTrackingMap = dynamic(() => import('./VehicleTrackingMap'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+});
+
+// Dynamic imports for modals to prevent SSR issues
+const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
+const HelpCenterModal = dynamic(() => import('@/components/HelpCenterModal'), { ssr: false });
 
 // Helper for classes
 function cn(...inputs: (string | undefined | null | false)[]) {
