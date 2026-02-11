@@ -173,6 +173,7 @@ export default function VehicleTrackingMap({
   const isInitializedRef = useRef(false);
   const segmentProgressRef = useRef(0); // Progress within current segment (0-1)
   const lastUpdateTimeRef = useRef(Date.now());
+  const previousLocationRef = useRef<string>(''); // Track previous location to detect changes
 
   useEffect(() => {
     setIsClient(true);
@@ -281,12 +282,14 @@ export default function VehicleTrackingMap({
     
     // Handle new location update from user
     const currentLocationKey = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
+    const isNewLocation = currentLocationKey !== previousLocationRef.current && currentLocationKey !== '';
     
-    if (currentLocation) {
+    if (isNewLocation) {
       // New location update - reset and start fresh with proper routes
       console.log('New location update received, resetting position');
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);
       lastLocationUpdateRef.current = currentLocationKey;
+      previousLocationRef.current = currentLocationKey;
       
       // Find closest point in route path to current location
       let closestIndex = 0;
@@ -305,12 +308,20 @@ export default function VehicleTrackingMap({
       // Clear localStorage to ensure fresh start with proper routes
       localStorage.removeItem('vehicleTrackingState');
     } else if (routePath.length > 0 && !isInitializedRef.current) {
-      // No saved state and no current location - start from beginning
-      console.log('No saved state, starting from beginning');
-      currentIndexRef.current = 0;
-      segmentProgressRef.current = 0;
-      setVehiclePosition(fullRoute[0]);
-      isInitializedRef.current = true;
+      // No saved state and no new location - restore from saved state or start from beginning
+      console.log('No new location, restoring from saved state or starting from beginning');
+      
+      if (savedState) {
+        // We already processed saved state above, just need to set initialized
+        isInitializedRef.current = true;
+      } else {
+        // No saved state - start from beginning
+        console.log('No saved state, starting from beginning');
+        currentIndexRef.current = 0;
+        segmentProgressRef.current = 0;
+        setVehiclePosition(fullRoute[0]);
+        isInitializedRef.current = true;
+      }
     }
   }, [currentLocation, routePath, remainingPath, center]);
 
