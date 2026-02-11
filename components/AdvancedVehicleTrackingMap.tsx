@@ -245,24 +245,89 @@ function VehicleMarker({ position, speed, rotation, progress }: {
   );
 }
 
-// Map Controller for smooth pan and zoom
-function MapController({ center, zoom, vehiclePosition }: { 
+// Map Controller for smooth pan and zoom with intelligent zoom control
+function MapController({ center, zoom, vehiclePosition, routePath, isSystemView }: { 
   center?: [number, number]; 
   zoom?: number;
   vehiclePosition?: [number, number];
+  routePath?: [number, number][];
+  isSystemView?: boolean;
 }) {
   const map = useMap();
   const defaultCenter: [number, number] = [-6.8151812, 39.2864692];
   const defaultZoom = 12;
   const isFollowingRef = useRef(true);
+  const userZoomRef = useRef(zoom || defaultZoom);
+  const hasUserInteractedRef = useRef(false);
+
+  // Calculate optimal zoom based on route characteristics
+  const calculateOptimalZoom = useCallback((route: [number, number][]) => {
+    if (route.length < 2) return 14; // Default for single point
+
+    // Calculate route bounds
+    const lats = route.map(point => point[0]);
+    const lngs = route.map(point => point[1]);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+
+    // Calculate route density and area
+    const latDiff = maxLat - minLat;
+    const lngDiff = maxLng - minLng;
+    const routeArea = latDiff * lngDiff;
+    
+    // Determine if urban vs rural based on point density
+    const totalDistance = route.reduce((acc, point, index) => {
+      if (index === 0) return 0;
+      const prevPoint = route[index - 1];
+      const distance = Math.sqrt(
+        Math.pow(point[0] - prevPoint[0], 2) + 
+        Math.pow(point[1] - prevPoint[1], 2)
+      );
+      return acc + distance;
+    }, 0);
+    
+    const density = route.length / (routeArea || 0.01);
+    const isUrban = density > 50; // High density indicates urban area
+    
+    // Calculate optimal zoom based on route characteristics
+    let optimalZoom;
+    
+    if (isUrban) {
+      // Urban areas - need higher zoom for road details
+      if (routeArea < 0.01) optimalZoom = 16; // Very tight urban area
+      else if (routeArea < 0.05) optimalZoom = 15; // Small urban area  
+      else if (routeArea < 0.2) optimalZoom = 14; // Medium urban area
+      else optimalZoom = 13; // Large urban area
+    } else {
+      // Rural areas - moderate zoom for visibility
+      if (routeArea < 0.1) optimalZoom = 14; // Small rural area
+      else if (routeArea < 0.5) optimalZoom = 13; // Medium rural area
+      else if (routeArea < 2) optimalZoom = 12; // Large rural area
+      else optimalZoom = 11; // Very large rural area
+    }
+    
+    // Ensure minimum zoom for road visibility
+    return Math.max(11, Math.min(17, optimalZoom));
+  }, []);
 
   useEffect(() => {
     if (!map) return;
 
-    // Set initial view
+    // Calculate optimal zoom for route
     const effectiveCenter = center || defaultCenter;
-    const effectiveZoom = zoom ?? defaultZoom;
-    map.setView(effectiveCenter, effectiveZoom, { animate: false });
+    const effectiveZoom = zoom || defaultZoom;
+    
+    // Set initial view with calculated optimal zoom
+    const optimalZoom = routePath && routePath.length > 1 
+      ? calculateOptimalZoom(routePath) 
+      : effectiveZoom;
+    
+    map.setView(effectiveCenter, optimalZoom, { animate: false });
+    userZoomRef.current = optimalZoom;
+    isFollowingRef.current = true;
+    hasUserInteractedRef.current = false;
 
     // Add keyboard controls
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -270,10 +335,12 @@ function MapController({ center, zoom, vehiclePosition }: {
         case '+':
         case '=':
           map.zoomIn();
+          hasUserInteractedRef.current = true;
           break;
         case '-':
         case '_':
           map.zoomOut();
+          hasUserInteractedRef.current = true;
           break;
         case 'f':
         case 'F':
@@ -281,21 +348,52 @@ function MapController({ center, zoom, vehiclePosition }: {
           isFollowingRef.current = !isFollowingRef.current;
           if (isFollowingRef.current && vehiclePosition) {
             map.panTo(vehiclePosition);
+            hasUserInteractedRef.current = false;
+          }
+          break;
+        case 'a':
+        case 'A':
+          // Toggle between System View and User View
+          isFollowingRef.current = !isFollowingRef.current;
+          if (isFollowingRef.current) {
+            // System View - reset to optimal zoom and follow
+            const optimalZoom = routePath && routePath.length > 1 
+              ? calculateOptimalZoom(routePath) 
+              : defaultZoom;
+            map.setView(vehiclePosition || effectiveCenter, optimalZoom, { animate: true });
+            hasUserInteractedRef.current = false;
           }
           break;
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [center, zoom, map]);
+    // Track user interactions
+    const handleUserInteraction = () => {
+      hasUserInteractedRef.current = true;
+    };
 
-  // Follow vehicle if enabled
+    map.on('zoomstart', handleUserInteraction);
+    map.on('movestart', handleUserInteraction);
+    map.on('dragstart', handleUserInteraction);
+    
+    document.addEventListener('keydown', handleKeyPress);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+      map.off('zoomstart', handleUserInteraction);
+      map.off('movestart', handleUserInteraction);
+      map.off('dragstart', handleUserInteraction);
+    };
+  }, [center, zoom, map, routePath, calculateOptimalZoom, vehiclePosition]);
+
+  // Follow vehicle if in System View and user hasn't manually interacted
   useEffect(() => {
-    if (isFollowingRef.current && vehiclePosition && map) {
+    if (!map) return;
+
+    if (isSystemView !== false && isFollowingRef.current && vehiclePosition && !hasUserInteractedRef.current) {
       map.panTo(vehiclePosition, { animate: true, duration: 1 });
     }
-  }, [vehiclePosition, map]);
+  }, [vehiclePosition, map, isSystemView]);
 
   return null;
 }
@@ -319,6 +417,7 @@ export default function AdvancedVehicleTrackingMap({
   const [traveledPath, setTraveledPath] = useState<[number, number][]>([]);
   const [isMoving, setIsMoving] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [isSystemView, setIsSystemView] = useState(true); // Default to System View
 
   const animationRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
@@ -690,6 +789,8 @@ export default function AdvancedVehicleTrackingMap({
             center={center} 
             zoom={zoom}
             vehiclePosition={vehiclePosition}
+            routePath={fullRouteRef.current}
+            isSystemView={isSystemView}
           />
           
           {/* Start Point */}
@@ -789,13 +890,35 @@ export default function AdvancedVehicleTrackingMap({
         </MapContainer>
         
         {/* Advanced Progress Indicator */}
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 z-10 min-w-[250px]">
-          <div className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <span className="text-red-600">🚚</span>
-            <span>Live Tracking</span>
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 z-10 min-w-[280px]">
+          <div className="text-sm font-bold text-gray-800 mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-red-600">🚚</span>
+              <span>Live Tracking</span>
+            </div>
+            {/* View Mode Toggle */}
+            <button
+              onClick={() => setIsSystemView(!isSystemView)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                isSystemView 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                  : 'bg-gray-100 text-gray-700 border border-gray-300'
+              }`}
+              title={isSystemView ? 'Switch to User View (Manual)' : 'Switch to System View (Auto)'}
+            >
+              {isSystemView ? '🤖 Auto' : '👤 Manual'}
+            </button>
           </div>
           
           <div className="space-y-3">
+            {/* View Mode Indicator */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">View Mode:</span>
+              <span className={`font-semibold ${isSystemView ? 'text-blue-600' : 'text-gray-600'}`}>
+                {isSystemView ? '🤖 System View' : '👤 User View'}
+              </span>
+            </div>
+            
             {/* Progress Bar */}
             <div>
               <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -826,8 +949,12 @@ export default function AdvancedVehicleTrackingMap({
           </div>
           
           {/* Controls hint */}
-          <div className="text-xs text-gray-500 mt-3 pt-2 border-t">
-            Press 'F' to follow vehicle • '+/-' for zoom
+          <div className="text-xs text-gray-500 mt-3 pt-2 border-t space-y-1">
+            <div>🎮 <strong>Controls:</strong></div>
+            <div>• Press 'A' to toggle Auto/Manual view</div>
+            <div>• Press 'F' to follow vehicle (Auto mode)</div>
+            <div>• Use '+/-' to zoom in/out</div>
+            <div>• Drag to pan (Manual mode)</div>
           </div>
         </div>
 
