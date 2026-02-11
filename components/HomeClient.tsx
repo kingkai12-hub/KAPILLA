@@ -213,7 +213,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       }
     }
   } catch (e) {
-    console.error("Error parsing remarks:", e);
   }
 
   const performSearch = async (wb: string) => {
@@ -242,7 +241,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         }
       }
     } catch (error) {
-      console.error(error);
       setError("Failed to connect to server. Please try again.");
     } finally {
       setLoading(false);
@@ -261,7 +259,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       // Ensure coordinates are valid numbers
       if (!start || !end || start.length !== 2 || end.length !== 2 ||
           isNaN(start[0]) || isNaN(start[1]) || isNaN(end[0]) || isNaN(end[1])) {
-        console.warn('Invalid coordinates for routing, using straight line');
         return [start, end];
       }
 
@@ -276,7 +273,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       );
 
       if (!response.ok) {
-        console.warn('OSRM routing failed with status:', response.status, ', falling back to straight line');
         return [start, end];
       }
 
@@ -292,15 +288,12 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         }).filter((coord: [number, number]) => coord[0] !== 0 || coord[1] !== 0); // remove fallback coordinates
 
         if (routeCoordinates.length >= 2) {
-          console.log('OSRM routing successful, route has', routeCoordinates.length, 'points');
           return routeCoordinates;
         }
       }
 
-      console.warn('OSRM returned invalid route data, falling back to straight line');
       return [start, end];
     } catch (error) {
-      console.warn('OSRM routing error, falling back to straight line:', error);
       return [start, end];
     }
   };
@@ -312,7 +305,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
   const mapProps = useMemo(() => {
     try {
       if (!searchResult) {
-        console.log('No search result, returning null mapProps');
         return null;
       }
 
@@ -331,15 +323,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       const destinationCoords = locationCoords[searchResult.destination];
       const isDelivered = searchResult.currentStatus === 'DELIVERED';
       
-      console.log('Map props calculation:', {
-        origin: searchResult.origin,
-        destination: searchResult.destination,
-        isDelivered,
-        hasOrigin: !!originCoords,
-        hasDestination: !!destinationCoords,
-        routePathLength: routePath.length,
-        remainingPathLength: remainingPath.length
-      });
       
       // Determine the effective "current" location
       // If delivered, snap to destination
@@ -385,10 +368,8 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           }))
       };
 
-      console.log('Final map props:', props);
       return props;
     } catch (error) {
-      console.error("Error calculating map props:", error);
       return null;
     }
   }, [searchResult, routePath, remainingPath]);
@@ -444,7 +425,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         setRoutePath(traveledRoute);
         setRemainingPath(remainingRoute);
       } catch (error) {
-        console.error('Error loading routes:', error);
         // Fallback to straight lines
         let fallbackRoute: [number, number][] = [];
         let fallbackRemaining: [number, number][] = [];

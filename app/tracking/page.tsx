@@ -11,7 +11,6 @@ async function getServices() {
       orderBy: { sortOrder: 'asc' },
     });
   } catch (error) {
-    console.error('Error fetching services:', error);
     return [];
   }
 }
@@ -22,7 +21,6 @@ async function getExecutives() {
       orderBy: { createdAt: 'asc' },
     });
   } catch (error) {
-    console.error('Error fetching executives:', error);
     return [];
   }
 }

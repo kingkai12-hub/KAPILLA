@@ -273,7 +273,6 @@ export default function VehicleTrackingMap({
           }
         }
       } catch (error) {
-        console.warn('Failed to parse saved state:', error);
       }
     }
     
@@ -283,7 +282,6 @@ export default function VehicleTrackingMap({
     
     if (isNewLocation && currentLocation) {
       // New location update - reset and start fresh with proper routes
-      console.log('New location update received, resetting position');
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);
       lastLocationUpdateRef.current = currentLocationKey;
       previousLocationRef.current = currentLocationKey;
@@ -306,14 +304,12 @@ export default function VehicleTrackingMap({
       localStorage.removeItem('vehicleTrackingState');
     } else if (routePath.length > 0 && !isInitializedRef.current) {
       // No saved state and no new location - restore from saved state or start from beginning
-      console.log('No new location, restoring from saved state or starting from beginning');
       
       if (savedState) {
         // We already processed saved state above, just need to set initialized
         isInitializedRef.current = true;
       } else {
         // No saved state - start from beginning
-        console.log('No saved state, starting from beginning');
         currentIndexRef.current = 0;
         segmentProgressRef.current = 0;
         setVehiclePosition(fullRoute[0]);
@@ -452,7 +448,6 @@ export default function VehicleTrackingMap({
             
             // If more than 10 seconds have passed, calculate expected position
             if (timeSinceLastActive > 10000 && parsed.currentIndex < fullRouteRef.current.length - 1) {
-              console.log('Updating position after inactive period:', timeSinceLastActive / 1000, 'seconds');
               
               // Calculate how many segments should have been completed
               const avgSpeed = 50; // Average speed km/h
@@ -495,7 +490,6 @@ export default function VehicleTrackingMap({
               }
             }
           } catch (error) {
-            console.warn('Failed to calculate background movement:', error);
           }
         }
       }
