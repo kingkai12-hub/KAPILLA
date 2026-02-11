@@ -180,24 +180,6 @@ export default function VehicleTrackingMap({
     setIsClient(true);
   }, []);
 
-  // Add error boundary for debugging
-  useEffect(() => {
-    try {
-      console.log('VehicleTrackingMap props:', {
-        center,
-        zoom,
-        hasStartPoint: !!startPoint,
-        hasEndPoint: !!endPoint,
-        hasCurrentLocation: !!currentLocation,
-        routePathLength: routePath.length,
-        remainingPathLength: remainingPath.length,
-        checkInsCount: checkIns.length
-      });
-    } catch (error) {
-      console.error('Error in VehicleTrackingMap debug useEffect:', error);
-    }
-  }, [center, zoom, startPoint, endPoint, currentLocation, routePath, remainingPath, checkIns]);
-
   // Set initial vehicle position and restore state from localStorage
   useEffect(() => {
     // Combine route path and remaining path for full journey
@@ -222,9 +204,6 @@ export default function VehicleTrackingMap({
           
           // If more than 5 seconds have passed, calculate expected position
           if (timeElapsed > 5000 && savedIndex < fullRoute.length - 1) {
-            console.log('Time elapsed since last save:', timeElapsed / 1000, 'seconds');
-            console.log('Calculating expected position...');
-            
             // Calculate expected position based on elapsed time
             const avgSpeed = 50; // Average speed km/h
             const avgSpeedKmPerSecond = avgSpeed / 3600;
@@ -255,7 +234,6 @@ export default function VehicleTrackingMap({
             
             // Update to calculated position
             if (tempIndex > savedIndex || tempProgress > savedProgress) {
-              console.log('Updated to calculated position - index:', tempIndex, 'progress:', tempProgress);
               currentIndexRef.current = tempIndex;
               segmentProgressRef.current = Math.min(tempProgress, 0.99);
               
