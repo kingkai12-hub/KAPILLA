@@ -330,6 +330,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       
       // Determine the effective "current" location
       // If delivered, snap to destination
+      // If not delivered, don't pass currentLocation to allow free movement
       const activeLocation = (isDelivered && destinationCoords)
           ? {
               lat: destinationCoords.lat,
@@ -337,14 +338,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
               label: searchResult.destination,
               timestamp: latestCheckIn?.timestamp || new Date().toISOString()
             }
-          : (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude)) 
-            ? {
-                 lat: latestCheckIn.latitude,
-                 lng: latestCheckIn.longitude,
-                 label: latestCheckIn.location,
-                 timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
-             } 
-            : undefined;
+          : null; // Don't pass currentLocation when not delivered - let vehicle move freely
          
       const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
       const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
@@ -403,30 +397,26 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
               label: searchResult.destination,
               timestamp: latestCheckIn?.timestamp || new Date().toISOString()
             }
-          : (latestCheckIn && typeof latestCheckIn.latitude === 'number' && !isNaN(latestCheckIn.latitude) && typeof latestCheckIn.longitude === 'number' && !isNaN(latestCheckIn.longitude))
-            ? {
-                 lat: latestCheckIn.latitude,
-                 lng: latestCheckIn.longitude,
-                 label: latestCheckIn.location,
-                 timestamp: new Date(latestCheckIn.timestamp).toLocaleString()
-             }
-            : undefined;
+          : null; // Don't use check-in location for route when not delivered - let vehicle move freely
 
       if (!originCoords || !destinationCoords) return;
 
       try {
-        // Get route from origin to current location (if not delivered)
+        // Get full route from origin to destination for vehicle movement
         let traveledRoute: [number, number][] = [];
-        if (activeLocation && !isDelivered) {
-          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
-        } else if (isDelivered && activeLocation) {
-          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
-        }
-
-        // Get remaining route from current location to destination
         let remainingRoute: [number, number][] = [];
-        if (!isDelivered && activeLocation && destinationCoords) {
-          remainingRoute = await fetchRouteFromOSRM([activeLocation.lat, activeLocation.lng], [destinationCoords.lat, destinationCoords.lng]);
+        
+        if (isDelivered && activeLocation) {
+          // Delivered - show route to destination
+          traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
+        } else if (!isDelivered) {
+          // Not delivered - get full route for vehicle to travel along
+          const fullRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
+          
+          // Split full route into traveled and remaining for display
+          // Vehicle will move along the full route, but we show it as traveled/remaining
+          traveledRoute = fullRoute; // Vehicle moves along full route
+          remainingRoute = []; // No remaining path needed - vehicle moves along traveled route
         }
 
         setRoutePath(traveledRoute);
@@ -437,12 +427,14 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         let fallbackRoute: [number, number][] = [];
         let fallbackRemaining: [number, number][] = [];
 
-        if (originCoords && activeLocation) {
-          fallbackRoute = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
-        }
-
-        if (!isDelivered && activeLocation && destinationCoords) {
-          fallbackRemaining = [[activeLocation.lat, activeLocation.lng], [destinationCoords.lat, destinationCoords.lng]];
+        if (originCoords && destinationCoords) {
+          if (isDelivered && activeLocation) {
+            fallbackRoute = [[originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]];
+          } else {
+            // Full route for vehicle movement
+            fallbackRoute = [[originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]];
+            fallbackRemaining = [];
+          }
         }
 
         setRoutePath(fallbackRoute);
