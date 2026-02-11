@@ -196,18 +196,95 @@ export default function VehicleTrackingMap({
         if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
           savedIndex = parsed.currentIndex || 0;
           savedProgress = parsed.segmentProgress || 0;
-          console.log('Restored vehicle position from saved state, index:', savedIndex, 'progress:', savedProgress);
+          
+          // Calculate time elapsed since last save
+          const timeElapsed = Date.now() - parsed.timestamp;
+          
+          // If more than 5 seconds have passed, calculate expected position
+          if (timeElapsed > 5000 && savedIndex < fullRoute.length - 1) {
+            console.log('Time elapsed since last save:', timeElapsed / 1000, 'seconds');
+            console.log('Calculating expected position...');
+            
+            // Calculate expected position based on elapsed time
+            const avgSpeed = 50; // Average speed km/h
+            const avgSpeedKmPerSecond = avgSpeed / 3600;
+            
+            let tempIndex = savedIndex;
+            let tempProgress = savedProgress;
+            let remainingTime = timeElapsed / 1000; // Convert to seconds
+            
+            // Simulate movement during elapsed time
+            while (tempIndex < fullRoute.length - 1 && remainingTime > 0) {
+              const currentPos = fullRoute[tempIndex];
+              const nextPos = fullRoute[tempIndex + 1];
+              const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+              const timeForSegment = (segmentDistance / avgSpeedKmPerSecond);
+              const remainingSegmentTime = timeForSegment * (1 - tempProgress);
+              
+              if (remainingTime >= remainingSegmentTime) {
+                // Complete this segment
+                tempIndex++;
+                tempProgress = 0;
+                remainingTime -= remainingSegmentTime;
+              } else {
+                // Partial progress in this segment
+                tempProgress += remainingTime / timeForSegment;
+                remainingTime = 0;
+              }
+            }
+            
+            // Update to calculated position
+            if (tempIndex > savedIndex || tempProgress > savedProgress) {
+              console.log('Updated to calculated position - index:', tempIndex, 'progress:', tempProgress);
+              currentIndexRef.current = tempIndex;
+              segmentProgressRef.current = Math.min(tempProgress, 0.99);
+              
+              // Set interpolated position
+              if (tempIndex < fullRoute.length - 1) {
+                const interpolatedPos = interpolatePosition(
+                  fullRoute[tempIndex],
+                  fullRoute[tempIndex + 1],
+                  segmentProgressRef.current
+                );
+                setVehiclePosition(interpolatedPos);
+              } else {
+                // Journey completed during absence
+                setVehiclePosition(fullRoute[fullRoute.length - 1]);
+                setIsMoving(false);
+                setVehicleSpeed(0);
+                localStorage.removeItem('vehicleTrackingState');
+                return;
+              }
+            }
+          } else {
+            // Use saved position (recent save)
+            currentIndexRef.current = savedIndex;
+            segmentProgressRef.current = savedProgress;
+            
+            // Set initial position (interpolated if progress > 0)
+            if (savedIndex < fullRoute.length - 1 && savedProgress > 0) {
+              const interpolatedPos = interpolatePosition(
+                fullRoute[savedIndex],
+                fullRoute[savedIndex + 1],
+                savedProgress
+              );
+              setVehiclePosition(interpolatedPos);
+            } else {
+              setVehiclePosition(fullRoute[savedIndex]);
+            }
+          }
         }
       } catch (error) {
         console.warn('Failed to parse saved state:', error);
       }
     }
     
-    // Clear any deviated route data - always show proper OSRM routes
+    // Handle new location update from user
     const currentLocationKey = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
     
     if (currentLocation) {
       // New location update - reset and start fresh with proper routes
+      console.log('New location update received, resetting position');
       setVehiclePosition([currentLocation.lat, currentLocation.lng]);
       lastLocationUpdateRef.current = currentLocationKey;
       
@@ -228,23 +305,11 @@ export default function VehicleTrackingMap({
       // Clear localStorage to ensure fresh start with proper routes
       localStorage.removeItem('vehicleTrackingState');
     } else if (routePath.length > 0 && !isInitializedRef.current) {
-      // Start from saved position or beginning of route path
-      const startIndex = savedIndex > 0 && savedIndex < fullRoute.length ? savedIndex : 0;
-      currentIndexRef.current = startIndex;
-      segmentProgressRef.current = savedProgress;
-      
-      // Set initial position (interpolated if progress > 0)
-      if (startIndex < fullRoute.length - 1 && savedProgress > 0) {
-        const interpolatedPos = interpolatePosition(
-          fullRoute[startIndex],
-          fullRoute[startIndex + 1],
-          savedProgress
-        );
-        setVehiclePosition(interpolatedPos);
-      } else {
-        setVehiclePosition(fullRoute[startIndex]);
-      }
-      
+      // No saved state and no current location - start from beginning
+      console.log('No saved state, starting from beginning');
+      currentIndexRef.current = 0;
+      segmentProgressRef.current = 0;
+      setVehiclePosition(fullRoute[0]);
       isInitializedRef.current = true;
     }
   }, [currentLocation, routePath, remainingPath, center]);
