@@ -19,6 +19,12 @@ const VehicleTrackingMap = dynamic(() => import('./VehicleTrackingMap'), {
   loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
 });
 
+// Dynamic import for SimpleTestMap for debugging
+const SimpleTestMap = dynamic(() => import('./SimpleTestMap'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+});
+
 // Dynamic imports for modals to prevent SSR issues
 const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
 const HelpCenterModal = dynamic(() => import('@/components/HelpCenterModal'), { ssr: false });
@@ -674,7 +680,14 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               </div>
                             </div>
                           }>
-                            <VehicleTrackingMap key={`map-${searchResult?.waybillNumber}-${Date.now()}`} {...mapProps} />
+                            {/* Using SimpleTestMap for debugging */}
+                            <SimpleTestMap 
+                              key={`simple-map-${searchResult?.waybillNumber}-${Date.now()}`} 
+                              center={mapProps.center} 
+                              zoom={mapProps.zoom}
+                              startPoint={mapProps.startPoint}
+                              endPoint={mapProps.endPoint}
+                            />
                           </ErrorBoundary>
                         ) : (
                           <div className="flex items-center justify-center h-full bg-slate-100 rounded-xl">
