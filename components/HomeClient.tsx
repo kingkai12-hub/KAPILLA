@@ -19,6 +19,12 @@ const VehicleTrackingMap = dynamic(() => import('./VehicleTrackingMap'), {
   loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
 });
 
+// Dynamic import for EnhancedTrackingMap with advanced features
+const EnhancedTrackingMap = dynamic(() => import('./EnhancedTrackingMap'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+});
+
 // Dynamic import for SimpleTestMap for debugging
 const SimpleTestMap = dynamic(() => import('./SimpleTestMap'), {
   ssr: false,
@@ -680,13 +686,17 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               </div>
                             </div>
                           }>
-                            {/* Using SimpleTestMap while fixing VehicleTrackingMap */}
-                            <SimpleTestMap 
-                              key={`simple-map-${searchResult?.waybillNumber}-${Date.now()}`} 
+                            {/* Enhanced tracking map with animation and real-time features */}
+                            <EnhancedTrackingMap 
+                              key={`enhanced-map-${searchResult?.waybillNumber}-${Date.now()}`} 
                               center={mapProps.center} 
                               zoom={mapProps.zoom}
                               startPoint={mapProps.startPoint}
                               endPoint={mapProps.endPoint}
+                              currentLocation={mapProps.currentLocation}
+                              routePath={mapProps.routePath}
+                              remainingPath={mapProps.remainingPath}
+                              checkIns={mapProps.checkIns}
                             />
                           </ErrorBoundary>
                         ) : (
