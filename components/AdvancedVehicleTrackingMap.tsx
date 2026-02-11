@@ -33,6 +33,17 @@ function interpolatePosition(start: [number, number], end: [number, number], pro
   ];
 }
 
+// Enhanced state persistence interface
+interface TrackingState {
+  currentIndex: number;
+  segmentProgress: number;
+  timestamp: number;
+  lastActiveTime: number;
+  routeHash: string;
+  totalDistance: number;
+  completedDistance: number;
+}
+
 // Speed simulation engine
 class SpeedSimulator {
   private baseSpeed: number = 50; // km/h
@@ -315,133 +326,339 @@ export default function AdvancedVehicleTrackingMap({
   const lastTimeRef = useRef(Date.now());
   const speedSimulatorRef = useRef(new SpeedSimulator());
   const fullRouteRef = useRef<[number, number][]>([]);
+  const totalDistanceRef = useRef(0);
+  const completedDistanceRef = useRef(0);
+  const isRestoringRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // Calculate total route distance
+  const calculateTotalDistance = useCallback((route: [number, number][]) => {
+    let total = 0;
+    for (let i = 1; i < route.length; i++) {
+      total += calculateDistance(
+        route[i - 1][0], route[i - 1][1],
+        route[i][0], route[i][1]
+      );
+    }
+    return total;
+  }, []);
+
+  // Generate route hash for change detection
+  const generateRouteHash = useCallback((route: [number, number][]) => {
+    return route.map(point => point.join(',')).join('|');
+  }, []);
+
+  // Save tracking state to localStorage
+  const saveTrackingState = useCallback(() => {
+    try {
+      const currentState: TrackingState = {
+        currentIndex: currentIndexRef.current,
+        segmentProgress: progressRef.current,
+        timestamp: Date.now(),
+        lastActiveTime: Date.now(),
+        routeHash: generateRouteHash(fullRouteRef.current),
+        totalDistance: totalDistanceRef.current,
+        completedDistance: completedDistanceRef.current
+      };
+      localStorage.setItem('advancedVehicleTracking', JSON.stringify(currentState));
+    } catch (error) {
+      console.warn('Failed to save tracking state:', error);
+    }
+  }, [generateRouteHash]);
+
+  // Load tracking state from localStorage
+  const loadTrackingState = useCallback((): TrackingState | null => {
+    try {
+      const saved = localStorage.getItem('advancedVehicleTracking');
+      if (!saved) return null;
+      
+      const state = JSON.parse(saved) as TrackingState;
+      const currentRouteHash = generateRouteHash(fullRouteRef.current);
+      
+      // Only restore if it's the same route and not too old (24 hours)
+      if (state.routeHash === currentRouteHash && 
+          Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
+        return state;
+      }
+    } catch (error) {
+      console.warn('Failed to load tracking state:', error);
+    }
+    return null;
+  }, [generateRouteHash]);
+
+  // Calculate expected position based on elapsed time
+  const calculateExpectedPosition = useCallback((savedState: TrackingState) => {
+    const timeElapsed = Date.now() - savedState.lastActiveTime;
+    const timeInSeconds = timeElapsed / 1000;
+    
+    let tempIndex = savedState.currentIndex;
+    let tempProgress = savedState.segmentProgress;
+    let tempCompletedDistance = savedState.completedDistance;
+    
+    // Simulate movement during elapsed time
+    while (tempIndex < fullRouteRef.current.length - 1 && timeInSeconds > 0) {
+      const currentPos = fullRouteRef.current[tempIndex];
+      const nextPos = fullRouteRef.current[tempIndex + 1];
+      const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+      
+      // Use average speed for simulation
+      const avgSpeed = segmentDistance <= 2 ? 35 : segmentDistance > 5 ? 80 : 55;
+      const speedKmPerSecond = avgSpeed / 3600;
+      const timeForSegment = segmentDistance / speedKmPerSecond;
+      const remainingSegmentTime = timeForSegment * (1 - tempProgress);
+      
+      if (timeInSeconds >= remainingSegmentTime) {
+        // Complete this segment
+        tempIndex++;
+        tempProgress = 0;
+        tempCompletedDistance += segmentDistance;
+        break; // For simplicity, just process one segment at a time
+      } else {
+        // Partial progress in this segment
+        tempProgress += timeInSeconds / timeForSegment;
+        tempCompletedDistance += segmentDistance * tempProgress;
+        break;
+      }
+    }
+    
+    return { tempIndex, tempProgress, tempCompletedDistance };
   }, []);
 
   // Combine route paths for full journey
   useEffect(() => {
     const fullRoute = [...routePath, ...remainingPath];
     fullRouteRef.current = fullRoute;
-  }, [routePath, remainingPath]);
+    totalDistanceRef.current = calculateTotalDistance(fullRoute);
+  }, [routePath, remainingPath, calculateTotalDistance]);
 
-  // Initialize and start vehicle animation
+  // Enhanced initialization with state restoration
   useEffect(() => {
     if (!isClient || routePath.length < 2) return;
 
     try {
-      // Reset state for new route
+      isRestoringRef.current = true;
+      
+      // Try to restore saved state
+      const savedState = loadTrackingState();
+      
+      if (savedState) {
+        console.log('🔄 Restoring tracking state:', savedState);
+        
+        // Calculate expected position based on elapsed time
+        const expected = calculateExpectedPosition(savedState);
+        
+        // Update refs with restored/calculated state
+        currentIndexRef.current = expected.tempIndex;
+        progressRef.current = expected.tempProgress;
+        completedDistanceRef.current = expected.tempCompletedDistance;
+        
+        // Set initial position (interpolated if progress > 0)
+        let initialPosition: [number, number];
+        if (expected.tempIndex < routePath.length - 1 && expected.tempProgress > 0) {
+          initialPosition = interpolatePosition(
+            routePath[expected.tempIndex],
+            routePath[expected.tempIndex + 1],
+            expected.tempProgress
+          );
+        } else {
+          initialPosition = routePath[expected.tempIndex];
+        }
+        
+        // Update state smoothly
+        setVehiclePosition(initialPosition);
+        setRouteProgress(expected.tempCompletedDistance / totalDistanceRef.current);
+        
+        // Rebuild traveled path
+        const traveled: [number, number][] = [];
+        for (let i = 0; i <= expected.tempIndex && i < routePath.length; i++) {
+          traveled.push(routePath[i]);
+        }
+        if (expected.tempProgress > 0 && expected.tempIndex < routePath.length - 1) {
+          traveled[expected.tempIndex] = initialPosition;
+        }
+        setTraveledPath(traveled);
+        
+        setIsMoving(expected.tempIndex < routePath.length - 1);
+      } else {
+        // No saved state - start fresh
+        console.log('🆕 Starting fresh journey');
+        currentIndexRef.current = 0;
+        progressRef.current = 0;
+        completedDistanceRef.current = 0;
+        setVehiclePosition(routePath[0]);
+        setRouteProgress(0);
+        setTraveledPath([routePath[0]]);
+        setIsMoving(true);
+      }
+      
+      // Clear old saved state if journey is complete
+      if (currentIndexRef.current >= routePath.length - 1) {
+        localStorage.removeItem('advancedVehicleTracking');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error initializing vehicle position:', error);
+      // Fallback to start position
       currentIndexRef.current = 0;
       progressRef.current = 0;
+      completedDistanceRef.current = 0;
       setVehiclePosition(routePath[0]);
       setRouteProgress(0);
       setTraveledPath([routePath[0]]);
       setIsMoving(true);
+    } finally {
+      isRestoringRef.current = false;
+    }
+  }, [isClient, routePath, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
 
-      const animate = () => {
-        const currentTime = Date.now();
-        const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
-        lastTimeRef.current = currentTime;
+  // Enhanced animation loop with state persistence
+  useEffect(() => {
+    if (!isClient || routePath.length < 2 || isRestoringRef.current) return;
 
-        const currentPos = routePath[currentIndexRef.current];
-        const nextPos = routePath[currentIndexRef.current + 1];
+    const animate = () => {
+      const currentTime = Date.now();
+      const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
+      lastTimeRef.current = currentTime;
+
+      const currentPos = routePath[currentIndexRef.current];
+      const nextPos = routePath[currentIndexRef.current + 1];
+      
+      if (!nextPos) {
+        // Journey complete
+        setIsMoving(false);
+        setVehicleSpeed(0);
+        setRouteProgress(1);
+        setTraveledPath(routePath);
+        localStorage.removeItem('advancedVehicleTracking');
+        return;
+      }
+
+      // Calculate segment distance
+      const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+      
+      // Determine if we're in a city area
+      const isInCity = segmentDistance <= 2;
+      
+      // Calculate speed using simulator
+      const calculatedSpeed = speedSimulatorRef.current.calculateSpeed(segmentDistance, isInCity);
+      
+      // Convert speed to progress
+      const speedKmPerSecond = calculatedSpeed / 3600;
+      const progressDelta = (speedKmPerSecond * deltaTime) / segmentDistance;
+      
+      progressRef.current += progressDelta;
+      
+      // Check if segment is complete
+      if (progressRef.current >= 1) {
+        progressRef.current = 0;
+        currentIndexRef.current++;
         
-        if (!nextPos) {
+        // Update traveled path
+        setTraveledPath(prev => [...prev, nextPos]);
+        
+        if (currentIndexRef.current >= routePath.length - 1) {
           // Journey complete
           setIsMoving(false);
           setVehicleSpeed(0);
+          setVehiclePosition(routePath[routePath.length - 1]);
           setRouteProgress(1);
           setTraveledPath(routePath);
+          localStorage.removeItem('advancedVehicleTracking');
           return;
         }
-
-        // Calculate segment distance
-        const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-        
-        // Determine if we're in a city area (simplified - could be enhanced with geolocation)
-        const isInCity = segmentDistance <= 2;
-        
-        // Calculate speed using simulator
-        const calculatedSpeed = speedSimulatorRef.current.calculateSpeed(segmentDistance, isInCity);
-        
-        // Convert speed to progress
-        const speedKmPerSecond = calculatedSpeed / 3600;
-        const progressDelta = (speedKmPerSecond * deltaTime) / segmentDistance;
-        
-        progressRef.current += progressDelta;
-        
-        // Check if segment is complete
-        if (progressRef.current >= 1) {
-          progressRef.current = 0;
-          currentIndexRef.current++;
-          
-          // Update traveled path
-          setTraveledPath(prev => [...prev, nextPos]);
-          
-          if (currentIndexRef.current >= routePath.length - 1) {
-            // Journey complete
-            setIsMoving(false);
-            setVehicleSpeed(0);
-            setVehiclePosition(routePath[routePath.length - 1]);
-            setRouteProgress(1);
-            setTraveledPath(routePath);
-            return;
-          }
-        }
-        
-        // Calculate interpolated position
-        const interpolatedPos = interpolatePosition(
-          routePath[currentIndexRef.current],
-          routePath[currentIndexRef.current + 1],
-          progressRef.current
-        );
-        
-        // Calculate rotation based on movement direction
-        const angle = Math.atan2(
-          routePath[currentIndexRef.current + 1][1] - routePath[currentIndexRef.current][1],
-          routePath[currentIndexRef.current + 1][0] - routePath[currentIndexRef.current][0]
-        ) * (180 / Math.PI) - 90;
-        
-        // Calculate overall progress
-        const totalSegments = routePath.length - 1;
-        const completedSegments = currentIndexRef.current;
-        const currentSegmentProgress = progressRef.current;
-        const overallProgress = (completedSegments + currentSegmentProgress) / totalSegments;
-        
-        // Update vehicle state
-        setVehiclePosition(interpolatedPos);
-        setVehicleRotation(angle);
-        setVehicleSpeed(calculatedSpeed);
-        setRouteProgress(overallProgress);
-        
-        // Update traveled path with current interpolated position
-        setTraveledPath(prev => {
-          const newPath = [...prev];
-          if (newPath.length > completedSegments) {
-            newPath[completedSegments] = interpolatedPos;
-          } else {
-            newPath.push(interpolatedPos);
-          }
-          return newPath;
-        });
-        
-        // Continue animation
-        animationRef.current = requestAnimationFrame(animate);
-      };
+      }
       
+      // Calculate interpolated position
+      const interpolatedPos = interpolatePosition(
+        routePath[currentIndexRef.current],
+        routePath[currentIndexRef.current + 1],
+        progressRef.current
+      );
+      
+      // Calculate rotation based on movement direction
+      const angle = Math.atan2(
+        routePath[currentIndexRef.current + 1][1] - routePath[currentIndexRef.current][1],
+        routePath[currentIndexRef.current + 1][0] - routePath[currentIndexRef.current][0]
+      ) * (180 / Math.PI) - 90;
+      
+      // Calculate overall progress
+      const totalSegments = routePath.length - 1;
+      const completedSegments = currentIndexRef.current;
+      const currentSegmentProgress = progressRef.current;
+      const overallProgress = (completedSegments + currentSegmentProgress) / totalSegments;
+      
+      // Update vehicle state
+      setVehiclePosition(interpolatedPos);
+      setVehicleRotation(angle);
+      setVehicleSpeed(calculatedSpeed);
+      setRouteProgress(overallProgress);
+      
+      // Update completed distance
+      completedDistanceRef.current += segmentDistance * progressDelta;
+      
+      // Save state periodically (every 2 seconds when active, every 5 seconds when inactive)
+      const saveInterval = document.hidden ? 5000 : 2000;
+      if (Math.floor(currentTime / saveInterval) !== Math.floor((currentTime - deltaTime * 1000) / saveInterval)) {
+        saveTrackingState();
+      }
+      
+      // Update traveled path with current position
+      setTraveledPath(prev => {
+        const newPath = [...prev];
+        if (newPath.length > completedSegments) {
+          newPath[completedSegments] = interpolatedPos;
+        } else {
+          newPath.push(interpolatedPos);
+        }
+        return newPath;
+      });
+      
+      // Continue animation
       animationRef.current = requestAnimationFrame(animate);
-      
-      return () => {
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
+    };
+    
+    // Start animation
+    animationRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isClient, routePath, key, saveTrackingState, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
+
+  // Handle page visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && fullRouteRef.current.length > 1) {
+        // Page became visible - check if we need to update position
+        const savedState = loadTrackingState();
+        if (savedState) {
+          const expected = calculateExpectedPosition(savedState);
+          if (expected.tempIndex > currentIndexRef.current || expected.tempProgress > progressRef.current) {
+            currentIndexRef.current = expected.tempIndex;
+            progressRef.current = expected.tempProgress;
+            completedDistanceRef.current = expected.tempCompletedDistance;
+            
+            if (expected.tempIndex < routePath.length - 1) {
+              const interpolatedPos = interpolatePosition(
+                routePath[expected.tempIndex],
+                routePath[expected.tempIndex + 1],
+                expected.tempProgress
+              );
+              setVehiclePosition(interpolatedPos);
+            }
+          }
         }
-      };
-    } catch (error) {
-      console.error('❌ AdvancedVehicleTrackingMap error:', error);
-      setMapError(error instanceof Error ? error.message : String(error));
-    }
-  }, [isClient, routePath, key]);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loadTrackingState, calculateExpectedPosition, routePath]);
 
   if (!isClient) return null;
 
@@ -610,7 +827,7 @@ export default function AdvancedVehicleTrackingMap({
           
           {/* Controls hint */}
           <div className="text-xs text-gray-500 mt-3 pt-2 border-t">
-            Press 'F' to follow vehicle
+            Press 'F' to follow vehicle • '+/-' for zoom
           </div>
         </div>
 
@@ -621,25 +838,19 @@ export default function AdvancedVehicleTrackingMap({
             <div className="flex justify-between">
               <span className="text-gray-600">Total Distance:</span>
               <span className="font-medium">
-                {routePath.reduce((total, point, index) => {
-                  if (index === 0) return 0;
-                  return total + calculateDistance(
-                    routePath[index - 1][0], routePath[index - 1][1],
-                    point[0], point[1]
-                  );
-                }, 0).toFixed(1)} km
+                {totalDistanceRef.current.toFixed(1)} km
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Remaining:</span>
               <span className="font-medium text-red-600">
-                {((1 - routeProgress) * routePath.reduce((total, point, index) => {
-                  if (index === 0) return 0;
-                  return total + calculateDistance(
-                    routePath[index - 1][0], routePath[index - 1][1],
-                    point[0], point[1]
-                  );
-                }, 0)).toFixed(1)} km
+                {Math.max(0, totalDistanceRef.current - completedDistanceRef.current).toFixed(1)} km
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Completed:</span>
+              <span className="font-medium text-green-600">
+                {completedDistanceRef.current.toFixed(1)} km
               </span>
             </div>
           </div>
