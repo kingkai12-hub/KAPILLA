@@ -651,11 +651,46 @@ export default function AdvancedVehicleTrackingMap({
     return { tempIndex, tempProgress, tempCompletedDistance };
   }, []);
 
-  // Combine route paths for full journey
+  // Combine route paths for full journey with validation
   useEffect(() => {
-    const fullRoute = [...routePath, ...remainingPath];
-    fullRouteRef.current = fullRoute;
-    totalDistanceRef.current = calculateTotalDistance(fullRoute);
+    try {
+      // Validate route data
+      if (!routePath || !Array.isArray(routePath)) {
+        setMapError('Invalid route data provided');
+        return;
+      }
+      
+      if (routePath.length === 0) {
+        setMapError('No route coordinates available');
+        return;
+      }
+      
+      // Validate coordinate format
+      const invalidCoords = routePath.filter(point => 
+        !Array.isArray(point) || 
+        point.length !== 2 || 
+        typeof point[0] !== 'number' || 
+        typeof point[1] !== 'number' ||
+        isNaN(point[0]) || isNaN(point[1]) ||
+        Math.abs(point[0]) > 90 || Math.abs(point[1]) > 180
+      );
+      
+      if (invalidCoords.length > 0) {
+        setMapError(`Invalid coordinates found: ${invalidCoords.length} points`);
+        return;
+      }
+      
+      // Clear any previous errors
+      setMapError(null);
+      
+      const fullRoute = [...routePath, ...remainingPath];
+      fullRouteRef.current = fullRoute;
+      totalDistanceRef.current = calculateTotalDistance(fullRoute);
+      
+    } catch (error) {
+      console.error('Route validation error:', error);
+      setMapError('Failed to process route data');
+    }
   }, [routePath, remainingPath, calculateTotalDistance]);
 
   // Enhanced initialization with state restoration
@@ -945,6 +980,12 @@ export default function AdvancedVehicleTrackingMap({
         <div className="text-center p-4">
           <div className="text-red-500 mb-2">🗺️ Map Error</div>
           <div className="text-sm text-slate-600">{mapError}</div>
+          <button 
+            onClick={() => setMapError(null)}
+            className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -972,6 +1013,7 @@ export default function AdvancedVehicleTrackingMap({
           ]}
           minZoom={10}
           maxZoom={19}
+          key={`map-${routePath?.length || 0}`} // Force re-render on route change
         >
           {/* Enhanced tile layer for better road and place name visibility */}
           <TileLayer
@@ -1453,11 +1495,26 @@ export default function AdvancedVehicleTrackingMap({
     );
   } catch (error) {
     console.error('❌ AdvancedVehicleTrackingMap render error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown map error';
+    
     return (
       <div className="flex items-center justify-center h-full bg-red-50 rounded-xl">
         <div className="text-center p-4">
           <div className="text-red-500 mb-2">🗺️ Map Error</div>
-          <div className="text-sm text-slate-600">{error instanceof Error ? error.message : String(error)}</div>
+          <div className="text-sm text-slate-600 mb-2">Unable to load tracking map</div>
+          <div className="text-xs text-slate-500 mb-3">Route: Dar es Salaam → Mbeya</div>
+          <div className="text-xs text-slate-500 mb-3">Error: {errorMessage}</div>
+          <button 
+            onClick={() => {
+              setMapError(null);
+              // Force re-render by clearing and resetting
+              setIsClient(false);
+              setTimeout(() => setIsClient(true), 100);
+            }}
+            className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
