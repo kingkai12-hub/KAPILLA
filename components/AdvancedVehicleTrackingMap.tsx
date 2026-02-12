@@ -361,13 +361,27 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     // Update system view ref when prop changes
     isSystemViewRef.current = isSystemView !== false;
     
-    // Set initial view with calculated optimal zoom
-    const optimalZoom = routePath && routePath.length > 1 
-      ? calculateOptimalZoom(routePath) 
-      : effectiveZoom;
+    // Set initial view with bounds
+    map.setView(effectiveCenter, effectiveZoom, { animate: false });
     
-    map.setView(effectiveCenter, optimalZoom, { animate: false });
-    userZoomRef.current = optimalZoom;
+    // Set reasonable map bounds to prevent going off-screen
+    const maxBounds = [
+      [-85, -180], // Southwest corner
+      [85, 180]   // Northeast corner
+    ];
+    map.setMaxBounds(maxBounds);
+    map.setMaxBoundsViscosity(1.0); // Strong resistance at bounds
+    
+    // Calculate optimal zoom for route if available
+    if (routePath && routePath.length > 1) {
+      const optimalZoom = calculateOptimalZoom(routePath);
+      if (optimalZoom !== effectiveZoom) {
+        map.setView(effectiveCenter, optimalZoom, { animate: false });
+      }
+    }
+    
+    // Update user zoom reference
+    userZoomRef.current = map.getZoom();
     isFollowingRef.current = isSystemViewRef.current;
     hasUserInteractedRef.current = false;
 
@@ -422,29 +436,38 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
 
     // Enhanced user interaction tracking (reduced sensitivity)
     const handleUserInteraction = () => {
-      // Only mark as user interaction in User View mode
+      // Mark as user interaction in User View mode
       if (!isSystemViewRef.current) {
         hasUserInteractedRef.current = true;
         userZoomRef.current = map.getZoom();
+      }
+      // Always update zoom state for UI
+      if (typeof window !== 'undefined' && window.currentMapZoomSetter) {
+        window.currentMapZoomSetter(map.getZoom());
       }
     };
 
     const handleZoomEnd = () => {
+      // Update zoom state in both modes
+      userZoomRef.current = map.getZoom();
       if (!isSystemViewRef.current) {
-        userZoomRef.current = map.getZoom();
         hasUserInteractedRef.current = true;
-        // Update current zoom state for UI
-        if (typeof window !== 'undefined' && window.currentMapZoomSetter) {
-          window.currentMapZoomSetter(map.getZoom());
-        }
+      }
+      // Update current zoom state for UI
+      if (typeof window !== 'undefined' && window.currentMapZoomSetter) {
+        window.currentMapZoomSetter(map.getZoom());
       }
     };
 
-    // Map event listeners (only in User View)
-    if (!isSystemViewRef.current) {
-      map.on('zoomstart', handleUserInteraction);
-      map.on('zoomend', handleZoomEnd);
-    }
+    // Map event listeners for zoom tracking
+    map.on('zoomstart', handleUserInteraction);
+    map.on('zoomend', handleZoomEnd);
+    map.on('zoom', () => {
+      // Real-time zoom tracking
+      if (typeof window !== 'undefined' && window.currentMapZoomSetter) {
+        window.currentMapZoomSetter(map.getZoom());
+      }
+    });
     
     document.addEventListener('keydown', handleKeyPress);
     
@@ -452,10 +475,11 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       document.removeEventListener('keydown', handleKeyPress);
       map.off('zoomstart', handleUserInteraction);
       map.off('zoomend', handleZoomEnd);
+      map.off('zoom');
     };
   }, [center, zoom, map, routePath, calculateOptimalZoom, vehiclePosition, isSystemView]);
 
-  // Enhanced vehicle following with intelligent zoom management (reduced frequency)
+  // Enhanced vehicle following with intelligent zoom management and boundary constraints
   useEffect(() => {
     if (!map) return;
 
@@ -467,7 +491,15 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       
       // Keep vehicle centered with lower threshold for better visibility
       if (distance > 200) {
-        map.setView(vehiclePosition, map.getZoom(), { animate: true, duration: 0.8 });
+        // Ensure vehicle stays within reasonable bounds
+        const bounds = map.getBounds();
+        const vehicleBounds = L.latLngBounds(vehiclePosition, vehiclePosition);
+        
+        // Only move if vehicle is still within reasonable geographic bounds
+        if (bounds.contains(vehicleLatLng) || 
+            (Math.abs(vehiclePosition[0]) < 90 && Math.abs(vehiclePosition[1]) < 180)) {
+          map.setView(vehiclePosition, map.getZoom(), { animate: true, duration: 0.8 });
+        }
       }
     }
   }, [vehiclePosition, map]); // Removed routePath dependency to reduce re-renders
@@ -793,22 +825,23 @@ export default function AdvancedVehicleTrackingMap({
       const angle = Math.atan2(
         routePath[currentIndexRef.current + 1][1] - routePath[currentIndexRef.current][1],
         routePath[currentIndexRef.current + 1][0] - routePath[currentIndexRef.current][0]
-      ) * (180 / Math.PI) - 90;
+      );
       
-      // Calculate overall progress
-      const totalSegments = routePath.length - 1;
-      const completedSegments = currentIndexRef.current;
-      const currentSegmentProgress = progressRef.current;
-      const overallProgress = (completedSegments + currentSegmentProgress) / totalSegments;
-      
-      // Update vehicle state
-      setVehiclePosition(interpolatedPos);
-      setVehicleRotation(angle);
-      setVehicleSpeed(calculatedSpeed);
-      setRouteProgress(overallProgress);
-      
-      // Update completed distance
-      completedDistanceRef.current += segmentDistance * progressDelta;
+      // Add boundary checking for interpolated position
+      if (Math.abs(interpolatedPos[0]) < 85 && Math.abs(interpolatedPos[1]) < 180) {
+        setVehiclePosition(interpolatedPos);
+        setVehicleRotation(angle);
+        setVehicleSpeed(calculatedSpeed);
+        
+        // Update route progress
+        const completedDistance = completedDistanceRef.current + (segmentDistance * progressRef.current);
+        setRouteProgress(completedDistance / totalDistanceRef.current);
+        completedDistanceRef.current = completedDistance;
+      } else {
+        // Skip this segment if it would go out of bounds
+        progressRef.current = 0;
+        currentIndexRef.current++;
+      }
       
       // Save state periodically (every 2 seconds when active, every 5 seconds when inactive)
       const saveInterval = document.hidden ? 5000 : 2000;
@@ -931,8 +964,14 @@ export default function AdvancedVehicleTrackingMap({
           dragging={true}
           touchZoom={true}
           bounceAtZoomLimits={false}
-          maxBoundsViscosity={0.8}
+          maxBoundsViscosity={1.0}
           worldCopyJump={false}
+          maxBounds={[
+            [-85, -180], // Southwest corner
+            [85, 180]   // Northeast corner
+          ]}
+          minZoom={10}
+          maxZoom={19}
         >
           {/* Enhanced tile layer for better road and place name visibility */}
           <TileLayer
@@ -1097,47 +1136,53 @@ export default function AdvancedVehicleTrackingMap({
             </div>
             
             {/* Manual Zoom Controls */}
-            {!isSystemView && (
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
-                <span className="text-xs text-gray-600 font-medium">Manual Zoom:</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => {
-                      if (mapInstance && !isSystemView) {
-                        try {
-                          mapInstance.zoomOut({ animate: true, duration: 0.3 });
-                          const newZoom = mapInstance.getZoom();
-                          setCurrentZoom(newZoom);
-                        } catch (error) {
-                          console.error('Zoom out error:', error);
+            <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+              <span className="text-xs text-gray-600 font-medium">Zoom:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    if (mapInstance) {
+                      try {
+                        mapInstance.zoomOut({ animate: true, duration: 0.3 });
+                        const newZoom = mapInstance.getZoom();
+                        setCurrentZoom(newZoom);
+                        // Mark as user interaction if in User View
+                        if (!isSystemView) {
+                          hasUserInteractedRef.current = true;
                         }
+                      } catch (error) {
+                        console.error('Zoom out error:', error);
                       }
-                    }}
-                    className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
-                    title="Zoom Out"
-                  >
-                    −
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (mapInstance && !isSystemView) {
-                        try {
-                          mapInstance.zoomIn({ animate: true, duration: 0.3 });
-                          const newZoom = mapInstance.getZoom();
-                          setCurrentZoom(newZoom);
-                        } catch (error) {
-                          console.error('Zoom in error:', error);
+                    }
+                  }}
+                  className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
+                  title="Zoom Out"
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => {
+                    if (mapInstance) {
+                      try {
+                        mapInstance.zoomIn({ animate: true, duration: 0.3 });
+                        const newZoom = mapInstance.getZoom();
+                        setCurrentZoom(newZoom);
+                        // Mark as user interaction if in User View
+                        if (!isSystemView) {
+                          hasUserInteractedRef.current = true;
                         }
+                      } catch (error) {
+                        console.error('Zoom in error:', error);
                       }
-                    }}
-                    className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
-                    title="Zoom In"
-                  >
-                    +
-                  </button>
-                </div>
+                    }
+                  }}
+                  className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
+                  title="Zoom In"
+                >
+                  +
+                </button>
               </div>
-            )}
+            </div>
             
             {/* Manual Pan Controls */}
             {!isSystemView && (
