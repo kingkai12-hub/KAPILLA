@@ -1146,10 +1146,6 @@ export default function AdvancedVehicleTrackingMap({
                         mapInstance.zoomOut({ animate: true, duration: 0.3 });
                         const newZoom = mapInstance.getZoom();
                         setCurrentZoom(newZoom);
-                        // Mark as user interaction if in User View
-                        if (!isSystemView) {
-                          hasUserInteractedRef.current = true;
-                        }
                       } catch (error) {
                         console.error('Zoom out error:', error);
                       }
@@ -1167,10 +1163,6 @@ export default function AdvancedVehicleTrackingMap({
                         mapInstance.zoomIn({ animate: true, duration: 0.3 });
                         const newZoom = mapInstance.getZoom();
                         setCurrentZoom(newZoom);
-                        // Mark as user interaction if in User View
-                        if (!isSystemView) {
-                          hasUserInteractedRef.current = true;
-                        }
                       } catch (error) {
                         console.error('Zoom in error:', error);
                       }

@@ -9,7 +9,7 @@ const ratelimit = new Map<string, { count: number, startTime: number }>();
 const WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_REQUESTS = 100; // Limit each IP to 100 requests per minute for API
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. RATE LIMITING
   // Apply only to API routes to prevent abuse
   if (request.nextUrl.pathname.startsWith('/api')) {
@@ -75,7 +75,7 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // 2. SECURITY HEADERS
-  // These are redundant with next.config.ts but ensure coverage for all responses handled by middleware
+  // These are redundant with next.config.ts but ensure coverage for all responses handled by proxy
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
