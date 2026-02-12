@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
-// CSS import should be at the top level
+// CSS import should be at top level
 import 'leaflet/dist/leaflet.css';
 
 // Dynamically import Leaflet to avoid SSR issues
-const L = require('leaflet') as any;
+const L = require('leaflet');
 
 // Fix for default marker icons in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
