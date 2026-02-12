@@ -112,6 +112,7 @@ model Shipment {
   
   events         TrackingEvent[]
   trips          Trip[]
+  vehicleTracking VehicleTracking?
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -222,4 +223,62 @@ model Executive {
   updatedAt   DateTime @updatedAt
 
   @@map("Executive")
+}
+
+model VehicleTracking {
+  id                String   @id @default(uuid())
+  shipmentId        String   @unique
+  shipment          Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  // Route definition (JSON array of [lat, lng] coordinates)
+  routePath         Json     // [[lat, lng], [lat, lng], ...]
+  
+  // Current position and progress
+  currentLatitude   Float
+  currentLongitude  Float
+  routeIndex        Int      @default(0)  // Current position index in route array
+  distanceCompleted Float    @default(0)  // Total distance traveled in meters
+  totalDistance     Float    @default(0)  // Total route distance in meters
+  progressPercent  Float    @default(0)  // Progress percentage (0-100)
+  
+  // Movement simulation data
+  currentSpeed      Float    @default(40) // Current speed in km/h
+  isCityZone        Boolean  @default(true) // Whether currently in city zone
+  lastUpdateTime    DateTime @default(now()) // Last position update timestamp
+  
+  // Status and control
+  isActive          Boolean  @default(true)
+  isPaused          Boolean  @default(false)
+  simulationStart   DateTime @default(now()) // When simulation started
+  
+  routeSegments     RouteSegment[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([shipmentId])
+  @@index([isActive])
+  @@index([lastUpdateTime])
+  @@map("VehicleTracking")
+}
+
+model RouteSegment {
+  id          String   @id @default(uuid())
+  trackingId  String
+  tracking    VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+  
+  startLat    Float
+  startLng    Float
+  endLat      Float
+  endLng      Float
+  distance    Float    // Distance in meters
+  isCityZone  Boolean  @default(false) // Whether this segment is in city zone
+  speedLimit  Float    @default(40) // Speed limit for this segment (km/h)
+  
+  orderIndex  Int      // Order in the route
+  
+  createdAt   DateTime @default(now())
+
+  @@index([trackingId])
+  @@map("RouteSegment")
 }

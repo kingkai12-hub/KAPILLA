@@ -75,7 +75,7 @@ export function proxy(request: NextRequest) {
   const response = NextResponse.next();
 
   // 2. SECURITY HEADERS
-  // These are redundant with next.config.ts but ensure coverage for all responses handled by proxy
+  // These are redundant with next.config.ts but ensure coverage for all responses handled by middleware
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

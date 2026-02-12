@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
   },
   // Reduce build time by optimizing dependencies
   experimental: {
-    optimizePackageImports: ['react', 'react-dom', 'leaflet', 'react-leaflet'],
+    optimizePackageImports: ['react', 'react-dom'],
   },
   // Turbopack config for faster builds
   turbopack: {},

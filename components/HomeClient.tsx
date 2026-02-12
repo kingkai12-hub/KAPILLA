@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,45 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
-import ErrorBoundary from '@/components/ErrorBoundary';
 
-import { locationCoords, getLocationCoords } from '@/lib/locations';
-
-// Haversine formula to calculate distance between two points
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Dynamic import for VehicleTrackingMap to prevent SSR issues
-const VehicleTrackingMap = dynamic(() => import('./VehicleTrackingMap'), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-});
-
-// Dynamic import for EnhancedTrackingMap with advanced features
-const EnhancedTrackingMap = dynamic(() => import('./EnhancedTrackingMap'), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-});
-
-// Dynamic import for SimpleTestMap for debugging
-const SimpleTestMap = dynamic(() => import('./SimpleTestMap'), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-});
-
-// Dynamic import for AdvancedVehicleTrackingMap with real-time movement
-const AdvancedVehicleTrackingMap = dynamic(() => import('./AdvancedVehicleTrackingMap'), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-48 md:h-72 bg-slate-100 rounded-xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-});
+import TrackingTimeline from '@/components/TrackingTimeline';
 
 // Dynamic imports for modals to prevent SSR issues
 const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
@@ -299,239 +262,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
     performSearch(waybill);
   };
 
-  // Enhanced route fetching with OSRM for realistic road-based routing
-  const fetchRouteFromOSRM = async (start: [number, number], end: [number, number]): Promise<[number, number][]> => {
-    try {
-      // Ensure coordinates are valid numbers
-      if (!start || !end || start.length !== 2 || end.length !== 2 ||
-          isNaN(start[0]) || isNaN(start[1]) || isNaN(end[0]) || isNaN(end[1])) {
-        return [start, end];
-      }
-
-      // Add timeout to prevent long delays
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-      const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=false`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-          signal: controller.signal,
-        }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`OSRM API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates) {
-        // Convert OSRM coordinates [lng, lat] to Leaflet [lat, lng] and ensure proper typing
-        const routeCoordinates: [number, number][] = data.routes[0].geometry.coordinates.map((coord: [number, number]) => {
-          if (Array.isArray(coord) && coord.length >= 2 && typeof coord[0] === 'number' && typeof coord[1] === 'number') {
-            return [coord[1], coord[0]] as [number, number];
-          }
-          return [0, 0] as [number, number]; // fallback for invalid coordinates
-        }).filter((coord: [number, number]) => coord[0] !== 0 || coord[1] !== 0); // remove fallback coordinates
-
-        if (routeCoordinates.length >= 2) {
-          return routeCoordinates;
-        }
-      }
-
-      return [start, end];
-    } catch (error) {
-      console.log('⚠️ OSRM fetch failed:', error instanceof Error ? error.message : String(error));
-      return [start, end];
-    }
-  };
-
-  // Routing state
-  const [routePath, setRoutePath] = useState<[number, number][]>([]);
-  const [remainingPath, setRemainingPath] = useState<[number, number][]>([]);
-
-  const mapProps = useMemo(() => {
-    try {
-      if (!searchResult) {
-        return null;
-      }
-
-      const trip = searchResult.trips?.[0];
-      const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
-      
-      // Sort for latest check-in
-      const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
-        const tA = new Date(a.timestamp).getTime();
-        const tB = new Date(b.timestamp).getTime();
-        return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
-      });
-      
-      const latestCheckIn = sortedCheckIns[0];
-      const originCoords = getLocationCoords(searchResult.origin) ?? locationCoords[searchResult.origin];
-      const destinationCoords = getLocationCoords(searchResult.destination) ?? locationCoords[searchResult.destination];
-      const isDelivered = searchResult.currentStatus === 'DELIVERED';
-      
-      
-      // Determine the effective "current" location
-      // If delivered, snap to destination
-      // If not delivered, don't pass currentLocation to allow free movement
-      const activeLocation = (isDelivered && destinationCoords)
-          ? {
-              lat: destinationCoords.lat,
-              lng: destinationCoords.lng,
-              label: searchResult.destination,
-              timestamp: latestCheckIn?.timestamp || new Date().toISOString()
-            }
-          : null; // Don't pass currentLocation when not delivered - let vehicle move freely
-         
-      const startPoint = originCoords ? { ...originCoords, label: searchResult.origin } : undefined;
-      const endPoint = destinationCoords ? { ...destinationCoords, label: searchResult.destination } : undefined;
-
-      let center: [number, number] = [-6.3690, 34.8888];
-      if (activeLocation) {
-          center = [activeLocation.lat, activeLocation.lng];
-      } else if (originCoords) {
-          // Use origin as center when no active location
-          center = [originCoords.lat, originCoords.lng];
-      } else if (destinationCoords) {
-          // Use destination as fallback center
-          center = [destinationCoords.lat, destinationCoords.lng];
-      }
-
-      const zoom = (checkIns.length > 0 || isDelivered) ? 10 : 6;
-
-      const props = {
-          currentLocation: activeLocation,
-          startPoint,
-          endPoint,
-          routePath,
-          remainingPath,
-          center,
-          zoom,
-          checkIns: checkIns.map((c: any) => ({
-               lat: c.latitude,
-               lng: c.longitude,
-               label: c.location || 'Check-in',
-               timestamp: c.timestamp
-          }))
-      };
-
-      return props;
-    } catch (error) {
-      return null;
-    }
-  }, [searchResult, routePath, remainingPath]);
-
-  // Load routes asynchronously when searchResult changes
-  useEffect(() => {
-    const loadRoutes = async () => {
-      if (!searchResult) return;
-
-      console.log('🗺️ Loading map for', searchResult.waybillNumber);
-      
-      const trip = searchResult.trips?.[0];
-      const checkIns = trip?.checkIns ? [...trip.checkIns].filter((c: any) => c.latitude != null && c.longitude != null) : [];
-
-      const sortedCheckIns = [...checkIns].sort((a: any, b: any) => {
-        const tA = new Date(a.timestamp).getTime();
-        const tB = new Date(b.timestamp).getTime();
-        return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
-      });
-
-      const latestCheckIn = sortedCheckIns[0];
-      const originCoords = getLocationCoords(searchResult.origin) ?? locationCoords[searchResult.origin];
-      const destinationCoords = getLocationCoords(searchResult.destination) ?? locationCoords[searchResult.destination];
-      const isDelivered = searchResult.currentStatus === 'DELIVERED';
-
-      console.log('📍 Location check:', { origin: searchResult.origin, destination: searchResult.destination });
-      console.log('📍 Coordinates:', { originCoords: !!originCoords, destinationCoords: !!destinationCoords });
-
-      const activeLocation = (isDelivered && destinationCoords)
-          ? {
-              lat: destinationCoords.lat,
-              lng: destinationCoords.lng,
-              label: searchResult.destination,
-              timestamp: latestCheckIn?.timestamp || new Date().toISOString()
-            }
-          : null;
-
-      // Create enhanced route with multiple waypoints for realistic vehicle movement
-      const createEnhancedRoute = (start: [number, number], end: [number, number]): [number, number][] => {
-        const route: [number, number][] = [start];
-        
-        // Add intermediate waypoints for realistic movement
-        const numWaypoints = Math.max(5, Math.floor(calculateDistance(start[0], start[1], end[0], end[1]) * 2));
-        
-        for (let i = 1; i < numWaypoints; i++) {
-          const progress = i / numWaypoints;
-          // Add some realistic curve to the route
-          const lat = start[0] + (end[0] - start[0]) * progress + (Math.random() - 0.5) * 0.01;
-          const lng = start[1] + (end[1] - start[1]) * progress + (Math.random() - 0.5) * 0.01;
-          route.push([lat, lng]);
-        }
-        
-        route.push(end);
-        return route;
-      };
-
-      // Set immediate enhanced route for realistic vehicle tracking
-      const enhancedRoute: [number, number][] = [];
-      const enhancedRemaining: [number, number][] = [];
-
-      if (originCoords && destinationCoords) {
-        if (isDelivered && activeLocation) {
-          const deliveredRoute = createEnhancedRoute([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
-          enhancedRoute.push(...deliveredRoute);
-        } else {
-          const fullRoute = createEnhancedRoute([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
-          enhancedRoute.push(...fullRoute);
-        }
-      }
-
-      // Set enhanced route immediately so map can load with realistic tracking
-      setRoutePath(enhancedRoute);
-      setRemainingPath(enhancedRemaining);
-      console.log('🗺️ Enhanced route set for', searchResult.waybillNumber, { points: enhancedRoute.length });
-
-      // Try to get better routes in background (non-blocking)
-      if (originCoords && destinationCoords) {
-        try {
-          console.log('🛣️ Attempting to fetch OSRM route...');
-          let traveledRoute: [number, number][] = [];
-          let remainingRoute: [number, number][] = [];
-          
-          if (isDelivered && activeLocation) {
-            traveledRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [activeLocation.lat, activeLocation.lng]);
-          } else if (!isDelivered) {
-            const fullRoute = await fetchRouteFromOSRM([originCoords.lat, originCoords.lng], [destinationCoords.lat, destinationCoords.lng]);
-            traveledRoute = fullRoute;
-            remainingRoute = [];
-          }
-
-          // Only update if we got a better route
-          if (traveledRoute.length > enhancedRoute.length) {
-            setRoutePath(traveledRoute);
-            setRemainingPath(remainingRoute);
-            console.log('✅ OSRM enhanced route loaded for', searchResult.waybillNumber, { points: traveledRoute.length });
-          } else {
-            console.log('📍 Using enhanced route for', searchResult.waybillNumber, { points: enhancedRoute.length });
-          }
-        } catch (error) {
-          console.log('⚠️ OSRM route failed, using fallback for', searchResult.waybillNumber, ':', error instanceof Error ? error.message : String(error));
-          // Fallback is already set, so no action needed
-        }
-      }
-    };
-
-    loadRoutes();
-  }, [searchResult]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-200 via-white to-cyan-200 font-sans selection:bg-blue-100 selection:text-blue-900">
       <Suspense fallback={null}>
@@ -716,36 +446,31 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                           <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
                         </div>
                       </div>
-                      <div className="w-full h-48 md:h-72 rounded-xl overflow-hidden shadow-sm border border-slate-100 relative z-0">
-                        {mapProps ? (
-                          <ErrorBoundary fallback={
-                            <div className="flex items-center justify-center h-full bg-slate-100 rounded-xl">
-                              <div className="text-center p-4">
-                                <div className="text-red-500 mb-2">🗺️ Map Error</div>
-                                <div className="text-sm text-slate-600">Unable to load tracking map</div>
-                                <div className="text-xs text-slate-500 mt-1">Route: {searchResult.origin} → {searchResult.destination}</div>
-                              </div>
-                            </div>
-                          }>
-                            {/* Advanced Vehicle Tracking Map with real-time movement */}
-                            <AdvancedVehicleTrackingMap 
-                              key={`advanced-map-${searchResult?.waybillNumber}-${Date.now()}`} 
-                              center={mapProps.center} 
-                              zoom={mapProps.zoom}
-                              startPoint={mapProps.startPoint}
-                              endPoint={mapProps.endPoint}
-                              routePath={mapProps.routePath}
-                              remainingPath={mapProps.remainingPath}
-                              currentLocation={mapProps.currentLocation}
-                              checkIns={mapProps.checkIns}
+                      <div className="rounded-xl overflow-hidden shadow-sm border border-slate-100 bg-slate-50">
+                        <div className="flex items-center justify-center h-32 md:h-40 bg-slate-100/50 rounded-t-xl border-b border-slate-200">
+                          <div className="text-center p-4">
+                            <div className="text-slate-400 mb-2 text-4xl">🗺️</div>
+                            <div className="text-sm font-medium text-slate-600">Tracking Map</div>
+                            <div className="text-xs text-slate-500 mt-1">Coming soon — new system in development</div>
+                          </div>
+                        </div>
+                        {searchResult?.events && searchResult.events.length > 0 && (
+                          <div className="p-4">
+                            <TrackingTimeline
+                              shipment={{
+                                waybillNumber: searchResult.waybillNumber,
+                                origin: searchResult.origin,
+                                destination: searchResult.destination,
+                                currentStatus: searchResult.currentStatus as any,
+                                events: searchResult.events.map((e: any) => ({
+                                  id: e.id,
+                                  status: e.status,
+                                  location: e.location,
+                                  timestamp: e.timestamp,
+                                  remarks: e.remarks
+                                }))
+                              }}
                             />
-                          </ErrorBoundary>
-                        ) : (
-                          <div className="flex items-center justify-center h-full bg-slate-100 rounded-xl">
-                            <div className="text-center p-4">
-                              <div className="text-slate-500 mb-2">📍</div>
-                              <div className="text-sm text-slate-600">Map data loading...</div>
-                            </div>
                           </div>
                         )}
                       </div>

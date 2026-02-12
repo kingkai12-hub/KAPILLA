@@ -1,656 +1,375 @@
-"use client";
+'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { useEffect, useState, useRef } from 'react';
 
-// Fix for default marker icons in Next.js/React-Leaflet
+// Dynamically import Leaflet to avoid SSR issues
+const L = require('leaflet');
+
+// Fix for default marker icons in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Haversine formula to calculate distance between two points
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+interface TrackingData {
+  waybillNumber: string;
+  route: [number, number][];
+  currentPosition: { lat: number; lng: number };
+  progress: number;
+  completedPath: [number, number][];
+  remainingPath: [number, number][];
+  speed: number;
+  isActive: boolean;
+  lastUpdate?: string;
 }
 
-// Linear interpolation between two points
-function interpolatePosition(start: [number, number], end: [number, number], progress: number): [number, number] {
-  return [
-    start[0] + (end[0] - start[0]) * progress,
-    start[1] + (end[1] - start[1]) * progress
-  ];
+interface VehicleTrackingMapProps {
+  waybillNumber: string;
+  className?: string;
 }
 
-interface Location {
-  lat: number;
-  lng: number;
-  label?: string;
-  timestamp?: string;
-}
+function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleTrackingMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const vehicleMarkerRef = useRef<any>(null);
+  const completedPathRef = useRef<any>(null);
+  const remainingPathRef = useRef<any>(null);
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-interface MapProps {
-  center?: [number, number];
-  zoom?: number;
-  startPoint?: Location;
-  endPoint?: Location;
-  currentLocation?: Location | null;
-  routePath?: [number, number][];
-  remainingPath?: [number, number][];
-  checkIns?: Location[];
-  key?: string;
-}
+  const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
-// Vehicle Component with movement animation and rotation
-function VehicleMarker({ position, speed, rotation }: { position: [number, number]; speed: number; rotation: number }) {
-  const vehicleIcon = L.divIcon({
-    html: `
-      <div style="
-        position: relative;
-        width: 24px;
-        height: 24px;
-        z-index: 1000;
-        transform: rotate(${rotation}deg);
-        transition: transform 0.5s ease-in-out;
-      ">
-        <div style="
-          position: absolute;
-          width: 18px;
-          height: 18px;
-          background: linear-gradient(135deg, #dc2626, #ef4444);
-          border-radius: 50%;
-          top: 3px;
-          left: 3px;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 6px rgba(220,38,38,0.4);
-        "></div>
-        <div style="
-          position: absolute;
-          width: 24px;
-          height: 24px;
-          border: 2px solid #dc2626;
-          border-radius: 50%;
-          top: 0;
-          left: 0;
-          animation: pulse 2s infinite;
-          opacity: 0.3;
-        "></div>
-        <!-- Direction indicator -->
-        <div style="
-          position: absolute;
-          width: 0;
-          height: 0;
-          border-left: 4px solid transparent;
-          border-right: 4px solid transparent;
-          border-bottom: 8px solid #fbbf24;
-          top: -4px;
-          left: 6px;
-          filter: drop-shadow(0 1px 2px rgba(251,191,36,0.5));
-        "></div>
-      </div>
-      <style>
-        @keyframes pulse {
-          0% { transform: scale(1); opacity: 0.3; }
-          50% { transform: scale(1.2); opacity: 0.1; }
-          100% { transform: scale(1); opacity: 0.3; }
-        }
-      </style>
-    `,
-    className: 'vehicle-marker',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
+  // Calculate optimal zoom level based on route
+  const calculateOptimalZoom = useCallback((route: [number, number][]) => {
+    if (!route || route.length === 0) return 7;
 
-  return (
-    <Marker position={position} icon={vehicleIcon}>
-      <Popup>
-        <div className="text-center p-3 bg-white rounded-lg shadow-lg">
-          <div className="font-bold text-red-600 mb-1">🚚 Vehicle</div>
-          <div className="text-sm space-y-1">
-            <div>Speed: <span className="font-semibold">{speed.toFixed(1)} km/h</span></div>
-            <div>Heading: <span className="font-semibold">{rotation.toFixed(0)}°</span></div>
-            <div className="text-xs text-gray-500">{new Date().toLocaleTimeString()}</div>
-          </div>
-        </div>
-      </Popup>
-    </Marker>
-  );
-}
+    const bounds = L.latLngBounds(route);
+    const map = mapInstanceRef.current;
+    
+    if (!map || !mapRef.current) return 7;
 
-function MapController({ center, zoom }: { 
-  center?: [number, number]; 
-  zoom?: number; 
-}) {
-  const map = useMap();
-  const defaultCenter: [number, number] = [-6.8151812, 39.2864692]; // Office location
-  const defaultZoom = 12;
+    // Get map dimensions
+    const mapWidth = mapRef.current.clientWidth;
+    const mapHeight = mapRef.current.clientHeight;
 
-  useEffect(() => {
-    if (!map) return;
-
-    const effectiveCenter = center || defaultCenter;
-    const effectiveZoom = zoom ?? defaultZoom;
-
-    // Only set view on initial load, don't interfere with user zoom/pan
-    map.setView(effectiveCenter, effectiveZoom, { animate: false });
-  }, [center, zoom, map]);
-
-  return null;
-}
-
-export default function VehicleTrackingMap({
-  center,
-  zoom,
-  startPoint,
-  endPoint,
-  currentLocation,
-  routePath = [],
-  remainingPath = [],
-  checkIns = [],
-  key 
-}: MapProps) {
-  const [isClient, setIsClient] = useState(false);
-  const [vehiclePosition, setVehiclePosition] = useState<[number, number]>(center || [-6.8151812, 39.2864692]);
-  const [vehicleSpeed, setVehicleSpeed] = useState(0);
-  const [vehicleRotation, setVehicleRotation] = useState(0);
-  const [isMoving, setIsMoving] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
-
-  const movementRef = useRef<NodeJS.Timeout | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const currentIndexRef = useRef(0);
-  const fullRouteRef = useRef<[number, number][]>([]);
-  const lastLocationUpdateRef = useRef('');
-  const isInitializedRef = useRef(false);
-  const segmentProgressRef = useRef(0); // Progress within current segment (0-1)
-  const lastUpdateTimeRef = useRef(Date.now());
-  const previousLocationRef = useRef<string>(''); // Track previous location to detect changes
-
-  useEffect(() => {
-    setIsClient(true);
+    // Calculate zoom that fits the route with padding
+    const zoom = map.getBoundsZoom(bounds, false, [mapWidth - 100, mapHeight - 100]);
+    
+    // Ensure zoom is within reasonable bounds for road visibility
+    return Math.max(Math.min(zoom, 12), 8);
   }, []);
 
-  // Error boundary wrapper
-  const handleMapError = (error: Error) => {
-    console.error('❌ VehicleTrackingMap error:', error);
-    setMapError(error.message);
-  };
+  // Initialize map
+  const initializeMap = useCallback(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-  // Set initial vehicle position and restore state from localStorage
-  useEffect(() => {
     try {
-      // Combine route path and remaining path for full journey
-      const fullRoute = [...routePath, ...remainingPath];
-      fullRouteRef.current = fullRoute;
-      
-      // Try to restore saved position from localStorage
-      const savedState = localStorage.getItem('vehicleTrackingState');
-      let savedIndex = 0;
-      let savedProgress = 0;
-      
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          // Check if saved state is recent (within last 24 hours)
-          if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-            savedIndex = parsed.currentIndex || 0;
-            savedProgress = parsed.segmentProgress || 0;
-            
-            // Calculate time elapsed since last save
-            const timeElapsed = Date.now() - parsed.timestamp;
-            
-            // If more than 5 seconds have passed, calculate expected position
-            if (timeElapsed > 5000 && savedIndex < fullRoute.length - 1) {
-              // Calculate expected position based on elapsed time
-              const avgSpeed = 50; // Average speed km/h
-              const avgSpeedKmPerSecond = avgSpeed / 3600;
-            
-            let tempIndex = savedIndex;
-            let tempProgress = savedProgress;
-            let remainingTime = timeElapsed / 1000; // Convert to seconds
-            
-            // Simulate movement during elapsed time
-            while (tempIndex < fullRoute.length - 1 && remainingTime > 0) {
-              const currentPos = fullRoute[tempIndex];
-              const nextPos = fullRoute[tempIndex + 1];
-              const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-              const timeForSegment = (segmentDistance / avgSpeedKmPerSecond);
-              const remainingSegmentTime = timeForSegment * (1 - tempProgress);
-              
-              if (remainingTime >= remainingSegmentTime) {
-                // Complete this segment
-                tempIndex++;
-                tempProgress = 0;
-                remainingTime -= remainingSegmentTime;
-              } else {
-                // Partial progress in this segment
-                tempProgress += remainingTime / timeForSegment;
-                remainingTime = 0;
-              }
-            }
-            
-            // Update to calculated position
-            if (tempIndex > savedIndex || tempProgress > savedProgress) {
-              currentIndexRef.current = tempIndex;
-              segmentProgressRef.current = Math.min(tempProgress, 0.99);
-              
-              // Set interpolated position
-              if (tempIndex < fullRoute.length - 1) {
-                const interpolatedPos = interpolatePosition(
-                  fullRoute[tempIndex],
-                  fullRoute[tempIndex + 1],
-                  segmentProgressRef.current
-                );
-                setVehiclePosition(interpolatedPos);
-              } else {
-                // Journey completed during absence
-                setVehiclePosition(fullRoute[fullRoute.length - 1]);
-                setIsMoving(false);
-                setVehicleSpeed(0);
-                localStorage.removeItem('vehicleTrackingState');
-                return;
-              }
-            }
-          } else {
-            // Use saved position (recent save)
-            currentIndexRef.current = savedIndex;
-            segmentProgressRef.current = savedProgress;
-            
-            // Set initial position (interpolated if progress > 0)
-            if (savedIndex < fullRoute.length - 1 && savedProgress > 0) {
-              const interpolatedPos = interpolatePosition(
-                fullRoute[savedIndex],
-                fullRoute[savedIndex + 1],
-                savedProgress
-              );
-              setVehiclePosition(interpolatedPos);
-            } else {
-              setVehiclePosition(fullRoute[savedIndex]);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error restoring saved state:', error);
-      }
-    }
-    
-    // Handle new location update from user
-    const currentLocationKey = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
-    const isNewLocation = currentLocationKey !== previousLocationRef.current && currentLocationKey !== '';
-    
-    if (isNewLocation && currentLocation) {
-      // New location update - reset and start fresh with proper routes
-      setVehiclePosition([currentLocation.lat, currentLocation.lng]);
-      lastLocationUpdateRef.current = currentLocationKey;
-      previousLocationRef.current = currentLocationKey;
-      
-      // Find closest point in route path to current location
-      let closestIndex = 0;
-      let minDistance = Infinity;
-      routePath.forEach((point, index) => {
-        const distance = calculateDistance(currentLocation.lat, currentLocation.lng, point[0], point[1]);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestIndex = index;
-        }
+      const map = L.map(mapRef.current, {
+        center: [-6.8151812, 39.2864692], // Default to Dar es Salaam
+        zoom: 8,
+        zoomControl: true,
+        attributionControl: true
       });
-      currentIndexRef.current = closestIndex;
-      segmentProgressRef.current = 0;
-      isInitializedRef.current = true;
-      
-      // Clear localStorage to ensure fresh start with proper routes
-      localStorage.removeItem('vehicleTrackingState');
-    } else if (routePath.length > 0 && !isInitializedRef.current) {
-      // No saved state and no new location - restore from saved state or start from beginning
-      
-      if (savedState) {
-        // We already processed saved state above, just need to set initialized
-        isInitializedRef.current = true;
-      } else {
-        // No saved state - start from beginning
-        currentIndexRef.current = 0;
-        segmentProgressRef.current = 0;
-        setVehiclePosition(fullRoute[0]);
-        isInitializedRef.current = true;
-      }
+
+      // Add tile layer with better road visibility
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+        minZoom: 3
+      }).addTo(map);
+
+      // Add scale control
+      L.control.scale({
+        position: 'bottomleft',
+        metric: true,
+        imperial: false
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+      setMapInitialized(true);
+    } catch (err) {
+      console.error('Failed to initialize map:', err);
+      setError('Failed to initialize map');
     }
-    } catch (error) {
-      console.error('❌ Error initializing vehicle position:', error);
-      // Fallback to start position
-      const fullRoute = [...routePath, ...remainingPath];
-      if (fullRoute.length > 0) {
-        setVehiclePosition(fullRoute[0]);
-        currentIndexRef.current = 0;
-        segmentProgressRef.current = 0;
-        isInitializedRef.current = true;
-      }
+  }, []);
+
+  // Create vehicle icon
+  const createVehicleIcon = useCallback(() => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background: #10b981;
+          border: 3px solid white;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          position: relative;
+          z-index: 1000;
+        ">
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+          ">🚚</div>
+        </div>
+      `,
+      className: 'vehicle-marker',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -13]
+    });
+  }, []);
+
+  // Update map with tracking data
+  const updateMapWithTrackingData = useCallback((data: TrackingData) => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapInitialized) return;
+
+    // Clear existing layers
+    if (vehicleMarkerRef.current) {
+      map.removeLayer(vehicleMarkerRef.current);
     }
-  }, [currentLocation, routePath, remainingPath, center]);
-
-  // Smooth vehicle movement animation
-  useEffect(() => {
-    const fullRoute = fullRouteRef.current;
-    
-    if (fullRoute.length < 2 || currentIndexRef.current >= fullRoute.length - 1) {
-      setIsMoving(false);
-      return;
+    if (completedPathRef.current) {
+      map.removeLayer(completedPathRef.current);
+    }
+    if (remainingPathRef.current) {
+      map.removeLayer(remainingPathRef.current);
     }
 
-    setIsMoving(true);
-    lastUpdateTimeRef.current = Date.now();
+    // Add completed path (BLUE)
+    if (data.completedPath && data.completedPath.length > 0) {
+      completedPathRef.current = L.polyline(data.completedPath, {
+        color: '#3b82f6',
+        weight: 6,
+        opacity: 0.8,
+        smoothFactor: 1
+      }).addTo(map);
+    }
 
-    const animate = () => {
-      const currentTime = Date.now();
-      const deltaTime = (currentTime - lastUpdateTimeRef.current) / 1000; // Convert to seconds
-      lastUpdateTimeRef.current = currentTime;
+    // Add remaining path (RED)
+    if (data.remainingPath && data.remainingPath.length > 0) {
+      remainingPathRef.current = L.polyline(data.remainingPath, {
+        color: '#ef4444',
+        weight: 6,
+        opacity: 0.8,
+        smoothFactor: 1,
+        dashArray: '10, 5'
+      }).addTo(map);
+    }
 
-      const currentPos = fullRoute[currentIndexRef.current];
-      const nextPos = fullRoute[currentIndexRef.current + 1];
+    // Add vehicle marker
+    const vehicleIcon = createVehicleIcon();
+    vehicleMarkerRef.current = L.marker([data.currentPosition.lat, data.currentPosition.lng], {
+      icon: vehicleIcon,
+      zIndexOffset: 1000
+    }).addTo(map);
+
+    // Add popup to vehicle marker
+    vehicleMarkerRef.current.bindPopup(`
+      <div style="font-family: Arial, sans-serif; font-size: 12px;">
+        <strong>${data.waybillNumber}</strong><br>
+        Speed: ${data.speed.toFixed(1)} km/h<br>
+        Progress: ${data.progress.toFixed(1)}%<br>
+        Status: ${data.isActive ? 'Active' : 'Inactive'}
+      </div>
+    `);
+
+    // Set map view to optimal zoom on first load
+    if (data.route && data.route.length > 0) {
+      const bounds = L.latLngBounds(data.route);
+      const optimalZoom = calculateOptimalZoom(data.route);
       
-      // Calculate segment distance
-      const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-      
-      // Determine road type and speed
-      const isHighway = segmentDistance > 5;
-      const isCity = segmentDistance <= 2;
-      
-      let baseSpeed;
-      if (isHighway) {
-        baseSpeed = 70; // Highway: 60-80 km/h
-      } else if (isCity) {
-        baseSpeed = 35; // City: 20-50 km/h
-      } else {
-        baseSpeed = 50; // Rural: 40-60 km/h
-      }
-      
-      const speedVariation = Math.sin(Date.now() / 5000) * 8;
-      const randomFactor = (Math.random() - 0.5) * 4;
-      let calculatedSpeed = baseSpeed + speedVariation + randomFactor;
-      
-      // Speed validation
-      if (isHighway) {
-        calculatedSpeed = Math.max(60, Math.min(80, calculatedSpeed));
-      } else if (isCity) {
-        calculatedSpeed = Math.max(20, Math.min(50, calculatedSpeed));
-      } else {
-        calculatedSpeed = Math.max(40, Math.min(60, calculatedSpeed));
-      }
-      
-      // Convert speed to km/s and calculate progress
-      const speedKmPerSecond = calculatedSpeed / 3600;
-      const progressDelta = (speedKmPerSecond * deltaTime) / segmentDistance;
-      
-      segmentProgressRef.current += progressDelta;
-      
-      // Check if we've completed this segment
-      if (segmentProgressRef.current >= 1) {
-        segmentProgressRef.current = 0;
-        currentIndexRef.current++;
-        
-        // Check if we've reached the destination
-        if (currentIndexRef.current >= fullRoute.length - 1) {
-          setIsMoving(false);
-          setVehicleSpeed(0);
-          setVehiclePosition(fullRoute[fullRoute.length - 1]);
-          
-          // Clear saved state when journey is complete
-          localStorage.removeItem('vehicleTrackingState');
-          return;
+      // Only fit bounds if this is the first load or if user hasn't manually zoomed
+      if (!trackingData) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+        if (map.getZoom() > optimalZoom) {
+          map.setZoom(optimalZoom);
         }
       }
+    }
+  }, [mapInitialized, trackingData, calculateOptimalZoom, createVehicleIcon]);
+
+  // Fetch tracking data
+  const fetchTrackingData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/vehicle-tracking?waybill=${waybillNumber}`);
       
-      // Calculate interpolated position
-      const interpolatedPos = interpolatePosition(
-        fullRoute[currentIndexRef.current],
-        fullRoute[currentIndexRef.current + 1],
-        segmentProgressRef.current
-      );
-      
-      // Calculate rotation based on movement direction
-      const angle = Math.atan2(
-        fullRoute[currentIndexRef.current + 1][1] - fullRoute[currentIndexRef.current][1],
-        fullRoute[currentIndexRef.current + 1][0] - fullRoute[currentIndexRef.current][0]
-      ) * (180 / Math.PI) - 90;
-      
-      // Update vehicle state
-      setVehiclePosition(interpolatedPos);
-      setVehicleRotation(angle);
-      setVehicleSpeed(calculatedSpeed);
-      
-      // Save state more frequently when tab is inactive (every 2 seconds)
-      // and less frequently when active (every 5 seconds)
-      const saveInterval = document.hidden ? 2000 : 5000;
-      if (Math.floor(currentTime / saveInterval) !== Math.floor((currentTime - deltaTime * 1000) / saveInterval)) {
-        const stateToSave = {
-          currentIndex: currentIndexRef.current,
-          segmentProgress: segmentProgressRef.current,
-          timestamp: Date.now(),
-          lastActiveTime: Date.now()
-        };
-        localStorage.setItem('vehicleTrackingState', JSON.stringify(stateToSave));
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
-      // Continue animation
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
 
-    // Start animation
-    animationFrameRef.current = requestAnimationFrame(animate);
+      const data = await response.json();
+      setTrackingData(data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch tracking data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load tracking data');
+    } finally {
+      setLoading(false);
+    }
+  }, [waybillNumber]);
 
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [currentLocation, routePath, remainingPath]);
-
-  // Handle page visibility changes - continue movement in background
+  // Initialize map on component mount
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && fullRouteRef.current.length > 1) {
-        // Page became visible - check if we need to update position based on time elapsed
-        const savedState = localStorage.getItem('vehicleTrackingState');
-        if (savedState) {
-          try {
-            const parsed = JSON.parse(savedState);
-            const timeSinceLastActive = Date.now() - parsed.lastActiveTime;
-            
-            // If more than 10 seconds have passed, calculate expected position
-            if (timeSinceLastActive > 10000 && parsed.currentIndex < fullRouteRef.current.length - 1) {
-              
-              // Calculate how many segments should have been completed
-              const avgSpeed = 50; // Average speed km/h
-              const avgSpeedKmPerSecond = avgSpeed / 3600;
-              
-              let tempIndex = parsed.currentIndex;
-              let tempProgress = parsed.segmentProgress || 0;
-              
-              // Simulate movement during inactive period
-              const simulatedTime = timeSinceLastActive / 1000; // Convert to seconds
-              
-              while (tempIndex < fullRouteRef.current.length - 1) {
-                const currentPos = fullRouteRef.current[tempIndex];
-                const nextPos = fullRouteRef.current[tempIndex + 1];
-                const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
-                const timeForSegment = (segmentDistance / avgSpeedKmPerSecond);
-                
-                if (simulatedTime > timeForSegment * (1 - tempProgress)) {
-                  tempIndex++;
-                  tempProgress = 0;
-                } else {
-                  tempProgress += simulatedTime / timeForSegment;
-                  break;
-                }
-              }
-              
-              // Update position if progress was made
-              if (tempIndex > parsed.currentIndex || tempProgress > (parsed.segmentProgress || 0)) {
-                currentIndexRef.current = tempIndex;
-                segmentProgressRef.current = Math.min(tempProgress, 0.99);
-                
-                if (tempIndex < fullRouteRef.current.length - 1) {
-                  const interpolatedPos = interpolatePosition(
-                    fullRouteRef.current[tempIndex],
-                    fullRouteRef.current[tempIndex + 1],
-                    segmentProgressRef.current
-                  );
-                  setVehiclePosition(interpolatedPos);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('❌ Error in animation loop:', error);
-          }
-        }
+    initializeMap();
+
+    return () => {
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+        updateIntervalRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [initializeMap]);
+
+  // Fetch initial data and set up updates
+  useEffect(() => {
+    if (!mapInitialized) return;
+
+    fetchTrackingData();
+
+    // Set up real-time updates every 2 seconds
+    updateIntervalRef.current = setInterval(fetchTrackingData, 2000);
+
+    return () => {
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+        updateIntervalRef.current = null;
+      }
+    };
+  }, [mapInitialized, fetchTrackingData]);
+
+  // Update map when tracking data changes
+  useEffect(() => {
+    if (trackingData && mapInitialized) {
+      updateMapWithTrackingData(trackingData);
+    }
+  }, [trackingData, mapInitialized, updateMapWithTrackingData]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current && trackingData) {
+        mapInstanceRef.current.invalidateSize();
       }
     };
 
-    // Add event listener for visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [currentLocation, routePath, remainingPath]);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [trackingData]);
 
-  const defaultIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    tooltipAnchor: [16, -28],
-    shadowSize: [41, 41]
-  });
+  if (loading) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading tracking map...</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (!isClient) return null;
+  if (error) {
+    return (
+      <div className={`flex items-center justify-center bg-red-50 ${className}`}>
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-2">⚠️</div>
+          <p className="text-red-800">Failed to load tracking data</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
-      <MapContainer 
-        center={center} 
-        zoom={zoom} 
-        style={{ height: '100%', width: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        <MapController 
-          center={center} 
-          zoom={zoom} 
-        />
-        
-        {/* Start Point */}
-        {startPoint && (
-          <Marker position={[startPoint.lat, startPoint.lng]} icon={defaultIcon}>
-            <Popup>
-              <div className="text-center">
-                <strong className="block text-green-600">📍 Origin</strong>
-                <p className="text-sm">{startPoint.label}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
+    <div className={`relative ${className}`}>
+      <div 
+        ref={mapRef} 
+        className="w-full h-full min-h-[400px]"
+        style={{ minHeight: '500px' }}
+      />
+      
+      {/* Tracking Info Panel */}
+      {trackingData && (
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-[1000] max-w-xs">
+          <h3 className="font-bold text-gray-800 mb-2">{trackingData.waybillNumber}</h3>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Progress:</span>
+              <span className="font-medium">{trackingData.progress.toFixed(1)}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Speed:</span>
+              <span className="font-medium">{trackingData.speed.toFixed(1)} km/h</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Status:</span>
+              <span className={`font-medium ${trackingData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                {trackingData.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${trackingData.progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* End Point */}
-        {endPoint && (
-          <Marker position={[endPoint.lat, endPoint.lng]} icon={defaultIcon}>
-            <Popup>
-              <div className="text-center">
-                <strong className="block text-red-600">🎯 Destination</strong>
-                <p className="text-sm">{endPoint.label}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {/* Moving Vehicle */}
-        <VehicleMarker position={vehiclePosition} speed={vehicleSpeed} rotation={vehicleRotation} />
-
-        {/* Check-in Points */}
-        {checkIns.map((checkIn, idx) => (
-          <Marker key={idx} position={[checkIn.lat, checkIn.lng]} icon={defaultIcon} opacity={0.6}>
-            <Popup>
-              <span className="font-bold">✅ Check-in {idx + 1}</span><br/>
-              {checkIn.label}<br/>
-              <span className="text-xs">{checkIn.timestamp}</span>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Traveled Path - Blue Solid Line (includes current interpolated position) */}
-        {fullRouteRef.current.length > 1 && (currentIndexRef.current > 0 || segmentProgressRef.current > 0) && (
-          <Polyline 
-            positions={[
-              ...fullRouteRef.current.slice(0, currentIndexRef.current),
-              vehiclePosition // Include current interpolated position
-            ]} 
-            color="#2563eb" 
-            weight={4} 
-            opacity={0.8}
-            smoothFactor={1}
-          />
-        )}
-
-        {/* Remaining Path - Red Dotted Line (from current position to end) */}
-        {fullRouteRef.current.length > 1 && currentIndexRef.current < fullRouteRef.current.length - 1 && (
-          <Polyline 
-            positions={[
-              vehiclePosition, // Start from current position
-              ...fullRouteRef.current.slice(currentIndexRef.current + 1)
-            ]} 
-            color="#dc2626" 
-            weight={3} 
-            opacity={0.7}
-            dashArray="10, 5"
-            smoothFactor={1}
-          />
-        )}
-
-        {/* Current Location Marker (if different from vehicle) */}
-        {currentLocation && (
-          <Marker position={[currentLocation.lat, currentLocation.lng]} icon={defaultIcon}>
-            <Popup>
-              <div className="text-center">
-                <strong className="block text-blue-600">📍 Current Location</strong>
-                <span className="text-xs">{currentLocation.timestamp}</span>
-                <p className="text-sm">{currentLocation.label}</p>
-                <div className="mt-2 p-2 bg-blue-50 rounded">
-                  <div className="text-xs font-medium text-blue-700">
-                    {isMoving ? (
-                      <>
-                        <div className="animate-pulse">🚚 Vehicle Moving</div>
-                        <div>Speed: {vehicleSpeed.toFixed(1)} km/h</div>
-                        <div>Status: In Transit</div>
-                      </>
-                    ) : (
-                      <>
-                        <div>🚚 Vehicle Stationary</div>
-                        <div>Speed: 0 km/h</div>
-                        <div>Status: Stopped</div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-      </MapContainer>
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
+        <h4 className="font-semibold text-gray-800 mb-2 text-sm">Legend</h4>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-1 bg-blue-500"></div>
+            <span className="text-xs text-gray-600">Completed Path</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-1 bg-red-500" style={{ borderTop: '2px dashed #ef4444' }}></div>
+            <span className="text-xs text-gray-600">Remaining Path</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+            <span className="text-xs text-gray-600">Vehicle Position</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+// Export dynamic component to avoid SSR issues
+export const VehicleTrackingMap = dynamic(
+  () => Promise.resolve(VehicleTrackingMapComponent),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center bg-gray-100 w-full h-full min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading map...</p>
+        </div>
+      </div>
+    )
+  }
+);
