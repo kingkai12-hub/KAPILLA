@@ -1,3 +1,10 @@
+/** Case-insensitive lookup for location coordinates */
+export function getLocationCoords(name: string): { lat: number; lng: number } | undefined {
+  if (!name || typeof name !== 'string') return undefined;
+  const key = Object.keys(locationCoords).find(k => k.toLowerCase() === name.trim().toLowerCase());
+  return key ? locationCoords[key] : undefined;
+}
+
 export const locationCoords: Record<string, { lat: number, lng: number }> = {
   // Major Cities
   "Dar es Salaam": { lat: -6.8151812, lng: 39.2864692 },

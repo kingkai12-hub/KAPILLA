@@ -11,7 +11,7 @@ import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-import { locationCoords } from '@/lib/locations';
+import { locationCoords, getLocationCoords } from '@/lib/locations';
 
 // Haversine formula to calculate distance between two points
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -373,8 +373,8 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       });
       
       const latestCheckIn = sortedCheckIns[0];
-      const originCoords = locationCoords[searchResult.origin];
-      const destinationCoords = locationCoords[searchResult.destination];
+      const originCoords = getLocationCoords(searchResult.origin) ?? locationCoords[searchResult.origin];
+      const destinationCoords = getLocationCoords(searchResult.destination) ?? locationCoords[searchResult.destination];
       const isDelivered = searchResult.currentStatus === 'DELIVERED';
       
       
@@ -445,8 +445,8 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
       });
 
       const latestCheckIn = sortedCheckIns[0];
-      const originCoords = locationCoords[searchResult.origin];
-      const destinationCoords = locationCoords[searchResult.destination];
+      const originCoords = getLocationCoords(searchResult.origin) ?? locationCoords[searchResult.origin];
+      const destinationCoords = getLocationCoords(searchResult.destination) ?? locationCoords[searchResult.destination];
       const isDelivered = searchResult.currentStatus === 'DELIVERED';
 
       console.log('📍 Location check:', { origin: searchResult.origin, destination: searchResult.destination });

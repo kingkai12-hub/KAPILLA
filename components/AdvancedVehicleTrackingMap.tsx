@@ -12,13 +12,17 @@ declare global {
   }
 }
 
-// Fix for default marker icons in Next.js/React-Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+// Fix for default marker icons in Next.js/React-Leaflet (guarded for SSR)
+if (typeof window !== 'undefined') {
+  try {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+  } catch (_) { /* ignore */ }
+}
 
 // Haversine formula to calculate distance between two points
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -540,6 +544,7 @@ export default function AdvancedVehicleTrackingMap({
   const [traveledPath, setTraveledPath] = useState<[number, number][]>([]);
   const [isMoving, setIsMoving] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [effectiveRoute, setEffectiveRoute] = useState<[number, number][]>([]);
   const [isSystemView, setIsSystemView] = useState(true); // Default to System View
   const [mapInstance, setMapInstance] = useState<any>(null); // Store map instance
   const [currentZoom, setCurrentZoom] = useState(zoom || 18); // Track current zoom level
@@ -654,28 +659,24 @@ export default function AdvancedVehicleTrackingMap({
   // Combine route paths for full journey with validation
   useEffect(() => {
     try {
-      console.log('🗺️ Route validation started:', { 
-        routePathLength: routePath?.length || 0, 
-        remainingPathLength: remainingPath?.length || 0,
-        routePath: routePath?.slice(0, 3), // First 3 points for debugging
-        remainingPath: remainingPath?.slice(0, 3)
-      });
+      let effectiveRoutePath = routePath && Array.isArray(routePath) ? [...routePath] : [];
       
-      // Validate route data
-      if (!routePath || !Array.isArray(routePath)) {
-        console.error('❌ Invalid routePath:', routePath);
-        setMapError('Invalid route data provided - routePath is not an array');
-        return;
+      // Fallback: when routePath is empty but we have startPoint and endPoint, create minimal route
+      if (effectiveRoutePath.length === 0 && startPoint && endPoint) {
+        effectiveRoutePath = [
+          [startPoint.lat, startPoint.lng],
+          [endPoint.lat, endPoint.lng]
+        ];
       }
       
-      if (routePath.length === 0) {
-        console.error('❌ Empty routePath');
-        setMapError('No route coordinates available - routePath is empty');
+      // Validate route data
+      if (!effectiveRoutePath || effectiveRoutePath.length === 0) {
+        setMapError('No route coordinates available. Origin or destination may not be in our database.');
         return;
       }
       
       // Validate coordinate format
-      const invalidCoords = routePath.filter((point, index) => {
+      const invalidCoords = effectiveRoutePath.filter((point, index) => {
         const isValid = Array.isArray(point) && 
           point.length === 2 && 
           typeof point[0] === 'number' && 
@@ -690,16 +691,13 @@ export default function AdvancedVehicleTrackingMap({
       });
       
       if (invalidCoords.length > 0) {
-        console.error('❌ Invalid coordinates found:', invalidCoords.length);
         setMapError(`Invalid coordinates found: ${invalidCoords.length} points`);
         return;
       }
       
-      // Clear any previous errors
-      console.log('✅ Route validation passed:', { points: routePath.length });
       setMapError(null);
-      
-      const fullRoute = [...routePath, ...remainingPath];
+      setEffectiveRoute(effectiveRoutePath);
+      const fullRoute = [...effectiveRoutePath, ...(remainingPath || [])];
       fullRouteRef.current = fullRoute;
       totalDistanceRef.current = calculateTotalDistance(fullRoute);
       
@@ -707,7 +705,7 @@ export default function AdvancedVehicleTrackingMap({
       console.error('❌ Route validation error:', error);
       setMapError('Failed to process route data: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
-  }, [routePath, remainingPath, calculateTotalDistance]);
+  }, [routePath, remainingPath, startPoint, endPoint, calculateTotalDistance]);
 
   // Enhanced initialization with state restoration
   useEffect(() => {
@@ -723,8 +721,7 @@ export default function AdvancedVehicleTrackingMap({
       return;
     }
     
-    if (!routePath || routePath.length < 2) {
-      console.log('⏳ Waiting for route data:', { routePathLength: routePath?.length || 0 });
+    if (effectiveRoute.length < 2) {
       return;
     }
 
@@ -799,7 +796,7 @@ export default function AdvancedVehicleTrackingMap({
     } finally {
       isRestoringRef.current = false;
     }
-  }, [isClient, routePath, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
+  }, [isClient, effectiveRoute, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
 
   // Enhanced animation loop with state persistence
   useEffect(() => {
@@ -809,22 +806,20 @@ export default function AdvancedVehicleTrackingMap({
       isRestoring: isRestoringRef.current 
     });
     
-    if (!isClient || !routePath || routePath.length < 2 || isRestoringRef.current) {
-      console.log('⏳ Animation not starting - conditions not met');
+    if (!isClient || effectiveRoute.length < 2 || isRestoringRef.current) {
       return;
     }
 
-    setIsMoving(true); // Ensure moving state is set
-    console.log('🚀 Animation loop starting');
-
+    setIsMoving(true);
     const animate = () => {
       try {
+        const r = fullRouteRef.current;
+        if (!r || r.length < 2) return;
         const currentTime = Date.now();
-        const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
+        const deltaTime = (currentTime - lastTimeRef.current) / 1000;
         lastTimeRef.current = currentTime;
 
-        // Prevent animation if route is invalid
-        if (currentIndexRef.current >= routePath.length - 1) {
+        if (currentIndexRef.current >= r.length - 1) {
           console.log('🏁 Animation completed - reached end of route');
           setIsMoving(false);
           setVehicleSpeed(0);
@@ -833,8 +828,8 @@ export default function AdvancedVehicleTrackingMap({
           return;
         }
 
-        const currentPos = routePath[currentIndexRef.current];
-        const nextPos = routePath[currentIndexRef.current + 1];
+        const currentPos = r[currentIndexRef.current];
+        const nextPos = r[currentIndexRef.current + 1];
         
         // Validate positions
         if (!currentPos || !nextPos || currentPos.length !== 2 || nextPos.length !== 2) {
@@ -845,11 +840,10 @@ export default function AdvancedVehicleTrackingMap({
         }
         
         if (!nextPos) {
-          console.log('🏁 Animation completed - no next position');
           setIsMoving(false);
           setVehicleSpeed(0);
           setRouteProgress(1);
-          setTraveledPath(routePath);
+          setTraveledPath(r);
           localStorage.removeItem('advancedVehicleTracking');
           return;
         }
@@ -890,28 +884,26 @@ export default function AdvancedVehicleTrackingMap({
         // Update traveled path
         setTraveledPath(prev => [...prev, nextPos]);
         
-        if (currentIndexRef.current >= routePath.length - 1) {
+        if (currentIndexRef.current >= r.length - 1) {
           setIsMoving(false);
           setVehicleSpeed(0);
-          setVehiclePosition(routePath[routePath.length - 1]);
+          setVehiclePosition(r[r.length - 1]);
           setRouteProgress(1);
-          setTraveledPath(routePath);
+          setTraveledPath(r);
           localStorage.removeItem('advancedVehicleTracking');
           return;
         }
       }
       
-      // Calculate interpolated position
       const interpolatedPos = interpolatePosition(
-        routePath[currentIndexRef.current],
-        routePath[currentIndexRef.current + 1],
+        r[currentIndexRef.current],
+        r[currentIndexRef.current + 1],
         progressRef.current
       );
       
-      // Calculate rotation based on movement direction
       const angle = Math.atan2(
-        routePath[currentIndexRef.current + 1][1] - routePath[currentIndexRef.current][1],
-        routePath[currentIndexRef.current + 1][0] - routePath[currentIndexRef.current][0]
+        r[currentIndexRef.current + 1][1] - r[currentIndexRef.current][1],
+        r[currentIndexRef.current + 1][0] - r[currentIndexRef.current][0]
       );
       
       // Add boundary checking for interpolated position
@@ -964,7 +956,7 @@ export default function AdvancedVehicleTrackingMap({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isClient, routePath, key, saveTrackingState, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
+  }, [isClient, effectiveRoute, key, saveTrackingState, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
 
   // Track zoom level changes
   useEffect(() => {
@@ -1002,8 +994,8 @@ export default function AdvancedVehicleTrackingMap({
   // Handle page visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && fullRouteRef.current.length > 1) {
-        // Page became visible - check if we need to update position
+      const r = fullRouteRef.current;
+      if (!document.hidden && r && r.length > 1) {
         const savedState = loadTrackingState();
         if (savedState) {
           const expected = calculateExpectedPosition(savedState);
@@ -1012,10 +1004,10 @@ export default function AdvancedVehicleTrackingMap({
             progressRef.current = expected.tempProgress;
             completedDistanceRef.current = expected.tempCompletedDistance;
             
-            if (expected.tempIndex < routePath.length - 1) {
+            if (expected.tempIndex < r.length - 1) {
               const interpolatedPos = interpolatePosition(
-                routePath[expected.tempIndex],
-                routePath[expected.tempIndex + 1],
+                r[expected.tempIndex],
+                r[expected.tempIndex + 1],
                 expected.tempProgress
               );
               setVehiclePosition(interpolatedPos);
@@ -1027,7 +1019,7 @@ export default function AdvancedVehicleTrackingMap({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [loadTrackingState, calculateExpectedPosition, routePath]);
+  }, [loadTrackingState, calculateExpectedPosition]);
 
   if (!isClient) return null;
 
@@ -1146,11 +1138,11 @@ export default function AdvancedVehicleTrackingMap({
           )}
 
           {/* Remaining Path - RED LINE */}
-          {routePath.length > 1 && currentIndexRef.current < routePath.length - 1 && (
+          {effectiveRoute.length > 1 && currentIndexRef.current < fullRouteRef.current.length - 1 && (
             <Polyline 
               positions={[
                 vehiclePosition,
-                ...routePath.slice(currentIndexRef.current + 1)
+                ...fullRouteRef.current.slice(currentIndexRef.current + 1)
               ]} 
               color="#dc2626" 
               weight={4} 
@@ -1163,7 +1155,7 @@ export default function AdvancedVehicleTrackingMap({
           )}
 
           {/* Animated Vehicle */}
-          {routePath.length > 1 && (
+          {effectiveRoute.length > 1 && (
             <VehicleMarker 
               position={vehiclePosition}
               speed={vehicleSpeed}
