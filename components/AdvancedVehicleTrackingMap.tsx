@@ -273,7 +273,7 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
 }) {
   const map = useMap();
   const defaultCenter: [number, number] = [-6.8151812, 39.2864692];
-  const defaultZoom = 17; // Higher default zoom for better road and place name visibility
+  const defaultZoom = 18; // Maximum default zoom for best road and place name visibility
   const isFollowingRef = useRef(true);
   const userZoomRef = useRef(zoom || defaultZoom);
   const hasUserInteractedRef = useRef(false);
@@ -281,7 +281,7 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
 
   // Calculate optimal zoom based on route characteristics with enhanced road visibility
   const calculateOptimalZoom = useCallback((route: [number, number][]) => {
-    if (route.length < 2) return 17; // Higher default for better road visibility
+    if (route.length < 2) return 18; // Higher default for better road visibility
 
     // Calculate route bounds
     const lats = route.map(point => point[0]);
@@ -329,26 +329,26 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     let optimalZoom;
     
     if (isUrban) {
-      // Urban areas - higher zoom for detailed road geometry and place names
-      if (routeArea < 0.005) optimalZoom = 18; // Very tight urban area - maximum detail
-      else if (routeArea < 0.01) optimalZoom = 17; // Tight urban area - streets visible
-      else if (routeArea < 0.05) optimalZoom = 16; // Small urban area - major roads clear
-      else if (routeArea < 0.2) optimalZoom = 15; // Medium urban area - road network visible
-      else optimalZoom = 14; // Large urban area - main roads visible
+      // Urban areas - maximum zoom for detailed road geometry and place names
+      if (routeArea < 0.005) optimalZoom = 19; // Very tight urban area - maximum detail
+      else if (routeArea < 0.01) optimalZoom = 18; // Tight urban area - streets visible
+      else if (routeArea < 0.05) optimalZoom = 17; // Small urban area - major roads clear
+      else if (routeArea < 0.2) optimalZoom = 16; // Medium urban area - road network visible
+      else optimalZoom = 15; // Large urban area - main roads visible
     } else {
-      // Rural areas - balanced zoom for visibility while maintaining context
-      if (routeArea < 0.05) optimalZoom = 16; // Small rural area - detailed view
-      else if (routeArea < 0.2) optimalZoom = 15; // Medium rural area - roads visible
-      else if (routeArea < 1) optimalZoom = 14; // Large rural area - highway network
-      else if (routeArea < 3) optimalZoom = 13; // Very large rural area - major roads
-      else optimalZoom = 12; // Extensive rural area - overview with main highways
+      // Rural areas - higher zoom for better visibility while maintaining context
+      if (routeArea < 0.05) optimalZoom = 17; // Small rural area - detailed view
+      else if (routeArea < 0.2) optimalZoom = 16; // Medium rural area - roads visible
+      else if (routeArea < 1) optimalZoom = 15; // Large rural area - highway network
+      else if (routeArea < 3) optimalZoom = 14; // Very large rural area - major roads
+      else optimalZoom = 13; // Extensive rural area - overview with main highways
     }
     
     // Ensure minimum zoom for road and place name visibility
-    // Zoom 14+ is generally needed for clear road names and street details
-    // Zoom 16+ is ideal for urban street names and landmarks
-    const minZoom = isUrban ? 15 : 13;
-    return Math.max(minZoom, Math.min(18, optimalZoom));
+    // Zoom 15+ is generally needed for clear road names and street details
+    // Zoom 17+ is ideal for urban street names and landmarks
+    const minZoom = isUrban ? 16 : 14;
+    return Math.max(minZoom, Math.min(19, optimalZoom));
   }, []);
 
   useEffect(() => {
@@ -509,7 +509,7 @@ export default function AdvancedVehicleTrackingMap({
   const [mapError, setMapError] = useState<string | null>(null);
   const [isSystemView, setIsSystemView] = useState(true); // Default to System View
   const [mapInstance, setMapInstance] = useState<any>(null); // Store map instance
-  const [currentZoom, setCurrentZoom] = useState(zoom || 17); // Track current zoom level
+  const [currentZoom, setCurrentZoom] = useState(zoom || 18); // Track current zoom level
 
   const animationRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
@@ -921,8 +921,17 @@ export default function AdvancedVehicleTrackingMap({
       <div className="relative">
         <MapContainer 
           center={center || [-6.8151812, 39.2864692]} 
-          zoom={zoom || 17} 
+          zoom={zoom || 18} 
           style={{ height: '100%', width: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
+          zoomControl={false} // Disable default zoom controls for custom ones
+          attributionControl={true}
+          doubleClickZoom={true}
+          scrollWheelZoom={true}
+          dragging={true}
+          touchZoom={true}
+          bounceAtZoomLimits={false}
+          maxBoundsViscosity={0.8}
+          worldCopyJump={false}
         >
           {/* Enhanced tile layer for better road and place name visibility */}
           <TileLayer
@@ -1095,7 +1104,7 @@ export default function AdvancedVehicleTrackingMap({
                     onClick={() => {
                       if (mapInstance) {
                         try {
-                          mapInstance.zoomOut();
+                          mapInstance.zoomOut({ animate: true, duration: 0.3 });
                           const newZoom = mapInstance.getZoom();
                           setCurrentZoom(newZoom);
                         } catch (error) {
@@ -1103,7 +1112,7 @@ export default function AdvancedVehicleTrackingMap({
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Zoom Out"
                   >
                     −
@@ -1112,7 +1121,7 @@ export default function AdvancedVehicleTrackingMap({
                     onClick={() => {
                       if (mapInstance) {
                         try {
-                          mapInstance.zoomIn();
+                          mapInstance.zoomIn({ animate: true, duration: 0.3 });
                           const newZoom = mapInstance.getZoom();
                           setCurrentZoom(newZoom);
                         } catch (error) {
@@ -1120,7 +1129,7 @@ export default function AdvancedVehicleTrackingMap({
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Zoom In"
                   >
                     +
@@ -1140,13 +1149,17 @@ export default function AdvancedVehicleTrackingMap({
                       if (mapInstance) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat + 0.005, center.lng], { animate: true, duration: 0.5 });
+                          mapInstance.panTo([center.lat + 0.003, center.lng], { 
+                            animate: true, 
+                            duration: 0.4,
+                            easeLinearity: 0.5
+                          });
                         } catch (error) {
                           console.error('Pan up error:', error);
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Pan Up"
                   >
                     ↑
@@ -1157,13 +1170,17 @@ export default function AdvancedVehicleTrackingMap({
                       if (mapInstance) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat, center.lng - 0.005], { animate: true, duration: 0.5 });
+                          mapInstance.panTo([center.lat, center.lng - 0.003], { 
+                            animate: true, 
+                            duration: 0.4,
+                            easeLinearity: 0.5
+                          });
                         } catch (error) {
                           console.error('Pan left error:', error);
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Pan Left"
                   >
                     ←
@@ -1172,13 +1189,17 @@ export default function AdvancedVehicleTrackingMap({
                     onClick={() => {
                       if (mapInstance && vehiclePosition) {
                         try {
-                          mapInstance.panTo(vehiclePosition, { animate: true, duration: 0.8 });
+                          mapInstance.flyTo(vehiclePosition, currentZoom, { 
+                            animate: true, 
+                            duration: 1.2,
+                            easeLinearity: 0.5
+                          });
                         } catch (error) {
                           console.error('Center on vehicle error:', error);
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Center on Vehicle"
                   >
                     ⚡
@@ -1188,13 +1209,17 @@ export default function AdvancedVehicleTrackingMap({
                       if (mapInstance) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat, center.lng + 0.005], { animate: true, duration: 0.5 });
+                          mapInstance.panTo([center.lat, center.lng + 0.003], { 
+                            animate: true, 
+                            duration: 0.4,
+                            easeLinearity: 0.5
+                          });
                         } catch (error) {
                           console.error('Pan right error:', error);
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Pan Right"
                   >
                     →
@@ -1205,18 +1230,78 @@ export default function AdvancedVehicleTrackingMap({
                       if (mapInstance) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat - 0.005, center.lng], { animate: true, duration: 0.5 });
+                          mapInstance.panTo([center.lat - 0.003, center.lng], { 
+                            animate: true, 
+                            duration: 0.4,
+                            easeLinearity: 0.5
+                          });
                         } catch (error) {
                           console.error('Pan down error:', error);
                         }
                       }
                     }}
-                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
                     title="Pan Down"
                   >
                     ↓
                   </button>
                   <div></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Manual Rotation Controls */}
+            {!isSystemView && (
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                <span className="text-xs text-gray-600 font-medium">Rotation:</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        try {
+                          const currentBearing = mapInstance.getBearing() || 0;
+                          mapInstance.setBearing(currentBearing - 15, { animate: true, duration: 0.3 });
+                        } catch (error) {
+                          console.error('Rotate left error:', error);
+                        }
+                      }
+                    }}
+                    className="w-6 h-6 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
+                    title="Rotate Left"
+                  >
+                    ↺
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        try {
+                          mapInstance.setBearing(0, { animate: true, duration: 0.5 });
+                        } catch (error) {
+                          console.error('Reset rotation error:', error);
+                        }
+                      }
+                    }}
+                    className="w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
+                    title="Reset Rotation"
+                  >
+                    ⊙
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        try {
+                          const currentBearing = mapInstance.getBearing() || 0;
+                          mapInstance.setBearing(currentBearing + 15, { animate: true, duration: 0.3 });
+                        } catch (error) {
+                          console.error('Rotate right error:', error);
+                        }
+                      }
+                    }}
+                    className="w-6 h-6 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-bold transition-all transform hover:scale-110 active:scale-95"
+                    title="Rotate Right"
+                  >
+                    ↻
+                  </button>
                 </div>
               </div>
             )}
@@ -1277,6 +1362,22 @@ export default function AdvancedVehicleTrackingMap({
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">↑↓←→</span>
                 <span className="text-gray-600">Pan controls (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">↺↻</span>
+                <span className="text-gray-600">Rotate map (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">⊙</span>
+                <span className="text-gray-600">Reset rotation (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">🎯</span>
+                <span className="text-gray-600">Double-click to zoom (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">⚙️</span>
+                <span className="text-gray-600">Scroll wheel to zoom (Manual mode)</span>
               </div>
             </div>
           </div>
