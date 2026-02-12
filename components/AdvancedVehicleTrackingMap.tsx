@@ -422,14 +422,15 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
 
     // Enhanced user interaction tracking (reduced sensitivity)
     const handleUserInteraction = () => {
-      if (isSystemViewRef.current) {
+      // Only mark as user interaction in User View mode
+      if (!isSystemViewRef.current) {
         hasUserInteractedRef.current = true;
         userZoomRef.current = map.getZoom();
       }
     };
 
     const handleZoomEnd = () => {
-      if (isSystemViewRef.current) {
+      if (!isSystemViewRef.current) {
         userZoomRef.current = map.getZoom();
         hasUserInteractedRef.current = true;
         // Update current zoom state for UI
@@ -439,10 +440,11 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       }
     };
 
-    // Map event listeners (reduced frequency)
-    map.on('zoomstart', handleUserInteraction);
-    map.on('zoomend', handleZoomEnd);
-    // Removed movestart and dragstart to reduce sensitivity
+    // Map event listeners (only in User View)
+    if (!isSystemViewRef.current) {
+      map.on('zoomstart', handleUserInteraction);
+      map.on('zoomend', handleZoomEnd);
+    }
     
     document.addEventListener('keydown', handleKeyPress);
     
@@ -463,10 +465,9 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       const vehicleLatLng = L.latLng(vehiclePosition[0], vehiclePosition[1]);
       const distance = currentCenter.distanceTo(vehicleLatLng);
       
-      // Only recenter if vehicle is significantly far from center (reduce bouncing)
-      // Increased threshold to reduce frequent updates
-      if (distance > 1000) {
-        map.panTo(vehiclePosition, { animate: true, duration: 1.0 });
+      // Keep vehicle centered with lower threshold for better visibility
+      if (distance > 200) {
+        map.setView(vehiclePosition, map.getZoom(), { animate: true, duration: 0.8 });
       }
     }
   }, [vehiclePosition, map]); // Removed routePath dependency to reduce re-renders
@@ -1102,7 +1103,7 @@ export default function AdvancedVehicleTrackingMap({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           mapInstance.zoomOut({ animate: true, duration: 0.3 });
                           const newZoom = mapInstance.getZoom();
@@ -1119,7 +1120,7 @@ export default function AdvancedVehicleTrackingMap({
                   </button>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           mapInstance.zoomIn({ animate: true, duration: 0.3 });
                           const newZoom = mapInstance.getZoom();
@@ -1146,13 +1147,14 @@ export default function AdvancedVehicleTrackingMap({
                   <div></div>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat + 0.003, center.lng], { 
+                          mapInstance.panTo([center.lat + 0.002, center.lng], { 
                             animate: true, 
-                            duration: 0.4,
-                            easeLinearity: 0.5
+                            duration: 0.3,
+                            easeLinearity: 0.5,
+                            noMoveStart: true
                           });
                         } catch (error) {
                           console.error('Pan up error:', error);
@@ -1167,13 +1169,14 @@ export default function AdvancedVehicleTrackingMap({
                   <div></div>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat, center.lng - 0.003], { 
+                          mapInstance.panTo([center.lat, center.lng - 0.002], { 
                             animate: true, 
-                            duration: 0.4,
-                            easeLinearity: 0.5
+                            duration: 0.3,
+                            easeLinearity: 0.5,
+                            noMoveStart: true
                           });
                         } catch (error) {
                           console.error('Pan left error:', error);
@@ -1187,11 +1190,11 @@ export default function AdvancedVehicleTrackingMap({
                   </button>
                   <button
                     onClick={() => {
-                      if (mapInstance && vehiclePosition) {
+                      if (mapInstance && !isSystemView && vehiclePosition) {
                         try {
                           mapInstance.flyTo(vehiclePosition, currentZoom, { 
                             animate: true, 
-                            duration: 1.2,
+                            duration: 1.0,
                             easeLinearity: 0.5
                           });
                         } catch (error) {
@@ -1206,13 +1209,14 @@ export default function AdvancedVehicleTrackingMap({
                   </button>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat, center.lng + 0.003], { 
+                          mapInstance.panTo([center.lat, center.lng + 0.002], { 
                             animate: true, 
-                            duration: 0.4,
-                            easeLinearity: 0.5
+                            duration: 0.3,
+                            easeLinearity: 0.5,
+                            noMoveStart: true
                           });
                         } catch (error) {
                           console.error('Pan right error:', error);
@@ -1227,13 +1231,14 @@ export default function AdvancedVehicleTrackingMap({
                   <div></div>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const center = mapInstance.getCenter();
-                          mapInstance.panTo([center.lat - 0.003, center.lng], { 
+                          mapInstance.panTo([center.lat - 0.002, center.lng], { 
                             animate: true, 
-                            duration: 0.4,
-                            easeLinearity: 0.5
+                            duration: 0.3,
+                            easeLinearity: 0.5,
+                            noMoveStart: true
                           });
                         } catch (error) {
                           console.error('Pan down error:', error);
@@ -1257,7 +1262,7 @@ export default function AdvancedVehicleTrackingMap({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const currentBearing = mapInstance.getBearing() || 0;
                           mapInstance.setBearing(currentBearing - 15, { animate: true, duration: 0.3 });
@@ -1273,7 +1278,7 @@ export default function AdvancedVehicleTrackingMap({
                   </button>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           mapInstance.setBearing(0, { animate: true, duration: 0.5 });
                         } catch (error) {
@@ -1288,7 +1293,7 @@ export default function AdvancedVehicleTrackingMap({
                   </button>
                   <button
                     onClick={() => {
-                      if (mapInstance) {
+                      if (mapInstance && !isSystemView) {
                         try {
                           const currentBearing = mapInstance.getBearing() || 0;
                           mapInstance.setBearing(currentBearing + 15, { animate: true, duration: 0.3 });
