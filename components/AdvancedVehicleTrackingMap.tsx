@@ -5,6 +5,13 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useState, useRef, useCallback } from 'react';
 
+// Extend window interface for zoom tracking
+declare global {
+  interface Window {
+    currentMapZoomSetter?: (zoom: number) => void;
+  }
+}
+
 // Fix for default marker icons in Next.js/React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -413,7 +420,7 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       }
     };
 
-    // Enhanced user interaction tracking
+    // Enhanced user interaction tracking (reduced sensitivity)
     const handleUserInteraction = () => {
       if (isSystemViewRef.current) {
         hasUserInteractedRef.current = true;
@@ -425,14 +432,17 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       if (isSystemViewRef.current) {
         userZoomRef.current = map.getZoom();
         hasUserInteractedRef.current = true;
+        // Update current zoom state for UI
+        if (typeof window !== 'undefined' && window.currentMapZoomSetter) {
+          window.currentMapZoomSetter(map.getZoom());
+        }
       }
     };
 
-    // Map event listeners
+    // Map event listeners (reduced frequency)
     map.on('zoomstart', handleUserInteraction);
     map.on('zoomend', handleZoomEnd);
-    map.on('movestart', handleUserInteraction);
-    map.on('dragstart', handleUserInteraction);
+    // Removed movestart and dragstart to reduce sensitivity
     
     document.addEventListener('keydown', handleKeyPress);
     
@@ -440,12 +450,10 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       document.removeEventListener('keydown', handleKeyPress);
       map.off('zoomstart', handleUserInteraction);
       map.off('zoomend', handleZoomEnd);
-      map.off('movestart', handleUserInteraction);
-      map.off('dragstart', handleUserInteraction);
     };
   }, [center, zoom, map, routePath, calculateOptimalZoom, vehiclePosition, isSystemView]);
 
-  // Enhanced vehicle following with intelligent zoom management
+  // Enhanced vehicle following with intelligent zoom management (reduced frequency)
   useEffect(() => {
     if (!map) return;
 
@@ -456,24 +464,12 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
       const distance = currentCenter.distanceTo(vehicleLatLng);
       
       // Only recenter if vehicle is significantly far from center (reduce bouncing)
-      if (distance > 500) {
-        map.panTo(vehiclePosition, { animate: true, duration: 0.5 });
-      }
-      
-      // Intelligent zoom adjustment based on route context
-      if (routePath && routePath.length > 1) {
-        const currentZoom = map.getZoom();
-        const optimalZoom = calculateOptimalZoom(routePath);
-        const zoomDifference = Math.abs(currentZoom - optimalZoom);
-        
-        // Only adjust zoom if difference is significant (avoid constant zoom changes)
-        if (zoomDifference > 1) {
-          // Smooth zoom transition to optimal level
-          map.setZoom(optimalZoom, { animate: true });
-        }
+      // Increased threshold to reduce frequent updates
+      if (distance > 1000) {
+        map.panTo(vehiclePosition, { animate: true, duration: 1.0 });
       }
     }
-  }, [vehiclePosition, map, routePath, calculateOptimalZoom]);
+  }, [vehiclePosition, map]); // Removed routePath dependency to reduce re-renders
 
   // Update view mode state when prop changes
   useEffect(() => {
@@ -640,8 +636,6 @@ export default function AdvancedVehicleTrackingMap({
       const savedState = loadTrackingState();
       
       if (savedState) {
-        console.log('🔄 Restoring tracking state:', savedState);
-        
         // Calculate expected position based on elapsed time
         const expected = calculateExpectedPosition(savedState);
         
@@ -679,7 +673,6 @@ export default function AdvancedVehicleTrackingMap({
         setIsMoving(expected.tempIndex < routePath.length - 1);
       } else {
         // No saved state - start fresh
-        console.log('🆕 Starting fresh journey');
         currentIndexRef.current = 0;
         progressRef.current = 0;
         completedDistanceRef.current = 0;
@@ -695,7 +688,7 @@ export default function AdvancedVehicleTrackingMap({
       }
       
     } catch (error) {
-      console.error('❌ Error initializing vehicle position:', error);
+      console.error('Error initializing vehicle position:', error);
       // Fallback to start position
       currentIndexRef.current = 0;
       progressRef.current = 0;
@@ -713,8 +706,7 @@ export default function AdvancedVehicleTrackingMap({
   useEffect(() => {
     if (!isClient || routePath.length < 2 || isRestoringRef.current) return;
 
-    console.log('🚀 Starting animation loop with route length:', routePath.length);
-    setIsMoving(true);
+    setIsMoving(true); // Ensure moving state is set
 
     const animate = () => {
       const currentTime = Date.now();
@@ -723,7 +715,6 @@ export default function AdvancedVehicleTrackingMap({
 
       // Prevent animation if route is invalid
       if (currentIndexRef.current >= routePath.length - 1) {
-        console.log('🏁 Journey completed at index:', currentIndexRef.current);
         setIsMoving(false);
         setVehicleSpeed(0);
         setRouteProgress(1);
@@ -735,7 +726,6 @@ export default function AdvancedVehicleTrackingMap({
       const nextPos = routePath[currentIndexRef.current + 1];
       
       if (!nextPos) {
-        console.log('🏁 No next position, journey completed');
         setIsMoving(false);
         setVehicleSpeed(0);
         setRouteProgress(1);
@@ -749,7 +739,6 @@ export default function AdvancedVehicleTrackingMap({
       
       // Prevent division by zero
       if (segmentDistance <= 0) {
-        console.log('⚠️ Zero segment distance, skipping to next segment');
         currentIndexRef.current++;
         progressRef.current = 0;
         animationRef.current = requestAnimationFrame(animate);
@@ -762,15 +751,19 @@ export default function AdvancedVehicleTrackingMap({
       // Calculate speed using simulator
       const calculatedSpeed = speedSimulatorRef.current.calculateSpeed(segmentDistance, isInCity);
       
-      // Convert speed to progress
+      // Convert speed to progress with safety checks
       const speedKmPerSecond = calculatedSpeed / 3600;
       const progressDelta = (speedKmPerSecond * deltaTime) / segmentDistance;
       
-      progressRef.current += progressDelta;
+      // Ensure progressDelta is reasonable and not NaN
+      if (isNaN(progressDelta) || !isFinite(progressDelta) || progressDelta <= 0) {
+        progressRef.current += 0.001; // Small default progress
+      } else {
+        progressRef.current += progressDelta;
+      }
       
       // Check if segment is complete
       if (progressRef.current >= 1) {
-        console.log('📍 Segment completed, moving to next:', currentIndexRef.current, '->', currentIndexRef.current + 1);
         progressRef.current = 0;
         currentIndexRef.current++;
         
@@ -778,7 +771,6 @@ export default function AdvancedVehicleTrackingMap({
         setTraveledPath(prev => [...prev, nextPos]);
         
         if (currentIndexRef.current >= routePath.length - 1) {
-          console.log('🏁 Final segment completed');
           setIsMoving(false);
           setVehicleSpeed(0);
           setVehiclePosition(routePath[routePath.length - 1]);
@@ -852,7 +844,8 @@ export default function AdvancedVehicleTrackingMap({
   useEffect(() => {
     if (mapInstance && !isSystemView) {
       const handleZoomChange = () => {
-        setCurrentZoom(mapInstance.getZoom());
+        const newZoom = mapInstance.getZoom();
+        setCurrentZoom(newZoom);
       };
       
       mapInstance.on('zoomend', handleZoomChange);
@@ -862,6 +855,23 @@ export default function AdvancedVehicleTrackingMap({
       };
     }
   }, [mapInstance, isSystemView]);
+
+  // Set up window callback for zoom tracking
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.currentMapZoomSetter = (zoom: number) => {
+        if (!isSystemView) {
+          setCurrentZoom(zoom);
+        }
+      };
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.currentMapZoomSetter = undefined;
+      }
+    };
+  }, [isSystemView]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -1084,8 +1094,13 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        mapInstance.zoomOut();
-                        setCurrentZoom(mapInstance.getZoom());
+                        try {
+                          mapInstance.zoomOut();
+                          const newZoom = mapInstance.getZoom();
+                          setCurrentZoom(newZoom);
+                        } catch (error) {
+                          console.error('Zoom out error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-colors"
@@ -1096,8 +1111,13 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        mapInstance.zoomIn();
-                        setCurrentZoom(mapInstance.getZoom());
+                        try {
+                          mapInstance.zoomIn();
+                          const newZoom = mapInstance.getZoom();
+                          setCurrentZoom(newZoom);
+                        } catch (error) {
+                          console.error('Zoom in error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors"
@@ -1118,8 +1138,12 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        const center = mapInstance.getCenter();
-                        mapInstance.panTo([center.lat + 0.01, center.lng]);
+                        try {
+                          const center = mapInstance.getCenter();
+                          mapInstance.panTo([center.lat + 0.005, center.lng], { animate: true, duration: 0.5 });
+                        } catch (error) {
+                          console.error('Pan up error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
@@ -1131,8 +1155,12 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        const center = mapInstance.getCenter();
-                        mapInstance.panTo([center.lat, center.lng - 0.01]);
+                        try {
+                          const center = mapInstance.getCenter();
+                          mapInstance.panTo([center.lat, center.lng - 0.005], { animate: true, duration: 0.5 });
+                        } catch (error) {
+                          console.error('Pan left error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
@@ -1143,7 +1171,11 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance && vehiclePosition) {
-                        mapInstance.panTo(vehiclePosition);
+                        try {
+                          mapInstance.panTo(vehiclePosition, { animate: true, duration: 0.8 });
+                        } catch (error) {
+                          console.error('Center on vehicle error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-bold transition-colors"
@@ -1154,8 +1186,12 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        const center = mapInstance.getCenter();
-                        mapInstance.panTo([center.lat, center.lng + 0.01]);
+                        try {
+                          const center = mapInstance.getCenter();
+                          mapInstance.panTo([center.lat, center.lng + 0.005], { animate: true, duration: 0.5 });
+                        } catch (error) {
+                          console.error('Pan right error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
@@ -1167,8 +1203,12 @@ export default function AdvancedVehicleTrackingMap({
                   <button
                     onClick={() => {
                       if (mapInstance) {
-                        const center = mapInstance.getCenter();
-                        mapInstance.panTo([center.lat - 0.01, center.lng]);
+                        try {
+                          const center = mapInstance.getCenter();
+                          mapInstance.panTo([center.lat - 0.005, center.lng], { animate: true, duration: 0.5 });
+                        } catch (error) {
+                          console.error('Pan down error:', error);
+                        }
                       }
                     }}
                     className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
