@@ -18,7 +18,7 @@ export default function WaybillDisplayPage() {
         </div>
         <div className="mt-5 sm:mt-6">
           <Link
-            href={`/tracking?waybill=${encodeURIComponent(waybill || '')}`}
+            href={`/tracking/map/${encodeURIComponent(waybill || '')}`}
             className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-blue-900 px-5 py-3 text-white font-semibold hover:bg-blue-800 transition-colors"
           >
             Track Shipment
