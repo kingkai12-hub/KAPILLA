@@ -245,6 +245,17 @@ function VehicleMarker({ position, speed, rotation, progress }: {
   );
 }
 
+// Map Instance Handler to capture map reference
+function MapInstanceHandler({ onMapReady }: { onMapReady: (map: any) => void }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    onMapReady(map);
+  }, [map, onMapReady]);
+  
+  return null;
+}
+
 // Map Controller for smooth pan and zoom with intelligent zoom control
 function MapController({ center, zoom, vehiclePosition, routePath, isSystemView }: { 
   center?: [number, number]; 
@@ -255,14 +266,15 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
 }) {
   const map = useMap();
   const defaultCenter: [number, number] = [-6.8151812, 39.2864692];
-  const defaultZoom = 12;
+  const defaultZoom = 17; // Higher default zoom for better road and place name visibility
   const isFollowingRef = useRef(true);
   const userZoomRef = useRef(zoom || defaultZoom);
   const hasUserInteractedRef = useRef(false);
+  const isSystemViewRef = useRef(isSystemView !== false); // Track system view state
 
-  // Calculate optimal zoom based on route characteristics
+  // Calculate optimal zoom based on route characteristics with enhanced road visibility
   const calculateOptimalZoom = useCallback((route: [number, number][]) => {
-    if (route.length < 2) return 14; // Default for single point
+    if (route.length < 2) return 17; // Higher default for better road visibility
 
     // Calculate route bounds
     const lats = route.map(point => point[0]);
@@ -277,39 +289,59 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     const lngDiff = maxLng - minLng;
     const routeArea = latDiff * lngDiff;
     
-    // Determine if urban vs rural based on point density
-    const totalDistance = route.reduce((acc, point, index) => {
-      if (index === 0) return 0;
-      const prevPoint = route[index - 1];
-      const distance = Math.sqrt(
-        Math.pow(point[0] - prevPoint[0], 2) + 
-        Math.pow(point[1] - prevPoint[1], 2)
+    // Enhanced density calculation with segment analysis
+    let totalDistance = 0;
+    let shortSegments = 0;
+    let mediumSegments = 0;
+    let longSegments = 0;
+    
+    for (let i = 1; i < route.length; i++) {
+      const distance = calculateDistance(
+        route[i - 1][0], route[i - 1][1],
+        route[i][0], route[i][1]
       );
-      return acc + distance;
-    }, 0);
+      totalDistance += distance;
+      
+      if (distance <= 1) shortSegments++;
+      else if (distance <= 5) mediumSegments++;
+      else longSegments++;
+    }
     
+    const avgSegmentDistance = totalDistance / (route.length - 1);
     const density = route.length / (routeArea || 0.01);
-    const isUrban = density > 50; // High density indicates urban area
     
-    // Calculate optimal zoom based on route characteristics
+    // Enhanced urban detection based on multiple factors
+    const shortSegmentRatio = shortSegments / (route.length - 1);
+    const isUrban = (
+      density > 50 || 
+      shortSegmentRatio > 0.6 || 
+      avgSegmentDistance < 2
+    );
+    
+    // Calculate optimal zoom with enhanced road visibility focus
     let optimalZoom;
     
     if (isUrban) {
-      // Urban areas - need higher zoom for road details
-      if (routeArea < 0.01) optimalZoom = 16; // Very tight urban area
-      else if (routeArea < 0.05) optimalZoom = 15; // Small urban area  
-      else if (routeArea < 0.2) optimalZoom = 14; // Medium urban area
-      else optimalZoom = 13; // Large urban area
+      // Urban areas - higher zoom for detailed road geometry and place names
+      if (routeArea < 0.005) optimalZoom = 18; // Very tight urban area - maximum detail
+      else if (routeArea < 0.01) optimalZoom = 17; // Tight urban area - streets visible
+      else if (routeArea < 0.05) optimalZoom = 16; // Small urban area - major roads clear
+      else if (routeArea < 0.2) optimalZoom = 15; // Medium urban area - road network visible
+      else optimalZoom = 14; // Large urban area - main roads visible
     } else {
-      // Rural areas - moderate zoom for visibility
-      if (routeArea < 0.1) optimalZoom = 14; // Small rural area
-      else if (routeArea < 0.5) optimalZoom = 13; // Medium rural area
-      else if (routeArea < 2) optimalZoom = 12; // Large rural area
-      else optimalZoom = 11; // Very large rural area
+      // Rural areas - balanced zoom for visibility while maintaining context
+      if (routeArea < 0.05) optimalZoom = 16; // Small rural area - detailed view
+      else if (routeArea < 0.2) optimalZoom = 15; // Medium rural area - roads visible
+      else if (routeArea < 1) optimalZoom = 14; // Large rural area - highway network
+      else if (routeArea < 3) optimalZoom = 13; // Very large rural area - major roads
+      else optimalZoom = 12; // Extensive rural area - overview with main highways
     }
     
-    // Ensure minimum zoom for road visibility
-    return Math.max(11, Math.min(17, optimalZoom));
+    // Ensure minimum zoom for road and place name visibility
+    // Zoom 14+ is generally needed for clear road names and street details
+    // Zoom 16+ is ideal for urban street names and landmarks
+    const minZoom = isUrban ? 15 : 13;
+    return Math.max(minZoom, Math.min(18, optimalZoom));
   }, []);
 
   useEffect(() => {
@@ -319,6 +351,9 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     const effectiveCenter = center || defaultCenter;
     const effectiveZoom = zoom || defaultZoom;
     
+    // Update system view ref when prop changes
+    isSystemViewRef.current = isSystemView !== false;
+    
     // Set initial view with calculated optimal zoom
     const optimalZoom = routePath && routePath.length > 1 
       ? calculateOptimalZoom(routePath) 
@@ -326,53 +361,76 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     
     map.setView(effectiveCenter, optimalZoom, { animate: false });
     userZoomRef.current = optimalZoom;
-    isFollowingRef.current = true;
+    isFollowingRef.current = isSystemViewRef.current;
     hasUserInteractedRef.current = false;
 
-    // Add keyboard controls
+    // Enhanced keyboard controls
     const handleKeyPress = (e: KeyboardEvent) => {
       switch(e.key) {
         case '+':
         case '=':
           map.zoomIn();
           hasUserInteractedRef.current = true;
+          userZoomRef.current = map.getZoom();
           break;
         case '-':
         case '_':
           map.zoomOut();
           hasUserInteractedRef.current = true;
+          userZoomRef.current = map.getZoom();
           break;
         case 'f':
         case 'F':
-          // Toggle follow vehicle
-          isFollowingRef.current = !isFollowingRef.current;
-          if (isFollowingRef.current && vehiclePosition) {
-            map.panTo(vehiclePosition);
-            hasUserInteractedRef.current = false;
+          // Toggle follow vehicle (only works in System View)
+          if (isSystemViewRef.current) {
+            isFollowingRef.current = !isFollowingRef.current;
+            if (isFollowingRef.current && vehiclePosition) {
+              map.panTo(vehiclePosition);
+              hasUserInteractedRef.current = false;
+            }
           }
           break;
         case 'a':
         case 'A':
           // Toggle between System View and User View
-          isFollowingRef.current = !isFollowingRef.current;
-          if (isFollowingRef.current) {
+          const newSystemView = !isSystemViewRef.current;
+          isSystemViewRef.current = newSystemView;
+          
+          if (newSystemView) {
             // System View - reset to optimal zoom and follow
             const optimalZoom = routePath && routePath.length > 1 
               ? calculateOptimalZoom(routePath) 
               : defaultZoom;
             map.setView(vehiclePosition || effectiveCenter, optimalZoom, { animate: true });
+            isFollowingRef.current = true;
             hasUserInteractedRef.current = false;
+          } else {
+            // User View - stop following, maintain current view
+            isFollowingRef.current = false;
+            hasUserInteractedRef.current = true;
           }
           break;
       }
     };
 
-    // Track user interactions
+    // Enhanced user interaction tracking
     const handleUserInteraction = () => {
-      hasUserInteractedRef.current = true;
+      if (isSystemViewRef.current) {
+        hasUserInteractedRef.current = true;
+        userZoomRef.current = map.getZoom();
+      }
     };
 
+    const handleZoomEnd = () => {
+      if (isSystemViewRef.current) {
+        userZoomRef.current = map.getZoom();
+        hasUserInteractedRef.current = true;
+      }
+    };
+
+    // Map event listeners
     map.on('zoomstart', handleUserInteraction);
+    map.on('zoomend', handleZoomEnd);
     map.on('movestart', handleUserInteraction);
     map.on('dragstart', handleUserInteraction);
     
@@ -381,19 +439,55 @@ function MapController({ center, zoom, vehiclePosition, routePath, isSystemView 
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
       map.off('zoomstart', handleUserInteraction);
+      map.off('zoomend', handleZoomEnd);
       map.off('movestart', handleUserInteraction);
       map.off('dragstart', handleUserInteraction);
     };
-  }, [center, zoom, map, routePath, calculateOptimalZoom, vehiclePosition]);
+  }, [center, zoom, map, routePath, calculateOptimalZoom, vehiclePosition, isSystemView]);
 
-  // Follow vehicle if in System View and user hasn't manually interacted
+  // Enhanced vehicle following with intelligent zoom management
   useEffect(() => {
     if (!map) return;
 
-    if (isSystemView !== false && isFollowingRef.current && vehiclePosition && !hasUserInteractedRef.current) {
-      map.panTo(vehiclePosition, { animate: true, duration: 1 });
+    // Only follow vehicle in System View and when user hasn't manually interacted
+    if (isSystemViewRef.current && isFollowingRef.current && vehiclePosition && !hasUserInteractedRef.current) {
+      const currentCenter = map.getCenter();
+      const vehicleLatLng = L.latLng(vehiclePosition[0], vehiclePosition[1]);
+      const distance = currentCenter.distanceTo(vehicleLatLng);
+      
+      // Only recenter if vehicle is significantly far from center (reduce bouncing)
+      if (distance > 500) {
+        map.panTo(vehiclePosition, { animate: true, duration: 0.5 });
+      }
+      
+      // Intelligent zoom adjustment based on route context
+      if (routePath && routePath.length > 1) {
+        const currentZoom = map.getZoom();
+        const optimalZoom = calculateOptimalZoom(routePath);
+        const zoomDifference = Math.abs(currentZoom - optimalZoom);
+        
+        // Only adjust zoom if difference is significant (avoid constant zoom changes)
+        if (zoomDifference > 1) {
+          // Smooth zoom transition to optimal level
+          map.setZoom(optimalZoom, { animate: true });
+        }
+      }
     }
-  }, [vehiclePosition, map, isSystemView]);
+  }, [vehiclePosition, map, routePath, calculateOptimalZoom]);
+
+  // Update view mode state when prop changes
+  useEffect(() => {
+    isSystemViewRef.current = isSystemView !== false;
+    if (!isSystemViewRef.current) {
+      // User View - stop following and mark as user interacted
+      isFollowingRef.current = false;
+      hasUserInteractedRef.current = true;
+    } else {
+      // System View - reset following state
+      isFollowingRef.current = true;
+      hasUserInteractedRef.current = false;
+    }
+  }, [isSystemView]);
 
   return null;
 }
@@ -418,6 +512,8 @@ export default function AdvancedVehicleTrackingMap({
   const [isMoving, setIsMoving] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isSystemView, setIsSystemView] = useState(true); // Default to System View
+  const [mapInstance, setMapInstance] = useState<any>(null); // Store map instance
+  const [currentZoom, setCurrentZoom] = useState(zoom || 17); // Track current zoom level
 
   const animationRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
@@ -617,16 +713,29 @@ export default function AdvancedVehicleTrackingMap({
   useEffect(() => {
     if (!isClient || routePath.length < 2 || isRestoringRef.current) return;
 
+    console.log('🚀 Starting animation loop with route length:', routePath.length);
+    setIsMoving(true);
+
     const animate = () => {
       const currentTime = Date.now();
       const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
       lastTimeRef.current = currentTime;
 
+      // Prevent animation if route is invalid
+      if (currentIndexRef.current >= routePath.length - 1) {
+        console.log('🏁 Journey completed at index:', currentIndexRef.current);
+        setIsMoving(false);
+        setVehicleSpeed(0);
+        setRouteProgress(1);
+        localStorage.removeItem('advancedVehicleTracking');
+        return;
+      }
+
       const currentPos = routePath[currentIndexRef.current];
       const nextPos = routePath[currentIndexRef.current + 1];
       
       if (!nextPos) {
-        // Journey complete
+        console.log('🏁 No next position, journey completed');
         setIsMoving(false);
         setVehicleSpeed(0);
         setRouteProgress(1);
@@ -637,6 +746,15 @@ export default function AdvancedVehicleTrackingMap({
 
       // Calculate segment distance
       const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
+      
+      // Prevent division by zero
+      if (segmentDistance <= 0) {
+        console.log('⚠️ Zero segment distance, skipping to next segment');
+        currentIndexRef.current++;
+        progressRef.current = 0;
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
       
       // Determine if we're in a city area
       const isInCity = segmentDistance <= 2;
@@ -652,6 +770,7 @@ export default function AdvancedVehicleTrackingMap({
       
       // Check if segment is complete
       if (progressRef.current >= 1) {
+        console.log('📍 Segment completed, moving to next:', currentIndexRef.current, '->', currentIndexRef.current + 1);
         progressRef.current = 0;
         currentIndexRef.current++;
         
@@ -659,7 +778,7 @@ export default function AdvancedVehicleTrackingMap({
         setTraveledPath(prev => [...prev, nextPos]);
         
         if (currentIndexRef.current >= routePath.length - 1) {
-          // Journey complete
+          console.log('🏁 Final segment completed');
           setIsMoving(false);
           setVehicleSpeed(0);
           setVehiclePosition(routePath[routePath.length - 1]);
@@ -729,6 +848,21 @@ export default function AdvancedVehicleTrackingMap({
     };
   }, [isClient, routePath, key, saveTrackingState, loadTrackingState, calculateExpectedPosition, calculateTotalDistance]);
 
+  // Track zoom level changes
+  useEffect(() => {
+    if (mapInstance && !isSystemView) {
+      const handleZoomChange = () => {
+        setCurrentZoom(mapInstance.getZoom());
+      };
+      
+      mapInstance.on('zoomend', handleZoomChange);
+      
+      return () => {
+        mapInstance.off('zoomend', handleZoomChange);
+      };
+    }
+  }, [mapInstance, isSystemView]);
+
   // Handle page visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -777,13 +911,18 @@ export default function AdvancedVehicleTrackingMap({
       <div className="relative">
         <MapContainer 
           center={center || [-6.8151812, 39.2864692]} 
-          zoom={zoom || 6} 
+          zoom={zoom || 17} 
           style={{ height: '100%', width: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
         >
+          {/* Enhanced tile layer for better road and place name visibility */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
+            maxNativeZoom={19}
           />
+          
+          <MapInstanceHandler onMapReady={setMapInstance} />
           
           <MapController 
             center={center} 
@@ -889,35 +1028,158 @@ export default function AdvancedVehicleTrackingMap({
           )}
         </MapContainer>
         
-        {/* Advanced Progress Indicator */}
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 z-10 min-w-[280px]">
+        {/* Enhanced Progress Indicator with Zoom Controls */}
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
           <div className="text-sm font-bold text-gray-800 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-red-600">🚚</span>
               <span>Live Tracking</span>
             </div>
-            {/* View Mode Toggle */}
+            {/* Enhanced View Mode Toggle */}
             <button
               onClick={() => setIsSystemView(!isSystemView)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all transform hover:scale-105 ${
                 isSystemView 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                  : 'bg-gray-100 text-gray-700 border border-gray-300'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-400 shadow-md' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white border border-gray-400 shadow-md'
               }`}
-              title={isSystemView ? 'Switch to User View (Manual)' : 'Switch to System View (Auto)'}
+              title={isSystemView ? 'Switch to User View (Manual Control)' : 'Switch to System View (Auto Follow)'}
             >
               {isSystemView ? '🤖 Auto' : '👤 Manual'}
             </button>
           </div>
           
           <div className="space-y-3">
-            {/* View Mode Indicator */}
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">View Mode:</span>
-              <span className={`font-semibold ${isSystemView ? 'text-blue-600' : 'text-gray-600'}`}>
-                {isSystemView ? '🤖 System View' : '👤 User View'}
+            {/* Enhanced View Mode Indicator */}
+            <div className="flex items-center justify-between text-xs p-2 rounded-lg bg-gray-50">
+              <span className="text-gray-600 font-medium">View Mode:</span>
+              <span className={`font-bold ${isSystemView ? 'text-blue-600' : 'text-gray-700'}`}>
+                {isSystemView ? '🤖 System View (Auto)' : '👤 User View (Manual)'}
               </span>
             </div>
+            
+            {/* Follow Status Indicator */}
+            {isSystemView && (
+              <div className="flex items-center justify-between text-xs p-2 rounded-lg bg-blue-50">
+                <span className="text-gray-600 font-medium">Follow Status:</span>
+                <span className={`font-bold ${true ? 'text-green-600' : 'text-orange-600'}`}>
+                  {true ? '🟢 Following Vehicle' : '🟡 Manual Control'}
+                </span>
+              </div>
+            )}
+            
+            {/* Current Zoom Level Display */}
+            <div className="flex items-center justify-between text-xs p-2 rounded-lg bg-gray-50">
+              <span className="text-gray-600 font-medium">Current Zoom:</span>
+              <span className="font-bold text-blue-600" id="current-zoom-level">
+                {isSystemView ? '🎯 Auto' : `🔧 ${currentZoom}`}
+              </span>
+            </div>
+            
+            {/* Manual Zoom Controls */}
+            {!isSystemView && (
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                <span className="text-xs text-gray-600 font-medium">Manual Zoom:</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        mapInstance.zoomOut();
+                        setCurrentZoom(mapInstance.getZoom());
+                      }
+                    }}
+                    className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Zoom Out"
+                  >
+                    −
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        mapInstance.zoomIn();
+                        setCurrentZoom(mapInstance.getZoom());
+                      }
+                    }}
+                    className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Zoom In"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Manual Pan Controls */}
+            {!isSystemView && (
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                <span className="text-xs text-gray-600 font-medium">Manual Pan:</span>
+                <div className="grid grid-cols-3 gap-1">
+                  <div></div>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        const center = mapInstance.getCenter();
+                        mapInstance.panTo([center.lat + 0.01, center.lng]);
+                      }
+                    }}
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Pan Up"
+                  >
+                    ↑
+                  </button>
+                  <div></div>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        const center = mapInstance.getCenter();
+                        mapInstance.panTo([center.lat, center.lng - 0.01]);
+                      }
+                    }}
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Pan Left"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (mapInstance && vehiclePosition) {
+                        mapInstance.panTo(vehiclePosition);
+                      }
+                    }}
+                    className="w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Center on Vehicle"
+                  >
+                    ⚡
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        const center = mapInstance.getCenter();
+                        mapInstance.panTo([center.lat, center.lng + 0.01]);
+                      }
+                    }}
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Pan Right"
+                  >
+                    →
+                  </button>
+                  <div></div>
+                  <button
+                    onClick={() => {
+                      if (mapInstance) {
+                        const center = mapInstance.getCenter();
+                        mapInstance.panTo([center.lat - 0.01, center.lng]);
+                      }
+                    }}
+                    className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors"
+                    title="Pan Down"
+                  >
+                    ↓
+                  </button>
+                  <div></div>
+                </div>
+              </div>
+            )}
             
             {/* Progress Bar */}
             <div>
@@ -948,13 +1210,35 @@ export default function AdvancedVehicleTrackingMap({
             </div>
           </div>
           
-          {/* Controls hint */}
-          <div className="text-xs text-gray-500 mt-3 pt-2 border-t space-y-1">
-            <div>🎮 <strong>Controls:</strong></div>
-            <div>• Press 'A' to toggle Auto/Manual view</div>
-            <div>• Press 'F' to follow vehicle (Auto mode)</div>
-            <div>• Use '+/-' to zoom in/out</div>
-            <div>• Drag to pan (Manual mode)</div>
+          {/* Enhanced Controls Guide */}
+          <div className="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-2">
+            <div className="font-semibold text-gray-700 mb-2">🎮 Enhanced Controls:</div>
+            <div className="grid grid-cols-1 gap-1">
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">A</span>
+                <span className="text-gray-600">Toggle Auto/Manual view mode</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">F</span>
+                <span className="text-gray-600">Follow vehicle (Auto mode only)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">+/-</span>
+                <span className="text-gray-600">Zoom in/out (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">🖱️</span>
+                <span className="text-gray-600">Drag to pan (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">⚡</span>
+                <span className="text-gray-600">Center on vehicle (Manual mode)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 font-mono bg-blue-50 px-1 rounded">↑↓←→</span>
+                <span className="text-gray-600">Pan controls (Manual mode)</span>
+              </div>
+            </div>
           </div>
         </div>
 
