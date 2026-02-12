@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
+
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { id } = await params;
     const body = await req.json();
@@ -23,24 +31,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { id } = await params;
-    const { searchParams } = new URL(req.url);
-    const userIdQuery = searchParams.get('userId');
-    const body = await req.json().catch(() => ({}));
-    const { userId: userIdBody } = body as { userId?: string };
-    const userId = userIdQuery || userIdBody;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-    }
-
-    const user = await db.user.findUnique({ where: { id: userId } });
-    const allowedRoles = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'];
-
-    if (!user || !allowedRoles.includes(String(user.role))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
 
     const request = await db.pickupRequest.findUnique({ where: { id } });
     if (!request) {

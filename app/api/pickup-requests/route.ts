@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendPickupRequestSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
-// POST: Create a new pickup request (Public)
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
+
+// POST: Create a new pickup request (Public - no auth required)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -100,10 +103,13 @@ export async function POST(req: Request) {
   }
 }
 
-// GET: List all pickup requests (Protected - ideally, but we'll do simple check or assume middleware/client handles it)
-// For now, we'll allow fetching, but in a real app, we should check auth.
-// Since this is called from the staff portal which is protected, it's "okay" for this MVP.
+// GET: List all pickup requests (Staff only)
 export async function GET(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');

@@ -1,27 +1,28 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
+import { requireAuth, requireRole } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT']
+const ADMIN_LOCKED_ROLES = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO']
+
 export async function GET(request: Request) {
+  const auth = await requireAuth(request)
+  if (auth.error) return auth.error
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
     const folderId = searchParams.get('folderId')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
 
-    // Check authorization
-    let isAuthorized = false
-    if (userId) {
-      const user = await prisma.user.findUnique({ where: { id: userId } })
-      if (user && ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(user.role)) {
-        isAuthorized = true
-      }
-    }
+    const isAuthorized = ADMIN_LOCKED_ROLES.includes(auth.user!.role)
 
     let where: any = {}
     if (folderId === 'null') {
@@ -77,22 +78,25 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAuth(request)
+  if (auth.error) return auth.error
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   try {
     // Support both JSON (legacy) and FormData (new)
     const contentType = request.headers.get('content-type') || ''
     
-    let uploaderId, name, data, mimeType, folderId
+    let name: string | undefined, data: string | undefined, mimeType: string | undefined, folderId: string | undefined
 
     if (contentType.includes('application/json')) {
       const body = await request.json()
-      uploaderId = body.uploaderId
       name = body.name
       data = body.data
       mimeType = body.mimeType
       folderId = body.folderId
     } else if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
-      uploaderId = formData.get('uploaderId') as string
       name = formData.get('name') as string
       const file = formData.get('file') as File
       folderId = formData.get('folderId') as string
@@ -132,9 +136,10 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!uploaderId || !name || !data || !mimeType) {
+    if (!name || !data || !mimeType) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+    const uploaderId = auth.user!.id
 
     const effectiveFolderId = (folderId === 'null' || !folderId) ? null : folderId
 

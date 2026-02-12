@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const ADMIN_ROLES = ['ADMIN'];
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { id } = await params;
     const body = await req.json();
@@ -28,6 +36,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { id } = await params;
     await db.executive.delete({

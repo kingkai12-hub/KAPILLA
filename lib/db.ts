@@ -35,38 +35,33 @@ try {
 } catch (error) {
   console.log('⚠️ Prisma not available, using mock for build');
   // Mock Prisma only for build time
+  const noop = () => Promise.resolve(null);
+  const noopArr = () => Promise.resolve([]);
+  const noopObj = () => Promise.resolve({});
+  const mockModel = {
+    findMany: noopArr,
+    findUnique: noop,
+    findFirst: noop,
+    create: noopObj,
+    update: noopObj,
+    delete: noopObj,
+  };
   prisma = {
     $connect: () => Promise.resolve(),
     $disconnect: () => Promise.resolve(),
-    shipment: {
-      findMany: () => Promise.resolve([]),
-      findUnique: () => Promise.resolve(null),
-      findFirst: () => Promise.resolve(null),
-      create: () => Promise.resolve({}),
-      update: () => Promise.resolve({}),
-      delete: () => Promise.resolve({}),
-    },
-    trackingEvent: {
-      findMany: () => Promise.resolve([]),
-      create: () => Promise.resolve({}),
-    },
-    trip: {
-      findMany: () => Promise.resolve([]),
-      create: () => Promise.resolve({}),
-      update: () => Promise.resolve({}),
-    },
-    checkIn: {
-      findMany: () => Promise.resolve([]),
-      create: () => Promise.resolve({}),
-    },
-    user: {
-      findMany: () => Promise.resolve([]),
-      findUnique: () => Promise.resolve(null),
-      create: () => Promise.resolve({}),
-      update: () => Promise.resolve({}),
-    },
-    $queryRaw: () => Promise.resolve([]),
-    $executeRaw: () => Promise.resolve({}),
+    shipment: { ...mockModel },
+    trackingEvent: { findMany: noopArr, create: noopObj },
+    trip: { ...mockModel },
+    checkIn: { findMany: noopArr, create: noopObj },
+    user: { ...mockModel },
+    document: { ...mockModel },
+    documentFolder: { ...mockModel },
+    message: { ...mockModel },
+    pickupRequest: { ...mockModel },
+    serviceShowcase: { ...mockModel },
+    executive: { ...mockModel },
+    $queryRaw: noopArr,
+    $executeRaw: () => Promise.resolve(0),
   };
 }
 

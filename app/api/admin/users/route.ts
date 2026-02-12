@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { hashPassword } from '@/lib/auth';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const ADMIN_ROLES = ['ADMIN'];
 
 async function generateWorkId() {
   const now = new Date();
@@ -18,8 +22,13 @@ async function generateWorkId() {
   return `KPL-WRK-${Date.now().toString().slice(-6)}`;
 }
 
-// GET: List all users
-export async function GET() {
+// GET: List all users (ADMIN only)
+export async function GET(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const users = await db.user.findMany({
       orderBy: { createdAt: 'desc' },
@@ -42,8 +51,13 @@ export async function GET() {
   }
 }
 
-// POST: Create new user
+// POST: Create new user (ADMIN only)
 export async function POST(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const { name, email, password, role, workId, phoneNumber, isDisabled } = body;
@@ -65,12 +79,13 @@ export async function POST(req: Request) {
     }
 
     const finalWorkId = workId || await generateWorkId();
+    const hashedPassword = await hashPassword(password);
 
     const newUser = await db.user.create({
       data: {
         name,
         email,
-        password, // In production, hash this!
+        password: hashedPassword,
         role: role || 'STAFF',
         workId: finalWorkId,
         phoneNumber: phoneNumber || null,
@@ -138,14 +153,19 @@ export async function POST(req: Request) {
   }
 }
 
-// PUT: Update user
+// PUT: Update user (ADMIN only)
 export async function PUT(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const { id, name, email, role, password, workId, phoneNumber, isDisabled } = body;
 
-    const data: any = { name, email, role, workId, phoneNumber };
-    if (password) data.password = password;
+    const data: Record<string, unknown> = { name, email, role, workId, phoneNumber };
+    if (password) data.password = await hashPassword(password);
     if (typeof isDisabled === 'boolean') {
       // Prevent disabling executive/admin accounts to avoid lockout
       const target = await db.user.findUnique({ where: { id } });
@@ -170,8 +190,13 @@ export async function PUT(req: Request) {
   }
 }
 
-// DELETE: Remove user
+// DELETE: Remove user (ADMIN only)
 export async function DELETE(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ADMIN_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

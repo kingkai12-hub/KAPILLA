@@ -3,11 +3,19 @@ import { db } from '@/lib/db';
 import { sendShipmentCreatedSMS, sendShipmentCreatedToReceiverSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
+
 export async function GET(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const shipments = await db.shipment.findMany({
       orderBy: {
@@ -22,10 +30,15 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const {
-      senderName, senderPhone, senderAddress,
+      senderName, senderEmail, senderPhone, senderAddress,
       receiverName, receiverPhone, receiverAddress,
       origin, destination, weight, price, type, cargoDetails,
       dispatcherName, dispatcherSignature
@@ -58,6 +71,7 @@ export async function POST(req: Request) {
           data: {
             waybillNumber,
             senderName,
+            senderEmail: senderEmail || null,
             senderPhone,
             senderAddress,
             receiverName,
@@ -123,10 +137,10 @@ export async function POST(req: Request) {
     }
 
     // Send email notification if sender email is provided
-    if (senderPhone && senderPhone.includes('@')) {
+    if (senderEmail && senderEmail.includes('@')) {
       const emailTemplate = emailTemplates.shipmentUpdate(waybillNumber, 'PENDING', senderName);
       await sendEmail({
-        to: senderPhone,
+        to: senderEmail,
         ...emailTemplate
       });
     }

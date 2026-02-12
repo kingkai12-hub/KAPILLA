@@ -654,33 +654,49 @@ export default function AdvancedVehicleTrackingMap({
   // Combine route paths for full journey with validation
   useEffect(() => {
     try {
+      console.log('🗺️ Route validation started:', { 
+        routePathLength: routePath?.length || 0, 
+        remainingPathLength: remainingPath?.length || 0,
+        routePath: routePath?.slice(0, 3), // First 3 points for debugging
+        remainingPath: remainingPath?.slice(0, 3)
+      });
+      
       // Validate route data
       if (!routePath || !Array.isArray(routePath)) {
-        setMapError('Invalid route data provided');
+        console.error('❌ Invalid routePath:', routePath);
+        setMapError('Invalid route data provided - routePath is not an array');
         return;
       }
       
       if (routePath.length === 0) {
-        setMapError('No route coordinates available');
+        console.error('❌ Empty routePath');
+        setMapError('No route coordinates available - routePath is empty');
         return;
       }
       
       // Validate coordinate format
-      const invalidCoords = routePath.filter(point => 
-        !Array.isArray(point) || 
-        point.length !== 2 || 
-        typeof point[0] !== 'number' || 
-        typeof point[1] !== 'number' ||
-        isNaN(point[0]) || isNaN(point[1]) ||
-        Math.abs(point[0]) > 90 || Math.abs(point[1]) > 180
-      );
+      const invalidCoords = routePath.filter((point, index) => {
+        const isValid = Array.isArray(point) && 
+          point.length === 2 && 
+          typeof point[0] === 'number' && 
+          typeof point[1] === 'number' &&
+          !isNaN(point[0]) && !isNaN(point[1]) &&
+          Math.abs(point[0]) <= 90 && Math.abs(point[1]) <= 180;
+        
+        if (!isValid) {
+          console.error(`❌ Invalid coordinate at index ${index}:`, point);
+        }
+        return !isValid;
+      });
       
       if (invalidCoords.length > 0) {
+        console.error('❌ Invalid coordinates found:', invalidCoords.length);
         setMapError(`Invalid coordinates found: ${invalidCoords.length} points`);
         return;
       }
       
       // Clear any previous errors
+      console.log('✅ Route validation passed:', { points: routePath.length });
       setMapError(null);
       
       const fullRoute = [...routePath, ...remainingPath];
@@ -688,14 +704,29 @@ export default function AdvancedVehicleTrackingMap({
       totalDistanceRef.current = calculateTotalDistance(fullRoute);
       
     } catch (error) {
-      console.error('Route validation error:', error);
-      setMapError('Failed to process route data');
+      console.error('❌ Route validation error:', error);
+      setMapError('Failed to process route data: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }, [routePath, remainingPath, calculateTotalDistance]);
 
   // Enhanced initialization with state restoration
   useEffect(() => {
-    if (!isClient || routePath.length < 2) return;
+    console.log('🚀 Initialization started:', { 
+      isClient, 
+      routePathLength: routePath?.length || 0,
+      center: center ? [center[0], center[1]] : null,
+      zoom
+    });
+    
+    if (!isClient) {
+      console.log('⏳ Waiting for client-side rendering');
+      return;
+    }
+    
+    if (!routePath || routePath.length < 2) {
+      console.log('⏳ Waiting for route data:', { routePathLength: routePath?.length || 0 });
+      return;
+    }
 
     try {
       isRestoringRef.current = true;
@@ -772,35 +803,56 @@ export default function AdvancedVehicleTrackingMap({
 
   // Enhanced animation loop with state persistence
   useEffect(() => {
-    if (!isClient || routePath.length < 2 || isRestoringRef.current) return;
+    console.log('🎬 Animation loop useEffect:', { 
+      isClient, 
+      routePathLength: routePath?.length || 0, 
+      isRestoring: isRestoringRef.current 
+    });
+    
+    if (!isClient || !routePath || routePath.length < 2 || isRestoringRef.current) {
+      console.log('⏳ Animation not starting - conditions not met');
+      return;
+    }
 
     setIsMoving(true); // Ensure moving state is set
+    console.log('🚀 Animation loop starting');
 
     const animate = () => {
-      const currentTime = Date.now();
-      const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
-      lastTimeRef.current = currentTime;
+      try {
+        const currentTime = Date.now();
+        const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
+        lastTimeRef.current = currentTime;
 
-      // Prevent animation if route is invalid
-      if (currentIndexRef.current >= routePath.length - 1) {
-        setIsMoving(false);
-        setVehicleSpeed(0);
-        setRouteProgress(1);
-        localStorage.removeItem('advancedVehicleTracking');
-        return;
-      }
+        // Prevent animation if route is invalid
+        if (currentIndexRef.current >= routePath.length - 1) {
+          console.log('🏁 Animation completed - reached end of route');
+          setIsMoving(false);
+          setVehicleSpeed(0);
+          setRouteProgress(1);
+          localStorage.removeItem('advancedVehicleTracking');
+          return;
+        }
 
-      const currentPos = routePath[currentIndexRef.current];
-      const nextPos = routePath[currentIndexRef.current + 1];
-      
-      if (!nextPos) {
-        setIsMoving(false);
-        setVehicleSpeed(0);
-        setRouteProgress(1);
-        setTraveledPath(routePath);
-        localStorage.removeItem('advancedVehicleTracking');
-        return;
-      }
+        const currentPos = routePath[currentIndexRef.current];
+        const nextPos = routePath[currentIndexRef.current + 1];
+        
+        // Validate positions
+        if (!currentPos || !nextPos || currentPos.length !== 2 || nextPos.length !== 2) {
+          console.error('❌ Invalid positions in animation:', { currentPos, nextPos, index: currentIndexRef.current });
+          currentIndexRef.current++;
+          animationRef.current = requestAnimationFrame(animate);
+          return;
+        }
+        
+        if (!nextPos) {
+          console.log('🏁 Animation completed - no next position');
+          setIsMoving(false);
+          setVehicleSpeed(0);
+          setRouteProgress(1);
+          setTraveledPath(routePath);
+          localStorage.removeItem('advancedVehicleTracking');
+          return;
+        }
 
       // Calculate segment distance
       const segmentDistance = calculateDistance(currentPos[0], currentPos[1], nextPos[0], nextPos[1]);
@@ -897,6 +949,11 @@ export default function AdvancedVehicleTrackingMap({
       
       // Continue animation
       animationRef.current = requestAnimationFrame(animate);
+      } catch (error) {
+        console.error('❌ Animation frame error:', error);
+        // Continue to next frame even if there's an error
+        animationRef.current = requestAnimationFrame(animate);
+      }
     };
     
     // Start animation

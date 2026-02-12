@@ -2,8 +2,16 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendShipmentUpdateSMS, sendDeliveryConfirmationSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { requireAuth, requireRole } from '@/lib/auth';
+
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
 
 export async function POST(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const { waybillNumber, status, location, remarks, signature, receivedBy, latitude, longitude, estimatedDelivery, estimatedDeliveryTime, transportType } = body;

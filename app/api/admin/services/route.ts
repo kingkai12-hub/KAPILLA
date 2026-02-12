@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// GET is public (used by homepage)
 export async function GET() {
   try {
     const services = await db.serviceShowcase.findMany({
@@ -16,7 +17,14 @@ export async function GET() {
   }
 }
 
+// POST requires ADMIN
 export async function POST(req: Request) {
+  const { requireAuth, requireRole } = await import('@/lib/auth');
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ['ADMIN'])) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const { title, description, imageUrl, icon, sortOrder } = body;

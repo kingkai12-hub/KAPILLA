@@ -1,25 +1,27 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
+import { requireAuth, requireRole } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
+const MANAGER_ROLES = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO']
+
 export async function POST(request: Request) {
+  const auth = await requireAuth(request)
+  if (auth.error) return auth.error
   try {
     const body = await request.json()
-    const { id, name, userId } = body
-    if (!id || !name || !userId) {
+    const { id, name } = body
+    if (!id || !name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+    const userId = auth.user!.id
 
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    
-    // Check permissions: Owner or Manager+
     const existingDoc = await prisma.document.findUnique({ where: { id } })
     if (!existingDoc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
 
     const isOwner = existingDoc.uploaderId === userId
-    const isManager = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(user.role)
+    const isManager = requireRole(auth.user!, MANAGER_ROLES)
 
     if (!isOwner && !isManager) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

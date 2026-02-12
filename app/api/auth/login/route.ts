@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { verifyPassword, migrateToHash } from '@/lib/auth';
 
 export const runtime = 'nodejs';
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: 'strict' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 60 * 60 * 8,
+};
 
 export async function POST(req: Request) {
   try {
@@ -12,40 +21,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
     }
 
-    // --- AUTO-HEAL: Ensure Admin User Exists ---
-    if (email === 'admin@kapilla.com' && password === 'admin123') {
-      try {
-        const adminUser = await db.user.findUnique({ where: { email } });
-        
-        if (!adminUser) {
-          // Create Admin if missing
-          const newUser = await db.user.create({
-            data: {
-              email: 'admin@kapilla.com',
-              password: 'admin123',
-              name: 'Kapilla Admin',
-              role: 'ADMIN'
-            }
-          });
-          const { password: _, ...userWithoutPassword } = newUser;
-          return NextResponse.json(userWithoutPassword);
-        } 
-        // SECURITY FIX: Removed auto-reset of password to prevent backdoor access.
-        // If admin exists but password is wrong, fall through to normal check.
-      } catch (e) {
-        console.error("Auto-heal failed:", e);
-        // Continue to normal login flow if this fails
-      }
-    }
-    // -------------------------------------------
-
-    // In production, use bcrypt to compare hashed passwords!
-    // For this demo, we use plain text comparison as requested for the "working system" setup.
     const user = await db.user.findUnique({
       where: { email }
     });
 
-    if (!user || user.password !== password) {
+    if (!user || !(await verifyPassword(user.password, password))) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
@@ -53,16 +33,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Account disabled. Contact admin.' }, { status: 403 });
     }
 
-    // Return user info (excluding password)
+    // One-time migration: if password was plain text, hash it now
+    if (!user.password.startsWith('$2')) {
+      try {
+        await migrateToHash(user.id, password);
+      } catch (e) {
+        console.error('Password migration failed:', e);
+      }
+    }
+
     const { password: _, ...userWithoutPassword } = user;
     const res = NextResponse.json(userWithoutPassword);
-    res.cookies.set('kapilla_auth', '1', {
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 8,
-    });
+    res.cookies.set('kapilla_auth', '1', cookieOptions);
+    res.cookies.set('kapilla_uid', user.id, cookieOptions);
     return res;
   } catch (error: any) {
     console.error('[AUTH_LOGIN]', error);

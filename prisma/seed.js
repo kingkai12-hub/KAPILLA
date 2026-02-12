@@ -1,16 +1,20 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
+const SALT_ROUNDS = 10;
 
 async function main() {
   // 1. Clean up existing users
   await prisma.user.deleteMany({});
 
-  // 2. Create Admin User
+  const hash = (p) => bcrypt.hashSync(p, SALT_ROUNDS);
+
+  // 2. Create Admin User (hashed password)
   const admin = await prisma.user.create({
     data: {
       email: 'admin@kapilla.com',
-      password: 'admin123', // In a real app, hash this!
+      password: hash('admin123'),
       name: 'Super Admin',
       role: 'ADMIN',
     },
@@ -20,13 +24,13 @@ async function main() {
   const staff = await prisma.user.create({
     data: {
       email: 'staff@kapilla.com',
-      password: 'staff123',
+      password: hash('staff123'),
       name: 'John Staff',
       role: 'STAFF',
     },
   });
 
-  console.log({ admin, staff });
+  console.log('Seeded admin and staff (passwords hashed)');
 }
 
 main()

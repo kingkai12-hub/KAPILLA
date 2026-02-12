@@ -1,29 +1,23 @@
-
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
+import { requireAuth, requireRole } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const runtime = 'nodejs'
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const userId = searchParams.get('userId')
-    
-    let whereClause = {}
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT']
+const ADMIN_LOCKED_ROLES = ['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO']
 
-    if (userId) {
-      const user = await prisma.user.findUnique({ where: { id: userId } })
-      // If user is not found or is a basic staff/driver, hide locked folders
-      // Allowed roles to see locked folders: ADMIN, MD, CEO, MANAGER, OPERATION_MANAGER
-      if (!user || ['STAFF', 'DRIVER'].includes(user.role)) {
-        whereClause = { isLocked: false }
-      }
-    } else {
-      // If no user ID provided, default to secure (hide locked)
-      whereClause = { isLocked: false }
-    }
+export async function GET(req: Request) {
+  const auth = await requireAuth(req)
+  if (auth.error) return auth.error
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  try {
+    const isAuthorized = ADMIN_LOCKED_ROLES.includes(auth.user!.role)
+    const whereClause = isAuthorized ? {} : { isLocked: false }
 
     const folders = await prisma.documentFolder.findMany({
       where: whereClause,
@@ -41,16 +35,17 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAuth(req)
+  if (auth.error) return auth.error
+  if (!requireRole(auth.user!, ADMIN_LOCKED_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   try {
-    const { name, userId, isLocked } = await req.json()
-    if (!name || typeof name !== 'string' || !userId || typeof userId !== 'string') {
-      return NextResponse.json({ error: 'Valid name and userId required' }, { status: 400 })
+    const { name, isLocked } = await req.json()
+    if (!name || typeof name !== 'string') {
+      return NextResponse.json({ error: 'Valid name required' }, { status: 400 })
     }
-
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user || !['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
+    const userId = auth.user!.id
 
     const folder = await prisma.documentFolder.create({
       data: {

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { hashPassword } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function PUT(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
   try {
     const body = await req.json();
     const { id, name, password, image, workId, phoneNumber } = body;
@@ -13,8 +17,11 @@ export async function PUT(req: Request) {
     if (!id) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
+    if (id !== auth.user!.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const dataToUpdate: any = {
+    const dataToUpdate: Record<string, unknown> = {
       name,
       image,
       workId,
@@ -22,7 +29,7 @@ export async function PUT(req: Request) {
     };
 
     if (password) {
-      dataToUpdate.password = password;
+      dataToUpdate.password = await hashPassword(password);
     }
 
     const updatedUser = await db.user.update({
@@ -41,11 +48,16 @@ export async function PUT(req: Request) {
 }
 
 export async function GET(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     if (!id) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    }
+    if (id !== auth.user!.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     const user = await db.user.findUnique({
       where: { id },
