@@ -62,35 +62,48 @@ export default function StaffPortalLayout({
   useEffect(() => {
     setMounted(true);
     // Check for session
-    try {
-      const storedUser = localStorage.getItem('kapilla_user');
-      console.log('Layout mounting, storedUser:', !!storedUser);
-      
-      if (!storedUser) {
+    const checkSession = async () => {
+      try {
+        const storedUser = localStorage.getItem('kapilla_user');
+        console.log('Layout mounting, storedUser:', !!storedUser);
+        
+        if (!storedUser) {
+          // Attempt to fetch from API if localStorage is empty
+          const res = await fetch('/api/auth/session', { cache: 'no-store' });
+          if (res.ok) {
+            const fresh = await res.json();
+            console.log('User found from session API:', fresh.email);
+            localStorage.setItem('kapilla_user', JSON.stringify(fresh));
+            setUser(fresh);
+          } else if (pathname !== '/staff/login') {
+            console.log('No user found in localStorage or session API, redirecting...');
+            window.location.href = '/staff/login';
+          }
+        } else {
+          const parsed = JSON.parse(storedUser);
+          console.log('User found in localStorage:', parsed.email);
+          setUser(parsed);
+          
+          // Background refresh
+          fetch(`/api/staff/profile?id=${parsed.id}`, { cache: 'no-store' })
+            .then(res => res.ok ? res.json() : null)
+            .then(fresh => {
+              if (fresh) {
+                localStorage.setItem('kapilla_user', JSON.stringify(fresh));
+                setUser(fresh);
+              }
+            })
+            .catch(err => console.error('Silent profile refresh failed', err));
+        }
+      } catch (e) {
+        console.error('Session check failed', e);
         if (pathname !== '/staff/login') {
-          console.log('No user found in localStorage, redirecting to login...');
           window.location.href = '/staff/login';
         }
-      } else {
-        const parsed = JSON.parse(storedUser);
-        console.log('User found in localStorage:', parsed.email);
-        setUser(parsed);
-        
-        // Background refresh - don't let it block anything
-        fetch(`/api/staff/profile?id=${parsed.id}`, { cache: 'no-store' })
-          .then(res => res.ok ? res.json() : null)
-          .then(fresh => {
-            if (fresh) {
-              localStorage.setItem('kapilla_user', JSON.stringify(fresh));
-              setUser(fresh);
-            }
-          })
-          .catch(err => console.error('Silent profile refresh failed', err));
       }
-    } catch (e) {
-      console.error('Session check failed', e);
-      window.location.href = '/staff/login';
-    }
+    };
+
+    checkSession();
 
     // Fetch pending pickup requests count
     const fetchPendingCount = async () => {
