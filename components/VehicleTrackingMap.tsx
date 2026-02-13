@@ -6,17 +6,6 @@ import dynamic from 'next/dynamic';
 // CSS import should be at top level
 import 'leaflet/dist/leaflet.css';
 
-// Dynamically import Leaflet to avoid SSR issues
-const L = require('leaflet');
-
-// Fix for default marker icons in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
 interface TrackingData {
   waybillNumber: string;
   route: [number, number][];
@@ -35,6 +24,17 @@ interface VehicleTrackingMapProps {
 }
 
 function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleTrackingMapProps) {
+  // Dynamically import Leaflet to avoid SSR issues
+  const L = require('leaflet');
+  
+  // Fix for default marker icons in Leaflet
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const vehicleMarkerRef = useRef<any>(null);
