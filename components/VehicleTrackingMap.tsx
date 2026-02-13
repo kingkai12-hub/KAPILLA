@@ -222,24 +222,20 @@ function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleT
 
   // Initialize map on component mount
   useEffect(() => {
-    initializeMap();
+    if (!loading) {
+      initializeMap();
+    }
 
     return () => {
-      if (updateIntervalRef.current) {
-        clearInterval(updateIntervalRef.current);
-        updateIntervalRef.current = null;
-      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [initializeMap]);
+  }, [loading, initializeMap]);
 
   // Fetch initial data and set up updates
   useEffect(() => {
-    if (!mapInitialized) return;
-
     fetchTrackingData();
 
     // Set up real-time updates every 2 seconds
@@ -251,7 +247,7 @@ function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleT
         updateIntervalRef.current = null;
       }
     };
-  }, [mapInitialized, fetchTrackingData]);
+  }, [fetchTrackingData]);
 
   // Update map when tracking data changes
   useEffect(() => {
