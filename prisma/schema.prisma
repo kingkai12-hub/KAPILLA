@@ -109,6 +109,7 @@ model Shipment {
   receivedBy     String?  // Name of the person who actually received it
   
   events         TrackingEvent[]
+  tracking       VehicleTracking?
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -118,6 +119,41 @@ model Shipment {
   @@index([receiverPhone])
   @@index([createdAt])
   @@map("Shipment")
+}
+
+model VehicleTracking {
+  id             String         @id @default(uuid())
+  shipmentId     String         @unique
+  shipment       Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  currentLat     Float
+  currentLng     Float
+  speed          Float          @default(0)
+  heading        Float          @default(0)
+  lastUpdated    DateTime       @default(now())
+  
+  // The full planned route as a JSON array of [lat, lng]
+  routePoints    Json?          
+  
+  // Track which segments are completed
+  segments       RouteSegment[]
+
+  @@map("VehicleTracking")
+}
+
+model RouteSegment {
+  id                String          @id @default(uuid())
+  trackingId        String
+  tracking          VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+  
+  startLat          Float
+  startLng          Float
+  endLat            Float
+  endLng            Float
+  isCompleted       Boolean         @default(false)
+  order             Int
+
+  @@map("RouteSegment")
 }
 
 model TrackingEvent {

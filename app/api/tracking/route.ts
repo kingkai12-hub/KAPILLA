@@ -1,149 +1,68 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendShipmentUpdateSMS, sendDeliveryConfirmationSMS } from '@/lib/sms';
-import { sendEmail, emailTemplates } from '@/lib/email';
-import { requireAuth, requireRole } from '@/lib/auth';
+import { locationCoords } from '@/lib/locations';
 
-const STAFF_ROLES = ['ADMIN', 'STAFF', 'DRIVER', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
+export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request) {
-  const auth = await requireAuth(req);
-  if (auth.error) return auth.error;
-  if (!requireRole(auth.user!, STAFF_ROLES)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const waybillNumber = searchParams.get('waybillNumber');
+
+  if (!waybillNumber) {
+    return NextResponse.json({ error: 'Waybill number is required' }, { status: 400 });
   }
+
   try {
-    const body = await req.json();
-    const { waybillNumber, status, location, remarks, signature, receivedBy, estimatedDelivery, estimatedDeliveryTime, transportType } = body;
-
-    if (!waybillNumber || !status || !location) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Find shipment first to get ID
-    const shipment = await db.shipment.findUnique({
-      where: { waybillNumber }
+    let tracking = await db.vehicleTracking.findUnique({
+      where: { shipmentId: (await db.shipment.findUnique({ where: { waybillNumber } }))?.id || '' },
+      include: { segments: { orderBy: { order: 'asc' } } }
     });
 
-    if (!shipment) {
-      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
-    }
+    // If no tracking exists, create a simulated one for demonstration
+    if (!tracking) {
+      const shipment = await db.shipment.findUnique({ where: { waybillNumber } });
+      if (!shipment) return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
 
-    // Transaction operations
-    const composedRemarks = (() => {
-      const parts = [remarks?.trim()].filter(Boolean);
-      if (estimatedDelivery) {
-        let eta = `ETA: ${estimatedDelivery}`;
-        if (estimatedDeliveryTime) eta += ` ${estimatedDeliveryTime}`;
-        parts.push(eta);
+      const startCoords = locationCoords[shipment.origin as keyof typeof locationCoords] || { lat: -6.7924, lng: 39.2083 };
+      const endCoords = locationCoords[shipment.destination as keyof typeof locationCoords] || { lat: -2.5164, lng: 32.9033 };
+
+      // Simplified straight line for initial segments (In a real app, OSRM would provide road points)
+      const numSegments = 50;
+      const segmentsData = [];
+      for (let i = 0; i < numSegments; i++) {
+        const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
+        const sLng = startCoords.lng + (endCoords.lng - startCoords.lng) * (i / numSegments);
+        const eLat = startCoords.lat + (endCoords.lat - startCoords.lat) * ((i + 1) / numSegments);
+        const eLng = startCoords.lng + (endCoords.lng - startCoords.lng) * ((i + 1) / numSegments);
+        
+        segmentsData.push({
+          startLat: sLat,
+          startLng: sLng,
+          endLat: eLat,
+          endLng: eLng,
+          isCompleted: false,
+          order: i
+        });
       }
-      if (transportType) parts.push(`Mode: ${transportType}`);
-      return parts.join(' | ');
-    })();
 
-    const operations: any[] = [
-      db.trackingEvent.create({
+      tracking = await db.vehicleTracking.create({
         data: {
           shipmentId: shipment.id,
-          status,
-          location,
-          remarks: composedRemarks
-        }
-      })
-    ];
-
-    if (shipment.currentStatus === 'PENDING') {
-        operations.push(
-            db.shipment.update({
-                where: { id: shipment.id },
-                data: { currentStatus: 'IN_TRANSIT' }
-            })
-        );
+          currentLat: startCoords.lat,
+          currentLng: startCoords.lng,
+          speed: 45,
+          heading: 0,
+          segments: {
+            create: segmentsData
+          }
+        },
+        include: { segments: { orderBy: { order: 'asc' } } }
+      });
     }
 
-    const result = await db.$transaction(operations);
-
-    // Send notifications after successful tracking update
-    try {
-      const updatedStatus = shipment.currentStatus === 'PENDING' ? 'IN_TRANSIT' : status;
-      
-      // Send SMS notification to receiver
-      if (shipment.receiverPhone) {
-        if (updatedStatus === 'DELIVERED') {
-          await sendDeliveryConfirmationSMS(
-            shipment.receiverPhone,
-            shipment.waybillNumber,
-            shipment.receiverName,
-            remarks || 'Delivery Team'
-          );
-        } else {
-          await sendShipmentUpdateSMS(
-            shipment.receiverPhone,
-            shipment.waybillNumber,
-            updatedStatus,
-            shipment.receiverName
-          );
-        }
-      }
-
-      // Send email notification to receiver
-      if (shipment.receiverPhone && shipment.receiverPhone.includes('@')) {
-        const emailTemplate = emailTemplates.shipmentUpdate(
-          shipment.waybillNumber,
-          updatedStatus,
-          shipment.receiverName
-        );
-        await sendEmail({
-          to: shipment.receiverPhone,
-          ...emailTemplate
-        });
-      }
-
-      // Send admin notification for delivery
-      if (updatedStatus === 'DELIVERED') {
-        const adminEmail = process.env.ADMIN_EMAIL || 'express@kapillagroup.co.tz';
-        await sendEmail({
-          to: adminEmail,
-          subject: `Shipment Delivered - ${shipment.waybillNumber}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">✓ Shipment Delivered</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Kapilla Group Ltd</p>
-              </div>
-              
-              <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-                <h2 style="color: #333; margin-bottom: 20px;">Delivery Confirmation:</h2>
-                <div style="background: white; padding: 20px; border-left: 4px solid #10b981; margin: 20px 0; border-radius: 5px;">
-                  <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">Waybill: ${shipment.waybillNumber}</p>
-                  <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Receiver: ${shipment.receiverName}</p>
-                  <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Location: ${location}</p>
-                  <p style="margin: 10px 0 0 0; font-size: 14px; color: #10b981; font-weight: bold;">Status: DELIVERED ✓</p>
-                  ${receivedBy ? `<p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Received By: ${receivedBy}</p>` : ''}
-                </div>
-                
-                <div style="text-align: center; margin-top: 30px;">
-                  <a href="https://kapillagroup.vercel.app/staff/shipments" 
-                     style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
-                    View in Staff Portal
-                  </a>
-                </div>
-              </div>
-            </div>
-          `
-        });
-      }
-    } catch (notificationError) {
-      console.error('Failed to send notifications:', notificationError);
-      // Don't fail the request if notifications fail
-    }
-
-    return NextResponse.json(result[0]); // Return the created event
+    return NextResponse.json(tracking);
   } catch (error) {
-    console.error('[TRACKING_POST_ERROR]', error);
-    return NextResponse.json({ 
-      error: 'Internal Server Error', 
-      details: error instanceof Error ? error.message : String(error) 
-    }, { status: 500 });
+    console.error('[TRACKING_GET]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -10,7 +10,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
 
-import TrackingTimeline from '@/components/TrackingTimeline';
+const TrackingTimeline = dynamic(() => import('@/components/TrackingTimeline'), { ssr: false });
+const VehicleTrackingMap = dynamic(() => import('@/components/VehicleTrackingMap'), { ssr: false });
 
 // Dynamic imports for modals to prevent SSR issues
 const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
@@ -426,6 +427,12 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                           </div>
                         </div>
                       </div>
+
+                      {/* Map View */}
+                      <div className="mt-6">
+                        <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
+                      </div>
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-1">
                           <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Origin</div>
