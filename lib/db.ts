@@ -51,6 +51,8 @@ try {
     $disconnect: () => Promise.resolve(),
     shipment: { ...mockModel },
     trackingEvent: { findMany: noopArr, create: noopObj },
+    vehicleTracking: { ...mockModel },
+    routeSegment: { ...mockModel },
     trip: { ...mockModel },
     checkIn: { findMany: noopArr, create: noopObj },
     user: { ...mockModel },
