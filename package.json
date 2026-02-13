@@ -8,19 +8,16 @@
     "start": "next start",
     "lint": "eslint",
     "deploy:fix": "node deploy-fix.js",
-    "db:seed": "node prisma/seed.js",
-    "simulation": "node scripts/vehicle-simulation-service.js"
+    "db:seed": "node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
-    "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.29.0",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
     "next-themes": "^0.4.6",
@@ -30,7 +27,6 @@
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-leaflet": "^5.0.0",
     "react-signature-canvas": "^1.1.0-alpha.2",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.0",

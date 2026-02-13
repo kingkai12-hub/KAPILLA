@@ -19,20 +19,6 @@ export async function GET(
           orderBy: {
             timestamp: 'desc'
           }
-        },
-        trips: {
-          include: {
-            checkIns: {
-              orderBy: {
-                timestamp: 'desc'
-              },
-              take: 1
-            }
-          },
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 1
         }
       }
     });

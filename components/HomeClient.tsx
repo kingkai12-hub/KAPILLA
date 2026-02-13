@@ -465,7 +465,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                             />
                           </div>
                         )}
-                      </div>
                       {searchResult.currentStatus === 'DELIVERED' && (
                         <div className="mt-2 flex justify-center">
                           <a 
@@ -587,8 +586,8 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
               },
               { 
                 icon: Clock, 
-                title: 'Real-Time Tracking', 
-                desc: 'Monitor your shipment 24/7 with GPS-enabled precision updates. Instant visibility into your cargo\'s location.' 
+                title: 'Real-Time Updates', 
+                desc: 'Monitor your shipment 24/7 with status updates at every major checkpoint. Instant visibility into your cargo\'s journey.' 
               },
               { 
                 icon: Globe, 

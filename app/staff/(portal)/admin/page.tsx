@@ -48,7 +48,7 @@ export default async function AdminDashboard() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    window.open(`/tracking?waybill=${encodeURIComponent(e.currentTarget.value.trim())}`, '_blank');
+                    window.open(`/?waybill=${encodeURIComponent(e.currentTarget.value.trim())}`, '_blank');
                   }
                 }}
               />

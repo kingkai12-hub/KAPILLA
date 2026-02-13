@@ -21,56 +21,24 @@ function UpdateTrackingContent() {
   const status = 'IN_TRANSIT'; 
   
   const [location, setLocation] = useState('');
-  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [remarks, setRemarks] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
   const [estimatedDeliveryTime, setEstimatedDeliveryTime] = useState<string>('');
   const [transportType, setTransportType] = useState<'AIR' | 'WATER' | 'LAND' | ''>('');
   const [recentScans, setRecentScans] = useState<any[]>([]);
   
-  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   
-  const verifyLocation = async (query: string) => {
-    if (!query) return;
-    
-    // Check hardcoded first
-    if (locationCoords[query]) {
-        setCoords(locationCoords[query]);
-        return;
-    }
-
-    setIsSearchingLocation(true);
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tz&limit=1`);
-        const data = await res.json();
-        if (data && data.length > 0) {
-            setCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
-        } else {
-            setCoords(null); // Invalid
-        }
-    } catch (e) {
-        console.error("Location verification failed", e);
-        setCoords(null);
-    } finally {
-        setIsSearchingLocation(false);
-    }
-  };
-
   const handleLocationBlur = () => {
       setTimeout(() => {
         setShowSuggestions(false);
-        verifyLocation(location);
       }, 200);
   };
 
   const handleSuggestionClick = (place: string) => {
     setLocation(place);
     setShowSuggestions(false);
-    if (locationCoords[place]) {
-        setCoords(locationCoords[place]);
-    }
   };
 
   const handleLocationFocus = () => {
@@ -92,7 +60,7 @@ function UpdateTrackingContent() {
     }
   };
 
-  // Update coords when location changes if it matches a known location
+  // Update when location changes
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;
     setLocation(newLocation);
@@ -107,20 +75,6 @@ function UpdateTrackingContent() {
         setSuggestions([]);
         setShowSuggestions(false);
     }
-    
-    // If empty, clear coords
-    if (!newLocation) {
-        setCoords(null);
-        return;
-    }
-
-    // Check hardcoded immediately for better UX
-    if (locationCoords[newLocation]) {
-        setCoords(locationCoords[newLocation]);
-    } else {
-        // Otherwise mark as unverified until blur/search
-        setCoords(null); 
-    }
   };
 
   const [loading, setLoading] = useState(false);
@@ -130,11 +84,6 @@ function UpdateTrackingContent() {
     if (!waybill) {
       alert('Please enter a Waybill Number.');
       return;
-    }
-
-    if (!coords) {
-        alert('Please enter a valid location in Tanzania. We need to verify the location to update the map.');
-        return;
     }
 
     setLoading(true);
@@ -147,12 +96,10 @@ function UpdateTrackingContent() {
           waybillNumber: waybill,
           status,
           location,
-          latitude: coords?.lat,
-          longitude: coords?.lng,
-              remarks,
-              estimatedDelivery,
-              estimatedDeliveryTime,
-              transportType
+          remarks,
+          estimatedDelivery,
+          estimatedDeliveryTime,
+          transportType
         }),
       });
 
@@ -224,18 +171,9 @@ function UpdateTrackingContent() {
                   onChange={handleLocationChange}
                   onFocus={handleLocationFocus}
                   onBlur={handleLocationBlur}
-                  className={`block w-full py-3 px-4 pl-10 border ${!coords && location ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-500'} dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:border-transparent transition-all`}
+                  className="block w-full py-3 px-4 pl-10 border border-slate-200 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:border-transparent transition-all"
                   placeholder="Enter village, town, or city in Tanzania..."
                 />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    {isSearchingLocation ? (
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    ) : coords ? (
-                        <span className="text-green-500 text-xs font-bold">Verified</span>
-                    ) : location ? (
-                         <span className="text-red-400 text-xs">Unverified</span>
-                    ) : null}
-                </div>
               
                 {/* Suggestions Dropdown */}
                 {showSuggestions && suggestions.length > 0 && (
@@ -253,7 +191,7 @@ function UpdateTrackingContent() {
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania. System will verify coordinates automatically.</p>
+              <p className="text-xs text-slate-500 mt-1">Enter any place in Tanzania where the shipment is currently located.</p>
             </div>
 
             {/* Estimated Delivery Date & Time */}

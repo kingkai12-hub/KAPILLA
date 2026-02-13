@@ -24,8 +24,6 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  trips     Trip[]
-  
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
   documents        Document[]
@@ -111,7 +109,6 @@ model Shipment {
   receivedBy     String?  // Name of the person who actually received it
   
   events         TrackingEvent[]
-  trips          Trip[]
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -121,46 +118,6 @@ model Shipment {
   @@index([receiverPhone])
   @@index([createdAt])
   @@map("Shipment")
-}
-
-model Trip {
-  id            String    @id @default(uuid())
-  driverId      String
-  driver        User      @relation(fields: [driverId], references: [id])
-  shipmentId    String?
-  shipment      Shipment? @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  
-  startLocation String
-  endLocation   String
-  startTime     DateTime  @default(now())
-  endTime       DateTime?
-  status        String    @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
-
-  checkIns      CheckIn[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([driverId])
-  @@index([status])
-  @@index([startTime])
-  @@map("Trip")
-}
-
-model CheckIn {
-  id        String   @id @default(uuid())
-  tripId    String
-  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  
-  location  String   // Text description
-  latitude  Float
-  longitude Float
-  status    String   // OK, BREAKDOWN, RESTING
-  
-  timestamp DateTime @default(now())
-
-  @@index([tripId])
-  @@map("CheckIn")
 }
 
 model TrackingEvent {
