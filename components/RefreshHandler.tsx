@@ -16,17 +16,8 @@ export default function RefreshHandler() {
           const navEntry = entries[0] as PerformanceNavigationTiming;
           
           if (navEntry.type === 'reload') {
-            const currentCount = parseInt(sessionStorage.getItem('reload_count') || '0');
-            const newCount = currentCount + 1;
-            
-            if (newCount >= 2) {
-              sessionStorage.removeItem('reload_count');
-              router.push('/');
-            } else {
-              sessionStorage.setItem('reload_count', newCount.toString());
-            }
-          } else if (navEntry.type === 'navigate') {
-            sessionStorage.setItem('reload_count', '0');
+            // Disabled aggressive redirect on reload to prevent confusion during debugging
+            console.log('Page reloaded');
           }
         }
       } catch (e) {

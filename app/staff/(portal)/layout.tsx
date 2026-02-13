@@ -62,64 +62,30 @@ export default function StaffPortalLayout({
   useEffect(() => {
     setMounted(true);
     // Check for session
-    const storedUser = localStorage.getItem('kapilla_user');
-    if (!storedUser) {
-      console.log('No user found in localStorage, redirecting to login...');
-      router.push('/staff/login');
-    } else {
-      try {
+    try {
+      const storedUser = localStorage.getItem('kapilla_user');
+      if (!storedUser) {
+        console.log('No user found in localStorage, redirecting to login...');
+        router.push('/staff/login');
+      } else {
         const parsed = JSON.parse(storedUser);
         console.log('User found in localStorage:', parsed.email);
         setUser(parsed);
         
-        // Use a flag to avoid multiple concurrent refreshes
-        let isRefreshing = false;
-
-        const refreshProfile = async () => {
-          if (isRefreshing) return;
-          isRefreshing = true;
-          
-          try {
-            console.log('Refreshing user profile for:', parsed.id);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-            const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { 
-              cache: 'no-store',
-              signal: controller.signal 
-            });
-            
-            clearTimeout(timeoutId);
-
-            if (res.ok) {
-              const fresh = await res.json();
-              console.log('Profile refreshed successfully');
+        // Background refresh - don't let it block anything
+        fetch(`/api/staff/profile?id=${parsed.id}`, { cache: 'no-store' })
+          .then(res => res.ok ? res.json() : null)
+          .then(fresh => {
+            if (fresh) {
               localStorage.setItem('kapilla_user', JSON.stringify(fresh));
               setUser(fresh);
-            } else {
-              console.error('Profile refresh failed with status:', res.status);
-              if (res.status === 401) {
-                console.log('Unauthorized, logging out...');
-                handleLogout();
-              }
             }
-          } catch (e: any) {
-            if (e.name === 'AbortError') {
-              console.warn('Profile refresh timed out after 5s');
-            } else {
-              console.error('Profile refresh error:', e);
-            }
-          } finally {
-            isRefreshing = false;
-          }
-        };
-
-        refreshProfile();
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
-        localStorage.removeItem('kapilla_user');
-        router.push('/staff/login');
+          })
+          .catch(err => console.error('Silent profile refresh failed', err));
       }
+    } catch (e) {
+      console.error('Session check failed', e);
+      router.push('/staff/login');
     }
 
     // Fetch pending pickup requests count
@@ -203,38 +169,48 @@ export default function StaffPortalLayout({
     { name: 'Request Pickup', icon: Truck, onClick: () => setIsPickupModalOpen(true), roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 
-  if (!mounted) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-500 font-medium">Initializing...</p>
-      </div>
-    </div>
-  );
-
-  // If we are on the client and no user is found after checking, 
-  // we show a message while the router redirects
-  if (mounted && !user) {
+  if (!mounted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 font-medium">Authenticating...</p>
-          <button 
-            onClick={() => {
-              localStorage.removeItem('kapilla_user');
-              window.location.href = '/staff/login';
-            }}
-            className="text-xs text-blue-600 hover:underline mt-2"
-          >
-            Not logged in? Click here to login
-          </button>
+          <p className="text-slate-400 font-medium tracking-widest uppercase text-xs">System Booting...</p>
         </div>
       </div>
     );
   }
 
-  // Final safety check to prevent rendering the portal if user is still null
+  if (!user && pathname !== '/staff/login') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 font-medium">Verifying Session...</p>
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <button 
+              onClick={() => window.location.href = '/staff/login'}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+            >
+              Go to Login Page
+            </button>
+            <button 
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/staff/login';
+              }}
+              className="text-xs text-slate-500 hover:text-white underline"
+            >
+              Clear Session & Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If we have a user or we are on login page, render children
+  // (Note: login page actually has its own layout or is handled outside this if possible, 
+  // but staff/(portal) should always have a user)
   if (!user) return null;
 
   return (

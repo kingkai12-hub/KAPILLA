@@ -32,21 +32,29 @@ export default async function StaffDashboard() {
   let deliveredToday = 0;
   let recentShipments: { waybillNumber: string; destination: string; currentStatus: string; createdAt: Date }[] = [];
 
+  // Helper to wrap prisma calls with timeout
+  const withTimeout = async (promise: Promise<any>, timeoutMs: number = 5000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs))
+    ]);
+  };
+
   try {
-    totalShipments = await db.shipment.count();
-    inTransit = await db.shipment.count({ where: { currentStatus: 'IN_TRANSIT' } });
-    pendingDelivery = await db.shipment.count({ where: { currentStatus: 'PENDING' } });
+    totalShipments = await withTimeout(db.shipment.count());
+    inTransit = await withTimeout(db.shipment.count({ where: { currentStatus: 'IN_TRANSIT' } }));
+    pendingDelivery = await withTimeout(db.shipment.count({ where: { currentStatus: 'PENDING' } }));
     
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
-    deliveredToday = await db.shipment.count({ 
+    deliveredToday = await withTimeout(db.shipment.count({ 
       where: { 
         currentStatus: 'DELIVERED',
         updatedAt: { gte: startOfToday }
       } 
-    });
+    }));
 
-    recentShipments = await db.shipment.findMany({
+    recentShipments = await withTimeout(db.shipment.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -55,8 +63,9 @@ export default async function StaffDashboard() {
         currentStatus: true,
         createdAt: true
       }
-    });
+    }));
   } catch (e) {
+    console.error('Dashboard DB Error or Timeout:', e);
     recentShipments = [];
   }
 

@@ -31,14 +31,27 @@ export default function ShipmentsPage() {
   }, []);
 
   const fetchShipments = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     try {
-      const res = await fetch('/api/shipments');
+      const res = await fetch('/api/shipments', {
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         setShipments(data);
+      } else {
+        console.error("Failed to fetch shipments, status:", res.status);
       }
-    } catch (error) {
-      console.error("Failed to fetch shipments", error);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error("Fetch shipments timed out");
+      } else {
+        console.error("Failed to fetch shipments", error);
+      }
     } finally {
       setLoading(false);
     }

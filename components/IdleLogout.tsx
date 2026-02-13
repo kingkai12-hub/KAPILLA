@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
-const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 export default function IdleLogout() {
   const router = useRouter();
