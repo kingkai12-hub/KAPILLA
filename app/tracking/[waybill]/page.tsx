@@ -1,14 +1,13 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import SimpleMap from '@/components/SimpleMap';
+import WorkingMap from '@/components/WorkingMap';
 
 export default function TrackingPage() {
   const params = useParams();
   const router = useRouter();
   const waybill = params.waybill as string;
 
-  // Validate waybill format
   if (!waybill || !waybill.match(/^KPL-\d+$/i)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -30,7 +29,6 @@ export default function TrackingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -58,38 +56,9 @@ export default function TrackingPage() {
         </div>
       </div>
 
-      {/* Map Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-          <SimpleMap waybillNumber={waybill} className="w-full h-full" />
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="bg-white rounded-lg shadow-lg p-4 space-y-2">
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
-          >
-            🔄 Refresh Position
-          </button>
-          <button
-            onClick={() => {
-              const url = window.location.href;
-              navigator.clipboard.writeText(url);
-              alert('Tracking link copied to clipboard!');
-            }}
-            className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium"
-          >
-            📋 Copy Link
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium"
-          >
-            🏠 Go Home
-          </button>
+          <WorkingMap waybillNumber={waybill} className="w-full h-full" />
         </div>
       </div>
     </div>
