@@ -13,16 +13,18 @@ export async function GET(req: Request) {
   }
 
   try {
+    const shipment = await db.shipment.findUnique({ where: { waybillNumber } });
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
     let tracking = await db.vehicleTracking.findUnique({
-      where: { shipmentId: (await db.shipment.findUnique({ where: { waybillNumber } }))?.id || '' },
+      where: { shipmentId: shipment.id },
       include: { segments: { orderBy: { order: 'asc' } } }
     });
 
     // If no tracking exists, create a simulated one for demonstration
     if (!tracking) {
-      const shipment = await db.shipment.findUnique({ where: { waybillNumber } });
-      if (!shipment) return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
-
       const startCoords = locationCoords[shipment.origin as keyof typeof locationCoords] || { lat: -6.7924, lng: 39.2083 };
       const endCoords = locationCoords[shipment.destination as keyof typeof locationCoords] || { lat: -2.5164, lng: 32.9033 };
 
