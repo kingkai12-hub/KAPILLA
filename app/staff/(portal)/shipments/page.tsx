@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine, Edit, X, Navigation } from 'lucide-react';
+import { Package, Search, Printer, Trash2, Eye, FileText, CheckCircle, ScanLine, Edit, X } from 'lucide-react';
 import Link from 'next/link';
 import SignatureCanvas from 'react-signature-canvas';
 import { locationCoords } from '@/lib/locations';
@@ -296,16 +296,6 @@ export default function ShipmentsPage() {
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Live Tracking Map */}
-                        <Link
-                          href={`/tracking/${shipment.waybillNumber}`}
-                          target="_blank"
-                          title="View Live Tracking Map"
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
-                        >
-                          <Navigation className="w-4 h-4" />
-                        </Link>
-
                         {/* Edit Status - New (Disabled if Delivered) */}
                         {shipment.currentStatus !== 'DELIVERED' && (
                           <button

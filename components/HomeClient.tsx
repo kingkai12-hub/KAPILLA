@@ -446,26 +446,9 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                           <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
                         </div>
                       </div>
-                      <div className="rounded-xl overflow-hidden shadow-sm border border-slate-100 bg-slate-50">
-                        <div className="relative h-32 md:h-40 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-t-xl border-b border-slate-200">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-center p-4">
-                              <div className="text-slate-400 mb-2 text-4xl">🗺️</div>
-                              <div className="text-sm font-medium text-slate-600">Live Tracking Map</div>
-                              <div className="text-xs text-slate-500 mt-1">Track your shipment in real-time</div>
-                              <a
-                                href={`/tracking/${searchResult.waybillNumber}`}
-                                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20"
-                              >
-                                <MapPin className="w-3 h-3" />
-                                View Live Map
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                        {searchResult?.events && searchResult.events.length > 0 && (
-                          <div className="p-4">
-                            <TrackingTimeline
+                      {searchResult?.events && searchResult.events.length > 0 && (
+                        <div className="p-4 border border-slate-100 rounded-xl bg-slate-50">
+                          <TrackingTimeline
                               shipment={{
                                 waybillNumber: searchResult.waybillNumber,
                                 origin: searchResult.origin,
