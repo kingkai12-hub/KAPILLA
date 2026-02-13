@@ -86,9 +86,48 @@ export async function GET(req: Request) {
     }
 
     // SIMULATION LOGIC: Move the vehicle if tracking exists
-    if (tracking && vehicleTrackingModel && routeSegmentModel) {
+    if (!tracking) {
+      console.warn('[TRACKING] No tracking data found.');
+    } else if (!vehicleTrackingModel || !routeSegmentModel) {
+      console.error('[TRACKING] CRITICAL: Models missing for update.', {
+        hasTrackingModel: !!vehicleTrackingModel,
+        hasSegmentModel: !!routeSegmentModel,
+        dbKeys: Object.keys(db).filter(k => !k.startsWith('$'))
+      });
+      // Fallback: If models are missing, we CANNOT update, so just return static
+    } else {
       const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
       
+      // AUTO-RESET SIMULATION: If all segments are completed, restart the loop
+      if (incompleteSegments.length === 0 && tracking.segments.length > 0) {
+        console.log('[TRACKING] Route completed. Resetting simulation loop...');
+        await routeSegmentModel.updateMany({
+          where: { trackingId: tracking.id },
+          data: { isCompleted: false }
+        });
+        // Refetch fresh segments
+        tracking.segments = await routeSegmentModel.findMany({
+          where: { trackingId: tracking.id },
+          orderBy: { order: 'asc' }
+        });
+        // Force update tracking to start position
+        await vehicleTrackingModel.update({
+          where: { id: tracking.id },
+          data: {
+            currentLat: tracking.segments[0].startLat,
+            currentLng: tracking.segments[0].startLng,
+            speed: 0,
+            lastUpdated: new Date()
+          }
+        });
+        return NextResponse.json({
+          ...tracking,
+          isSimulated: true,
+          status: 'Simulation Reset',
+          serverTime: new Date().toISOString()
+        });
+      }
+
       // ADMIN CONFIGURATION (Simulated)
       const SPEED_CONFIG = {
         CITY_MIN: 20,
