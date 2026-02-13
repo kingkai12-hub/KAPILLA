@@ -71,14 +71,31 @@ export default function StaffPortalLayout({
       setUser(parsed);
       (async () => {
         try {
-          const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { cache: 'no-store' });
+          // Add a timeout to the profile refresh fetch
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+          const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { 
+            cache: 'no-store',
+            signal: controller.signal 
+          });
+          
+          clearTimeout(timeoutId);
+
           if (res.ok) {
             const fresh = await res.json();
             localStorage.setItem('kapilla_user', JSON.stringify(fresh));
             setUser(fresh);
+          } else {
+            console.error('Failed to refresh user profile, status:', res.status);
+            // If the profile refresh fails (e.g., 401 Unauthorized), we might want to logout
+            if (res.status === 401) {
+              handleLogout();
+            }
           }
         } catch (e) {
           console.error('Failed to refresh user profile', e);
+          // Don't logout on network errors, just log it
         }
       })();
     }
@@ -164,11 +181,19 @@ export default function StaffPortalLayout({
     { name: 'Request Pickup', icon: Truck, onClick: () => setIsPickupModalOpen(true), roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 
+  if (!mounted) return null;
+
   if (!user) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
         <p className="text-slate-500 font-medium">Loading Portal...</p>
+        <button 
+          onClick={handleLogout}
+          className="text-xs text-blue-600 hover:underline mt-2"
+        >
+          Taking too long? Back to login
+        </button>
       </div>
     </div>
   );
