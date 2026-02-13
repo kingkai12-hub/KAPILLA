@@ -1,0 +1,10 @@
+#!/bin/sh
+echo "🚀 Auto-pushing changes to remote..."
+branch="$(git rev-parse --abbrev-ref HEAD)"
+remote="origin"
+if [ -n "$branch" ] && [ "$branch" != "HEAD" ]; then
+  git push "$remote" "$branch"
+  echo "✅ Push completed."
+else
+  echo "⚠️ Could not determine branch or on detached HEAD, skipping push."
+fi
