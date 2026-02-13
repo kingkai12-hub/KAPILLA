@@ -28,6 +28,11 @@ try {
 
     prisma = globalForPrisma.prisma ?? prismaClientSingleton();
     
+    // EXPLICITLY check and log if models are missing from the real client
+    if (prisma && !prisma.shipment) {
+      console.warn('⚠️ Prisma client initialized but "shipment" model is missing. Check schema mapping.');
+    }
+    
     if (process.env.NODE_ENV === 'development') {
       globalForPrisma.prisma = prisma;
     }
