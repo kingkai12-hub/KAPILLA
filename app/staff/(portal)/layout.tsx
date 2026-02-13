@@ -60,37 +60,6 @@ export default function StaffPortalLayout({
   const [pendingPickupCount, setPendingPickupCount] = useState(0);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem('kapilla_refresh_guard');
-      const now = Date.now();
-      let count = 0;
-      let ts = 0;
-      if (raw) {
-        const obj = JSON.parse(raw);
-        count = obj?.count || 0;
-        ts = obj?.ts || 0;
-      }
-      if (now - ts < 10000) {
-        count += 1;
-      } else {
-        count = 1;
-        ts = now;
-      }
-      sessionStorage.setItem('kapilla_refresh_guard', JSON.stringify({ count, ts }));
-      if (count >= 2) {
-        sessionStorage.removeItem('kapilla_refresh_guard');
-        localStorage.removeItem('kapilla_user');
-        (async () => {
-          try {
-            await fetch('/api/auth/logout', { method: 'POST' });
-          } catch {}
-          window.location.assign('/');
-        })();
-      }
-    } catch {}
-  }, []);
-
-  useEffect(() => {
     setMounted(true);
     // Check for session
     const storedUser = localStorage.getItem('kapilla_user');
