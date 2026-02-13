@@ -64,9 +64,13 @@ export default function StaffPortalLayout({
     // Check for session
     try {
       const storedUser = localStorage.getItem('kapilla_user');
+      console.log('Layout mounting, storedUser:', !!storedUser);
+      
       if (!storedUser) {
-        console.log('No user found in localStorage, redirecting to login...');
-        router.push('/staff/login');
+        if (pathname !== '/staff/login') {
+          console.log('No user found in localStorage, redirecting to login...');
+          window.location.href = '/staff/login';
+        }
       } else {
         const parsed = JSON.parse(storedUser);
         console.log('User found in localStorage:', parsed.email);
@@ -85,7 +89,7 @@ export default function StaffPortalLayout({
       }
     } catch (e) {
       console.error('Session check failed', e);
-      router.push('/staff/login');
+      window.location.href = '/staff/login';
     }
 
     // Fetch pending pickup requests count
@@ -188,20 +192,17 @@ export default function StaffPortalLayout({
           <p className="text-slate-400 font-medium">Verifying Session...</p>
           <div className="flex flex-col items-center gap-2 mt-4">
             <button 
-              onClick={() => window.location.href = '/staff/login'}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
-            >
-              Go to Login Page
-            </button>
-            <button 
               onClick={() => {
                 localStorage.clear();
                 window.location.href = '/staff/login';
               }}
-              className="text-xs text-slate-500 hover:text-white underline"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
             >
-              Clear Session & Reset
+              Back to Login
             </button>
+            <p className="text-[10px] text-slate-600 max-w-[200px] text-center">
+              If this screen hangs, please click the button to reset your session and try again.
+            </p>
           </div>
         </div>
       </div>
