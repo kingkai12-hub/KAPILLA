@@ -150,7 +150,7 @@ export async function GET(req: Request) {
       where: { shipmentId: shipment.id }
     });
 
-    // If no tracking exists, create it
+      // If no tracking exists, create it
     if (!existingTracking) {
       const route = await generateRoute(shipment.origin, shipment.destination);
       const totalDistance = calculateTotalDistance(route);
@@ -162,31 +162,30 @@ export async function GET(req: Request) {
           currentLatitude: route[0][0],
           currentLongitude: route[0][1],
           totalDistance,
-          isActive: shipment.currentStatus !== 'DELIVERED' && shipment.currentStatus !== 'CANCELLED'
+          isActive: shipment.currentStatus !== 'DELIVERED' && shipment.currentStatus !== 'CANCELLED',
+          routeSegments: {
+            create: route.slice(0, -1).map((point, i) => {
+              const startLat = point[0];
+              const startLng = point[1];
+              const endLat = route[i+1][0];
+              const endLng = route[i+1][1];
+              const segmentDistance = calculateDistance(startLat, startLng, endLat, endLng);
+              const inCity = isCityZoneCheck(startLat, startLng) || isCityZoneCheck(endLat, endLng);
+              
+              return {
+                startLat,
+                startLng,
+                endLat,
+                endLng,
+                distance: segmentDistance,
+                isCityZone: inCity,
+                speedLimit: inCity ? 40 : 80,
+                orderIndex: i
+              };
+            })
+          }
         }
       });
-
-      // Create route segments
-      for (let i = 0; i < route.length - 1; i++) {
-        const segmentDistance = calculateDistance(
-          route[i][0], route[i][1],
-          route[i+1][0], route[i+1][1]
-        );
-        
-        await db.routeSegment.create({
-          data: {
-            trackingId: tracking.id,
-            startLat: route[i][0],
-            startLng: route[i][1],
-            endLat: route[i+1][0],
-            endLng: route[i+1][1],
-            distance: segmentDistance,
-            isCityZone: isCityZoneCheck(route[i][0], route[i][1]) || isCityZoneCheck(route[i+1][0], route[i+1][1]),
-            speedLimit: isCityZoneCheck(route[i][0], route[i][1]) ? 40 : 80,
-            orderIndex: i
-          }
-        });
-      }
 
       return NextResponse.json({
         waybillNumber,
@@ -213,25 +212,26 @@ export async function GET(req: Request) {
     
     // Find current position along route
     let accumulatedDistance = 0;
-    // Construct completed and remaining paths smoothly
+      // Construct completed and remaining paths smoothly
     const completedPath: [number, number][] = [];
     const remainingPath: [number, number][] = [];
 
     // Current position
     const currentPos: [number, number] = [tracking.currentLatitude, tracking.currentLongitude];
 
-    // Add all waypoints before current routeIndex to completedPath
-    for (let i = 0; i <= tracking.routeIndex; i++) {
+    // Build completed path: all points up to routeIndex, then currentPos
+    for (let i = 0; i <= tracking.routeIndex && i < route.length; i++) {
       completedPath.push(route[i]);
     }
-    // Add current position as the last point of completedPath
-    if (tracking.routeIndex < route.length - 1) {
+    
+    // Only add currentPos if it's not already the last point (avoids duplicates)
+    const lastCompleted = completedPath[completedPath.length - 1];
+    if (!lastCompleted || (lastCompleted[0] !== currentPos[0] || lastCompleted[1] !== currentPos[1])) {
       completedPath.push(currentPos);
     }
 
-    // Add current position as the first point of remainingPath
+    // Build remaining path: currentPos, then all points after routeIndex
     remainingPath.push(currentPos);
-    // Add all waypoints after current routeIndex to remainingPath
     for (let i = tracking.routeIndex + 1; i < route.length; i++) {
       remainingPath.push(route[i]);
     }
@@ -291,11 +291,33 @@ export async function POST(req: Request) {
         data: {
           shipmentId: shipment.id,
           routePath: route,
-          currentLatitude: latitude || route[0][0],
-          currentLongitude: longitude || route[0][1],
+          currentLatitude: latitude !== undefined ? latitude : route[0][0],
+          currentLongitude: longitude !== undefined ? longitude : route[0][1],
           totalDistance,
           currentSpeed: speed || 40,
-          isPaused: isPaused || false
+          isPaused: isPaused || false,
+          isActive: shipment.currentStatus !== 'DELIVERED' && shipment.currentStatus !== 'CANCELLED',
+          routeSegments: {
+            create: route.slice(0, -1).map((point, i) => {
+              const startLat = point[0];
+              const startLng = point[1];
+              const endLat = route[i+1][0];
+              const endLng = route[i+1][1];
+              const segmentDistance = calculateDistance(startLat, startLng, endLat, endLng);
+              const inCity = isCityZoneCheck(startLat, startLng) || isCityZoneCheck(endLat, endLng);
+              
+              return {
+                startLat,
+                startLng,
+                endLat,
+                endLng,
+                distance: segmentDistance,
+                isCityZone: inCity,
+                speedLimit: inCity ? 40 : 80,
+                orderIndex: i
+              };
+            })
+          }
         }
       });
     } else {
@@ -304,18 +326,16 @@ export async function POST(req: Request) {
         lastUpdateTime: new Date()
       };
 
-      if (latitude !== undefined && longitude !== undefined) {
-        updateData.currentLatitude = latitude;
-        updateData.currentLongitude = longitude;
-      }
+      if (latitude !== undefined) updateData.currentLatitude = latitude;
+      if (longitude !== undefined) updateData.currentLongitude = longitude;
+      if (speed !== undefined) updateData.currentSpeed = speed;
+      if (isPaused !== undefined) updateData.isPaused = isPaused;
 
-      if (speed !== undefined) {
-        updateData.currentSpeed = speed;
-      }
-
-      if (isPaused !== undefined) {
-        updateData.isPaused = isPaused;
-      }
+      // Update progress if route index is provided
+      if (body.routeIndex !== undefined) updateData.routeIndex = body.routeIndex;
+      if (body.distanceCompleted !== undefined) updateData.distanceCompleted = body.distanceCompleted;
+      if (body.progressPercent !== undefined) updateData.progressPercent = body.progressPercent;
+      if (body.isCityZone !== undefined) updateData.isCityZone = body.isCityZone;
 
       tracking = await db.vehicleTracking.update({
         where: { id: tracking.id },
