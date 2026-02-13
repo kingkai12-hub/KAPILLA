@@ -9,7 +9,7 @@ const ratelimit = new Map<string, { count: number, startTime: number }>();
 const WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_REQUESTS = 100; // Limit each IP to 100 requests per minute for API
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   // 1. RATE LIMITING
   // Apply only to API routes to prevent abuse
   if (request.nextUrl.pathname.startsWith('/api')) {
@@ -45,17 +45,9 @@ export function proxy(request: NextRequest) {
 
   // 2. AUTH GUARD FOR STAFF ROUTES
   if (request.nextUrl.pathname.startsWith('/staff')) {
-    const fetchSite = request.headers.get('sec-fetch-site') || '';
-    // If navigation originates outside our site (shared link, external app), force redirect to homepage
-    if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'same-site' && fetchSite !== 'none') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      url.search = '';
-      return NextResponse.redirect(url);
-    }
-
     const auth = request.cookies.get('kapilla_auth');
     const isLogin = request.nextUrl.pathname === '/staff/login';
+    
     if (!auth?.value) {
       if (isLogin) {
         return NextResponse.next();

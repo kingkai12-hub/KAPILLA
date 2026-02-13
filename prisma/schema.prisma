@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,23 +9,22 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("STAFF") // ADMIN, STAFF, MANAGER, DRIVER, OPERATION_MANAGER, MD, CEO, ACCOUNTANT
-  workId    String?  @unique // Employee ID
-  phoneNumber String?
-  image     String?  // Base64 or URL
-  isDisabled Boolean  @default(false)
-  lastActive DateTime? // Track online status
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  id               String           @id @default(uuid())
+  email            String           @unique
+  password         String
+  name             String?
+  role             String           @default("STAFF")
+  workId           String?          @unique
+  phoneNumber      String?
+  image            String?
+  isDisabled       Boolean          @default(false)
+  lastActive       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   documents        Document[]
   createdFolders   DocumentFolder[]
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  sentMessages     Message[]        @relation("SentMessages")
 
   @@index([role])
   @@index([email])
@@ -38,25 +35,25 @@ model DocumentFolder {
   id        String     @id @default(uuid())
   name      String     @unique
   creatorId String
-  creator   User       @relation(fields: [creatorId], references: [id])
   createdAt DateTime   @default(now())
   isLocked  Boolean    @default(false)
   documents Document[]
+  creator   User       @relation(fields: [creatorId], references: [id])
 
   @@map("DocumentFolder")
 }
 
 model Message {
-  id            String    @id @default(uuid())
-  senderId      String
-  sender        User      @relation("SentMessages", fields: [senderId], references: [id])
-  receiverId    String
-  receiver      User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  content       String?
-  attachment    String?   // Base64 string for low-size storage
-  attachmentType String?  // 'IMAGE'
-  isRead        Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  id             String   @id @default(uuid())
+  senderId       String
+  receiverId     String
+  content        String?
+  attachment     String?
+  attachmentType String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  receiver       User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
 
   @@index([senderId])
   @@index([receiverId])
@@ -64,16 +61,16 @@ model Message {
 }
 
 model Document {
-  id         String   @id @default(uuid())
+  id         String          @id @default(uuid())
   name       String
   data       String
   mimeType   String
   uploaderId String
-  uploader   User     @relation(fields: [uploaderId], references: [id])
   folderId   String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
   folder     DocumentFolder? @relation(fields: [folderId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  uploader   User            @relation(fields: [uploaderId], references: [id])
 
   @@index([folderId])
   @@index([uploaderId])
@@ -81,38 +78,29 @@ model Document {
 }
 
 model Shipment {
-  id             String           @id @default(uuid())
-  waybillNumber  String           @unique // e.g., KPL-8829
-  
-  // Sender Details
-  senderName     String
-  senderEmail    String?
-  senderPhone    String
-  senderAddress  String?
-  
-  // Receiver Details
-  receiverName   String
-  receiverPhone  String
-  receiverAddress String?
-  
-  // Shipment Details
-  origin         String
-  destination    String
-  weight         Float?
-  price          Float?
-  cargoDetails   String?
-  
-  currentStatus  String   @default("PENDING")
-  dispatcherName String?
-  dispatcherSignature String? // Stores workId
-  receiverSignature String? // Base64 signature
-  receivedBy     String?  // Name of the person who actually received it
-  
-  events         TrackingEvent[]
-  tracking       VehicleTracking?
-  
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id                  String           @id @default(uuid())
+  waybillNumber       String           @unique
+  senderName          String
+  senderEmail         String?
+  senderPhone         String
+  senderAddress       String?
+  receiverName        String
+  receiverPhone       String
+  receiverAddress     String?
+  origin              String
+  destination         String
+  weight              Float?
+  price               Float?
+  cargoDetails        String?
+  currentStatus       String           @default("PENDING")
+  dispatcherName      String?
+  dispatcherSignature String?
+  receiverSignature   String?
+  receivedBy          String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  events              TrackingEvent[]
+  tracking            VehicleTracking?
 
   @@index([currentStatus])
   @@index([senderPhone])
@@ -122,50 +110,42 @@ model Shipment {
 }
 
 model VehicleTracking {
-  id             String         @id @default(uuid())
-  shipmentId     String         @unique
-  shipment       Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  
-  currentLat     Float
-  currentLng     Float
-  speed          Float          @default(0)
-  heading        Float          @default(0)
-  lastUpdated    DateTime       @default(now())
-  
-  // The full planned route as a JSON array of [lat, lng]
-  routePoints    Json?          
-  
-  // Track which segments are completed
-  segments       RouteSegment[]
+  id          String         @id @default(uuid())
+  shipmentId  String         @unique
+  currentLat  Float
+  currentLng  Float
+  speed       Float          @default(0)
+  heading     Float          @default(0)
+  lastUpdated DateTime       @default(now())
+  routePoints Json?
+  segments    RouteSegment[]
+  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@map("VehicleTracking")
 }
 
 model RouteSegment {
-  id                String          @id @default(uuid())
-  trackingId        String
-  tracking          VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
-  
-  startLat          Float
-  startLng          Float
-  endLat            Float
-  endLng            Float
-  isCompleted       Boolean         @default(false)
-  order             Int
+  id          String          @id @default(uuid())
+  trackingId  String
+  startLat    Float
+  startLng    Float
+  endLat      Float
+  endLng      Float
+  isCompleted Boolean         @default(false)
+  order       Int
+  tracking    VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
 
   @@map("RouteSegment")
 }
 
 model TrackingEvent {
-  id          String         @id @default(uuid())
-  shipmentId  String
-  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  
-  status      String
-  location    String         // e.g., "Dar es Salaam Hub"
-  remarks     String?        // e.g., "Dispatched to Mwanza Branch"
-  
-  timestamp   DateTime       @default(now())
+  id         String   @id @default(uuid())
+  shipmentId String
+  status     String
+  location   String
+  remarks    String?
+  timestamp  DateTime @default(now())
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@index([shipmentId])
   @@index([timestamp])
@@ -180,7 +160,7 @@ model PickupRequest {
   destination     String
   cargoDetails    String
   estimatedWeight String?
-  status          String   @default("PENDING") // PENDING, ISSUED
+  status          String   @default("PENDING")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -194,7 +174,7 @@ model ServiceShowcase {
   title       String
   description String
   imageUrl    String
-  icon        String   // e.g., 'Truck', 'Ship', 'Plane', 'Package'
+  icon        String
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -206,13 +186,13 @@ model ServiceShowcase {
 }
 
 model Executive {
-  id          String   @id @default(uuid())
-  name        String
-  role        String
-  bio         String
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  bio       String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("Executive")
 }
