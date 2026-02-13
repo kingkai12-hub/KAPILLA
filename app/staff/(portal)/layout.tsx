@@ -64,40 +64,62 @@ export default function StaffPortalLayout({
     // Check for session
     const storedUser = localStorage.getItem('kapilla_user');
     if (!storedUser) {
-      // Redirect to Login Page to enforce authentication
+      console.log('No user found in localStorage, redirecting to login...');
       router.push('/staff/login');
     } else {
-      const parsed = JSON.parse(storedUser);
-      setUser(parsed);
-      (async () => {
-        try {
-          // Add a timeout to the profile refresh fetch
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
+      try {
+        const parsed = JSON.parse(storedUser);
+        console.log('User found in localStorage:', parsed.email);
+        setUser(parsed);
+        
+        // Use a flag to avoid multiple concurrent refreshes
+        let isRefreshing = false;
 
-          const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { 
-            cache: 'no-store',
-            signal: controller.signal 
-          });
+        const refreshProfile = async () => {
+          if (isRefreshing) return;
+          isRefreshing = true;
           
-          clearTimeout(timeoutId);
+          try {
+            console.log('Refreshing user profile for:', parsed.id);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          if (res.ok) {
-            const fresh = await res.json();
-            localStorage.setItem('kapilla_user', JSON.stringify(fresh));
-            setUser(fresh);
-          } else {
-            console.error('Failed to refresh user profile, status:', res.status);
-            // If the profile refresh fails (e.g., 401 Unauthorized), we might want to logout
-            if (res.status === 401) {
-              handleLogout();
+            const res = await fetch(`/api/staff/profile?id=${parsed.id}`, { 
+              cache: 'no-store',
+              signal: controller.signal 
+            });
+            
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+              const fresh = await res.json();
+              console.log('Profile refreshed successfully');
+              localStorage.setItem('kapilla_user', JSON.stringify(fresh));
+              setUser(fresh);
+            } else {
+              console.error('Profile refresh failed with status:', res.status);
+              if (res.status === 401) {
+                console.log('Unauthorized, logging out...');
+                handleLogout();
+              }
             }
+          } catch (e: any) {
+            if (e.name === 'AbortError') {
+              console.warn('Profile refresh timed out after 5s');
+            } else {
+              console.error('Profile refresh error:', e);
+            }
+          } finally {
+            isRefreshing = false;
           }
-        } catch (e) {
-          console.error('Failed to refresh user profile', e);
-          // Don't logout on network errors, just log it
-        }
-      })();
+        };
+
+        refreshProfile();
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+        localStorage.removeItem('kapilla_user');
+        router.push('/staff/login');
+      }
     }
 
     // Fetch pending pickup requests count
@@ -181,13 +203,20 @@ export default function StaffPortalLayout({
     { name: 'Request Pickup', icon: Truck, onClick: () => setIsPickupModalOpen(true), roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'] },
   ];
 
-  if (!mounted) return null;
+  if (!mounted) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-500 font-medium">Initializing Portal...</p>
+      </div>
+    </div>
+  );
 
   if (!user) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-500 font-medium">Loading Portal...</p>
+        <p className="text-slate-500 font-medium">Checking Session...</p>
         <button 
           onClick={handleLogout}
           className="text-xs text-blue-600 hover:underline mt-2"
