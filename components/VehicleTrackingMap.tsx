@@ -151,18 +151,31 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     .filter(s => !s.isCompleted)
     .map(s => [[s.startLat, s.startLng], [s.endLat, s.endLng]]);
 
+  // Calculate rotation based on heading or segment direction
+  const rotation = tracking.heading || 0;
+
   return (
-    <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+    <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white group">
       {/* Map Header Overlay */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between items-center pointer-events-none">
-        <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-slate-200 pointer-events-auto">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Status</p>
-              <p className="text-sm font-bold text-slate-900 leading-none">Moving at {Math.round(tracking.speed)} km/h</p>
+      <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between items-start pointer-events-none">
+        <div className="flex flex-col gap-2 pointer-events-auto">
+          <div className="bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-slate-200">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-600 p-3 rounded-xl shadow-inner">
+                <Truck className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter mb-0.5">Live Tracking</p>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <p className="text-lg font-black text-slate-900 leading-none">
+                    {Math.round(tracking.speed)} <span className="text-xs font-bold text-slate-500">KM/H</span>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -170,59 +183,71 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         <div className="flex gap-2 pointer-events-auto">
           <button 
             onClick={() => setFollowMode(!followMode)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-lg ${
+            className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm transition-all shadow-xl hover:scale-105 active:scale-95 ${
               followMode 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
-            {followMode ? <LocateFixed className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {followMode ? 'Following' : 'Free View'}
+            {followMode ? <LocateFixed className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {followMode ? 'FOLLOWING' : 'FREE VIEW'}
           </button>
         </div>
       </div>
 
       <MapContainer 
         center={[tracking.currentLat, tracking.currentLng]} 
-        zoom={15} 
+        zoom={16} 
         style={{ height: '100%', width: '100%' }}
-        zoomControl={true}
+        zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Completed Path - Blue */}
-        {completedSegments.map((pos, idx) => (
-          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={6} opacity={0.8} />
+        {/* Remaining Path - RED (Dashed) */}
+        {remainingSegments.map((pos, idx) => (
+          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.6} dashArray="12, 12" />
         ))}
 
-        {/* Remaining Path - Red */}
-        {remainingSegments.map((pos, idx) => (
-          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.6} dashArray="10, 10" />
+        {/* Completed Path - BLUE (Solid) */}
+        {completedSegments.map((pos, idx) => (
+          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" />
         ))}
 
         {/* Vehicle Marker */}
         <Marker 
           position={[tracking.currentLat, tracking.currentLng]} 
-          icon={VehicleIcon}
+          icon={L.divIcon({
+            html: `<div class="bg-blue-600 p-2.5 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)] border-4 border-white transition-all duration-700 ease-in-out" style="transform: rotate(${rotation}deg)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v3"/><path d="M14 9l4-4 4 4"/><path d="M18 5v12"/><rect x="10" y="13" width="12" height="7" rx="2"/></svg>
+                  </div>`,
+            className: 'vehicle-marker',
+            iconSize: [44, 44],
+            iconAnchor: [22, 22]
+          })}
         />
 
         <MapController 
           position={[tracking.currentLat, tracking.currentLng]} 
           followMode={followMode}
           isUrban={isUrban}
-          userInteracted={() => setUserHasZoomed(true)}
+          userInteracted={() => setFollowMode(false)}
         />
       </MapContainer>
 
-      {/* Speed Warning Overlay if applicable */}
-      {tracking.speed > 80 && (
-        <div className="absolute bottom-4 left-4 z-[1000] bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold animate-pulse">
-          HIGH SPEED ALERT
+      {/* Speed & Environment Indicator */}
+      <div className="absolute bottom-6 left-6 z-[1000] pointer-events-none flex flex-col gap-2">
+        <div className="bg-slate-900/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase border border-white/10">
+          {isUrban ? '🏙️ URBAN ZONE (SPEED LIMITED)' : '🛣️ HIGHWAY MODE (OPTIMIZED)'}
         </div>
-      )}
+        {tracking.speed > 80 && (
+          <div className="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase animate-bounce shadow-2xl">
+            ⚠️ CAUTION: HIGH SPEED
+          </div>
+        )}
+      </div>
     </div>
   );
 }

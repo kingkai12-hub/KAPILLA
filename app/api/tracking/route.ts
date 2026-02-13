@@ -51,8 +51,8 @@ export async function GET(req: Request) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
-      // Simplified straight line for initial segments (In a real app, OSRM would provide road points)
-      const numSegments = 50;
+      // Generate a predefined route with 100 segments
+      const numSegments = 100;
       const segmentsData = [];
       for (let i = 0; i < numSegments; i++) {
         const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
@@ -65,7 +65,7 @@ export async function GET(req: Request) {
           startLng: sLng,
           endLat: eLat,
           endLng: eLng,
-          isCompleted: false,
+          isCompleted: i < 5, // Start with 5 segments completed
           order: i
         });
       }
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
           shipmentId: shipment.id,
           currentLat: startCoords.lat,
           currentLng: startCoords.lng,
-          speed: 45,
+          speed: 35,
           heading: 0,
           segments: {
             create: segmentsData
@@ -83,6 +83,62 @@ export async function GET(req: Request) {
         },
         include: { segments: { orderBy: { order: 'asc' } } }
       });
+    }
+
+    // SIMULATION LOGIC: Move the vehicle if tracking exists
+    if (tracking && vehicleTrackingModel && routeSegmentModel) {
+      const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
+      
+      if (incompleteSegments.length > 0) {
+        const nextSegment = incompleteSegments[0];
+        
+        // 1. Calculate heading from current position to next segment end
+        const dy = nextSegment.endLat - tracking.currentLat;
+        const dx = nextSegment.endLng - tracking.currentLng;
+        const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
+
+        // 2. Determine speed based on location (Urban vs Highway)
+        // Simplified: First and last 20% of segments are "Urban"
+        const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
+        const isUrban = progress < 0.2 || progress > 0.8;
+        const targetSpeed = isUrban ? 25 + Math.random() * 20 : 75 + Math.random() * 30;
+
+        // 3. Move currentLat/Lng towards nextSegment end
+        const stepSize = targetSpeed / 10000; // Arbitrary small step for simulation
+        const newLat = tracking.currentLat + (dy * stepSize);
+        const newLng = tracking.currentLng + (dx * stepSize);
+
+        // 4. Check if we reached the segment end (approx)
+        const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
+        
+        const updateData: any = {
+          currentLat: newLat,
+          currentLng: newLng,
+          speed: targetSpeed,
+          heading: heading,
+          lastUpdated: new Date()
+        };
+
+        if (distanceToEnd < 0.0005) {
+          // Mark segment as completed
+          await routeSegmentModel.update({
+            where: { id: nextSegment.id },
+            data: { isCompleted: true }
+          });
+          // Refresh segments for the response
+          tracking.segments = await routeSegmentModel.findMany({
+            where: { trackingId: tracking.id },
+            orderBy: { order: 'asc' }
+          });
+        }
+
+        // 5. Update the tracking record
+        tracking = await vehicleTrackingModel.update({
+          where: { id: tracking.id },
+          data: updateData,
+          include: { segments: { orderBy: { order: 'asc' } } }
+        });
+      }
     }
 
     if (tracking) {
