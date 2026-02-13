@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import DynamicVehicleTrackingMap from '@/components/DynamicVehicleTrackingMap';
+import SimpleMap from '@/components/SimpleMap';
 
 export default function TrackingPage() {
   const params = useParams();
@@ -18,10 +18,10 @@ export default function TrackingPage() {
           <p className="text-gray-600 mb-4">The waybill number "{waybill}" is not valid.</p>
           <p className="text-gray-500 text-sm mb-6">Expected format: KPL-123456</p>
           <button
-            onClick={() => router.push('/tracking/map')}
+            onClick={() => router.push('/')}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            View Sample Shipments
+            Go Home
           </button>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function TrackingPage() {
       {/* Map Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-          <DynamicVehicleTrackingMap waybillNumber={waybill} className="w-full h-full" />
+          <SimpleMap waybillNumber={waybill} className="w-full h-full" />
         </div>
       </div>
 
@@ -85,10 +85,10 @@ export default function TrackingPage() {
             📋 Copy Link
           </button>
           <button
-            onClick={() => router.push('/tracking/map')}
+            onClick={() => router.push('/')}
             className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium"
           >
-            🗺️ Track Another
+            🏠 Go Home
           </button>
         </div>
       </div>
