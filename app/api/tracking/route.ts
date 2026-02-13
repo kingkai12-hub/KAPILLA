@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { locationCoords } from '@/lib/locations';
+import { locationCoords, getLocationCoords } from '@/lib/locations';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -28,8 +29,8 @@ export async function GET(req: Request) {
 
     // If no tracking exists, create a simulated one for demonstration
     if (!tracking) {
-      const startCoords = locationCoords[shipment.origin as keyof typeof locationCoords] || { lat: -6.7924, lng: 39.2083 };
-      const endCoords = locationCoords[shipment.destination as keyof typeof locationCoords] || { lat: -2.5164, lng: 32.9033 };
+      const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+      const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
       // Simplified straight line for initial segments (In a real app, OSRM would provide road points)
       const numSegments = 50;
@@ -68,6 +69,7 @@ export async function GET(req: Request) {
     return NextResponse.json(tracking);
   } catch (error) {
     console.error('[TRACKING_GET]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const message = (error as any)?.message || 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

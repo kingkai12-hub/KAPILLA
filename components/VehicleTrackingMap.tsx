@@ -98,7 +98,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   useEffect(() => {
     const fetchTrackingData = async () => {
       try {
-        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}`);
+        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}`, { cache: 'no-store' });
         if (!res.ok) {
           let msg = `HTTP ${res.status}`;
           try {
