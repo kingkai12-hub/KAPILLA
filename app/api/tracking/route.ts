@@ -13,7 +13,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const shipment = await db.shipment.findUnique({ where: { waybillNumber } });
+    const normalized = waybillNumber.trim();
+    const shipment = await db.shipment.findFirst({
+      where: { waybillNumber: { equals: normalized, mode: 'insensitive' } }
+    });
     if (!shipment) {
       return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
     }

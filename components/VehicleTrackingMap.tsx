@@ -24,8 +24,8 @@ const VehicleIcon = L.divIcon({
 });
 
 interface RoutePoint {
-  lat: Float;
-  lng: Float;
+  lat: number;
+  lng: number;
 }
 
 interface TrackingData {
@@ -93,19 +93,28 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [loading, setLoading] = useState(true);
   const [isUrban, setIsUrban] = useState(true);
   const [userHasZoomed, setUserHasZoomed] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTrackingData = async () => {
       try {
         const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}`);
-        if (res.ok) {
+        if (!res.ok) {
+          let msg = `HTTP ${res.status}`;
+          try {
+            const data = await res.json();
+            if (data?.error) msg = data.error;
+          } catch {}
+          setErrorText(msg);
+          setTracking(null);
+        } else {
           const data = await res.json();
           setTracking(data);
-          // Simple urban detection logic (speed < 50km/h usually urban)
           setIsUrban(data.speed < 55);
+          setErrorText(null);
         }
       } catch (error) {
-        console.error("Failed to fetch tracking data", error);
+        setErrorText('Network error while fetching tracking data');
       } finally {
         setLoading(false);
       }
@@ -123,9 +132,16 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     </div>
   </div>;
 
-  if (!tracking) return <div className="h-[400px] w-full flex items-center justify-center bg-slate-100 rounded-xl">
-    <p className="text-slate-500">Tracking data unavailable for this shipment.</p>
-  </div>;
+  if (!tracking) {
+    return (
+      <div className="h-[400px] w-full flex items-center justify-center bg-slate-100 rounded-xl">
+        <div className="text-center">
+          <p className="text-slate-700 font-semibold">Tracking data unavailable for this shipment.</p>
+          {errorText && <p className="text-slate-500 text-sm mt-1">{errorText}</p>}
+        </div>
+      </div>
+    );
+  }
 
   const completedSegments = tracking.segments
     .filter(s => s.isCompleted)
