@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import WorkingMap from '@/components/WorkingMap';
+import FinalMap from '@/components/FinalMap';
 
 export default function TrackingPage() {
   const params = useParams();
@@ -58,7 +58,7 @@ export default function TrackingPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-          <WorkingMap waybillNumber={waybill} className="w-full h-full" />
+          <FinalMap waybillNumber={waybill} className="w-full h-full" />
         </div>
       </div>
     </div>
