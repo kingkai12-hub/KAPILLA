@@ -15,13 +15,16 @@ export default function SimpleMap({ waybillNumber, className = '' }: SimpleMapPr
   useEffect(() => {
     const fetchTrackingData = async () => {
       try {
+        console.log('Fetching tracking data for:', waybillNumber);
         const response = await fetch(`/api/vehicle-tracking?waybill=${waybillNumber}`);
         
         if (!response.ok) {
+          console.error('API response not OK:', response.status, response.statusText);
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('Tracking data received:', data);
         setTrackingData(data);
         setError(null);
       } catch (err) {
@@ -74,39 +77,68 @@ export default function SimpleMap({ waybillNumber, className = '' }: SimpleMapPr
         {/* Route Visualization */}
         {trackingData?.route && (
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-            {/* Completed Path */}
-            {trackingData.completedPath?.map((point: any, index: number) => (
-              <circle
-                key={`completed-${index}`}
-                cx={((point[1] - 33) / 6) * 100}
-                cy={((-point[0] + 3) / 10) * 100}
-                r="1"
-                fill="#3b82f6"
-              />
-            ))}
-            
-            {/* Remaining Path */}
-            {trackingData.remainingPath?.map((point: any, index: number) => (
-              <circle
-                key={`remaining-${index}`}
-                cx={((point[1] - 33) / 6) * 100}
-                cy={((-point[0] + 3) / 10) * 100}
-                r="1"
-                fill="#ef4444"
-              />
-            ))}
-            
-            {/* Current Position */}
-            {trackingData.currentPosition && (
-              <circle
-                cx={((trackingData.currentPosition.lng - 33) / 6) * 100}
-                cy={((-trackingData.currentPosition.lat + 3) / 10) * 100}
-                r="3"
-                fill="#10b981"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-            )}
+            {/* Calculate bounds for proper scaling */}
+            {(() => {
+              try {
+                const allPoints = [...(trackingData.completedPath || []), ...(trackingData.remainingPath || [])];
+                if (allPoints.length === 0) return null;
+                
+                const lats = allPoints.map(p => p[0]);
+                const lngs = allPoints.map(p => p[1]);
+                const minLat = Math.min(...lats);
+                const maxLat = Math.max(...lats);
+                const minLng = Math.min(...lngs);
+                const maxLng = Math.max(...lngs);
+                
+                const latRange = maxLat - minLat || 1;
+                const lngRange = maxLng - minLng || 1;
+                
+                return (
+                  <>
+                    {/* Completed Path */}
+                    {trackingData.completedPath?.map((point: any, index: number) => (
+                      <circle
+                        key={`completed-${index}`}
+                        cx={((point[1] - minLng) / lngRange) * 80 + 10}
+                        cy={((point[0] - minLat) / latRange) * 80 + 10}
+                        r="1.5"
+                        fill="#3b82f6"
+                      />
+                    ))}
+                    
+                    {/* Remaining Path */}
+                    {trackingData.remainingPath?.map((point: any, index: number) => (
+                      <circle
+                        key={`remaining-${index}`}
+                        cx={((point[1] - minLng) / lngRange) * 80 + 10}
+                        cy={((point[0] - minLat) / latRange) * 80 + 10}
+                        r="1.5"
+                        fill="#ef4444"
+                      />
+                    ))}
+                    
+                    {/* Current Position */}
+                    {trackingData.currentPosition && (
+                      <circle
+                        cx={((trackingData.currentPosition.lng - minLng) / lngRange) * 80 + 10}
+                        cy={((trackingData.currentPosition.lat - minLat) / latRange) * 80 + 10}
+                        r="4"
+                        fill="#10b981"
+                        stroke="white"
+                        strokeWidth="1"
+                      />
+                    )}
+                  </>
+                );
+              } catch (error) {
+                console.error('Error rendering route visualization:', error);
+                return (
+                  <text x="50" y="50" textAnchor="middle" fill="#666" fontSize="4">
+                    Map visualization error
+                  </text>
+                );
+              }
+            })()}
           </svg>
         )}
 
