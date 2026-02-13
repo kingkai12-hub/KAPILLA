@@ -454,7 +454,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                               <div className="text-sm font-medium text-slate-600">Live Tracking Map</div>
                               <div className="text-xs text-slate-500 mt-1">Track your shipment in real-time</div>
                               <a
-                                href={`/tracking/map/${searchResult.waybillNumber}`}
+                                href={`/tracking/${searchResult.waybillNumber}`}
                                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20"
                               >
                                 <MapPin className="w-3 h-3" />
