@@ -207,25 +207,35 @@ export default function StaffPortalLayout({
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-500 font-medium">Initializing Portal...</p>
+        <p className="text-slate-500 font-medium">Initializing...</p>
       </div>
     </div>
   );
 
-  if (!user) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-500 font-medium">Checking Session...</p>
-        <button 
-          onClick={handleLogout}
-          className="text-xs text-blue-600 hover:underline mt-2"
-        >
-          Taking too long? Back to login
-        </button>
+  // If we are on the client and no user is found after checking, 
+  // we show a message while the router redirects
+  if (mounted && !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 font-medium">Authenticating...</p>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('kapilla_user');
+              window.location.href = '/staff/login';
+            }}
+            className="text-xs text-blue-600 hover:underline mt-2"
+          >
+            Not logged in? Click here to login
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Final safety check to prevent rendering the portal if user is still null
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-50 to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 flex font-sans transition-colors duration-300">
@@ -271,7 +281,7 @@ export default function StaffPortalLayout({
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 px-2">Menu</div>
             {navigation.map((item) => {
-              if (item.roles && !item.roles.includes(user.role)) return null;
+              if (item.roles && (!user?.role || !item.roles.includes(user.role))) return null;
               const isActive = pathname === item.href;
               
               return (

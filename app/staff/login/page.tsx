@@ -24,9 +24,12 @@ export default function StaffLogin() {
 
       if (res.ok) {
         const user = await res.json();
+        console.log('Login successful, user:', user.email);
         // Store user session in localStorage for simple client-side auth
         localStorage.setItem('kapilla_user', JSON.stringify(user));
-        router.push('/staff/dashboard');
+        
+        // Force a hard navigation to dashboard to ensure state is fresh
+        window.location.href = '/staff/dashboard';
       } else {
         const data = await res.json();
         alert(data.error || 'Login failed');
