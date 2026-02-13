@@ -89,6 +89,14 @@ export async function GET(req: Request) {
     if (tracking && vehicleTrackingModel && routeSegmentModel) {
       const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
       
+      // ADMIN CONFIGURATION (Simulated)
+      const SPEED_CONFIG = {
+        CITY_MIN: 20,
+        CITY_MAX: 50,
+        HIGHWAY_MIN: 80, // "Admin-defined" high speed
+        HIGHWAY_MAX: 120
+      };
+
       if (incompleteSegments.length > 0) {
         const nextSegment = incompleteSegments[0];
         
@@ -98,15 +106,27 @@ export async function GET(req: Request) {
         const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
 
         // 2. Determine speed based on location (Urban vs Highway)
-        // Simplified: First and last 20% of segments are "Urban"
+        // First and last 20% of segments are considered "Urban Zones"
         const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
         const isUrban = progress < 0.2 || progress > 0.8;
-        const targetSpeed = isUrban ? 25 + Math.random() * 20 : 75 + Math.random() * 30;
+        
+        const minSpeed = isUrban ? SPEED_CONFIG.CITY_MIN : SPEED_CONFIG.HIGHWAY_MIN;
+        const maxSpeed = isUrban ? SPEED_CONFIG.CITY_MAX : SPEED_CONFIG.HIGHWAY_MAX;
+        
+        // Add slight randomness to simulate traffic variations
+        const targetSpeed = minSpeed + Math.random() * (maxSpeed - minSpeed);
 
         // 3. Move currentLat/Lng towards nextSegment end
+        // Physics Calculation:
+        // 1 degree latitude ~= 111km
+        // Time step = 1 second (1/3600 hour)
+        // Distance (km) = Speed (km/h) * Time (h) = Speed / 3600
+        // Distance (degrees) = Distance (km) / 111 = (Speed / 3600) / 111
+        // Factor: 1 / (3600 * 111) ≈ 0.0000025
+        const stepSize = targetSpeed * 0.0000025; 
+        
         // Use normalized vector to ensure consistent movement regardless of distance
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const stepSize = targetSpeed / 20000; // Increased step size for visible movement
         
         let newLat = tracking.currentLat;
         let newLng = tracking.currentLng;

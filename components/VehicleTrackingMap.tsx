@@ -123,7 +123,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     };
 
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 2000); // Faster polling for smoother movement
+    const interval = setInterval(fetchTrackingData, 1000); // Update every 1 second for smooth movement
     return () => clearInterval(interval);
   }, [waybillNumber]);
 
