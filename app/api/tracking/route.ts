@@ -141,16 +141,29 @@ export async function GET(req: Request) {
         }
 
         // 5. Update the tracking record
-        tracking = await vehicleTrackingModel.update({
-          where: { id: tracking.id },
-          data: updateData,
-          include: { segments: { orderBy: { order: 'asc' } } }
-        });
+        try {
+          tracking = await vehicleTrackingModel.update({
+            where: { id: tracking.id },
+            data: updateData,
+            include: { segments: { orderBy: { order: 'asc' } } }
+          });
+          console.log(`[TRACKING] Updated ${waybillNumber}: Lat ${newLat.toFixed(4)}, Lng ${newLng.toFixed(4)}, Speed ${targetSpeed.toFixed(1)}`);
+        } catch (updateError) {
+          console.error('[TRACKING_UPDATE_ERROR]', updateError);
+          // If update fails, we still return the locally updated tracking object 
+          // to keep the UI moving, but it won't persist.
+          tracking = { ...tracking, ...updateData };
+        }
       }
     }
 
     if (tracking) {
-      return NextResponse.json(tracking);
+      // Add a flag to indicate if this is simulated or real
+      return NextResponse.json({
+        ...tracking,
+        isSimulated: true,
+        serverTime: new Date().toISOString()
+      });
     }
 
     // FINAL FALLBACK: If tracking model is missing but shipment exists, 

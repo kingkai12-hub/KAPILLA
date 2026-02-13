@@ -98,6 +98,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   useEffect(() => {
     const fetchTrackingData = async () => {
       try {
+        console.log('Fetching tracking for:', waybillNumber);
         const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}`, { cache: 'no-store' });
         if (!res.ok) {
           let msg = `HTTP ${res.status}`;
@@ -109,11 +110,18 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           setTracking(null);
         } else {
           const data = await res.json();
+          console.log('Tracking data received:', {
+            lat: data.currentLat,
+            lng: data.currentLng,
+            speed: data.speed,
+            time: data.serverTime
+          });
           setTracking(data);
           setIsUrban(data.speed < 55);
           setErrorText(null);
         }
       } catch (error) {
+        console.error('Fetch error:', error);
         setErrorText('Network error while fetching tracking data');
       } finally {
         setLoading(false);
@@ -121,7 +129,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     };
 
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 3000); // Update every 3 seconds to match simulation steps
+    const interval = setInterval(fetchTrackingData, 3000); // Update every 3 seconds
     return () => clearInterval(interval);
   }, [waybillNumber]);
 
