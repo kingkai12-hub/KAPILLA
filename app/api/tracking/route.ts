@@ -104,9 +104,17 @@ export async function GET(req: Request) {
         const targetSpeed = isUrban ? 25 + Math.random() * 20 : 75 + Math.random() * 30;
 
         // 3. Move currentLat/Lng towards nextSegment end
-        const stepSize = targetSpeed / 10000; // Arbitrary small step for simulation
-        const newLat = tracking.currentLat + (dy * stepSize);
-        const newLng = tracking.currentLng + (dx * stepSize);
+        // Use normalized vector to ensure consistent movement regardless of distance
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const stepSize = targetSpeed / 20000; // Increased step size for visible movement
+        
+        let newLat = tracking.currentLat;
+        let newLng = tracking.currentLng;
+        
+        if (dist > 0) {
+          newLat += (dy / dist) * stepSize;
+          newLng += (dx / dist) * stepSize;
+        }
 
         // 4. Check if we reached the segment end (approx)
         const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));

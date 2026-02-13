@@ -121,7 +121,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     };
 
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 2000); // Update every 2 seconds
+    const interval = setInterval(fetchTrackingData, 3000); // Update every 3 seconds to match simulation steps
     return () => clearInterval(interval);
   }, [waybillNumber]);
 
