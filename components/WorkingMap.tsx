@@ -15,16 +15,28 @@ export default function WorkingMap({ waybillNumber, className = '' }: WorkingMap
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('🔄 Starting fetch for waybill:', waybillNumber);
         const response = await fetch(`/api/vehicle-tracking?waybill=${waybillNumber}`);
+        
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response OK:', response.ok);
+        
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          console.error('❌ API response not OK:', response.status, response.statusText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
         const data = await response.json();
+        console.log('✅ Tracking data received:', data);
         setTrackingData(data);
         setError(null);
       } catch (err) {
-        setError('Failed to load data');
+        console.error('💥 Fetch error details:', err);
+        console.error('💥 Error type:', typeof err);
+        console.error('💥 Error message:', err instanceof Error ? err.message : String(err));
+        setError(err instanceof Error ? err.message : 'Failed to load tracking data');
       } finally {
+        console.log('🏁 Fetch completed, setting loading to false');
         setLoading(false);
       }
     };
