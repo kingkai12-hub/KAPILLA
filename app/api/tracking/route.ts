@@ -15,14 +15,30 @@ export async function GET(req: Request) {
 
   try {
     const normalized = waybillNumber.trim();
-    const shipment = await db.shipment.findFirst({
+    // Extremely defensive model access to prevent "undefined" errors
+    const vehicleTrackingModel = (db as any).vehicleTracking || (db as any).VehicleTracking;
+    const shipmentModel = (db as any).shipment || (db as any).Shipment;
+
+    if (!vehicleTrackingModel || !shipmentModel) {
+      console.error('Database models missing from client:', { 
+        hasVehicleTracking: !!vehicleTrackingModel, 
+        hasShipment: !!shipmentModel 
+      });
+      return NextResponse.json({ 
+        error: 'Database configuration error. Please contact support.',
+        details: 'Models missing from Prisma client'
+      }, { status: 500 });
+    }
+
+    const shipment = await shipmentModel.findFirst({
       where: { waybillNumber: { equals: normalized, mode: 'insensitive' } }
     });
+
     if (!shipment) {
       return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
     }
 
-    let tracking = await db.vehicleTracking.findUnique({
+    let tracking = await vehicleTrackingModel.findUnique({
       where: { shipmentId: shipment.id },
       include: { segments: { orderBy: { order: 'asc' } } }
     });
@@ -51,7 +67,7 @@ export async function GET(req: Request) {
         });
       }
 
-      tracking = await db.vehicleTracking.create({
+      tracking = await vehicleTrackingModel.create({
         data: {
           shipmentId: shipment.id,
           currentLat: startCoords.lat,

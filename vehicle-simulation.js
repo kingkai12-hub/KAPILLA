@@ -4,9 +4,17 @@ import axios from 'axios';
 async function simulate() {
   console.log('Starting Vehicle Simulation...');
 
+  const vehicleTrackingModel = db.vehicleTracking || db.VehicleTracking;
+  const routeSegmentModel = db.routeSegment || db.RouteSegment;
+
+  if (!vehicleTrackingModel || !routeSegmentModel) {
+    console.error('Simulation failed: Database models missing from client.');
+    return;
+  }
+
   while (true) {
     try {
-      const activeTracking = await db.vehicleTracking.findMany({
+      const activeTracking = await vehicleTrackingModel.findMany({
         include: { segments: { orderBy: { order: 'asc' } } }
       });
 
@@ -20,7 +28,7 @@ async function simulate() {
           const speed = isUrban ? Math.random() * 30 + 20 : Math.random() * 40 + 60; // 20-50 km/h urban, 60-100 rural
           
           // Move current position to end of this segment
-          await db.vehicleTracking.update({
+          await vehicleTrackingModel.update({
             where: { id: track.id },
             data: {
               currentLat: nextSegment.endLat,
@@ -31,7 +39,7 @@ async function simulate() {
           });
 
           // Mark segment as completed
-          await db.routeSegment.update({
+          await routeSegmentModel.update({
             where: { id: nextSegment.id },
             data: { isCompleted: true }
           });
@@ -39,12 +47,12 @@ async function simulate() {
           console.log(`Shipment ${track.shipmentId}: Moved to next segment at ${speed.toFixed(1)} km/h`);
         } else {
           // Reset for demo purposes if all completed
-          await db.routeSegment.updateMany({
+          await routeSegmentModel.updateMany({
             where: { trackingId: track.id },
             data: { isCompleted: false }
           });
           const firstSegment = track.segments[0];
-          await db.vehicleTracking.update({
+          await vehicleTrackingModel.update({
             where: { id: track.id },
             data: {
               currentLat: firstSegment.startLat,
