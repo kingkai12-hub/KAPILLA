@@ -106,30 +106,28 @@ function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleT
     return L.divIcon({
       html: `
         <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: #10b981;
-          border: 3px solid white;
+          border: 2px solid white;
           border-radius: 50%;
-          width: 20px;
-          height: 20px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          position: relative;
-          z-index: 1000;
+          width: 32px;
+          height: 32px;
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+          transition: all 0.3s ease;
         ">
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-          ">🚚</div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
         </div>
       `,
-      className: 'vehicle-marker',
-      iconSize: [26, 26],
-      iconAnchor: [13, 13],
-      popupAnchor: [0, -13]
+      className: 'vehicle-marker-container',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
     });
   }, []);
 
@@ -347,7 +345,7 @@ function VehicleTrackingMapComponent({ waybillNumber, className = '' }: VehicleT
             <span className="text-xs text-gray-600">Completed Path</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-red-500" style={{ borderTop: '2px dashed #ef4444' }}></div>
+            <div className="w-4 h-1 bg-red-500"></div>
             <span className="text-xs text-gray-600">Remaining Path</span>
           </div>
           <div className="flex items-center gap-2">

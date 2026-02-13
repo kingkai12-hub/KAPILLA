@@ -5,7 +5,8 @@
  * It can be run as a cron job or standalone process
  */
 
-const fetch = require('node-fetch');
+// Use global fetch (available in Node.js 18+)
+const fetchFn = typeof fetch !== 'undefined' ? fetch : require('node-fetch');
 
 class VehicleSimulationService {
   constructor() {
@@ -59,7 +60,7 @@ class VehicleSimulationService {
     try {
       const startTime = Date.now();
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vehicle-simulation`, {
+      const response = await fetchFn(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vehicle-simulation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ class VehicleSimulationService {
 
   async getStatus() {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vehicle-simulation`);
+      const response = await fetchFn(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vehicle-simulation`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -14,8 +14,8 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-// Generate route coordinates between origin and destination
-function generateRoute(origin: string, destination: string): [number, number][] {
+// Generate route coordinates between origin and destination using OSRM or fallback
+async function generateRoute(origin: string, destination: string): Promise<[number, number][]> {
   const locations: Record<string, [number, number]> = {
     "Dar es Salaam": [-6.8151812, 39.2864692],
     "Mbeya": [-8.9094, 33.4608],
@@ -27,36 +27,72 @@ function generateRoute(origin: string, destination: string): [number, number][] 
     "Iringa": [-7.7667, 35.7000],
     "Kigoma": [-4.8765, 29.6262],
     "Mtwara": [-10.3069, 40.1830],
+    "Singida": [-4.8150, 34.7436],
+    "Shinyanga": [-3.6619, 33.4232],
+    "Tabora": [-5.0162, 32.8132],
+    "Musoma": [-1.4989, 33.8047],
+    "Bukoba": [-1.3320, 31.8122],
+    "Sumbawanga": [-7.9667, 31.6167],
+    "Songea": [-10.6833, 35.6500],
+    "Lindi": [-9.9967, 39.7133],
+    "Zanzibar": [-6.1659, 39.2026],
   };
 
   const start = locations[origin];
   const end = locations[destination];
 
   if (!start || !end) {
-    throw new Error(`Coordinates not found for ${origin} or ${destination}`);
+    // If not in our list, try to return a straight line at least
+    console.warn(`Coordinates not found for ${origin} or ${destination}, using straight line fallback`);
+    const s = start || [-6.8151, 39.2865]; // Fallback to Dar
+    const e = end || [-2.5164, 32.9175];   // Fallback to Mwanza
+    return [s, e];
   }
 
-  // Generate intermediate waypoints for realistic route
+  try {
+    // Try to get actual road route from OSRM
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+    const response = await fetch(osrmUrl);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+        const coords = data.routes[0].geometry.coordinates;
+        // OSRM returns [lng, lat], we need [lat, lng]
+        return coords.map((c: [number, number]) => [c[1], c[0]]);
+      }
+    }
+  } catch (err) {
+    console.error('OSRM routing failed, falling back to enhanced manual route:', err);
+  }
+
+  // Fallback: Enhanced manual routes following main highways
   const route: [number, number][] = [start];
   
-  // Add intermediate points based on major routes in Tanzania
   if (origin === "Dar es Salaam" && destination === "Mbeya") {
-    route.push([-6.5, 37.0], [-7.0, 36.0], [-7.5, 34.5], [-8.0, 34.0], end);
+    route.push([-6.8240, 37.6618]); // Morogoro
+    route.push([-7.4000, 36.5000]); // Mikumi
+    route.push([-7.7667, 35.7000]); // Iringa
+    route.push([-8.3000, 34.5000]); // Makambako
   } else if (origin === "Dar es Salaam" && destination === "Mwanza") {
-    route.push([-6.0, 37.5], [-5.5, 35.0], [-4.0, 33.0], [-3.0, 33.0], end);
+    route.push([-6.8240, 37.6618]); // Morogoro
+    route.push([-6.1830, 35.7430]); // Dodoma
+    route.push([-4.8150, 34.7436]); // Singida
+    route.push([-4.0000, 33.5000]); // Nzega
+    route.push([-3.6619, 33.4232]); // Shinyanga
   } else if (origin === "Dar es Salaam" && destination === "Arusha") {
-    route.push([-6.0, 37.0], [-5.5, 36.5], [-4.5, 36.0], end);
-  } else {
-    // Default straight line with some intermediate points
-    const steps = 5;
-    for (let i = 1; i < steps; i++) {
-      const lat = start[0] + (end[0] - start[0]) * (i / steps);
-      const lng = start[1] + (end[1] - start[1]) * (i / steps);
-      route.push([lat, lng]);
-    }
-    route.push(end);
+    route.push([-6.1000, 38.2000]); // Chalinze
+    route.push([-5.0689, 38.3000]); // Korogwe
+    route.push([-4.5000, 38.0000]); // Same
+    route.push([-3.3500, 37.3333]); // Moshi
+  } else if (origin === "Mwanza" && destination === "Dar es Salaam") {
+    route.push([-3.6619, 33.4232]); // Shinyanga
+    route.push([-4.0000, 33.5000]); // Nzega
+    route.push([-4.8150, 34.7436]); // Singida
+    route.push([-6.1830, 35.7430]); // Dodoma
+    route.push([-6.8240, 37.6618]); // Morogoro
   }
 
+  route.push(end);
   return route;
 }
 
@@ -116,7 +152,7 @@ export async function GET(req: Request) {
 
     // If no tracking exists, create it
     if (!existingTracking) {
-      const route = generateRoute(shipment.origin, shipment.destination);
+      const route = await generateRoute(shipment.origin, shipment.destination);
       const totalDistance = calculateTotalDistance(route);
 
       const tracking = await db.vehicleTracking.create({
@@ -177,16 +213,27 @@ export async function GET(req: Request) {
     
     // Find current position along route
     let accumulatedDistance = 0;
-    let currentPosition = route[tracking.routeIndex];
-    let completedPath: [number, number][] = [];
-    let remainingPath: [number, number][] = [];
+    // Construct completed and remaining paths smoothly
+    const completedPath: [number, number][] = [];
+    const remainingPath: [number, number][] = [];
 
-    for (let i = 0; i < route.length; i++) {
-      if (i <= tracking.routeIndex) {
-        completedPath.push(route[i]);
-      } else {
-        remainingPath.push(route[i]);
-      }
+    // Current position
+    const currentPos: [number, number] = [tracking.currentLatitude, tracking.currentLongitude];
+
+    // Add all waypoints before current routeIndex to completedPath
+    for (let i = 0; i <= tracking.routeIndex; i++) {
+      completedPath.push(route[i]);
+    }
+    // Add current position as the last point of completedPath
+    if (tracking.routeIndex < route.length - 1) {
+      completedPath.push(currentPos);
+    }
+
+    // Add current position as the first point of remainingPath
+    remainingPath.push(currentPos);
+    // Add all waypoints after current routeIndex to remainingPath
+    for (let i = tracking.routeIndex + 1; i < route.length; i++) {
+      remainingPath.push(route[i]);
     }
 
     return NextResponse.json({
@@ -237,7 +284,7 @@ export async function POST(req: Request) {
 
     // Create tracking if it doesn't exist
     if (!tracking) {
-      const route = generateRoute(shipment.origin, shipment.destination);
+      const route = await generateRoute(shipment.origin, shipment.destination);
       const totalDistance = calculateTotalDistance(route);
 
       tracking = await db.vehicleTracking.create({
