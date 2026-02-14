@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Truck, Navigation, LocateFixed, Eye } from 'lucide-react';
@@ -94,6 +94,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [loading, setLoading] = useState(true);
   const [isUrban, setIsUrban] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<number | null>(null);
 
   // Use refs for smooth client-side interpolation
   const currentPos = useRef<[number, number]>([0, 0]);
@@ -111,6 +112,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           setTracking(data);
           setIsUrban(data.speed < 55);
           setErrorText(null);
+          setLastUpdate(Date.now());
           
           // If this is the first load, set both positions
           if (currentPos.current[0] === 0) {
@@ -275,6 +277,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           rotation={tracking.heading || 0}
           isUrban={isUrban}
         />
+        <CircleMarker center={displayPos} radius={4} color="#2563eb" opacity={0.9} fillOpacity={1} />
 
         <MapController 
           position={displayPos} 
@@ -299,6 +302,12 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
             />
           </div>
         </motion.div>
+        
+        <div className="bg-white/90 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 pointer-events-auto">
+          <div>Lat: {displayPos[0].toFixed(5)} Lng: {displayPos[1].toFixed(5)}</div>
+          <div>Segs: {(tracking?.segments?.length ?? 0)} Speed: {Math.round(tracking.speed)}</div>
+          <div>Updated: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '—'}</div>
+        </div>
         
         {tracking.speed > 80 && (
           <div className="bg-red-600/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase animate-bounce shadow-2xl border border-red-400/50">
