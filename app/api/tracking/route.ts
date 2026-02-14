@@ -46,10 +46,12 @@ export async function GET(req: Request) {
       });
     }
 
-    // If no tracking exists, create a simulated one for demonstration
-    if (!tracking && vehicleTrackingModel && routeSegmentModel) {
+    // If no tracking exists, or it has no segments, create/re-create segments for demonstration
+    if (vehicleTrackingModel && routeSegmentModel && (!tracking || !tracking.segments || tracking.segments.length === 0)) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
+
+      console.log(`[TRACKING] Generating simulation route for ${waybillNumber} from ${shipment.origin} to ${shipment.destination}`);
 
       // Generate a predefined route with 100 segments
       const numSegments = 100;
@@ -65,24 +67,41 @@ export async function GET(req: Request) {
           startLng: sLng,
           endLat: eLat,
           endLng: eLng,
-          isCompleted: i < 5, // Start with 5 segments completed
+          isCompleted: false,
           order: i
         });
       }
 
-      tracking = await vehicleTrackingModel.create({
-        data: {
-          shipmentId: shipment.id,
-          currentLat: startCoords.lat,
-          currentLng: startCoords.lng,
-          speed: 35,
-          heading: 0,
-          segments: {
-            create: segmentsData
+      if (!tracking) {
+        tracking = await vehicleTrackingModel.create({
+          data: {
+            shipmentId: shipment.id,
+            currentLat: startCoords.lat,
+            currentLng: startCoords.lng,
+            speed: 35,
+            heading: 0,
+            segments: {
+              create: segmentsData
+            }
+          },
+          include: { segments: { orderBy: { order: 'asc' } } }
+        });
+      } else {
+        // Tracking exists but segments are missing, add them
+        await vehicleTrackingModel.update({
+          where: { id: tracking.id },
+          data: {
+            segments: {
+              create: segmentsData
+            }
           }
-        },
-        include: { segments: { orderBy: { order: 'asc' } } }
-      });
+        });
+        // Refetch with segments
+        tracking = await vehicleTrackingModel.findUnique({
+          where: { id: tracking.id },
+          include: { segments: { orderBy: { order: 'asc' } } }
+        });
+      }
     }
 
     // SIMULATION LOGIC: Move the vehicle if tracking exists
@@ -289,6 +308,33 @@ export async function POST(req: Request) {
         timestamp: new Date()
       }
     });
+
+    // Update vehicle tracking position if location is recognized
+    if (location) {
+      const coords = getLocationCoords(location);
+      if (coords) {
+        const vehicleTrackingModel = (db as any).VehicleTracking || (db as any).vehicleTracking;
+        if (vehicleTrackingModel) {
+          await vehicleTrackingModel.upsert({
+            where: { shipmentId: shipment.id },
+            update: {
+              currentLat: coords.lat,
+              currentLng: coords.lng,
+              lastUpdated: new Date()
+            },
+            create: {
+              shipmentId: shipment.id,
+              currentLat: coords.lat,
+              currentLng: coords.lng,
+              speed: 0,
+              heading: 0,
+              lastUpdated: new Date()
+            }
+          });
+          console.log(`[TRACKING_POST] Updated vehicle position for ${waybillNumber} to ${location} (${coords.lat}, ${coords.lng})`);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, event });
   } catch (error) {
