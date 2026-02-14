@@ -104,7 +104,8 @@ export default function ShipmentsPage() {
             body: JSON.stringify({
                 status: newStatus,
                 signature: signatureData,
-                receivedBy: receivedBy || editingStatusShipment.receivedBy
+                receivedBy: receivedBy || editingStatusShipment.receivedBy,
+                location: updateLocation // Add the location to the request body
             })
         });
 

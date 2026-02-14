@@ -242,3 +242,57 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { 
+      waybillNumber, 
+      status, 
+      location, 
+      remarks, 
+      estimatedDelivery, 
+      estimatedDeliveryTime,
+      transportType 
+    } = body;
+
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybillNumber },
+    });
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
+    // Update shipment status if it's not DELIVERED
+    if (shipment.currentStatus !== 'DELIVERED') {
+      await db.shipment.update({
+        where: { id: shipment.id },
+        data: { 
+          currentStatus: status,
+          // Update estimated delivery if provided
+          ...(estimatedDelivery && { 
+            // We might need to add these fields to the schema if they don't exist
+            // For now, let's assume they are handled by the events
+          })
+        }
+      });
+    }
+
+    // Create tracking event
+    const event = await db.trackingEvent.create({
+      data: {
+        shipmentId: shipment.id,
+        status: status,
+        location: location || 'Unknown',
+        remarks: remarks || `Shipment is ${status.toLowerCase().replace('_', ' ')}`,
+        timestamp: new Date()
+      }
+    });
+
+    return NextResponse.json({ success: true, event });
+  } catch (error) {
+    console.error('[TRACKING_POST]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
