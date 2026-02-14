@@ -19,14 +19,11 @@ const DefaultIcon = L.icon({
 function AnimatedVehicleMarker({ position, rotation, isUrban }: { position: [number, number], rotation: number, isUrban: boolean }) {
   const map = useMap();
   
-  // Use a ref to track the marker for direct Leaflet manipulation if needed
-  // but for now we rely on the Marker's position prop which Leaflet handles
-  
   return (
     <Marker 
       position={position} 
       icon={L.divIcon({
-        html: `<div class="vehicle-container transition-all duration-1000 ease-linear">
+        html: `<div class="vehicle-container">
                 <div class="bg-blue-600 p-2.5 rounded-full shadow-[0_0_25px_rgba(37,99,235,0.6)] border-4 border-white" style="transform: rotate(${rotation}deg)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v3"/><path d="M14 9l4-4 4 4"/><path d="M18 5v12"/><rect x="10" y="13" width="12" height="7" rx="2"/></svg>
                 </div>
