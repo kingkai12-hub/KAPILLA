@@ -22,13 +22,40 @@ export async function GET(req: Request) {
     const routeSegmentModel = (db as any).RouteSegment || (db as any).routeSegment;
 
     if (!shipmentModel || !vehicleTrackingModel || !routeSegmentModel) {
-      console.error('[TRACKING_GET] Database models not found', {
+      console.warn('[TRACKING_GET] One or more models missing, degrading gracefully', {
         available: Object.keys(db || {}).filter(k => !k.startsWith('$'))
       });
-      return NextResponse.json({ 
-        error: 'Database initialization error',
-        details: 'Models missing from prisma client'
-      }, { status: 500 });
+      // Try to return minimal payload using shipment model if available
+      if (shipmentModel) {
+        const shipment = await shipmentModel.findFirst({
+          where: { waybillNumber: { equals: normalized, mode: 'insensitive' } }
+        });
+        if (!shipment) {
+          return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+        }
+        const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+        return NextResponse.json({
+          currentLat: startCoords.lat,
+          currentLng: startCoords.lng,
+          speed: 0,
+          heading: 0,
+          segments: [],
+          isSimulated: true,
+          serverTime: new Date().toISOString(),
+          degraded: true
+        });
+      }
+      // If even shipment model is missing, return a static but valid response
+      return NextResponse.json({
+        currentLat: -6.7924,
+        currentLng: 39.2083,
+        speed: 0,
+        heading: 0,
+        segments: [],
+        isSimulated: true,
+        serverTime: new Date().toISOString(),
+        degraded: true
+      });
     }
 
     const shipment = await shipmentModel.findFirst({
