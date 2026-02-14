@@ -176,6 +176,33 @@ export async function GET(req: Request) {
 
   } catch (error) {
     console.error('[TRACKING_GET]', error);
+    try {
+      // Attempt a graceful fallback to avoid 500s breaking the UI
+      const { searchParams } = new URL(req.url);
+      const waybillNumber = searchParams.get('waybillNumber') || '';
+      const normalized = waybillNumber.trim();
+      const shipmentModel = (db as any).Shipment || (db as any).shipment;
+      if (shipmentModel && normalized) {
+        const shipment = await shipmentModel.findFirst({
+          where: { waybillNumber: { equals: normalized, mode: 'insensitive' } }
+        });
+        if (shipment) {
+          const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+          return NextResponse.json({
+            currentLat: startCoords.lat,
+            currentLng: startCoords.lng,
+            speed: 0,
+            heading: 0,
+            segments: [],
+            isSimulated: true,
+            serverTime: new Date().toISOString(),
+            fallback: true
+          });
+        }
+      }
+    } catch (fallbackError) {
+      console.error('[TRACKING_GET_FALLBACK_FAILED]', fallbackError);
+    }
     const message = (error as any)?.message || 'Internal Server Error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
