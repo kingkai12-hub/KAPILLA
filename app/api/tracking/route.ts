@@ -16,13 +16,19 @@ export async function GET(req: Request) {
   try {
     const normalized = waybillNumber.trim();
     
-    // Use the lowercase model names directly as verified in debug-db.js
-    const shipmentModel = (db as any).shipment;
-    const vehicleTrackingModel = (db as any).vehicleTracking;
-    const routeSegmentModel = (db as any).routeSegment;
+    // Defensive model access to handle case-sensitivity in generated Prisma client
+    const shipmentModel = (db as any).Shipment || (db as any).shipment;
+    const vehicleTrackingModel = (db as any).VehicleTracking || (db as any).vehicleTracking;
+    const routeSegmentModel = (db as any).RouteSegment || (db as any).routeSegment;
 
-    if (!shipmentModel || !vehicleTrackingModel) {
-      return NextResponse.json({ error: 'Database models not initialized' }, { status: 500 });
+    if (!shipmentModel || !vehicleTrackingModel || !routeSegmentModel) {
+      console.error('[TRACKING_GET] Database models not found', {
+        available: Object.keys(db || {}).filter(k => !k.startsWith('$'))
+      });
+      return NextResponse.json({ 
+        error: 'Database initialization error',
+        details: 'Models missing from prisma client'
+      }, { status: 500 });
     }
 
     const shipment = await shipmentModel.findFirst({
@@ -122,7 +128,7 @@ export async function GET(req: Request) {
         const targetSpeed = baseSpeed + (Math.random() * 10 - 5);
 
         // Move vehicle - INCREASED step size significantly for visibility
-        const stepSize = targetSpeed * 0.00005; // 5x faster than before
+        const stepSize = targetSpeed * 0.00005; 
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         let newLat = tracking.currentLat;
@@ -143,7 +149,7 @@ export async function GET(req: Request) {
           lastUpdated: new Date()
         };
 
-        if (distanceToEnd < 0.005) { // Increased threshold for smoother segment completion
+        if (distanceToEnd < 0.005) { 
           await routeSegmentModel.update({
             where: { id: nextSegment.id },
             data: { isCompleted: true }
@@ -156,6 +162,10 @@ export async function GET(req: Request) {
           include: { segments: { orderBy: { order: 'asc' } } }
         });
       }
+    }
+
+    if (!tracking) {
+      return NextResponse.json({ error: 'Tracking not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -184,7 +194,15 @@ export async function POST(req: Request) {
       transportType 
     } = body;
 
-    const shipment = await db.shipment.findUnique({
+    const shipmentModel = (db as any).Shipment || (db as any).shipment;
+    const trackingEventModel = (db as any).TrackingEvent || (db as any).trackingEvent;
+    const vehicleTrackingModel = (db as any).VehicleTracking || (db as any).vehicleTracking;
+
+    if (!shipmentModel || !trackingEventModel) {
+      return NextResponse.json({ error: 'Database models not initialized' }, { status: 500 });
+    }
+
+    const shipment = await shipmentModel.findUnique({
       where: { waybillNumber: waybillNumber },
     });
 
@@ -194,21 +212,14 @@ export async function POST(req: Request) {
 
     // Update shipment status if it's not DELIVERED
     if (shipment.currentStatus !== 'DELIVERED') {
-      await db.shipment.update({
+      await shipmentModel.update({
         where: { id: shipment.id },
-        data: { 
-          currentStatus: status,
-          // Update estimated delivery if provided
-          ...(estimatedDelivery && { 
-            // We might need to add these fields to the schema if they don't exist
-            // For now, let's assume they are handled by the events
-          })
-        }
+        data: { currentStatus: status }
       });
     }
 
     // Create tracking event
-    const event = await db.trackingEvent.create({
+    const event = await trackingEventModel.create({
       data: {
         shipmentId: shipment.id,
         status: status,
@@ -219,29 +230,25 @@ export async function POST(req: Request) {
     });
 
     // Update vehicle tracking position if location is recognized
-    if (location) {
+    if (location && vehicleTrackingModel) {
       const coords = getLocationCoords(location);
       if (coords) {
-        const vehicleTrackingModel = (db as any).VehicleTracking || (db as any).vehicleTracking;
-        if (vehicleTrackingModel) {
-          await vehicleTrackingModel.upsert({
-            where: { shipmentId: shipment.id },
-            update: {
-              currentLat: coords.lat,
-              currentLng: coords.lng,
-              lastUpdated: new Date()
-            },
-            create: {
-              shipmentId: shipment.id,
-              currentLat: coords.lat,
-              currentLng: coords.lng,
-              speed: 0,
-              heading: 0,
-              lastUpdated: new Date()
-            }
-          });
-          console.log(`[TRACKING_POST] Updated vehicle position for ${waybillNumber} to ${location} (${coords.lat}, ${coords.lng})`);
-        }
+        await vehicleTrackingModel.upsert({
+          where: { shipmentId: shipment.id },
+          update: {
+            currentLat: coords.lat,
+            currentLng: coords.lng,
+            lastUpdated: new Date()
+          },
+          create: {
+            shipmentId: shipment.id,
+            currentLat: coords.lat,
+            currentLng: coords.lng,
+            speed: 0,
+            heading: 0,
+            lastUpdated: new Date()
+          }
+        });
       }
     }
 
