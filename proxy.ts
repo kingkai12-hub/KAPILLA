@@ -27,7 +27,8 @@ export default function proxy(request: NextRequest) {
     ratelimit.set(ip, currentWindow);
 
     // Strict limit for Auth routes
-    if (request.nextUrl.pathname.startsWith('/api/auth') && currentWindow.count > 20) {
+    // Increased limit for development/debugging purposes
+    if (request.nextUrl.pathname.startsWith('/api/auth') && currentWindow.count > 100) {
        return new NextResponse(JSON.stringify({ error: 'Too many login attempts. Please wait.' }), { 
          status: 429,
          headers: { 'Content-Type': 'application/json' }
