@@ -98,8 +98,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [isUrban, setIsUrban] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  // Use refs for smooth client-side interpolation if server updates are slow
+  // Use refs for smooth client-side interpolation
   const currentPos = useRef<[number, number]>([0, 0]);
+  const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
 
   useEffect(() => {
     const fetchTrackingData = async () => {
@@ -113,7 +114,14 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           setTracking(data);
           setIsUrban(data.speed < 55);
           setErrorText(null);
-          currentPos.current = [data.currentLat, data.currentLng];
+          
+          // If this is the first load, set both positions
+          if (currentPos.current[0] === 0) {
+            currentPos.current = [data.currentLat, data.currentLng];
+            setDisplayPos([data.currentLat, data.currentLng]);
+          } else {
+            currentPos.current = [data.currentLat, data.currentLng];
+          }
         }
       } catch (error) {
         setErrorText('Connection issue. Retrying...');
@@ -123,9 +131,49 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     };
 
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 1000); // Update every 1 second for smooth movement
+    const interval = setInterval(fetchTrackingData, 1000); // Poll every 1 second
     return () => clearInterval(interval);
   }, [waybillNumber]);
+
+  // Interpolation loop for smooth 60fps movement
+  useEffect(() => {
+    let animationFrame: number;
+    
+    const animate = () => {
+      setDisplayPos(prev => {
+        const target = currentPos.current;
+        if (target[0] === 0) return prev;
+        
+        // Linear interpolation: move 15% towards target every frame
+        // This creates smooth movement even if the server only updates once per second
+        const lerpFactor = 0.15;
+        
+        // Calculate the actual distance
+        const dLat = target[0] - prev[0];
+        const dLng = target[1] - prev[1];
+        
+        // Only interpolate if the distance is small (to avoid jumping during resets)
+        // If distance is large (> 0.1 degrees), jump directly to target
+        if (Math.abs(dLat) > 0.1 || Math.abs(dLng) > 0.1) {
+          return target;
+        }
+        
+        // Threshold to stop oscillating
+        if (Math.abs(dLat) < 0.0000001 && Math.abs(dLng) < 0.0000001) {
+          return target;
+        }
+
+        const nextLat = prev[0] + dLat * lerpFactor;
+        const nextLng = prev[1] + dLng * lerpFactor;
+        
+        return [nextLat, nextLng];
+      });
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
 
   const completedSegments = useMemo(() => 
     tracking?.segments?.filter(s => s.isCompleted).map(s => [[s.startLat, s.startLng], [s.endLat, s.endLng]]) || [],
@@ -226,13 +274,13 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         ))}
 
         <AnimatedVehicleMarker 
-          position={[tracking.currentLat, tracking.currentLng]} 
+          position={displayPos} 
           rotation={tracking.heading || 0}
           isUrban={isUrban}
         />
 
         <MapController 
-          position={[tracking.currentLat, tracking.currentLng]} 
+          position={displayPos} 
           followMode={followMode}
           isUrban={isUrban}
           userInteracted={() => setFollowMode(false)}

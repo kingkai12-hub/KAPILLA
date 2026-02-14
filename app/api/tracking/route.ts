@@ -174,49 +174,49 @@ export async function GET(req: Request) {
         // Add slight randomness to simulate traffic variations
         const targetSpeed = minSpeed + Math.random() * (maxSpeed - minSpeed);
 
-        // 3. Move currentLat/Lng towards nextSegment end
-        // Physics Calculation:
-        // 1 degree latitude ~= 111km
-        // Time step = 1 second (1/3600 hour)
-        // Distance (km) = Speed (km/h) * Time (h) = Speed / 3600
-        // Distance (degrees) = Distance (km) / 111 = (Speed / 3600) / 111
-        // Factor: 1 / (3600 * 111) ≈ 0.0000025
-        const stepSize = targetSpeed * 0.0000025; 
-        
-        // Use normalized vector to ensure consistent movement regardless of distance
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        let newLat = tracking.currentLat;
-        let newLng = tracking.currentLng;
-        
-        if (dist > 0) {
-          newLat += (dy / dist) * stepSize;
-          newLng += (dx / dist) * stepSize;
-        }
+      // 3. Move currentLat/Lng towards nextSegment end
+      // Physics Calculation:
+      // 1 degree latitude ~= 111km
+      // Time step = 1 second (1/3600 hour)
+      // Distance (km) = Speed (km/h) * Time (h) = Speed / 3600
+      // Distance (degrees) = Distance (km) / 111 = (Speed / 3600) / 111
+      // Factor: 1 / (3600 * 111) ≈ 0.0000025
+      const stepSize = targetSpeed * 0.00001; // QUADRUPLED for visibility (was 0.000005)
+      
+      // Use normalized vector to ensure consistent movement regardless of distance
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      let newLat = tracking.currentLat;
+      let newLng = tracking.currentLng;
+      
+      if (dist > 0) {
+        newLat += (dy / dist) * stepSize;
+        newLng += (dx / dist) * stepSize;
+      }
 
-        // 4. Check if we reached the segment end (approx)
-        const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
-        
-        const updateData: any = {
-          currentLat: newLat,
-          currentLng: newLng,
-          speed: targetSpeed,
-          heading: heading,
-          lastUpdated: new Date()
-        };
+      // 4. Check if we reached the segment end (approx)
+      const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
+      
+      const updateData: any = {
+        currentLat: newLat,
+        currentLng: newLng,
+        speed: targetSpeed,
+        heading: heading,
+        lastUpdated: new Date()
+      };
 
-        if (distanceToEnd < 0.0005) {
-          // Mark segment as completed
-          await routeSegmentModel.update({
-            where: { id: nextSegment.id },
-            data: { isCompleted: true }
-          });
-          // Refresh segments for the response
-          tracking.segments = await routeSegmentModel.findMany({
-            where: { trackingId: tracking.id },
-            orderBy: { order: 'asc' }
-          });
-        }
+      if (distanceToEnd < 0.002) { // INCREASED threshold for smoother completion (was 0.001)
+        // Mark segment as completed
+        await routeSegmentModel.update({
+          where: { id: nextSegment.id },
+          data: { isCompleted: true }
+        });
+        // Refresh segments for the response
+        tracking.segments = await routeSegmentModel.findMany({
+          where: { trackingId: tracking.id },
+          orderBy: { order: 'asc' }
+        });
+      }
 
         // 5. Update the tracking record
         try {
