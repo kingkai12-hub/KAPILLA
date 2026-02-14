@@ -143,9 +143,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         const target = currentPos.current;
         if (target[0] === 0) return prev;
         
-        // Linear interpolation: move 15% towards target every frame
-        // This creates smooth movement even if the server only updates once per second
-        const lerpFactor = 0.15;
+        // Linear interpolation: move 10% towards target every frame
+        // Slightly smoother visual motion while still responsive to server updates
+        const lerpFactor = 0.10;
         
         // Calculate the actual distance
         const dLat = target[0] - prev[0];

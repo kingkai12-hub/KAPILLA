@@ -15,6 +15,28 @@ export async function GET(req: Request) {
 
   try {
     const normalized = waybillNumber.trim();
+    const CITY_SPEED_MIN = Number(process.env.CITY_SPEED_MIN_KMH || 20);
+    const CITY_SPEED_MAX = Number(process.env.CITY_SPEED_MAX_KMH || 50);
+    const HIGHWAY_SPEED = Number(process.env.HIGHWAY_SPEED_KMH || 80);
+    const CITY_ZONES = [
+      // Rough bounding boxes for major TZ cities: [latMin, lngMin, latMax, lngMax]
+      { name: 'Dar', box: [-7.0, 39.15, -6.6, 39.40] },
+      { name: 'Morogoro', box: [-6.92, 37.62, -6.75, 37.71] },
+      { name: 'Dodoma', box: [-6.20, 35.67, -6.14, 35.79] },
+      { name: 'Arusha', box: [-3.42, 36.58, -3.27, 36.76] },
+      { name: 'Mwanza', box: [-2.60, 32.86, -2.40, 32.96] },
+    ];
+    const inCity = (lat: number, lng: number) => CITY_ZONES.some(z => lat >= z.box[0] && lat <= z.box[2] && lng >= z.box[1] && lng <= z.box[3]);
+    const citySpeed = () => Math.min(CITY_SPEED_MAX, Math.max(CITY_SPEED_MIN, CITY_SPEED_MIN + Math.random() * (CITY_SPEED_MAX - CITY_SPEED_MIN)));
+    const haversineMeters = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+      const toRad = (d: number) => d * Math.PI / 180;
+      const R = 6371000;
+      const dLat = toRad(bLat - aLat);
+      const dLng = toRad(bLng - aLng);
+      const A = Math.sin(dLat/2)**2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng/2)**2;
+      const C = 2 * Math.atan2(Math.sqrt(A), Math.sqrt(1-A));
+      return R * C;
+    };
     
     // Defensive model access to handle case-sensitivity in generated Prisma client
     const shipmentModel = (db as any).Shipment || (db as any).shipment;
@@ -163,10 +185,10 @@ export async function GET(req: Request) {
         if (d < minD) { minD = d; iClosest = i; }
       }
       let targetIdx = Math.min(iClosest + 1, total - 1);
-      const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
       const progressRatio = targetIdx / (total - 1);
-      const isUrbanZone = progressRatio < 0.2 || progressRatio > 0.8;
-      const speedKmh = isUrbanZone ? (20 + Math.random() * 30) : highwayKmh;
+      const near = poly[Math.max(0, Math.min(targetIdx, total - 1))];
+      const isUrbanZone = inCity(near[0], near[1]) || progressRatio < 0.15 || progressRatio > 0.85;
+      const speedKmh = isUrbanZone ? citySpeed() : HIGHWAY_SPEED;
       const nowTs = Date.now();
       const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
       const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
@@ -180,7 +202,7 @@ export async function GET(req: Request) {
         const bLng = poly[targetIdx][1];
         const dy = bLat - aLat;
         const dx = bLng - aLng;
-        const segLen = Math.sqrt(dy * dy + dx * dx) * 111320;
+        const segLen = haversineMeters(aLat, aLng, bLat, bLng);
         if (segLen <= distToTravel && segLen > 0) {
           curLat = bLat;
           curLng = bLng;
@@ -232,14 +254,14 @@ export async function GET(req: Request) {
 
         const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
         const isUrban = progress < 0.2 || progress > 0.8;
-        const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
-        const targetSpeed = isUrban ? (20 + Math.random() * 30) : highwayKmh;
+        const nearLat = tracking.currentLat, nearLng = tracking.currentLng;
+        const targetSpeed = (inCity(nearLat, nearLng) || isUrban) ? citySpeed() : HIGHWAY_SPEED;
 
         const nowTs = Date.now();
         const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
         const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
         const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
-        const dist = Math.sqrt(dx * dx + dy * dy) * 111320;
+        const dist = haversineMeters(tracking.currentLat, tracking.currentLng, nextSegment.endLat, nextSegment.endLng);
         let newLat = tracking.currentLat;
         let newLng = tracking.currentLng;
         if (dist > 0) {
@@ -280,16 +302,18 @@ export async function GET(req: Request) {
       const dx = endCoords.lng - tracking.currentLng;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-      const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
-      const targetSpeed = highwayKmh;
+      const targetSpeed = inCity(tracking.currentLat, tracking.currentLng) ? citySpeed() : HIGHWAY_SPEED;
       const nowTs = Date.now();
       const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
       const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
       const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
-      const stepSize = distMeters / 111320;
+      const metersPerDegLat = 111320;
+      const metersPerDegLng = 111320 * Math.cos((tracking.currentLat * Math.PI) / 180);
+      const stepLat = (dy / Math.sqrt(dy*dy + dx*dx)) * (distMeters / metersPerDegLat);
+      const stepLng = (dx / Math.sqrt(dy*dy + dx*dx)) * (distMeters / metersPerDegLng || distMeters / metersPerDegLat);
 
-      const newLat = tracking.currentLat + (dy / dist) * stepSize;
-      const newLng = tracking.currentLng + (dx / dist) * stepSize;
+      const newLat = tracking.currentLat + stepLat;
+      const newLng = tracking.currentLng + stepLng;
 
       tracking = await vehicleTrackingModel.update({
         where: { id: tracking.id },
