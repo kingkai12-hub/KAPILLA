@@ -189,6 +189,33 @@ export async function GET(req: Request) {
           include: { segments: { orderBy: { order: 'asc' } } }
         });
       }
+    } else if (tracking) {
+      // SEGMENT-LESS FALLBACK: move in a straight line towards destination
+      const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+      const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
+
+      const dy = endCoords.lat - tracking.currentLat;
+      const dx = endCoords.lng - tracking.currentLng;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
+      const baseSpeed = 80;
+      const targetSpeed = baseSpeed + (Math.random() * 10 - 5);
+      const stepSize = targetSpeed * 0.00005;
+
+      const newLat = tracking.currentLat + (dy / dist) * stepSize;
+      const newLng = tracking.currentLng + (dx / dist) * stepSize;
+
+      tracking = await vehicleTrackingModel.update({
+        where: { id: tracking.id },
+        data: {
+          currentLat: newLat,
+          currentLng: newLng,
+          speed: targetSpeed,
+          heading,
+          lastUpdated: new Date()
+        },
+        include: { segments: { orderBy: { order: 'asc' } } }
+      });
     }
 
     if (!tracking) {
