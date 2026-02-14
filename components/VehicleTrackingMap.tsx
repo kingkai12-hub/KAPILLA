@@ -102,6 +102,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [isUrban, setIsUrban] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
+  const [sseActive, setSseActive] = useState<boolean>(false);
 
   const currentPos = useRef<[number, number]>([0, 0]);
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
@@ -145,9 +146,54 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       }
     };
 
-    fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 1000);
-    return () => clearInterval(interval);
+    // Try SSE first
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/tracking/stream?waybillNumber=${encodeURIComponent(waybillNumber)}`);
+      es.onopen = () => setSseActive(true);
+      es.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data);
+          setTracking(data);
+          setIsUrban(data.speed < 55);
+          setErrorText(null);
+          setLastUpdate(Date.now());
+          if (currentPos.current[0] === 0) {
+            currentPos.current = [data.currentLat, data.currentLng];
+            setDisplayPos([data.currentLat, data.currentLng]);
+          } else {
+            currentPos.current = [data.currentLat, data.currentLng];
+            tweenFrom.current = displayRef.current;
+            tweenTo.current = [data.currentLat, data.currentLng];
+            const start = Date.now();
+            tweenStart.current = start;
+            tweenEnd.current = start + 1000;
+          }
+        } catch {}
+      };
+      es.onerror = () => {
+        setSseActive(false);
+        try { es?.close(); } catch {}
+      };
+    } catch {
+      setSseActive(false);
+    }
+
+    // Polling fallback if SSE not active
+    let interval: any = null;
+    const kickPoll = () => {
+      if (!sseActive) {
+        fetchTrackingData();
+        interval = setInterval(fetchTrackingData, 1000);
+      }
+    };
+    const t = setTimeout(kickPoll, 600);
+
+    return () => {
+      clearTimeout(t);
+      if (interval) clearInterval(interval);
+      try { es?.close(); } catch {}
+    };
   }, [waybillNumber]);
 
   useEffect(() => {
