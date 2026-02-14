@@ -34,12 +34,31 @@ export async function GET(req: Request) {
           return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
         }
         const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+        const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
+        const numSegments = 100;
+        const segmentsData: any[] = [];
+        for (let i = 0; i < numSegments; i++) {
+          const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
+          const sLng = startCoords.lng + (endCoords.lng - startCoords.lng) * (i / numSegments);
+          const eLat = startCoords.lat + (endCoords.lat - startCoords.lat) * ((i + 1) / numSegments);
+          const eLng = startCoords.lng + (endCoords.lng - startCoords.lng) * ((i + 1) / numSegments);
+          segmentsData.push({ startLat: sLat, startLng: sLng, endLat: eLat, endLng: eLng, isCompleted: i < 5, order: i });
+        }
+        const cycle = 600000;
+        const now = Date.now();
+        const progress = ((now % cycle) / cycle);
+        const curLat = startCoords.lat + (endCoords.lat - startCoords.lat) * progress;
+        const curLng = startCoords.lng + (endCoords.lng - startCoords.lng) * progress;
+        const dy = endCoords.lat - curLat;
+        const dx = endCoords.lng - curLng;
+        const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
+        const speed = 80;
         return NextResponse.json({
-          currentLat: startCoords.lat,
-          currentLng: startCoords.lng,
-          speed: 0,
-          heading: 0,
-          segments: [],
+          currentLat: curLat,
+          currentLng: curLng,
+          speed,
+          heading,
+          segments: segmentsData,
           isSimulated: true,
           serverTime: new Date().toISOString(),
           degraded: true
@@ -222,11 +241,22 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Tracking not found' }, { status: 404 });
     }
 
-    return NextResponse.json({
-      ...tracking,
-      isSimulated: true,
-      serverTime: new Date().toISOString()
-    });
+    let payload: any = { ...tracking };
+    if (!payload.segments || payload.segments.length === 0) {
+      const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
+      const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
+      const numSegments = 100;
+      const segmentsData: any[] = [];
+      for (let i = 0; i < numSegments; i++) {
+        const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
+        const sLng = startCoords.lng + (endCoords.lng - startCoords.lng) * (i / numSegments);
+        const eLat = startCoords.lat + (endCoords.lat - startCoords.lat) * ((i + 1) / numSegments);
+        const eLng = startCoords.lng + (endCoords.lng - startCoords.lng) * ((i + 1) / numSegments);
+        segmentsData.push({ startLat: sLat, startLng: sLng, endLat: eLat, endLng: eLng, isCompleted: false, order: i });
+      }
+      payload = { ...payload, segments: segmentsData };
+    }
+    return NextResponse.json({ ...payload, isSimulated: true, serverTime: new Date().toISOString() });
 
   } catch (error) {
     console.error('[TRACKING_GET]', error);
