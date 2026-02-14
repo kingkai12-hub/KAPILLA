@@ -5,6 +5,31 @@ import { locationCoords, getLocationCoords } from '@/lib/locations';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const osrmCache: Map<string, { pts: [number, number][], t: number }> = new Map();
+const OSRM_TTL_MS = Number(process.env.OSRM_TTL_MS || 21600000);
+async function getRoadRoute(startLat: number, startLng: number, endLat: number, endLng: number): Promise<[number, number][]> {
+  const key = `${startLat.toFixed(5)},${startLng.toFixed(5)}-${endLat.toFixed(5)},${endLng.toFixed(5)}`;
+  const now = Date.now();
+  const hit = osrmCache.get(key);
+  if (hit && now - hit.t < OSRM_TTL_MS && hit.pts.length > 1) return hit.pts;
+  const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=false`;
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (r.ok) {
+      const j = await r.json();
+      const coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
+      if (coords && coords.length > 1) {
+        osrmCache.set(key, { pts: coords, t: now });
+        return coords;
+      }
+    }
+  } catch {}
+  return [
+    [startLat, startLng],
+    [endLat, endLng]
+  ];
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const waybillNumber = searchParams.get('waybillNumber');
@@ -42,6 +67,7 @@ export async function GET(req: Request) {
     const shipmentModel = (db as any).Shipment || (db as any).shipment;
     const vehicleTrackingModel = (db as any).VehicleTracking || (db as any).vehicleTracking;
     const routeSegmentModel = (db as any).RouteSegment || (db as any).routeSegment;
+    const trackingEventModel = (db as any).TrackingEvent || (db as any).trackingEvent;
 
     if (!shipmentModel || !vehicleTrackingModel || !routeSegmentModel) {
       console.warn('[TRACKING_GET] One or more models missing, degrading gracefully', {
@@ -57,19 +83,7 @@ export async function GET(req: Request) {
         }
         const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
         const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${endCoords.lng},${endCoords.lat}?overview=full&geometries=geojson&steps=false`;
-        let coords: [number, number][] | null = null;
-        try {
-          const res = await fetch(osrmUrl, { cache: 'no-store' });
-          if (res.ok) {
-            const j = await res.json();
-            coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
-          }
-        } catch {}
-        const poly = coords && coords.length > 1 ? coords : [
-          [startCoords.lat, startCoords.lng],
-          [endCoords.lat, endCoords.lng]
-        ];
+        const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
         const cycle = 900000;
         const now = Date.now();
         const progress = ((now % cycle) / cycle);
@@ -125,19 +139,7 @@ export async function GET(req: Request) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
-      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${endCoords.lng},${endCoords.lat}?overview=full&geometries=geojson&steps=false`;
-      let coords: [number, number][] | null = null;
-      try {
-        const res = await fetch(osrmUrl, { cache: 'no-store' });
-        if (res.ok) {
-          const j = await res.json();
-          coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
-        }
-      } catch {}
-      const poly = coords && coords.length > 1 ? coords : [
-        [startCoords.lat, startCoords.lng],
-        [endCoords.lat, endCoords.lng]
-      ];
+      const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
 
       const numSegments = 100;
       const segmentsData = [];
@@ -225,6 +227,24 @@ export async function GET(req: Request) {
         data: { currentLat: curLat, currentLng: curLng, speed: speedKmh, heading, lastUpdated: new Date() },
         include: { segments: { orderBy: { order: 'asc' } } }
       });
+      const dest = poly[poly.length - 1];
+      const remain = haversineMeters(curLat, curLng, dest[0], dest[1]);
+      if (remain < 50) {
+        try {
+          if (shipment.currentStatus !== 'DELIVERED') {
+            await shipmentModel.update({ where: { id: shipment.id }, data: { currentStatus: 'DELIVERED' } });
+            if (trackingEventModel) {
+              await trackingEventModel.create({
+              data: {
+                shipmentId: shipment.id,
+                status: 'DELIVERED',
+                location: `${dest[0].toFixed(5)},${dest[1].toFixed(5)}`
+              }
+              });
+            }
+          }
+        } catch {}
+      }
     } else if (tracking && tracking.segments && tracking.segments.length > 0) {
       const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
       
