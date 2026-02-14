@@ -23,14 +23,21 @@ function AnimatedVehicleMarker({ position, rotation, isUrban }: { position: [num
     <Marker 
       position={position} 
       icon={L.divIcon({
-        html: `<div class="vehicle-container">
-                <div class="bg-blue-600 p-2.5 rounded-full shadow-[0_0_25px_rgba(37,99,235,0.6)] border-4 border-white" style="transform: rotate(${rotation}deg)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v3"/><path d="M14 9l4-4 4 4"/><path d="M18 5v12"/><rect x="10" y="13" width="12" height="7" rx="2"/></svg>
-                </div>
-              </div>`,
+        html: `<div style="transform: rotate(${rotation}deg);">
+                 <svg width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                   <g>
+                     <rect x="14" y="10" width="36" height="44" rx="8" ry="8" fill="${isUrban ? '#2563eb' : '#0ea5e9'}" stroke="white" stroke-width="3"/>
+                     <rect x="20" y="14" width="24" height="10" rx="4" ry="4" fill="white" opacity="0.9"/>
+                     <circle cx="22" cy="54" r="4" fill="#111827" stroke="white" stroke-width="2"/>
+                     <circle cx="42" cy="54" r="4" fill="#111827" stroke="white" stroke-width="2"/>
+                     <rect x="18" y="26" width="28" height="18" rx="3" ry="3" fill="#1f2937" opacity="0.85"/>
+                     <rect x="28" y="8" width="8" height="6" rx="2" ry="2" fill="#111827" />
+                   </g>
+                 </svg>
+               </div>`,
         className: 'vehicle-marker-icon',
-        iconSize: [44, 44],
-        iconAnchor: [22, 22]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       })}
     />
   );
@@ -96,9 +103,14 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [errorText, setErrorText] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
 
-  // Use refs for smooth client-side interpolation
   const currentPos = useRef<[number, number]>([0, 0]);
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
+  const tweenFrom = useRef<[number, number] | null>(null);
+  const tweenTo = useRef<[number, number] | null>(null);
+  const tweenStart = useRef<number>(0);
+  const tweenEnd = useRef<number>(0);
+  const displayRef = useRef<[number, number]>([0,0]);
+  useEffect(() => { displayRef.current = displayPos; }, [displayPos]);
 
   useEffect(() => {
     const fetchTrackingData = async () => {
@@ -114,12 +126,16 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           setErrorText(null);
           setLastUpdate(Date.now());
           
-          // If this is the first load, set both positions
           if (currentPos.current[0] === 0) {
             currentPos.current = [data.currentLat, data.currentLng];
             setDisplayPos([data.currentLat, data.currentLng]);
           } else {
             currentPos.current = [data.currentLat, data.currentLng];
+            tweenFrom.current = displayRef.current;
+            tweenTo.current = [data.currentLat, data.currentLng];
+            const start = Date.now();
+            tweenStart.current = start;
+            tweenEnd.current = start + 1000;
           }
         }
       } catch (error) {
@@ -130,43 +146,30 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     };
 
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 1000); // Poll every 1 second
+    const interval = setInterval(fetchTrackingData, 1000);
     return () => clearInterval(interval);
   }, [waybillNumber]);
 
-  // Interpolation loop for smooth 60fps movement
   useEffect(() => {
     let animationFrame: number;
     
     const animate = () => {
-      setDisplayPos(prev => {
-        const target = currentPos.current;
-        if (target[0] === 0) return prev;
-        
-        // Linear interpolation: move 10% towards target every frame
-        // Slightly smoother visual motion while still responsive to server updates
-        const lerpFactor = 0.10;
-        
-        // Calculate the actual distance
-        const dLat = target[0] - prev[0];
-        const dLng = target[1] - prev[1];
-        
-        // Only interpolate if the distance is small (to avoid jumping during resets)
-        // If distance is large (> 0.1 degrees), jump directly to target
-        if (Math.abs(dLat) > 0.1 || Math.abs(dLng) > 0.1) {
-          return target;
+      const from = tweenFrom.current;
+      const to = tweenTo.current;
+      if (from && to) {
+        const now = Date.now();
+        const start = tweenStart.current;
+        const end = tweenEnd.current || (start + 1000);
+        const dur = Math.max(1, end - start);
+        const t = Math.max(0, Math.min(1, (now - start) / dur));
+        const lat = from[0] + (to[0] - from[0]) * t;
+        const lng = from[1] + (to[1] - from[1]) * t;
+        setDisplayPos([lat, lng]);
+        if (t >= 1) {
+          tweenFrom.current = [to[0], to[1]];
+          tweenTo.current = null;
         }
-        
-        // Threshold to stop oscillating
-        if (Math.abs(dLat) < 0.0000001 && Math.abs(dLng) < 0.0000001) {
-          return target;
-        }
-
-        const nextLat = prev[0] + dLat * lerpFactor;
-        const nextLng = prev[1] + dLng * lerpFactor;
-        
-        return [nextLat, nextLng];
-      });
+      }
       animationFrame = requestAnimationFrame(animate);
     };
 
@@ -184,31 +187,43 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     [tracking?.segments]
   );
 
-  const routeBlue = useMemo(() => {
+  const sampledRoute = useMemo(() => {
     if (!tracking?.routePoints || tracking.routePoints.length < 2) return null;
+    const pts = tracking.routePoints;
+    const step = Math.max(1, Math.floor(pts.length / 300));
+    const out: [number, number][] = [];
+    for (let i = 0; i < pts.length; i += step) out.push(pts[i]);
+    const last = pts[pts.length - 1];
+    const tail = out[out.length - 1];
+    if (!tail || tail[0] !== last[0] || tail[1] !== last[1]) out.push(last);
+    return out;
+  }, [tracking?.routePoints]);
+
+  const routeBlue = useMemo(() => {
+    if (!sampledRoute || sampledRoute.length < 2) return null;
     let idx = 0;
     let minD = Infinity;
-    for (let i = 0; i < tracking.routePoints.length; i++) {
-      const dLat = tracking.routePoints[i][0] - displayPos[0];
-      const dLng = tracking.routePoints[i][1] - displayPos[1];
+    for (let i = 0; i < sampledRoute.length; i++) {
+      const dLat = sampledRoute[i][0] - displayPos[0];
+      const dLng = sampledRoute[i][1] - displayPos[1];
       const d = dLat * dLat + dLng * dLng;
       if (d < minD) { minD = d; idx = i; }
     }
-    return tracking.routePoints.slice(0, Math.max(1, idx + 1));
-  }, [tracking?.routePoints, displayPos]);
+    return sampledRoute.slice(0, Math.max(1, idx + 1));
+  }, [sampledRoute, displayPos]);
 
   const routeRed = useMemo(() => {
-    if (!tracking?.routePoints || tracking.routePoints.length < 2) return null;
+    if (!sampledRoute || sampledRoute.length < 2) return null;
     let idx = 0;
     let minD = Infinity;
-    for (let i = 0; i < tracking.routePoints.length; i++) {
-      const dLat = tracking.routePoints[i][0] - displayPos[0];
-      const dLng = tracking.routePoints[i][1] - displayPos[1];
+    for (let i = 0; i < sampledRoute.length; i++) {
+      const dLat = sampledRoute[i][0] - displayPos[0];
+      const dLng = sampledRoute[i][1] - displayPos[1];
       const d = dLat * dLat + dLng * dLng;
       if (d < minD) { minD = d; idx = i; }
     }
-    return tracking.routePoints.slice(Math.max(0, idx), tracking.routePoints.length);
-  }, [tracking?.routePoints, displayPos]);
+    return sampledRoute.slice(Math.max(0, idx), sampledRoute.length);
+  }, [sampledRoute, displayPos]);
 
   if (loading) return (
     <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
@@ -284,25 +299,28 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         zoom={16} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
+        preferCanvas={true}
+        updateWhenZooming={false}
+        updateWhenIdle={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          updateWhenIdle={true}
+          keepBuffer={2}
         />
 
-        {/* Road-following route rendering if routePoints present */}
         {routeRed && routeRed.length > 1 && (
-          <Polyline positions={routeRed as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" />
+          <Polyline positions={routeRed as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" smoothFactor={1} />
         )}
         {routeBlue && routeBlue.length > 1 && (
-          <Polyline positions={routeBlue as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" />
+          <Polyline positions={routeBlue as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" smoothFactor={1} />
         )}
-        {/* Fallback to segment-based rendering if routePoints missing */}
         {!tracking?.routePoints && remainingSegments.map((pos, idx) => (
-          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" />
+          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" smoothFactor={1} />
         ))}
         {!tracking?.routePoints && completedSegments.map((pos, idx) => (
-          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" />
+          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" smoothFactor={1} />
         ))}
 
         <AnimatedVehicleMarker 
