@@ -1,0 +1,35 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "ignorePatterns": [
+    "prisma/**",
+    "scripts/**",
+    "setup-wizard.js",
+    "robust-sync.js",
+    "vehicle-simulation.js",
+    "prisma/seed*.js",
+    "fix-db.js"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.js"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off",
+        "@typescript-eslint/no-unused-vars": "warn"
+      }
+    },
+    {
+      "files": [
+        "lib/**/*.ts",
+        "lib/**/*.tsx",
+        "app/**/*.ts",
+        "app/**/*.tsx",
+        "components/**/*.ts",
+        "components/**/*.tsx"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    }
+  ]
+}

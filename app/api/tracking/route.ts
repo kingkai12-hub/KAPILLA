@@ -308,14 +308,13 @@ export async function GET(req: Request) {
         const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
         const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
         const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
+        const nowTs = Date.now();
+        const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
+        const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
         const desired = Math.max(5, baseTarget);
         const maxUp = prevSpeed + accel * deltaSec;
         const maxDown = prevSpeed - decel * deltaSec;
         const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
-
-        const nowTs = Date.now();
-        const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
-        const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
         const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
         const dist = haversineMeters(tracking.currentLat, tracking.currentLng, nextSegment.endLat, nextSegment.endLng);
         let newLat = tracking.currentLat;
@@ -370,9 +369,6 @@ export async function GET(req: Request) {
       const maxUp = prevSpeed + accel * deltaSec;
       const maxDown = prevSpeed - decel * deltaSec;
       const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
-      const nowTs = Date.now();
-      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
-      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
       const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
       const metersPerDegLat = 111320;
       const metersPerDegLng = 111320 * Math.cos((tracking.currentLat * Math.PI) / 180);
