@@ -190,13 +190,39 @@ export async function GET(req: Request) {
       const progressRatio = targetIdx / (total - 1);
       const near = poly[Math.max(0, Math.min(targetIdx, total - 1))];
       const isUrbanZone = inCity(near[0], near[1]) || progressRatio < 0.15 || progressRatio > 0.85;
-      const speedKmh = isUrbanZone ? citySpeed() : HIGHWAY_SPEED;
+      const baseTarget = isUrbanZone ? citySpeed() : HIGHWAY_SPEED;
+      let turnFactor = 1;
+      if (targetIdx > 0 && targetIdx < total - 1) {
+        const p0 = poly[targetIdx - 1];
+        const p1 = poly[targetIdx];
+        const p2 = poly[targetIdx + 1];
+        const v1x = p1[1] - p0[1], v1y = p1[0] - p0[0];
+        const v2x = p2[1] - p1[1], v2y = p2[0] - p1[0];
+        const dot = v1x * v2x + v1y * v2y;
+        const mag1 = Math.sqrt(v1x * v1x + v1y * v1y);
+        const mag2 = Math.sqrt(v2x * v2x + v2y * v2y);
+        if (mag1 > 0 && mag2 > 0) {
+          const cosA = Math.min(1, Math.max(-1, dot / (mag1 * mag2)));
+          const ang = Math.acos(cosA) * 180 / Math.PI;
+          if (ang < 60) turnFactor = 0.5;
+          else if (ang < 90) turnFactor = 0.7;
+          else if (ang < 120) turnFactor = 0.85;
+        }
+      }
+      const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
+      const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
+      const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
       const nowTs = Date.now();
       const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
       const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
-      let distToTravel = (speedKmh * 1000 / 3600) * deltaSec;
+      const desired = Math.max(5, baseTarget * turnFactor);
+      const maxUp = prevSpeed + accel * deltaSec;
+      const maxDown = prevSpeed - decel * deltaSec;
+      const clamped = Math.min(maxUp, Math.max(maxDown, desired));
+      let distToTravel = (clamped * 1000 / 3600) * deltaSec;
       let curLat = tracking.currentLat;
       let curLng = tracking.currentLng;
+      let traveled = 0;
       while (distToTravel > 0 && targetIdx < total) {
         const aLat = curLat;
         const aLng = curLng;
@@ -209,11 +235,13 @@ export async function GET(req: Request) {
           curLat = bLat;
           curLng = bLng;
           distToTravel -= segLen;
+          traveled += segLen;
           targetIdx += 1;
         } else if (segLen > 0) {
           const ratio = distToTravel / segLen;
           curLat = aLat + dy * ratio;
           curLng = aLng + dx * ratio;
+          traveled += distToTravel;
           distToTravel = 0;
         } else {
           targetIdx += 1;
@@ -222,9 +250,10 @@ export async function GET(req: Request) {
       const hdy = poly[Math.min(targetIdx, total - 1)][0] - curLat;
       const hdx = poly[Math.min(targetIdx, total - 1)][1] - curLng;
       const heading = (Math.atan2(hdx, hdy) * 180) / Math.PI;
+      const actualSpeed = Math.max(0, (traveled / deltaSec) * 3.6);
       tracking = await vehicleTrackingModel.update({
         where: { id: tracking.id },
-        data: { currentLat: curLat, currentLng: curLng, speed: speedKmh, heading, lastUpdated: new Date() },
+        data: { currentLat: curLat, currentLng: curLng, speed: actualSpeed, heading, lastUpdated: new Date() },
         include: { segments: { orderBy: { order: 'asc' } } }
       });
       const dest = poly[poly.length - 1];
@@ -275,7 +304,14 @@ export async function GET(req: Request) {
         const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
         const isUrban = progress < 0.2 || progress > 0.8;
         const nearLat = tracking.currentLat, nearLng = tracking.currentLng;
-        const targetSpeed = (inCity(nearLat, nearLng) || isUrban) ? citySpeed() : HIGHWAY_SPEED;
+        const baseTarget = (inCity(nearLat, nearLng) || isUrban) ? citySpeed() : HIGHWAY_SPEED;
+        const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
+        const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
+        const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
+        const desired = Math.max(5, baseTarget);
+        const maxUp = prevSpeed + accel * deltaSec;
+        const maxDown = prevSpeed - decel * deltaSec;
+        const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
 
         const nowTs = Date.now();
         const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
@@ -292,10 +328,11 @@ export async function GET(req: Request) {
 
         const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
         
+        const actualSpeed = Math.max(0, (Math.min(dist, distMeters) / deltaSec) * 3.6);
         const updateData: any = {
           currentLat: newLat,
           currentLng: newLng,
-          speed: targetSpeed,
+          speed: actualSpeed,
           heading: heading,
           lastUpdated: new Date()
         };
@@ -322,7 +359,17 @@ export async function GET(req: Request) {
       const dx = endCoords.lng - tracking.currentLng;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-      const targetSpeed = inCity(tracking.currentLat, tracking.currentLng) ? citySpeed() : HIGHWAY_SPEED;
+      const baseTarget = inCity(tracking.currentLat, tracking.currentLng) ? citySpeed() : HIGHWAY_SPEED;
+      const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
+      const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
+      const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
+      const nowTs = Date.now();
+      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
+      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
+      const desired = Math.max(5, baseTarget);
+      const maxUp = prevSpeed + accel * deltaSec;
+      const maxDown = prevSpeed - decel * deltaSec;
+      const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
       const nowTs = Date.now();
       const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
       const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
@@ -335,12 +382,13 @@ export async function GET(req: Request) {
       const newLat = tracking.currentLat + stepLat;
       const newLng = tracking.currentLng + stepLng;
 
+      const actualSpeed = Math.max(0, (distMeters / deltaSec) * 3.6);
       tracking = await vehicleTrackingModel.update({
         where: { id: tracking.id },
         data: {
           currentLat: newLat,
           currentLng: newLng,
-          speed: targetSpeed,
+          speed: actualSpeed,
           heading,
           lastUpdated: new Date()
         },
