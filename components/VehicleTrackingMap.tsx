@@ -48,7 +48,7 @@ interface TrackingData {
   heading: number;
   isSimulated?: boolean;
   serverTime?: string;
-  routePoints: [number, number][];
+  routePoints?: [number, number][];
   segments: {
     id: string;
     startLat: number;
@@ -184,6 +184,32 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     [tracking?.segments]
   );
 
+  const routeBlue = useMemo(() => {
+    if (!tracking?.routePoints || tracking.routePoints.length < 2) return null;
+    let idx = 0;
+    let minD = Infinity;
+    for (let i = 0; i < tracking.routePoints.length; i++) {
+      const dLat = tracking.routePoints[i][0] - displayPos[0];
+      const dLng = tracking.routePoints[i][1] - displayPos[1];
+      const d = dLat * dLat + dLng * dLng;
+      if (d < minD) { minD = d; idx = i; }
+    }
+    return tracking.routePoints.slice(0, Math.max(1, idx + 1));
+  }, [tracking?.routePoints, displayPos]);
+
+  const routeRed = useMemo(() => {
+    if (!tracking?.routePoints || tracking.routePoints.length < 2) return null;
+    let idx = 0;
+    let minD = Infinity;
+    for (let i = 0; i < tracking.routePoints.length; i++) {
+      const dLat = tracking.routePoints[i][0] - displayPos[0];
+      const dLng = tracking.routePoints[i][1] - displayPos[1];
+      const d = dLat * dLat + dLng * dLng;
+      if (d < minD) { minD = d; idx = i; }
+    }
+    return tracking.routePoints.slice(Math.max(0, idx), tracking.routePoints.length);
+  }, [tracking?.routePoints, displayPos]);
+
   if (loading) return (
     <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
       <div className="flex flex-col items-center gap-4">
@@ -264,12 +290,19 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Path Rendering */}
-        {remainingSegments.map((pos, idx) => (
-          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.3} dashArray="15, 15" />
+        {/* Road-following route rendering if routePoints present */}
+        {routeRed && routeRed.length > 1 && (
+          <Polyline positions={routeRed as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" />
+        )}
+        {routeBlue && routeBlue.length > 1 && (
+          <Polyline positions={routeBlue as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" />
+        )}
+        {/* Fallback to segment-based rendering if routePoints missing */}
+        {!tracking?.routePoints && remainingSegments.map((pos, idx) => (
+          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" />
         ))}
-        {completedSegments.map((pos, idx) => (
-          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.8} lineCap="round" lineJoin="round" />
+        {!tracking?.routePoints && completedSegments.map((pos, idx) => (
+          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" />
         ))}
 
         <AnimatedVehicleMarker 

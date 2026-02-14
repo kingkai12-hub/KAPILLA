@@ -35,30 +35,38 @@ export async function GET(req: Request) {
         }
         const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
         const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
-        const numSegments = 100;
-        const segmentsData: any[] = [];
-        for (let i = 0; i < numSegments; i++) {
-          const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
-          const sLng = startCoords.lng + (endCoords.lng - startCoords.lng) * (i / numSegments);
-          const eLat = startCoords.lat + (endCoords.lat - startCoords.lat) * ((i + 1) / numSegments);
-          const eLng = startCoords.lng + (endCoords.lng - startCoords.lng) * ((i + 1) / numSegments);
-          segmentsData.push({ startLat: sLat, startLng: sLng, endLat: eLat, endLng: eLng, isCompleted: i < 5, order: i });
-        }
-        const cycle = 600000;
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${endCoords.lng},${endCoords.lat}?overview=full&geometries=geojson&steps=false`;
+        let coords: [number, number][] | null = null;
+        try {
+          const res = await fetch(osrmUrl, { cache: 'no-store' });
+          if (res.ok) {
+            const j = await res.json();
+            coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
+          }
+        } catch {}
+        const poly = coords && coords.length > 1 ? coords : [
+          [startCoords.lat, startCoords.lng],
+          [endCoords.lat, endCoords.lng]
+        ];
+        const cycle = 900000;
         const now = Date.now();
         const progress = ((now % cycle) / cycle);
-        const curLat = startCoords.lat + (endCoords.lat - startCoords.lat) * progress;
-        const curLng = startCoords.lng + (endCoords.lng - startCoords.lng) * progress;
-        const dy = endCoords.lat - curLat;
-        const dx = endCoords.lng - curLng;
+        const idx = Math.min(Math.floor(progress * (poly.length - 1)), poly.length - 2);
+        const frac = progress * (poly.length - 1) - idx;
+        const a = poly[idx];
+        const b = poly[idx + 1];
+        const curLat = a[0] + (b[0] - a[0]) * frac;
+        const curLng = a[1] + (b[1] - a[1]) * frac;
+        const dy = b[0] - a[0];
+        const dx = b[1] - a[1];
         const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-        const speed = 80;
+        const speed = 60;
         return NextResponse.json({
           currentLat: curLat,
           currentLng: curLng,
           speed,
           heading,
-          segments: segmentsData,
+          routePoints: poly,
           isSimulated: true,
           serverTime: new Date().toISOString(),
           degraded: true
@@ -70,7 +78,7 @@ export async function GET(req: Request) {
         currentLng: 39.2083,
         speed: 0,
         heading: 0,
-        segments: [],
+        routePoints: [[-6.7924,39.2083],[-2.5164,32.9033]],
         isSimulated: true,
         serverTime: new Date().toISOString(),
         degraded: true
@@ -95,42 +103,45 @@ export async function GET(req: Request) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
-      console.log(`[TRACKING] Generating simulation route for ${waybillNumber}`);
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${endCoords.lng},${endCoords.lat}?overview=full&geometries=geojson&steps=false`;
+      let coords: [number, number][] | null = null;
+      try {
+        const res = await fetch(osrmUrl, { cache: 'no-store' });
+        if (res.ok) {
+          const j = await res.json();
+          coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
+        }
+      } catch {}
+      const poly = coords && coords.length > 1 ? coords : [
+        [startCoords.lat, startCoords.lng],
+        [endCoords.lat, endCoords.lng]
+      ];
 
       const numSegments = 100;
       const segmentsData = [];
-      for (let i = 0; i < numSegments; i++) {
-        const sLat = startCoords.lat + (endCoords.lat - startCoords.lat) * (i / numSegments);
-        const sLng = startCoords.lng + (endCoords.lng - startCoords.lng) * (i / numSegments);
-        const eLat = startCoords.lat + (endCoords.lat - startCoords.lat) * ((i + 1) / numSegments);
-        const eLng = startCoords.lng + (endCoords.lng - startCoords.lng) * ((i + 1) / numSegments);
-        
-        segmentsData.push({
-          startLat: sLat,
-          startLng: sLng,
-          endLat: eLat,
-          endLng: eLng,
-          isCompleted: false,
-          order: i
-        });
+      for (let i = 0; i < poly.length - 1; i++) {
+        const a = poly[i];
+        const b = poly[i + 1];
+        segmentsData.push({ startLat: a[0], startLng: a[1], endLat: b[0], endLng: b[1], isCompleted: false, order: i });
       }
 
       if (!tracking) {
         tracking = await vehicleTrackingModel.create({
           data: {
             shipmentId: shipment.id,
-            currentLat: startCoords.lat,
-            currentLng: startCoords.lng,
+            currentLat: poly[0][0],
+            currentLng: poly[0][1],
             speed: 35,
             heading: 0,
-            segments: { create: segmentsData }
+            segments: { create: segmentsData },
+            routePoints: poly
           },
           include: { segments: { orderBy: { order: 'asc' } } }
         });
       } else {
         await vehicleTrackingModel.update({
           where: { id: tracking.id },
-          data: { segments: { create: segmentsData } }
+          data: { segments: { create: segmentsData }, routePoints: poly }
         });
         tracking = await vehicleTrackingModel.findUnique({
           where: { id: tracking.id },
@@ -140,7 +151,59 @@ export async function GET(req: Request) {
     }
 
     // MOVEMENT LOGIC
-    if (tracking && tracking.segments && tracking.segments.length > 0) {
+    if (tracking && (tracking as any).routePoints && Array.isArray((tracking as any).routePoints) && (tracking as any).routePoints.length > 1) {
+      const poly: [number, number][] = (tracking as any).routePoints;
+      const total = poly.length;
+      let iClosest = 0;
+      let minD = Infinity;
+      for (let i = 0; i < total; i++) {
+        const dLat = poly[i][0] - tracking.currentLat;
+        const dLng = poly[i][1] - tracking.currentLng;
+        const d = dLat * dLat + dLng * dLng;
+        if (d < minD) { minD = d; iClosest = i; }
+      }
+      let targetIdx = Math.min(iClosest + 1, total - 1);
+      const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
+      const progressRatio = targetIdx / (total - 1);
+      const isUrbanZone = progressRatio < 0.2 || progressRatio > 0.8;
+      const speedKmh = isUrbanZone ? (20 + Math.random() * 30) : highwayKmh;
+      const nowTs = Date.now();
+      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
+      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
+      let distToTravel = (speedKmh * 1000 / 3600) * deltaSec;
+      let curLat = tracking.currentLat;
+      let curLng = tracking.currentLng;
+      while (distToTravel > 0 && targetIdx < total) {
+        const aLat = curLat;
+        const aLng = curLng;
+        const bLat = poly[targetIdx][0];
+        const bLng = poly[targetIdx][1];
+        const dy = bLat - aLat;
+        const dx = bLng - aLng;
+        const segLen = Math.sqrt(dy * dy + dx * dx) * 111320;
+        if (segLen <= distToTravel && segLen > 0) {
+          curLat = bLat;
+          curLng = bLng;
+          distToTravel -= segLen;
+          targetIdx += 1;
+        } else if (segLen > 0) {
+          const ratio = distToTravel / segLen;
+          curLat = aLat + dy * ratio;
+          curLng = aLng + dx * ratio;
+          distToTravel = 0;
+        } else {
+          targetIdx += 1;
+        }
+      }
+      const hdy = poly[Math.min(targetIdx, total - 1)][0] - curLat;
+      const hdx = poly[Math.min(targetIdx, total - 1)][1] - curLng;
+      const heading = (Math.atan2(hdx, hdy) * 180) / Math.PI;
+      tracking = await vehicleTrackingModel.update({
+        where: { id: tracking.id },
+        data: { currentLat: curLat, currentLng: curLng, speed: speedKmh, heading, lastUpdated: new Date() },
+        include: { segments: { orderBy: { order: 'asc' } } }
+      });
+    } else if (tracking && tracking.segments && tracking.segments.length > 0) {
       const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
       
       // Reset if finished
@@ -167,22 +230,22 @@ export async function GET(req: Request) {
         const dx = nextSegment.endLng - tracking.currentLng;
         const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
 
-        // Progress based speed
         const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
         const isUrban = progress < 0.2 || progress > 0.8;
-        const baseSpeed = isUrban ? 40 : 100;
-        const targetSpeed = baseSpeed + (Math.random() * 10 - 5);
+        const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
+        const targetSpeed = isUrban ? (20 + Math.random() * 30) : highwayKmh;
 
-        // Move vehicle - INCREASED step size significantly for visibility
-        const stepSize = targetSpeed * 0.00005; 
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
+        const nowTs = Date.now();
+        const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
+        const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
+        const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
+        const dist = Math.sqrt(dx * dx + dy * dy) * 111320;
         let newLat = tracking.currentLat;
         let newLng = tracking.currentLng;
-        
         if (dist > 0) {
-          newLat += (dy / dist) * stepSize;
-          newLng += (dx / dist) * stepSize;
+          const ratio = Math.min(1, distMeters / dist);
+          newLat += dy * ratio;
+          newLng += dx * ratio;
         }
 
         const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
@@ -217,9 +280,13 @@ export async function GET(req: Request) {
       const dx = endCoords.lng - tracking.currentLng;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-      const baseSpeed = 80;
-      const targetSpeed = baseSpeed + (Math.random() * 10 - 5);
-      const stepSize = targetSpeed * 0.00005;
+      const highwayKmh = Number(process.env.HIGHWAY_SPEED_KMH || 80);
+      const targetSpeed = highwayKmh;
+      const nowTs = Date.now();
+      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
+      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
+      const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
+      const stepSize = distMeters / 111320;
 
       const newLat = tracking.currentLat + (dy / dist) * stepSize;
       const newLng = tracking.currentLng + (dx / dist) * stepSize;
