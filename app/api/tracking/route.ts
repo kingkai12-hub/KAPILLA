@@ -146,8 +146,8 @@ export async function GET(req: Request) {
       include: { segments: { orderBy: { order: 'asc' } } }
     });
 
-    // If no tracking exists, or it has no segments, create segments for demonstration
-    if (!tracking || !tracking.segments || tracking.segments.length === 0) {
+    // If no tracking exists, or it has no segments, or it has no routePoints, create/regenerate route
+    if (!tracking || !tracking.segments || tracking.segments.length === 0 || !(tracking as any).routePoints) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
@@ -157,7 +157,13 @@ export async function GET(req: Request) {
       
       console.log(`[TRACKING] Created route with ${poly.length} points from ${shipment.origin} to ${shipment.destination}`);
 
-      const numSegments = 100;
+      // Delete old segments if they exist
+      if (tracking && tracking.segments && tracking.segments.length > 0) {
+        await routeSegmentModel.deleteMany({
+          where: { trackingId: tracking.id }
+        });
+      }
+
       const segmentsData = [];
       for (let i = 0; i < poly.length - 1; i++) {
         const a = poly[i];
@@ -335,131 +341,10 @@ export async function GET(req: Request) {
           }
         } catch {}
       }
-    } else if (tracking && tracking.segments && tracking.segments.length > 0) {
-      const incompleteSegments = tracking.segments.filter((s: any) => !s.isCompleted);
-      
-      // Reset if finished
-      if (incompleteSegments.length === 0) {
-        await routeSegmentModel.updateMany({
-          where: { trackingId: tracking.id },
-          data: { isCompleted: false }
-        });
-        tracking = await vehicleTrackingModel.update({
-          where: { id: tracking.id },
-          data: {
-            currentLat: tracking.segments[0].startLat,
-            currentLng: tracking.segments[0].startLng,
-            speed: 35,
-            lastUpdated: new Date()
-          },
-          include: { segments: { orderBy: { order: 'asc' } } }
-        });
-      } else {
-        const nextSegment = incompleteSegments[0];
-        
-        // Calculate heading
-        const dy = nextSegment.endLat - tracking.currentLat;
-        const dx = nextSegment.endLng - tracking.currentLng;
-        const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-
-        const progress = (tracking.segments.length - incompleteSegments.length) / tracking.segments.length;
-        const isUrban = progress < 0.2 || progress > 0.8;
-        const nearLat = tracking.currentLat, nearLng = tracking.currentLng;
-        const baseTarget = (inCity(nearLat, nearLng) || isUrban) ? citySpeed() : HIGHWAY_SPEED;
-        const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
-        const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
-        const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
-        const nowTs = Date.now();
-        const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
-        const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
-        const desired = Math.max(5, baseTarget);
-        const maxUp = prevSpeed + accel * deltaSec;
-        const maxDown = prevSpeed - decel * deltaSec;
-        const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
-        const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
-        const dist = haversineMeters(tracking.currentLat, tracking.currentLng, nextSegment.endLat, nextSegment.endLng);
-        let newLat = tracking.currentLat;
-        let newLng = tracking.currentLng;
-        if (dist > 0) {
-          const ratio = Math.min(1, distMeters / dist);
-          newLat += dy * ratio;
-          newLng += dx * ratio;
-        }
-
-        const distanceToEnd = Math.sqrt(Math.pow(nextSegment.endLat - newLat, 2) + Math.pow(nextSegment.endLng - newLng, 2));
-        
-        const actualSpeed = Math.max(0, (Math.min(dist, distMeters) / deltaSec) * 3.6);
-        const updateData: any = {
-          currentLat: newLat,
-          currentLng: newLng,
-          speed: actualSpeed,
-          heading: heading,
-          lastUpdated: new Date()
-        };
-
-        if (distanceToEnd < 0.005) { 
-          await routeSegmentModel.update({
-            where: { id: nextSegment.id },
-            data: { isCompleted: true }
-          });
-        }
-
-        try {
-          tracking = await vehicleTrackingModel.update({
-            where: { id: tracking.id },
-            data: updateData,
-            include: { segments: { orderBy: { order: 'asc' } } }
-          });
-        } catch {
-          tracking = { ...tracking, ...updateData } as any;
-        }
-      }
-    } else if (tracking) {
-      // SEGMENT-LESS FALLBACK: move in a straight line towards destination
-      const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
-      const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
-
-      const dy = endCoords.lat - tracking.currentLat;
-      const dx = endCoords.lng - tracking.currentLng;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const heading = (Math.atan2(dx, dy) * 180) / Math.PI;
-      const baseTarget = inCity(tracking.currentLat, tracking.currentLng) ? citySpeed() : HIGHWAY_SPEED;
-      const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
-      const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
-      const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
-      const nowTs = Date.now();
-      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
-      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
-      const desired = Math.max(5, baseTarget);
-      const maxUp = prevSpeed + accel * deltaSec;
-      const maxDown = prevSpeed - decel * deltaSec;
-      const targetSpeed = Math.min(maxUp, Math.max(maxDown, desired));
-      const distMeters = (targetSpeed * 1000 / 3600) * deltaSec;
-      const metersPerDegLat = 111320;
-      const metersPerDegLng = 111320 * Math.cos((tracking.currentLat * Math.PI) / 180);
-      const stepLat = (dy / Math.sqrt(dy*dy + dx*dx)) * (distMeters / metersPerDegLat);
-      const stepLng = (dx / Math.sqrt(dy*dy + dx*dx)) * (distMeters / metersPerDegLng || distMeters / metersPerDegLat);
-
-      const newLat = tracking.currentLat + stepLat;
-      const newLng = tracking.currentLng + stepLng;
-
-      const actualSpeed = Math.max(0, (distMeters / deltaSec) * 3.6);
-      try {
-        tracking = await vehicleTrackingModel.update({
-          where: { id: tracking.id },
-          data: {
-            currentLat: newLat,
-            currentLng: newLng,
-            speed: actualSpeed,
-            heading,
-            lastUpdated: new Date()
-          },
-          include: { segments: { orderBy: { order: 'asc' } } }
-        });
-      } catch {
-        tracking = { ...tracking, currentLat: newLat, currentLng: newLng, speed: actualSpeed, heading, lastUpdated: new Date() } as any;
-      }
     }
+    // NOTE: Old segment-based and straight-line fallbacks removed
+    // All routes now use OSRM routePoints for accurate road-following
+    // If routePoints are missing, they will be regenerated on next request
 
     if (!tracking) {
       return NextResponse.json({ error: 'Tracking not found' }, { status: 404 });
