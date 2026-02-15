@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Truck, LocateFixed, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
 
 // Custom component for the animated marker
 function AnimatedVehicleMarker({
@@ -391,12 +392,8 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         zoomControl={false}
         preferCanvas={true}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          updateWhenIdle={true}
-          keepBuffer={2}
-        />
+        {/* Enhanced map layers with multiple tile options and landmarks */}
+        <EnhancedTrackingMapLayers routePoints={tracking.routePoints} showLandmarks={true} />
 
         {routeRed && routeRed.length > 1 && (
           <Polyline
