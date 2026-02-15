@@ -49,8 +49,18 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+      {/* Background Image with Low Opacity */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+        style={{ backgroundImage: 'url(/assets/background.jpg)' }}
+      />
+      
+      {/* Overlay to ensure readability */}
+      <div className="absolute inset-0 bg-white/40" />
+      
+      {/* Content */}
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
             <Image src="/logo.png" alt="Kapilla Logo" width={96} height={96} className="w-28 h-28 object-contain" priority />
@@ -64,7 +74,7 @@ export default function StaffLogin() {
         </p>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="relative z-10 mt-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-10 px-6 shadow-xl border-0 rounded-3xl sm:px-12">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
