@@ -307,13 +307,19 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
   const routeBlue = useMemo(() => {
     if (!sampledRoute || sampledRoute.length < 2) return null;
-    return sampledRoute.slice(0, Math.max(1, closestIndex + 1));
-  }, [sampledRoute, closestIndex]);
+    // Blue line goes from start to car position (not to nearest point)
+    // This ensures the blue line always ends exactly at the car
+    const routeToVehicle = sampledRoute.slice(0, Math.max(1, closestIndex + 1));
+    // Add the actual vehicle position as the last point to ensure blue line ends at car
+    return [...routeToVehicle, displayPos];
+  }, [sampledRoute, closestIndex, displayPos]);
 
   const routeRed = useMemo(() => {
     if (!sampledRoute || sampledRoute.length < 2) return null;
-    return sampledRoute.slice(Math.max(0, closestIndex), sampledRoute.length);
-  }, [sampledRoute, closestIndex]);
+    // Red line goes from car position to end
+    // Start with vehicle position to ensure continuity
+    return [displayPos, ...sampledRoute.slice(Math.max(0, closestIndex + 1), sampledRoute.length)];
+  }, [sampledRoute, closestIndex, displayPos]);
 
   if (loading)
     return (
