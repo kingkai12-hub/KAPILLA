@@ -1,19 +1,23 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useTransition } from 'react';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function StaffLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    const email = emailRef.current?.value || '';
+    const password = passwordRef.current?.value || '';
     
     try {
       const res = await fetch('/api/auth/login', {
@@ -28,16 +32,18 @@ export default function StaffLogin() {
         // Store user session in localStorage for simple client-side auth
         localStorage.setItem('kapilla_user', JSON.stringify(user));
         
-        // Force a hard navigation to dashboard to ensure state is fresh
-        window.location.href = '/staff/dashboard';
+        // Use startTransition for smoother navigation
+        startTransition(() => {
+          window.location.href = '/staff/dashboard';
+        });
       } else {
         const data = await res.json();
         alert(data.error || 'Login failed');
+        setLoading(false);
       }
     } catch (error) {
       console.error(error);
       alert('Network error during login');
-    } finally {
       setLoading(false);
     }
   };
@@ -47,7 +53,7 @@ export default function StaffLogin() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
-            <Image src="/logo.png" alt="Kapilla Logo" width={96} height={96} className="w-28 h-28 object-contain" />
+            <Image src="/logo.png" alt="Kapilla Logo" width={96} height={96} className="w-28 h-28 object-contain" priority />
           </div>
         </div>
         <h2 className="mt-8 text-center text-4xl font-extrabold text-slate-900">
@@ -70,13 +76,13 @@ export default function StaffLogin() {
                   <Mail className="h-6 w-6 text-slate-400" />
                 </div>
                 <input
+                  ref={emailRef}
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  defaultValue=""
                   className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900 shadow-sm"
                   placeholder="staff@kapillagroup.com"
                 />
@@ -92,13 +98,13 @@ export default function StaffLogin() {
                   <Lock className="h-6 w-6 text-slate-400" />
                 </div>
                 <input
+                  ref={passwordRef}
                   id="password"
                   name="password"
                   type="password"
                   autoComplete="current-password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  defaultValue=""
                   className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900 shadow-sm"
                   placeholder="••••••••"
                 />
@@ -108,8 +114,8 @@ export default function StaffLogin() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02]"
+                disabled={loading || isPending}
+                className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02] disabled:transform-none"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
                 {!loading && <ArrowRight className="ml-3 h-5 w-5" />}
