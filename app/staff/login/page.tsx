@@ -50,11 +50,11 @@ export default function StaffLogin() {
 
   return (
     <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      {/* Background Image - clearly visible */}
+      {/* Background Image - Full Screen */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: 'url(/assets/background.jpg)',
+          backgroundImage: 'url(/background.jpg)',
           opacity: 0.25
         }}
       />
