@@ -575,11 +575,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
     }
 
-    // Update shipment status if it's not DELIVERED
+    // Update shipment status
+    const updateData: any = { currentStatus: status };
+    
+    // If status is DELIVERED, set deliveredAt timestamp
+    if (status === 'DELIVERED' && shipment.currentStatus !== 'DELIVERED') {
+      updateData.deliveredAt = new Date();
+    }
+    
+    // Update shipment if not already delivered
     if (shipment.currentStatus !== 'DELIVERED') {
       await shipmentModel.update({
         where: { id: shipment.id },
-        data: { currentStatus: status }
+        data: updateData
       });
     }
 

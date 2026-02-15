@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 
 const TrackingTimeline = dynamic(() => import('@/components/TrackingTimeline'), { ssr: false });
 const VehicleTrackingMap = dynamic(() => import('@/components/VehicleTrackingMap'), { ssr: false });
+const DeliveryStatusView = dynamic(() => import('@/components/DeliveryStatusView').then(mod => ({ default: mod.DeliveryStatusView })), { ssr: false });
 
 // Dynamic imports for modals to prevent SSR issues
 const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal'), { ssr: false });
@@ -428,9 +429,21 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                         </div>
                       </div>
 
-                      {/* Map View */}
+                      {/* Map View or Delivery Status */}
                       <div className="mt-6">
-                        <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
+                        {(searchResult.currentStatus === 'IN_TRANSIT' || searchResult.currentStatus === 'DELIVERED') ? (
+                          <DeliveryStatusView
+                            status={searchResult.currentStatus}
+                            deliveredAt={searchResult.deliveredAt}
+                            receivedBy={searchResult.receivedBy}
+                            receiverSignature={searchResult.receiverSignature}
+                            proofOfDelivery={searchResult.proofOfDelivery}
+                            destination={searchResult.destination}
+                            waybillNumber={searchResult.waybillNumber}
+                          />
+                        ) : (
+                          <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
