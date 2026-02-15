@@ -107,7 +107,7 @@ export function DynamicRoutePolyline({
             lineJoin: 'round',
             dashArray: '12, 12', // Dashed line for remaining
           }}
-          smoothFactor={1}
+          smoothFactor={0}
         />
       )}
 
@@ -122,7 +122,7 @@ export function DynamicRoutePolyline({
             lineCap: 'round',
             lineJoin: 'round',
           }}
-          smoothFactor={1}
+          smoothFactor={0}
         />
       )}
 

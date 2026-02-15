@@ -270,7 +270,15 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const sampledRoute = useMemo(() => {
     if (!tracking?.routePoints || tracking.routePoints.length < 2) return null;
     const pts = tracking.routePoints;
-    const step = Math.max(1, Math.floor(pts.length / 300));
+
+    // Use all points for better road geometry (OSRM already provides optimized points)
+    // Only sample if route is extremely long (> 2000 points)
+    if (pts.length <= 2000) {
+      return pts; // Use all points to follow road geometry exactly
+    }
+
+    // For very long routes, use minimal sampling to preserve curves
+    const step = Math.max(1, Math.floor(pts.length / 1000));
     const out: [number, number][] = [];
     for (let i = 0; i < pts.length; i += step) out.push(pts[i]);
     const last = pts[pts.length - 1];
