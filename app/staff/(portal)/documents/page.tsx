@@ -43,6 +43,7 @@ export default function DocumentsPage() {
 
   // Upload
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Auth Check
   useEffect(() => {
@@ -50,50 +51,32 @@ export default function DocumentsPage() {
     if (u) setCurrentUser(JSON.parse(u))
   }, [])
 
-  // Initial Load
-  useEffect(() => {
-    if (currentUser) {
-      fetchFolders()
-      fetchDocuments(1)
-    }
-  }, [currentUser, currentFolder])
+  // Drag and Drop Handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
 
-  // Fetch Folders
-  const fetchFolders = async () => {
-    if (!currentUser) return
-    try {
-      const res = await fetch(`/api/documents/folders?ts=${Date.now()}&userId=${currentUser.id}`, { cache: 'no-store' })
-      if (res.ok) setFolders(await res.json())
-    } catch (e) {
-      console.error('Failed to load folders', e)
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0) {
+      await uploadFile(files[0])
     }
   }
 
-  // Fetch Documents
-  const fetchDocuments = async (pageNum: number) => {
-    if (!currentUser) return
-    setLoading(true)
-    setError(null)
-    try {
-      const folderParam = currentFolder ? `folderId=${currentFolder.id}` : 'folderId=null'
-      const res = await fetch(`/api/documents?${folderParam}&page=${pageNum}&limit=50&ts=${Date.now()}&userId=${currentUser.id}`)
-      
-      if (!res.ok) throw new Error('Failed to load documents')
-      
-      const data = await res.json()
-      setDocuments(data.docs || [])
-      setTotalPages(data.pagination?.totalPages || 1)
-      setPage(pageNum)
-    } catch (err) {
-      setError('Could not load documents. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // File Upload
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  // File Upload Function
+  const uploadFile = async (file: File) => {
     if (!file || !currentUser) return
 
     setUploading(true)
@@ -108,7 +91,8 @@ export default function DocumentsPage() {
     try {
       const res = await fetch('/api/documents', {
         method: 'POST',
-        body: formData // Browser automatically sets Content-Type to multipart/form-data
+        body: formData,
+        credentials: 'include' // Include cookies for authentication
       })
 
       if (!res.ok) {
@@ -128,11 +112,68 @@ export default function DocumentsPage() {
     }
   }
 
+  // Initial Load
+  useEffect(() => {
+    if (currentUser) {
+      fetchFolders()
+      fetchDocuments(1)
+    }
+  }, [currentUser, currentFolder])
+
+  // Fetch Folders
+  const fetchFolders = async () => {
+    if (!currentUser) return
+    try {
+      const res = await fetch(`/api/documents/folders?ts=${Date.now()}&userId=${currentUser.id}`, { 
+        cache: 'no-store',
+        credentials: 'include'
+      })
+      if (res.ok) setFolders(await res.json())
+    } catch (e) {
+      console.error('Failed to load folders', e)
+    }
+  }
+
+  // Fetch Documents
+  const fetchDocuments = async (pageNum: number) => {
+    if (!currentUser) return
+    setLoading(true)
+    setError(null)
+    try {
+      const folderParam = currentFolder ? `folderId=${currentFolder.id}` : 'folderId=null'
+      const res = await fetch(`/api/documents?${folderParam}&page=${pageNum}&limit=50&ts=${Date.now()}&userId=${currentUser.id}`, {
+        credentials: 'include'
+      })
+      
+      if (!res.ok) throw new Error('Failed to load documents')
+      
+      const data = await res.json()
+      setDocuments(data.docs || [])
+      setTotalPages(data.pagination?.totalPages || 1)
+      setPage(pageNum)
+    } catch (err) {
+      setError('Could not load documents. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // File Upload Handler (from input)
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      await uploadFile(file)
+    }
+  }
+
   // Delete Document
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return
     try {
-      const res = await fetch(`/api/documents/delete?id=${id}&userId=${currentUser?.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/documents/delete?id=${id}&userId=${currentUser?.id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
       if (res.ok) {
         setDocuments(prev => prev.filter(d => d.id !== id))
         fetchFolders()
@@ -157,7 +198,8 @@ export default function DocumentsPage() {
           name: newFolderName, 
           userId: currentUser.id, 
           isLocked: newFolderLocked 
-        })
+        }),
+        credentials: 'include'
       })
       if (res.ok) {
         fetchFolders()
@@ -191,7 +233,8 @@ export default function DocumentsPage() {
        const res = await fetch('/api/documents/folders/lock', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ folderId: folder.id, userId: currentUser.id, isLocked: newLockState })
+         body: JSON.stringify({ folderId: folder.id, userId: currentUser.id, isLocked: newLockState }),
+         credentials: 'include'
        })
 
        if (res.ok) {
@@ -217,7 +260,10 @@ export default function DocumentsPage() {
     if (!confirm(`Are you sure you want to delete folder "${folder.name}"? Documents inside will be moved to the main library.`)) return
 
     try {
-      const res = await fetch(`/api/documents/folders/delete?id=${folder.id}&userId=${currentUser.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/documents/folders/delete?id=${folder.id}&userId=${currentUser.id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
       if (res.ok) {
         setFolders(prev => prev.filter(f => f.id !== folder.id))
       } else {
@@ -237,7 +283,8 @@ export default function DocumentsPage() {
       const res = await fetch('/api/documents/rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: doc.id, name: newName, userId: currentUser.id })
+        body: JSON.stringify({ id: doc.id, name: newName, userId: currentUser.id }),
+        credentials: 'include'
       })
       if (res.ok) {
         // Optimistic update
@@ -254,7 +301,22 @@ export default function DocumentsPage() {
 
 // Render
 return (
-  <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+  <div 
+    className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto"
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    onDrop={handleDrop}
+  >
+    {/* Drag Overlay */}
+    {isDragging && (
+      <div className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl border-4 border-dashed border-blue-500">
+          <Upload className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+          <p className="text-2xl font-bold text-blue-600">Drop file here to upload</p>
+        </div>
+      </div>
+    )}
+
     {/* Header */}
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
