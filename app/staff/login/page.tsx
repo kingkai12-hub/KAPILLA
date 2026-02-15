@@ -50,14 +50,11 @@ export default function StaffLogin() {
 
   return (
     <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      {/* Background Image with Low Opacity */}
+      {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
         style={{ backgroundImage: 'url(/assets/background.jpg)' }}
       />
-      
-      {/* Overlay to ensure readability */}
-      <div className="absolute inset-0 bg-white/40" />
       
       {/* Content */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
