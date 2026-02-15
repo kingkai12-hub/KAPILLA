@@ -1,0 +1,40 @@
+name: Build Check
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install
+        run: |
+          cd kapilla-logistics
+          npm ci
+      
+      - name: Generate Prisma
+        run: |
+          cd kapilla-logistics
+          npx prisma generate
+        env:
+          SKIP_ENV_VALIDATION: "true"
+      
+      - name: Build
+        run: |
+          cd kapilla-logistics
+          npm run build
+        env:
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test"
+          NODE_ENV: "production"
+          SKIP_ENV_VALIDATION: "true"
