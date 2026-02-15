@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { MapContainer, Marker, Polyline, CircleMarker, useMap } from 'react-leaflet';
+import { MapContainer, Marker, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Truck, LocateFixed, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
+import { DynamicRoutePolyline } from './DynamicRoutePolyline';
 
 // Custom component for the animated marker
 function AnimatedVehicleMarker({
@@ -395,52 +396,54 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         {/* Enhanced map layers with multiple tile options and landmarks */}
         <EnhancedTrackingMapLayers routePoints={tracking.routePoints} showLandmarks={true} />
 
-        {routeRed && routeRed.length > 1 && (
-          <Polyline
-            positions={routeRed as unknown as L.LatLngExpression[]}
-            color="#ef4444"
-            weight={6}
-            opacity={0.5}
-            dashArray="12, 12"
-            smoothFactor={1}
+        {/* Dynamic route polyline - single continuous line with dynamic recoloring */}
+        {sampledRoute && sampledRoute.length > 1 && (
+          <DynamicRoutePolyline
+            routePoints={sampledRoute}
+            currentPosition={displayPos}
+            completedColor="#2563eb"
+            remainingColor="#ef4444"
+            completedWeight={8}
+            remainingWeight={6}
+            completedOpacity={0.9}
+            remainingOpacity={0.5}
+            showProgress={true}
           />
         )}
-        {routeBlue && routeBlue.length > 1 && (
-          <Polyline
-            positions={routeBlue as unknown as L.LatLngExpression[]}
-            color="#2563eb"
-            weight={8}
-            opacity={0.9}
-            lineCap="round"
-            lineJoin="round"
-            smoothFactor={1}
-          />
+
+        {/* Fallback for segment-based routes (when routePoints not available) */}
+        {!tracking?.routePoints && completedSegments.length > 0 && (
+          <>
+            {completedSegments.map((pos, idx) => (
+              <DynamicRoutePolyline
+                key={`comp-${idx}`}
+                routePoints={pos as [number, number][]}
+                currentPosition={displayPos}
+                completedColor="#2563eb"
+                remainingColor="#2563eb"
+                completedWeight={8}
+                remainingWeight={8}
+                completedOpacity={0.9}
+                remainingOpacity={0.9}
+                showProgress={false}
+              />
+            ))}
+            {remainingSegments.map((pos, idx) => (
+              <DynamicRoutePolyline
+                key={`rem-${idx}`}
+                routePoints={pos as [number, number][]}
+                currentPosition={displayPos}
+                completedColor="#ef4444"
+                remainingColor="#ef4444"
+                completedWeight={6}
+                remainingWeight={6}
+                completedOpacity={0.5}
+                remainingOpacity={0.5}
+                showProgress={false}
+              />
+            ))}
+          </>
         )}
-        {!tracking?.routePoints &&
-          remainingSegments.map((pos, idx) => (
-            <Polyline
-              key={`rem-${idx}`}
-              positions={pos as unknown as L.LatLngExpression[]}
-              color="#ef4444"
-              weight={6}
-              opacity={0.5}
-              dashArray="12, 12"
-              smoothFactor={1}
-            />
-          ))}
-        {!tracking?.routePoints &&
-          completedSegments.map((pos, idx) => (
-            <Polyline
-              key={`comp-${idx}`}
-              positions={pos as unknown as L.LatLngExpression[]}
-              color="#2563eb"
-              weight={8}
-              opacity={0.9}
-              lineCap="round"
-              lineJoin="round"
-              smoothFactor={1}
-            />
-          ))}
 
         <AnimatedVehicleMarker
           position={displayPos}
