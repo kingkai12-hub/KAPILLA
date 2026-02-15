@@ -68,7 +68,7 @@ export default function LabelPage() {
         {`
           @page {
             size: A4;
-            margin: 8mm;
+            margin: 6mm;
           }
           @media print {
             .no-break {
@@ -81,6 +81,11 @@ export default function LabelPage() {
             body {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+              margin: 0;
+              padding: 0;
+            }
+            * {
+              box-sizing: border-box;
             }
           }
         `}
@@ -96,15 +101,15 @@ export default function LabelPage() {
 
       <div className="w-full overflow-x-auto">
         <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
-          <div className="bg-white p-3 border-b border-slate-200">
-            <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-3 min-w-0">
+          <div className="bg-white p-2 border-b border-slate-200">
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex items-center gap-2 min-w-0">
                 <div className="bg-white rounded-lg">
-                  <img src="/logo.png" alt="Logo" className="w-36 h-36 object-contain" />
+                  <img src="/logo.png" alt="Logo" className="w-24 h-24 object-contain" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
-                  <div className="text-[11px] font-bold leading-snug text-slate-700">
+                  <div className="text-lg font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
+                  <div className="text-[10px] font-bold leading-snug text-slate-700">
                     <div>P.O. BOX 71729, Dar es Salaam, Tanzania</div>
                     <div>Tel: +255 766 724 062 | +255 756 656 218</div>
                     <div>Email: express@kapillagroup.co.tz</div>
@@ -113,131 +118,131 @@ export default function LabelPage() {
               </div>
 
               <div className="text-right shrink-0">
-                <div className="text-[11px] uppercase tracking-wide text-slate-600">Waybill / Consignment Note</div>
-                <div className="mt-1 inline-block rounded-lg bg-slate-50 text-slate-900 px-3 py-2 border border-slate-200">
-                  <div className="text-[10px] font-semibold uppercase text-slate-600">Tracking No</div>
-                  <div className="text-xl font-mono font-bold leading-tight">{data.waybillNumber}</div>
+                <div className="text-[10px] uppercase tracking-wide text-slate-600">Waybill / Consignment Note</div>
+                <div className="mt-0.5 inline-block rounded-lg bg-slate-50 text-slate-900 px-2 py-1.5 border border-slate-200">
+                  <div className="text-[9px] font-semibold uppercase text-slate-600">Tracking No</div>
+                  <div className="text-lg font-mono font-bold leading-tight">{data.waybillNumber}</div>
                 </div>
               </div>
             </div>
           </div>
 
-        <div className="p-5">
-          <div className="flex items-center justify-between gap-4 border border-slate-200 rounded-lg p-3 bg-slate-50">
+        <div className="p-3">
+          <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-blue-800" />
-                <div className="text-xs font-semibold text-slate-700 uppercase">Shipment</div>
+              <div className="flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-blue-800" />
+                <div className="text-[10px] font-semibold text-slate-700 uppercase">Shipment</div>
               </div>
-              <div className="mt-1 text-xs text-slate-600">Date: {new Date(data.createdAt).toLocaleDateString()}</div>
+              <div className="mt-0.5 text-[10px] text-slate-600">Date: {new Date(data.createdAt).toLocaleDateString()}</div>
             </div>
-            <div className="bg-white p-2 rounded-md border border-slate-200">
-              <QRCodeSVG value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber)}`} size={64} />
+            <div className="bg-white p-1.5 rounded-md border border-slate-200">
+              <QRCodeSVG value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber)}`} size={56} />
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-emerald-700" />
-                <div className="text-[10px] font-semibold uppercase text-slate-500">Origin</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                <div className="text-[9px] font-semibold uppercase text-slate-500">Origin</div>
               </div>
-              <div className="mt-1 text-lg font-bold uppercase text-slate-900">{data.origin}</div>
+              <div className="mt-0.5 text-base font-bold uppercase text-slate-900">{data.origin}</div>
             </div>
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-orange-700" />
-                <div className="text-[10px] font-semibold uppercase text-slate-500">Destination</div>
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-orange-700" />
+                <div className="text-[9px] font-semibold uppercase text-slate-500">Destination</div>
               </div>
-              <div className="mt-1 text-lg font-bold uppercase text-slate-900">{data.destination}</div>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="text-[11px] font-bold uppercase text-slate-800">From (Sender)</div>
-              <div className="mt-2">
-                <div className="text-sm font-semibold text-slate-900">{data.senderName}</div>
-                <div className="text-xs text-slate-700">{data.senderPhone}</div>
-                <div className="mt-1 text-xs uppercase text-slate-700">{data.senderAddress}</div>
-              </div>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="text-[11px] font-bold uppercase text-slate-800">To (Receiver)</div>
-              <div className="mt-2">
-                <div className="text-sm font-semibold text-slate-900">{data.receiverName}</div>
-                <div className="text-xs text-slate-700">{data.receiverPhone}</div>
-                <div className="mt-1 text-xs uppercase text-slate-700">{data.receiverAddress}</div>
-              </div>
+              <div className="mt-0.5 text-base font-bold uppercase text-slate-900">{data.destination}</div>
             </div>
           </div>
 
-          <div className="mt-3 border border-slate-200 rounded-lg overflow-hidden">
-            <div className="bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-700">Shipment Particulars</div>
-            <table className="w-full border-collapse text-xs">
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="text-[10px] font-bold uppercase text-slate-800">From (Sender)</div>
+              <div className="mt-1">
+                <div className="text-xs font-semibold text-slate-900">{data.senderName}</div>
+                <div className="text-[10px] text-slate-700">{data.senderPhone}</div>
+                <div className="mt-0.5 text-[10px] uppercase text-slate-700">{data.senderAddress}</div>
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="text-[10px] font-bold uppercase text-slate-800">To (Receiver)</div>
+              <div className="mt-1">
+                <div className="text-xs font-semibold text-slate-900">{data.receiverName}</div>
+                <div className="text-[10px] text-slate-700">{data.receiverPhone}</div>
+                <div className="mt-0.5 text-[10px] uppercase text-slate-700">{data.receiverAddress}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden">
+            <div className="bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-700">Shipment Particulars</div>
+            <table className="w-full border-collapse text-[10px]">
               <thead>
                 <tr className="bg-white">
-                  <th className="border-t border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 w-[35%]">Type</th>
-                  <th className="border-t border-slate-200 px-3 py-2 text-center font-semibold text-slate-700 w-[25%]">
+                  <th className="border-t border-slate-200 px-2 py-1 text-left font-semibold text-slate-700 w-[35%]">Type</th>
+                  <th className="border-t border-slate-200 px-2 py-1 text-center font-semibold text-slate-700 w-[25%]">
                     <span className="inline-flex items-center gap-1 justify-center">
-                      <Scale className="w-3.5 h-3.5" />
+                      <Scale className="w-3 h-3" />
                       Weight
                     </span>
                   </th>
-                  <th className="border-t border-slate-200 px-3 py-2 text-center font-semibold text-slate-700 w-[40%]">Service</th>
+                  <th className="border-t border-slate-200 px-2 py-1 text-center font-semibold text-slate-700 w-[40%]">Service</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="border-t border-slate-200 px-3 py-2 font-semibold">{data.type || 'Standard'}</td>
-                  <td className="border-t border-slate-200 px-3 py-2 text-center font-semibold">{data.weight}</td>
-                  <td className="border-t border-slate-200 px-3 py-2 text-center">Standard Delivery</td>
+                  <td className="border-t border-slate-200 px-2 py-1 font-semibold">{data.type || 'Standard'}</td>
+                  <td className="border-t border-slate-200 px-2 py-1 text-center font-semibold">{data.weight}</td>
+                  <td className="border-t border-slate-200 px-2 py-1 text-center">Standard Delivery</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="mt-3 border border-slate-200 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-800" />
-              <div className="text-xs font-bold uppercase text-slate-700">Cargo Details</div>
+          <div className="mt-2 border border-slate-200 rounded-lg p-2">
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-blue-800" />
+              <div className="text-[10px] font-bold uppercase text-slate-700">Cargo Details</div>
             </div>
-            <div className="mt-2 text-xs text-slate-800">{data.cargoDetails || 'No additional details provided.'}</div>
+            <div className="mt-1 text-[10px] text-slate-800">{data.cargoDetails || 'No additional details provided.'}</div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="text-xs font-bold uppercase text-slate-800">Dispatched By (Dispatcher/Agent)</div>
-              <div className="mt-2 grid gap-2">
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Name:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold uppercase">{data.dispatcherName || '_________________'}</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="text-[10px] font-bold uppercase text-slate-800">Dispatched By (Dispatcher/Agent)</div>
+              <div className="mt-1 grid gap-1">
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Name:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold uppercase">{data.dispatcherName || '_________________'}</div>
                 </div>
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Sign (ID):</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold uppercase">{data.dispatcherSignature || '_________________'}</div>
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Sign (ID):</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold uppercase">{data.dispatcherSignature || '_________________'}</div>
                 </div>
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Date:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.createdAt ? new Date(data.createdAt).toLocaleString() : '_________________'}</div>
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Date:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.createdAt ? new Date(data.createdAt).toLocaleString() : '_________________'}</div>
                 </div>
               </div>
             </div>
 
-            <div className="border border-slate-200 rounded-lg p-3">
-              <div className="text-xs font-bold uppercase text-slate-800">Received By (Consignee)</div>
-              <div className="mt-2 grid gap-2">
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Name:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.receivedBy || ''}</div>
+            <div className="border border-slate-200 rounded-lg p-2">
+              <div className="text-[10px] font-bold uppercase text-slate-800">Received By (Consignee)</div>
+              <div className="mt-1 grid gap-1">
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Name:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.receivedBy || ''}</div>
                 </div>
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">ID No:</div>
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">ID No:</div>
                   <div className="border-b border-dotted border-slate-500" />
                 </div>
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Signature:</div>
-                  <div className="border-b border-dotted border-slate-500 h-8 relative">
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Signature:</div>
+                  <div className="border-b border-dotted border-slate-500 h-6 relative">
                     {data.receiverSignature && (
                       <img
                         src={data.receiverSignature}
@@ -247,24 +252,24 @@ export default function LabelPage() {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-[62px_1fr] gap-2 items-end">
-                  <div className="text-[11px] text-slate-600">Date:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.currentStatus === 'DELIVERED' ? new Date(data.updatedAt).toLocaleDateString() : ''}</div>
+                <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
+                  <div className="text-[9px] text-slate-600">Date:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.currentStatus === 'DELIVERED' ? new Date(data.updatedAt).toLocaleDateString() : ''}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-3 border-t border-slate-200 pt-2 text-[9px] text-slate-500 leading-tight">
+          <div className="mt-2 border-t border-slate-200 pt-1.5 text-[8px] text-slate-500 leading-tight">
             <div className="font-bold text-slate-600">TERMS AND CONDITIONS OF CARRIAGE</div>
-            <div className="mt-1">
+            <div className="mt-0.5">
               1. Kapilla Group Limited (hereinafter referred to as "The Carrier") accepts goods for carriage subject to the conditions herein.
               2. The Carrier shall not be liable for any loss or damage to goods unless such loss or damage is proven to be caused by the negligence of the Carrier.
               3. The Carrier's liability is limited to the declared value of the goods or a maximum liability limit as per standard policy, whichever is lower.
               4. Claims must be notified in writing within 7 days of delivery.
               5. This waybill constitutes the entire agreement between the parties.
             </div>
-            <div className="mt-2 text-center font-bold text-slate-600">THANK YOU FOR CHOOSING KAPILLA GROUP LIMITED</div>
+            <div className="mt-1 text-center font-bold text-slate-600">THANK YOU FOR CHOOSING KAPILLA GROUP LIMITED</div>
           </div>
         </div>
       </div>
