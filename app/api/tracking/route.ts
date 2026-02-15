@@ -1,63 +1,32 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { locationCoords, getLocationCoords } from '@/lib/locations';
+import { getLocationCoords } from '@/lib/locations';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type LatLng = [number, number];
 
-const corridorDefinitions: Record<string, string[]> = {
-  'Dar es Salaam|Mwanza': [
-    'Dar es Salaam',
-    'Kibaha',
-    'Chalinze',
-    'Morogoro',
-    'Dodoma',
-    'Singida',
-    'Nzega',
-    'Shinyanga',
-    'Magu',
-    'Mwanza'
-  ],
-  'Mwanza|Dar es Salaam': [
-    'Mwanza',
-    'Magu',
-    'Shinyanga',
-    'Nzega',
-    'Singida',
-    'Dodoma',
-    'Morogoro',
-    'Chalinze',
-    'Kibaha',
-    'Dar es Salaam'
-  ]
-};
-
-function buildCorridorRoute(originName: string, destName: string): LatLng[] | null {
-  const key = `${originName}|${destName}`;
-  const names = corridorDefinitions[key];
-  if (!names) return null;
-  const pts: LatLng[] = [];
-  for (const n of names) {
-    const c = getLocationCoords(n);
-    if (!c) continue;
-    const last = pts[pts.length - 1];
-    if (!last || last[0] !== c.lat || last[1] !== c.lng) {
-      pts.push([c.lat, c.lng]);
-    }
-  }
-  return pts.length > 1 ? pts : null;
-}
-
 const osrmCache: Map<string, { pts: [number, number][], t: number }> = new Map();
 const OSRM_TTL_MS = Number(process.env.OSRM_TTL_MS || 21600000);
+
+/**
+ * Get detailed road route from OSRM with maximum geometry detail
+ * Uses overview=full and geometries=geojson for complete road geometry
+ */
 async function getRoadRoute(startLat: number, startLng: number, endLat: number, endLng: number): Promise<[number, number][]> {
   const key = `${startLat.toFixed(5)},${startLng.toFixed(5)}-${endLat.toFixed(5)},${endLng.toFixed(5)}`;
   const now = Date.now();
   const hit = osrmCache.get(key);
   if (hit && now - hit.t < OSRM_TTL_MS && hit.pts.length > 1) return hit.pts;
-  const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=false`;
+  
+  // Request route with maximum detail:
+  // - overview=full: Returns complete route geometry (not simplified)
+  // - geometries=geojson: Returns coordinates in GeoJSON format
+  // - continue_straight=false: Allows turns at intersections (more accurate)
+  // - steps=false: No turn-by-turn instructions (faster)
+  const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&continue_straight=false&steps=false`;
+  
   try {
     const r = await fetch(url, { cache: 'no-store' });
     if (r.ok) {
@@ -65,10 +34,16 @@ async function getRoadRoute(startLat: number, startLng: number, endLat: number, 
       const coords = j?.routes?.[0]?.geometry?.coordinates?.map((c: any) => [c[1], c[0]]) || null;
       if (coords && coords.length > 1) {
         osrmCache.set(key, { pts: coords, t: now });
+        console.log(`[OSRM] Fetched route with ${coords.length} points from ${startLat.toFixed(4)},${startLng.toFixed(4)} to ${endLat.toFixed(4)},${endLng.toFixed(4)}`);
         return coords;
       }
     }
-  } catch {}
+  } catch (err) {
+    console.error('[OSRM] Error fetching route:', err);
+  }
+  
+  // Fallback to straight line if OSRM fails
+  console.warn('[OSRM] Falling back to straight line');
   return [
     [startLat, startLng],
     [endLat, endLng]
@@ -128,8 +103,8 @@ export async function GET(req: Request) {
         }
         const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
         const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
-        const corridor = buildCorridorRoute(shipment.origin, shipment.destination);
-        const poly = corridor || await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+        // Use OSRM for detailed road geometry
+        const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
         let totalMeters = 0;
         for (let i = 0; i < poly.length - 1; i++) {
           totalMeters += haversineMeters(poly[i][0], poly[i][1], poly[i + 1][0], poly[i + 1][1]);
@@ -190,8 +165,11 @@ export async function GET(req: Request) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
-      const corridor = buildCorridorRoute(shipment.origin, shipment.destination);
-      const poly = corridor || await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+      // Always use OSRM for detailed road geometry (not corridor routes)
+      // OSRM provides complete road geometry with all curves and bends
+      const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+      
+      console.log(`[TRACKING] Created route with ${poly.length} points from ${shipment.origin} to ${shipment.destination}`);
 
       const numSegments = 100;
       const segmentsData = [];
@@ -483,10 +461,10 @@ export async function GET(req: Request) {
     try {
       const startName = 'Dar es Salaam';
       const endName = 'Mwanza';
-      const corr = buildCorridorRoute(startName, endName);
       const start = getLocationCoords(startName) || { lat: -6.7924, lng: 39.2083 };
       const end = getLocationCoords(endName) || { lat: -2.5164, lng: 32.9033 };
-      const poly = corr || await getRoadRoute(start.lat, start.lng, end.lat, end.lng);
+      // Use OSRM for detailed road geometry
+      const poly = await getRoadRoute(start.lat, start.lng, end.lat, end.lng);
       const haversineMeters = (aLat: number, aLng: number, bLat: number, bLng: number) => {
         const toRad = (d: number) => d * Math.PI / 180;
         const R = 6371000;
