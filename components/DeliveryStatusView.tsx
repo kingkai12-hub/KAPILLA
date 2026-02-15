@@ -138,65 +138,42 @@ export function DeliveryStatusView({
           </div>
 
           {/* Proof of Delivery Actions */}
-          {(proofOfDelivery || receiverSignature) && (
-            <div className="space-y-3">
-              <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
-                Proof of Delivery
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {/* Preview Button */}
-                <button
-                  onClick={() => {
-                    const proof = proofOfDelivery || receiverSignature;
-                    if (proof) {
-                      // Open in new window
-                      const win = window.open('', '_blank');
-                      if (win) {
-                        win.document.write(`
-                          <html>
-                            <head>
-                              <title>Proof of Delivery - ${waybillNumber}</title>
-                              <style>
-                                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f3f4f6; }
-                                img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                              </style>
-                            </head>
-                            <body>
-                              <img src="${proof}" alt="Proof of Delivery" />
-                            </body>
-                          </html>
-                        `);
-                      }
-                    }
-                  }}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                >
-                  <Eye className="w-5 h-5" />
-                  Preview Proof
-                </button>
+          <div className="space-y-3">
+            <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
+              Proof of Delivery
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {/* Preview Button */}
+              <button
+                onClick={() => {
+                  // Open the full signed waybill document
+                  window.open(`/staff/shipments/${waybillNumber}/pod`, '_blank');
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              >
+                <Eye className="w-5 h-5" />
+                Preview Signed Waybill
+              </button>
 
-                {/* Download Button */}
-                <button
-                  onClick={() => {
-                    const proof = proofOfDelivery || receiverSignature;
-                    if (proof) {
-                      const link = document.createElement('a');
-                      link.href = proof;
-                      link.download = `POD_${waybillNumber}_${Date.now()}.png`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }
-                  }}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-green-700 font-bold rounded-xl border-2 border-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                >
-                  <Download className="w-5 h-5" />
-                  Download Proof
-                </button>
-              </div>
+              {/* Download Button */}
+              <button
+                onClick={() => {
+                  // Open print dialog for the signed waybill
+                  const podWindow = window.open(`/staff/shipments/${waybillNumber}/pod`, '_blank');
+                  if (podWindow) {
+                    setTimeout(() => {
+                      podWindow.print();
+                    }, 500);
+                  }
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-green-700 font-bold rounded-xl border-2 border-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              >
+                <Download className="w-5 h-5" />
+                Download Signed Waybill
+              </button>
             </div>
-          )}
+          </div>
 
           {/* Waybill Info */}
           <div className="bg-green-100/50 rounded-xl p-4 border border-green-200">
