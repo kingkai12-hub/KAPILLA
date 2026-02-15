@@ -1,27 +1,25 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Truck, Navigation, LocateFixed, Eye } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// Fix Leaflet icon issue
-const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
+import { Truck, LocateFixed, Eye } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Custom component for the animated marker
-function AnimatedVehicleMarker({ position, rotation, isUrban }: { position: [number, number], rotation: number, isUrban: boolean }) {
-  const map = useMap();
-  
+function AnimatedVehicleMarker({
+  position,
+  rotation,
+  isUrban,
+}: {
+  position: [number, number];
+  rotation: number;
+  isUrban: boolean;
+}) {
   return (
-    <Marker 
-      position={position} 
+    <Marker
+      position={position}
       icon={L.divIcon({
         html: `<div style="transform: rotate(${rotation}deg);">
                  <svg width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -37,15 +35,10 @@ function AnimatedVehicleMarker({ position, rotation, isUrban }: { position: [num
                </div>`,
         className: 'vehicle-marker-icon',
         iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        iconAnchor: [18, 18],
       })}
     />
   );
-}
-
-interface RoutePoint {
-  lat: number;
-  lng: number;
 }
 
 interface TrackingData {
@@ -67,25 +60,22 @@ interface TrackingData {
 }
 
 // Controller component for intelligent zoom and follow logic
-function MapController({ 
-  position, 
-  followMode, 
+function MapController({
+  position,
+  followMode,
   isUrban,
-  userInteracted 
-}: { 
-  position: [number, number]; 
-  followMode: boolean; 
+}: {
+  position: [number, number];
+  followMode: boolean;
   isUrban: boolean;
-  userInteracted: () => void;
 }) {
   const map = useMap();
-  const lastPos = useRef<[number, number]>(position);
 
   useEffect(() => {
     if (followMode) {
       const targetZoom = isUrban ? 16 : 14;
       map.setView(position, map.getZoom(), { animate: true, duration: 1 });
-      
+
       if (map.getZoom() < 13) {
         map.setZoom(targetZoom, { animate: true });
       }
@@ -102,7 +92,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [isUrban, setIsUrban] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
-  const [sseActive, setSseActive] = useState<boolean>(false);
 
   const currentPos = useRef<[number, number]>([0, 0]);
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
@@ -110,13 +99,17 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const tweenTo = useRef<[number, number] | null>(null);
   const tweenStart = useRef<number>(0);
   const tweenEnd = useRef<number>(0);
-  const displayRef = useRef<[number, number]>([0,0]);
-  useEffect(() => { displayRef.current = displayPos; }, [displayPos]);
+  const displayRef = useRef<[number, number]>([0, 0]);
+  useEffect(() => {
+    displayRef.current = displayPos;
+  }, [displayPos]);
 
   useEffect(() => {
     const fetchTrackingData = async () => {
       try {
-        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!res.ok) {
           setErrorText(`Unable to load tracking (Status: ${res.status})`);
           setTracking(null);
@@ -126,7 +119,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           setIsUrban(data.speed < 55);
           setErrorText(null);
           setLastUpdate(Date.now());
-          
+
           if (currentPos.current[0] === 0) {
             currentPos.current = [data.currentLat, data.currentLng];
             setDisplayPos([data.currentLat, data.currentLng]);
@@ -139,7 +132,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
             tweenEnd.current = start + 1000;
           }
         }
-      } catch (error) {
+      } catch {
         setErrorText('Connection issue. Retrying...');
       } finally {
         setLoading(false);
@@ -148,9 +141,23 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
     // Try SSE first
     let es: EventSource | null = null;
+    let sseConnected = false;
+    let pollInterval: NodeJS.Timeout | null = null;
+
     try {
-      es = new EventSource(`/api/tracking/stream?waybillNumber=${encodeURIComponent(waybillNumber)}`);
-      es.onopen = () => setSseActive(true);
+      es = new EventSource(
+        `/api/tracking/stream?waybillNumber=${encodeURIComponent(waybillNumber)}`
+      );
+
+      es.onopen = () => {
+        sseConnected = true;
+        // Clear any polling if SSE connects
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      };
+
       es.onmessage = (evt) => {
         try {
           const data = JSON.parse(evt.data);
@@ -171,41 +178,54 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           }
         } catch {}
       };
+
       es.onerror = () => {
-        setSseActive(false);
-        try { es?.close(); } catch {}
+        sseConnected = false;
+        try {
+          es?.close();
+        } catch {
+          /* ignore */
+        }
+
+        // Start polling fallback only if not already polling
+        if (!pollInterval) {
+          fetchTrackingData();
+          pollInterval = setInterval(fetchTrackingData, 1000);
+        }
       };
     } catch {
-      setSseActive(false);
+      sseConnected = false;
     }
 
-    // Polling fallback if SSE not active
-    let interval: any = null;
-    const kickPoll = () => {
-      if (!sseActive) {
+    // Delayed polling fallback - only start if SSE didn't connect
+    const fallbackTimer = setTimeout(() => {
+      if (!sseConnected && !pollInterval) {
         fetchTrackingData();
-        interval = setInterval(fetchTrackingData, 1000);
+        pollInterval = setInterval(fetchTrackingData, 1000);
       }
-    };
-    const t = setTimeout(kickPoll, 600);
+    }, 600);
 
     return () => {
-      clearTimeout(t);
-      if (interval) clearInterval(interval);
-      try { es?.close(); } catch {}
+      clearTimeout(fallbackTimer);
+      if (pollInterval) clearInterval(pollInterval);
+      if (es) {
+        try {
+          es.close();
+        } catch {}
+      }
     };
   }, [waybillNumber]);
 
   useEffect(() => {
     let animationFrame: number;
-    
+
     const animate = () => {
       const from = tweenFrom.current;
       const to = tweenTo.current;
       if (from && to) {
         const now = Date.now();
         const start = tweenStart.current;
-        const end = tweenEnd.current || (start + 1000);
+        const end = tweenEnd.current || start + 1000;
         const dur = Math.max(1, end - start);
         const t = Math.max(0, Math.min(1, (now - start) / dur));
         const lat = from[0] + (to[0] - from[0]) * t;
@@ -223,13 +243,25 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     return () => cancelAnimationFrame(animationFrame);
   }, []);
 
-  const completedSegments = useMemo(() => 
-    tracking?.segments?.filter(s => s.isCompleted).map(s => [[s.startLat, s.startLng], [s.endLat, s.endLng]]) || [],
+  const completedSegments = useMemo(
+    () =>
+      tracking?.segments
+        ?.filter((s) => s.isCompleted)
+        .map((s) => [
+          [s.startLat, s.startLng],
+          [s.endLat, s.endLng],
+        ]) || [],
     [tracking?.segments]
   );
 
-  const remainingSegments = useMemo(() => 
-    tracking?.segments?.filter(s => !s.isCompleted).map(s => [[s.startLat, s.startLng], [s.endLat, s.endLng]]) || [],
+  const remainingSegments = useMemo(
+    () =>
+      tracking?.segments
+        ?.filter((s) => !s.isCompleted)
+        .map((s) => [
+          [s.startLat, s.startLng],
+          [s.endLat, s.endLng],
+        ]) || [],
     [tracking?.segments]
   );
 
@@ -245,58 +277,68 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     return out;
   }, [tracking?.routePoints]);
 
-  const routeBlue = useMemo(() => {
-    if (!sampledRoute || sampledRoute.length < 2) return null;
+  const closestIndex = useMemo(() => {
+    if (!sampledRoute || sampledRoute.length < 2) return 0;
+    const lat = displayPos[0];
+    const lng = displayPos[1];
     let idx = 0;
     let minD = Infinity;
     for (let i = 0; i < sampledRoute.length; i++) {
-      const dLat = sampledRoute[i][0] - displayPos[0];
-      const dLng = sampledRoute[i][1] - displayPos[1];
+      const dLat = sampledRoute[i][0] - lat;
+      const dLng = sampledRoute[i][1] - lng;
       const d = dLat * dLat + dLng * dLng;
-      if (d < minD) { minD = d; idx = i; }
+      if (d < minD) {
+        minD = d;
+        idx = i;
+      }
     }
-    return sampledRoute.slice(0, Math.max(1, idx + 1));
+    return idx;
   }, [sampledRoute, displayPos]);
+
+  const routeBlue = useMemo(() => {
+    if (!sampledRoute || sampledRoute.length < 2) return null;
+    return sampledRoute.slice(0, Math.max(1, closestIndex + 1));
+  }, [sampledRoute, closestIndex]);
 
   const routeRed = useMemo(() => {
     if (!sampledRoute || sampledRoute.length < 2) return null;
-    let idx = 0;
-    let minD = Infinity;
-    for (let i = 0; i < sampledRoute.length; i++) {
-      const dLat = sampledRoute[i][0] - displayPos[0];
-      const dLng = sampledRoute[i][1] - displayPos[1];
-      const d = dLat * dLat + dLng * dLng;
-      if (d < minD) { minD = d; idx = i; }
-    }
-    return sampledRoute.slice(Math.max(0, idx), sampledRoute.length);
-  }, [sampledRoute, displayPos]);
+    return sampledRoute.slice(Math.max(0, closestIndex), sampledRoute.length);
+  }, [sampledRoute, closestIndex]);
 
-  if (loading) return (
-    <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Initializing GPS...</p>
-      </div>
-    </div>
-  );
-
-  if (!tracking) return (
-    <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
-      <div className="text-center px-6">
-        <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-200 inline-block">
-          <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-900 font-black uppercase tracking-tight mb-1">No Signal Detected</p>
-          <p className="text-slate-500 text-xs font-bold uppercase">{errorText || 'Awaiting coordinates'}</p>
+  if (loading)
+    return (
+      <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 font-black uppercase tracking-widest text-sm">
+            Initializing GPS...
+          </p>
         </div>
       </div>
-    </div>
-  );
+    );
+
+  if (!tracking)
+    return (
+      <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
+        <div className="text-center px-6">
+          <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-200 inline-block">
+            <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-900 font-black uppercase tracking-tight mb-1">
+              No Signal Detected
+            </p>
+            <p className="text-slate-500 text-xs font-bold uppercase">
+              {errorText || 'Awaiting coordinates'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
 
   return (
     <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white group">
       {/* HUD OVERLAY */}
       <div className="absolute top-6 left-6 right-6 z-[1000] flex justify-between items-start pointer-events-none">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="bg-white/95 backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-slate-200 pointer-events-auto min-w-[200px]"
@@ -306,7 +348,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
               <Truck className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter mb-0.5">Live Velocity</p>
+              <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter mb-0.5">
+                Live Velocity
+              </p>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-slate-900 leading-none">
                   {Math.round(tracking.speed)}
@@ -315,23 +359,23 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-500 uppercase">Signal: Strong</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase">
+                Signal: Strong
+              </span>
             </div>
             <span className="text-[10px] font-black text-blue-600 uppercase">Active</span>
           </div>
         </motion.div>
 
         <div className="pointer-events-auto">
-          <button 
+          <button
             onClick={() => setFollowMode(!followMode)}
             className={`flex items-center gap-3 px-6 py-4 rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-2xl hover:scale-105 active:scale-95 ${
-              followMode 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-slate-700 hover:bg-slate-50'
+              followMode ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             {followMode ? <LocateFixed className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -340,9 +384,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         </div>
       </div>
 
-      <MapContainer 
-        center={[tracking.currentLat, tracking.currentLng]} 
-        zoom={16} 
+      <MapContainer
+        center={[tracking.currentLat, tracking.currentLng]}
+        zoom={16}
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
         preferCanvas={true}
@@ -355,55 +399,96 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         />
 
         {routeRed && routeRed.length > 1 && (
-          <Polyline positions={routeRed as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" smoothFactor={1} />
+          <Polyline
+            positions={routeRed as unknown as L.LatLngExpression[]}
+            color="#ef4444"
+            weight={6}
+            opacity={0.5}
+            dashArray="12, 12"
+            smoothFactor={1}
+          />
         )}
         {routeBlue && routeBlue.length > 1 && (
-          <Polyline positions={routeBlue as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" smoothFactor={1} />
+          <Polyline
+            positions={routeBlue as unknown as L.LatLngExpression[]}
+            color="#2563eb"
+            weight={8}
+            opacity={0.9}
+            lineCap="round"
+            lineJoin="round"
+            smoothFactor={1}
+          />
         )}
-        {!tracking?.routePoints && remainingSegments.map((pos, idx) => (
-          <Polyline key={`rem-${idx}`} positions={pos as any} color="#ef4444" weight={6} opacity={0.5} dashArray="12, 12" smoothFactor={1} />
-        ))}
-        {!tracking?.routePoints && completedSegments.map((pos, idx) => (
-          <Polyline key={`comp-${idx}`} positions={pos as any} color="#2563eb" weight={8} opacity={0.9} lineCap="round" lineJoin="round" smoothFactor={1} />
-        ))}
+        {!tracking?.routePoints &&
+          remainingSegments.map((pos, idx) => (
+            <Polyline
+              key={`rem-${idx}`}
+              positions={pos as unknown as L.LatLngExpression[]}
+              color="#ef4444"
+              weight={6}
+              opacity={0.5}
+              dashArray="12, 12"
+              smoothFactor={1}
+            />
+          ))}
+        {!tracking?.routePoints &&
+          completedSegments.map((pos, idx) => (
+            <Polyline
+              key={`comp-${idx}`}
+              positions={pos as unknown as L.LatLngExpression[]}
+              color="#2563eb"
+              weight={8}
+              opacity={0.9}
+              lineCap="round"
+              lineJoin="round"
+              smoothFactor={1}
+            />
+          ))}
 
-        <AnimatedVehicleMarker 
-          position={displayPos} 
+        <AnimatedVehicleMarker
+          position={displayPos}
           rotation={tracking.heading || 0}
           isUrban={isUrban}
         />
-        <CircleMarker center={displayPos} radius={4} color="#2563eb" opacity={0.9} fillOpacity={1} />
-
-        <MapController 
-          position={displayPos} 
-          followMode={followMode}
-          isUrban={isUrban}
-          userInteracted={() => setFollowMode(false)}
+        <CircleMarker
+          center={displayPos}
+          radius={4}
+          color="#2563eb"
+          opacity={0.9}
+          fillOpacity={1}
         />
+
+        <MapController position={displayPos} followMode={followMode} isUrban={isUrban} />
       </MapContainer>
 
       {/* Footer Indicators */}
       <div className="absolute bottom-8 left-8 z-[1000] pointer-events-none flex flex-col gap-3">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-900/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase border border-white/10 flex items-center gap-3 shadow-2xl"
         >
           {isUrban ? '🏙️ Urban Transit Zone' : '🛣️ Highway Corridor'}
           <div className="h-1 w-12 bg-white/20 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 transition-all duration-1000" 
-              style={{ width: `${(completedSegments.length / (completedSegments.length + remainingSegments.length)) * 100}%` }} 
+            <div
+              className="h-full bg-blue-500 transition-all duration-1000"
+              style={{
+                width: `${(completedSegments.length / (completedSegments.length + remainingSegments.length)) * 100}%`,
+              }}
             />
           </div>
         </motion.div>
-        
+
         <div className="bg-white/90 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 pointer-events-auto">
-          <div>Lat: {displayPos[0].toFixed(5)} Lng: {displayPos[1].toFixed(5)}</div>
-          <div>Segs: {(tracking?.segments?.length ?? 0)} Speed: {Math.round(tracking.speed)}</div>
+          <div>
+            Lat: {displayPos[0].toFixed(5)} Lng: {displayPos[1].toFixed(5)}
+          </div>
+          <div>
+            Segs: {tracking?.segments?.length ?? 0} Speed: {Math.round(tracking.speed)}
+          </div>
           <div>Updated: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '—'}</div>
         </div>
-        
+
         {tracking.speed > 80 && (
           <div className="bg-red-600/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase animate-bounce shadow-2xl border border-red-400/50">
             ⚠️ Velocity Alert: High Speed

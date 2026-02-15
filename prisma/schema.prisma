@@ -137,6 +137,9 @@ model RouteSegment {
   order       Int
   tracking    VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
 
+  @@index([trackingId])
+  @@index([trackingId, isCompleted])
+  @@index([trackingId, order])
   @@map("RouteSegment")
 }
 
