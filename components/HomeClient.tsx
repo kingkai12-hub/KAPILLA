@@ -10,7 +10,6 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
 
-const TrackingTimeline = dynamic(() => import('@/components/TrackingTimeline'), { ssr: false });
 const VehicleTrackingMap = dynamic(() => import('@/components/VehicleTrackingMap'), { ssr: false });
 const DeliveryStatusView = dynamic(() => import('@/components/DeliveryStatusView').then(mod => ({ default: mod.DeliveryStatusView })), { ssr: false });
 
@@ -466,25 +465,6 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                           <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
                         </div>
                       </div>
-                      {searchResult?.events && searchResult.events.length > 0 && (
-                        <div className="p-4 border border-slate-100 rounded-xl bg-slate-50">
-                          <TrackingTimeline
-                              shipment={{
-                                waybillNumber: searchResult.waybillNumber,
-                                origin: searchResult.origin,
-                                destination: searchResult.destination,
-                                currentStatus: searchResult.currentStatus as any,
-                                events: searchResult.events.map((e: any) => ({
-                                  id: e.id,
-                                  status: e.status,
-                                  location: e.location,
-                                  timestamp: e.timestamp,
-                                  remarks: e.remarks
-                                }))
-                              }}
-                            />
-                          </div>
-                        )}
                       {searchResult.currentStatus === 'DELIVERED' && (
                         <div className="mt-2 flex justify-center">
                           <a 
