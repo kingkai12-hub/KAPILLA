@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getLocationCoords } from '@/lib/locations';
+import {
+  calculateMovement,
+  haversineDistance,
+  DEFAULT_SPEED_CONFIG,
+  type VehicleState,
+  type RouteContext,
+  type SpeedConfig,
+} from '@/lib/speed-manager';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -60,28 +68,6 @@ export async function GET(req: Request) {
 
   try {
     const normalized = waybillNumber.trim();
-    const CITY_SPEED_MIN = Number(process.env.CITY_SPEED_MIN_KMH || 20);
-    const CITY_SPEED_MAX = Number(process.env.CITY_SPEED_MAX_KMH || 50);
-    const HIGHWAY_SPEED = Number(process.env.HIGHWAY_SPEED_KMH || 80);
-    const CITY_ZONES = [
-      // Rough bounding boxes for major TZ cities: [latMin, lngMin, latMax, lngMax]
-      { name: 'Dar', box: [-7.0, 39.15, -6.6, 39.40] },
-      { name: 'Morogoro', box: [-6.92, 37.62, -6.75, 37.71] },
-      { name: 'Dodoma', box: [-6.20, 35.67, -6.14, 35.79] },
-      { name: 'Arusha', box: [-3.42, 36.58, -3.27, 36.76] },
-      { name: 'Mwanza', box: [-2.60, 32.86, -2.40, 32.96] },
-    ];
-    const inCity = (lat: number, lng: number) => CITY_ZONES.some(z => lat >= z.box[0] && lat <= z.box[2] && lng >= z.box[1] && lng <= z.box[3]);
-    const citySpeed = () => Math.min(CITY_SPEED_MAX, Math.max(CITY_SPEED_MIN, CITY_SPEED_MIN + Math.random() * (CITY_SPEED_MAX - CITY_SPEED_MIN)));
-    const haversineMeters = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-      const toRad = (d: number) => d * Math.PI / 180;
-      const R = 6371000;
-      const dLat = toRad(bLat - aLat);
-      const dLng = toRad(bLng - aLng);
-      const A = Math.sin(dLat/2)**2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng/2)**2;
-      const C = 2 * Math.atan2(Math.sqrt(A), Math.sqrt(1-A));
-      return R * C;
-    };
     
     // Defensive model access to handle case-sensitivity in generated Prisma client
     const shipmentModel = (db as any).Shipment || (db as any).shipment;
@@ -204,10 +190,12 @@ export async function GET(req: Request) {
       }
     }
 
-    // MOVEMENT LOGIC
+    // MOVEMENT LOGIC - Enhanced with realistic speed behavior
     if (tracking && (tracking as any).routePoints && Array.isArray((tracking as any).routePoints) && (tracking as any).routePoints.length > 1) {
       const poly: [number, number][] = (tracking as any).routePoints;
       const total = poly.length;
+      
+      // Find closest point on route
       let iClosest = 0;
       let minD = Infinity;
       for (let i = 0; i < total; i++) {
@@ -217,42 +205,59 @@ export async function GET(req: Request) {
         if (d < minD) { minD = d; iClosest = i; }
       }
       let targetIdx = Math.min(iClosest + 1, total - 1);
-      const progressRatio = targetIdx / (total - 1);
-      const near = poly[Math.max(0, Math.min(targetIdx, total - 1))];
-      const isUrbanZone = inCity(near[0], near[1]) || progressRatio < 0.15 || progressRatio > 0.85;
-      const baseTarget = isUrbanZone ? citySpeed() : HIGHWAY_SPEED;
-      let turnFactor = 1;
-      if (targetIdx > 0 && targetIdx < total - 1) {
-        const p0 = poly[targetIdx - 1];
-        const p1 = poly[targetIdx];
-        const p2 = poly[targetIdx + 1];
-        const v1x = p1[1] - p0[1], v1y = p1[0] - p0[0];
-        const v2x = p2[1] - p1[1], v2y = p2[0] - p1[0];
-        const dot = v1x * v2x + v1y * v2y;
-        const mag1 = Math.sqrt(v1x * v1x + v1y * v1y);
-        const mag2 = Math.sqrt(v2x * v2x + v2y * v2y);
-        if (mag1 > 0 && mag2 > 0) {
-          const cosA = Math.min(1, Math.max(-1, dot / (mag1 * mag2)));
-          const ang = Math.acos(cosA) * 180 / Math.PI;
-          if (ang < 60) turnFactor = 0.5;
-          else if (ang < 90) turnFactor = 0.7;
-          else if (ang < 120) turnFactor = 0.85;
-        }
+      
+      // Calculate route context
+      const dest = poly[poly.length - 1];
+      const remainingDistance = haversineDistance(tracking.currentLat, tracking.currentLng, dest[0], dest[1]);
+      let totalDistance = 0;
+      for (let i = 0; i < poly.length - 1; i++) {
+        totalDistance += haversineDistance(poly[i][0], poly[i][1], poly[i + 1][0], poly[i + 1][1]);
       }
-      const prevSpeed = typeof tracking.speed === 'number' ? tracking.speed : baseTarget;
-      const accel = Number(process.env.SPEED_ACCEL_KMHPS || 8);
-      const decel = Number(process.env.SPEED_DECEL_KMHPS || 12);
-      const nowTs = Date.now();
-      const last = tracking.lastUpdated ? new Date(tracking.lastUpdated as any).getTime() : nowTs;
-      const deltaSec = Math.max(1, Math.min(2, (nowTs - last) / 1000));
-      const desired = Math.max(5, baseTarget * turnFactor);
-      const maxUp = prevSpeed + accel * deltaSec;
-      const maxDown = prevSpeed - decel * deltaSec;
-      const clamped = Math.min(maxUp, Math.max(maxDown, desired));
-      let distToTravel = (clamped * 1000 / 3600) * deltaSec;
+      
+      const routeContext: RouteContext = {
+        routePoints: poly,
+        currentIndex: iClosest,
+        totalDistance,
+        remainingDistance,
+        progressRatio: targetIdx / (total - 1),
+      };
+      
+      // Create vehicle state
+      const vehicleState: VehicleState = {
+        currentLat: tracking.currentLat,
+        currentLng: tracking.currentLng,
+        speed: typeof tracking.speed === 'number' ? tracking.speed : 0,
+        heading: tracking.heading || 0,
+        lastUpdated: tracking.lastUpdated ? new Date(tracking.lastUpdated as any) : new Date(),
+        isStopped: (tracking as any).isStopped || false,
+        stopUntil: (tracking as any).stopUntil || undefined,
+        stopReason: (tracking as any).stopReason || undefined,
+        speedVariationOffset: (tracking as any).speedVariationOffset || 0,
+        lastVariationUpdate: (tracking as any).lastVariationUpdate || 0,
+      };
+      
+      // Speed configuration (can be customized via env vars)
+      const speedConfig: SpeedConfig = {
+        ...DEFAULT_SPEED_CONFIG,
+        citySpeedMin: Number(process.env.CITY_SPEED_MIN_KMH || 20),
+        citySpeedMax: Number(process.env.CITY_SPEED_MAX_KMH || 50),
+        highwaySpeedMin: Number(process.env.HIGHWAY_SPEED_MIN_KMH || 60),
+        highwaySpeedMax: Number(process.env.HIGHWAY_SPEED_MAX_KMH || 90),
+        accelRate: Number(process.env.SPEED_ACCEL_KMHPS || 8),
+        decelRate: Number(process.env.SPEED_DECEL_KMHPS || 12),
+        speedVariation: Number(process.env.SPEED_VARIATION_KMH || 5),
+        enableTrafficStops: process.env.ENABLE_TRAFFIC_STOPS !== 'false',
+      };
+      
+      // Calculate movement with realistic speed behavior
+      const movement = calculateMovement(vehicleState, routeContext, speedConfig);
+      
+      // Move vehicle along route
+      let distToTravel = movement.distanceToTravel;
       let curLat = tracking.currentLat;
       let curLng = tracking.currentLng;
       let traveled = 0;
+      
       while (distToTravel > 0 && targetIdx < total) {
         const aLat = curLat;
         const aLng = curLng;
@@ -260,7 +265,8 @@ export async function GET(req: Request) {
         const bLng = poly[targetIdx][1];
         const dy = bLat - aLat;
         const dx = bLng - aLng;
-        const segLen = haversineMeters(aLat, aLng, bLat, bLng);
+        const segLen = haversineDistance(aLat, aLng, bLat, bLng);
+        
         if (segLen <= distToTravel && segLen > 0) {
           curLat = bLat;
           curLng = bLng;
@@ -277,21 +283,42 @@ export async function GET(req: Request) {
           targetIdx += 1;
         }
       }
+      
+      // Calculate heading
       const hdy = poly[Math.min(targetIdx, total - 1)][0] - curLat;
       const hdx = poly[Math.min(targetIdx, total - 1)][1] - curLng;
       const heading = (Math.atan2(hdx, hdy) * 180) / Math.PI;
-      const actualSpeed = Math.max(0, (traveled / deltaSec) * 3.6);
+      
+      // Update tracking with new position and speed
+      const updateData: any = {
+        currentLat: curLat,
+        currentLng: curLng,
+        speed: movement.newSpeed,
+        heading,
+        lastUpdated: new Date(),
+        // Persist traffic simulation state
+        isStopped: vehicleState.isStopped,
+        stopUntil: vehicleState.stopUntil,
+        stopReason: vehicleState.stopReason,
+        speedVariationOffset: vehicleState.speedVariationOffset,
+        lastVariationUpdate: vehicleState.lastVariationUpdate,
+      };
+      
+      console.log(`[TRACKING] Vehicle at ${curLat.toFixed(5)},${curLng.toFixed(5)} | Speed: ${movement.newSpeed.toFixed(1)} km/h | Reason: ${movement.reason} | Remaining: ${(remainingDistance / 1000).toFixed(1)} km`);
+      
+      
       try {
         tracking = await vehicleTrackingModel.update({
           where: { id: tracking.id },
-          data: { currentLat: curLat, currentLng: curLng, speed: actualSpeed, heading, lastUpdated: new Date() },
+          data: updateData,
           include: { segments: { orderBy: { order: 'asc' } } }
         });
       } catch {
-        tracking = { ...tracking, currentLat: curLat, currentLng: curLng, speed: actualSpeed, heading, lastUpdated: new Date() } as any;
+        tracking = { ...tracking, ...updateData } as any;
       }
-      const dest = poly[poly.length - 1];
-      const remain = haversineMeters(curLat, curLng, dest[0], dest[1]);
+      
+      // Check if reached destination
+      const remain = haversineDistance(curLat, curLng, dest[0], dest[1]);
       if (remain < 50) {
         try {
           if (shipment.currentStatus !== 'DELIVERED') {

@@ -303,7 +303,7 @@ export function MultiColorRoutePolyline({
             lineJoin: 'round',
             dashArray: segment.completed ? undefined : '12, 12',
           }}
-          smoothFactor={1}
+          smoothFactor={0}
         />
       ))}
     </>

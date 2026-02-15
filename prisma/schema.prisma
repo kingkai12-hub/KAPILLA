@@ -112,16 +112,22 @@ model Shipment {
 }
 
 model VehicleTracking {
-  id          String         @id @default(uuid())
-  shipmentId  String         @unique
-  currentLat  Float
-  currentLng  Float
-  speed       Float          @default(0)
-  heading     Float          @default(0)
-  lastUpdated DateTime       @default(now())
-  routePoints Json?
-  segments    RouteSegment[]
-  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  id                    String         @id @default(uuid())
+  shipmentId            String         @unique
+  currentLat            Float
+  currentLng            Float
+  speed                 Float          @default(0)
+  heading               Float          @default(0)
+  lastUpdated           DateTime       @default(now())
+  routePoints           Json?
+  // Traffic simulation state
+  isStopped             Boolean?       @default(false)
+  stopUntil             BigInt?
+  stopReason            String?
+  speedVariationOffset  Float?         @default(0)
+  lastVariationUpdate   BigInt?        @default(0)
+  segments              RouteSegment[]
+  shipment              Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@map("VehicleTracking")
 }
