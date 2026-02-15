@@ -5,7 +5,6 @@ import { MapContainer, Marker, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Truck, LocateFixed, Eye } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
 import { DynamicRoutePolyline } from './DynamicRoutePolyline';
 
@@ -435,31 +434,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
         <MapController position={displayPos} followMode={followMode} isUrban={isUrban} />
       </MapContainer>
-
-      {/* Footer Indicators */}
-      <div className="absolute bottom-8 left-8 z-[1000] pointer-events-none flex flex-col gap-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase border border-white/10 flex items-center gap-3 shadow-2xl"
-        >
-          {isUrban ? '🏙️ Urban Transit Zone' : '🛣️ Highway Corridor'}
-          <div className="h-1 w-12 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all duration-1000"
-              style={{
-                width: `${(completedSegments.length / (completedSegments.length + remainingSegments.length)) * 100}%`,
-              }}
-            />
-          </div>
-        </motion.div>
-
-        {tracking.speed > 80 && (
-          <div className="bg-red-600/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase animate-bounce shadow-2xl border border-red-400/50">
-            ⚠️ Velocity Alert: High Speed
-          </div>
-        )}
-      </div>
     </div>
   );
 }
