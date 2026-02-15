@@ -67,10 +67,18 @@ export default function LabelPage() {
       <style>
         {`
           @page {
-            size: A4;
-            margin: 6mm;
+            size: A4 portrait;
+            margin: 0;
           }
           @media print {
+            html, body {
+              width: 210mm;
+              height: 297mm;
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
             .no-break {
               break-inside: avoid-page;
               page-break-inside: avoid;
@@ -78,11 +86,13 @@ export default function LabelPage() {
             .print-hidden {
               display: none !important;
             }
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-              margin: 0;
-              padding: 0;
+            .print-container {
+              width: 210mm !important;
+              height: 297mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              transform: scale(1) !important;
             }
             * {
               box-sizing: border-box;
@@ -99,9 +109,9 @@ export default function LabelPage() {
         Print Waybill
       </button>
 
-      <div className="w-full overflow-x-auto">
-        <div className="bg-white w-[210mm] min-h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break">
-          <div className="bg-white p-2 border-b border-slate-200">
+      <div className="w-full overflow-x-auto print:overflow-visible">
+        <div className="print-container bg-white w-[210mm] h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break print:shadow-none">
+          <div className="bg-white p-3 border-b border-slate-200">
             <div className="flex justify-between items-start gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="bg-white rounded-lg">
@@ -127,7 +137,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-        <div className="p-3">
+        <div className="p-4">
           <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
