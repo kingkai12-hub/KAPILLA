@@ -428,9 +428,9 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                         </div>
                       </div>
 
-                      {/* Map View or Delivery Status */}
+                      {/* Delivery Status View or Map */}
                       <div className="mt-6">
-                        {(searchResult.currentStatus === 'IN_TRANSIT' || searchResult.currentStatus === 'DELIVERED') ? (
+                        {searchResult.currentStatus === 'DELIVERED' ? (
                           <DeliveryStatusView
                             status={searchResult.currentStatus}
                             deliveredAt={searchResult.deliveredAt}
@@ -440,83 +440,15 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                             destination={searchResult.destination}
                             waybillNumber={searchResult.waybillNumber}
                           />
-                        ) : (
+                        ) : searchResult.currentStatus === 'IN_TRANSIT' ? (
                           <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="space-y-1">
-                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Origin</div>
-                          <div className="font-semibold text-slate-900 text-base">{searchResult.origin}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Destination</div>
-                          <div className="font-semibold text-slate-900 text-base">{searchResult.destination}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ETA</div>
-                          <div className="font-semibold text-slate-900 text-base">
-                            {latestEta ? <FormattedDate dateStr={latestEta} /> : 'Not available'}
+                        ) : (
+                          <div className="bg-slate-50 rounded-xl p-8 text-center">
+                            <Package className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                            <p className="text-slate-600 font-medium">Shipment is pending processing</p>
+                            <p className="text-sm text-slate-500 mt-1">Tracking will be available once the shipment is in transit</p>
                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mode</div>
-                          <div className="font-semibold text-slate-900 text-base">{latestMode || 'N/A'}</div>
-                        </div>
-                      </div>
-                      {searchResult.currentStatus === 'DELIVERED' && (
-                        <div className="mt-2 flex justify-center">
-                          <a 
-                            href={`/staff/shipments/${searchResult.waybillNumber}/pod`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            Download Proof of Delivery
-                          </a>
-                        </div>
-                      )}
-                      <div className="w-full py-2 px-2">
-                        <div className="flex items-center justify-between relative">
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full -z-10" />
-                          <div 
-                            className={cn(
-                              "absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500",
-                              searchResult.currentStatus === 'PENDING' ? "w-[0%]" :
-                              searchResult.currentStatus === 'IN_TRANSIT' ? "w-[50%]" :
-                              "w-[100%]"
-                            )} 
-                          />
-                          {[
-                            { id: 'PENDING', label: 'Pending', icon: Package },
-                            { id: 'IN_TRANSIT', label: 'In Transit', icon: Truck },
-                            { id: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
-                          ].map((step) => {
-                            const isCompleted = 
-                              (step.id === 'PENDING' && ['PENDING', 'IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                              (step.id === 'IN_TRANSIT' && ['IN_TRANSIT', 'DELIVERED'].includes(searchResult.currentStatus)) ||
-                              (step.id === 'DELIVERED' && searchResult.currentStatus === 'DELIVERED');
-                            const isCurrent = step.id === searchResult.currentStatus;
-                            return (
-                              <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
-                                <div className={cn(
-                                  "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                                  isCompleted || isCurrent ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "bg-white border-slate-300 text-slate-400"
-                                )}>
-                                  <step.icon className="w-5 h-5 md:w-6 md:h-6" />
-                                </div>
-                                <span className={cn(
-                                  "text-[11px] md:text-sm font-bold transition-colors duration-300",
-                                  isCompleted || isCurrent ? "text-slate-900" : "text-slate-400"
-                                )}>
-                                  {step.label}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
