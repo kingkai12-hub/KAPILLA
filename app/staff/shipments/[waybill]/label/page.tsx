@@ -68,7 +68,7 @@ export default function LabelPage() {
         {`
           @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 8mm;
           }
           @media print {
             html, body {
@@ -88,14 +88,15 @@ export default function LabelPage() {
               display: none !important;
             }
             .print-container {
-              width: 210mm !important;
-              height: 297mm !important;
-              max-height: 297mm !important;
-              margin: 0 !important;
+              width: 194mm !important;
+              max-width: 194mm !important;
+              height: auto !important;
+              max-height: 281mm !important;
+              margin: 0 auto !important;
               padding: 0 !important;
               box-shadow: none !important;
               transform: scale(1) !important;
-              overflow: hidden !important;
+              overflow: visible !important;
               page-break-after: avoid !important;
             }
             * {
@@ -113,8 +114,8 @@ export default function LabelPage() {
         Print Waybill
       </button>
 
-      <div className="w-full overflow-x-auto print:overflow-visible print:h-[297mm]">
-        <div className="print-container bg-white w-[210mm] h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break print:shadow-none overflow-hidden">
+      <div className="w-full overflow-x-auto print:overflow-visible">
+        <div className="print-container bg-white w-[210mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break print:shadow-none">
           <div className="bg-white p-3 border-b border-slate-200">
             <div className="flex justify-between items-start gap-3">
               <div className="flex items-center gap-2 min-w-0">
@@ -145,10 +146,10 @@ export default function LabelPage() {
           <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <Package className="w-3.5 h-3.5 text-blue-800" />
-                <div className="text-[10px] font-semibold text-slate-700 uppercase">Shipment</div>
+                <Package className="w-4 h-4 text-blue-800" />
+                <div className="text-xs font-semibold text-slate-700 uppercase">Shipment</div>
               </div>
-              <div className="mt-0.5 text-[10px] text-slate-600">Date: {new Date(data.createdAt).toLocaleDateString()}</div>
+              <div className="mt-0.5 text-xs text-slate-600">Date: {new Date(data.createdAt).toLocaleDateString()}</div>
             </div>
             <div className="bg-white p-1.5 rounded-md border border-slate-200">
               <QRCodeSVG value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber)}`} size={56} />
@@ -158,42 +159,42 @@ export default function LabelPage() {
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-                <div className="text-[9px] font-semibold uppercase text-slate-500">Origin</div>
+                <MapPin className="w-4 h-4 text-emerald-700" />
+                <div className="text-[10px] font-semibold uppercase text-slate-500">Origin</div>
               </div>
-              <div className="mt-0.5 text-base font-bold uppercase text-slate-900">{data.origin}</div>
+              <div className="mt-0.5 text-lg font-bold uppercase text-slate-900">{data.origin}</div>
             </div>
             <div className="border border-slate-200 rounded-lg p-2">
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-orange-700" />
-                <div className="text-[9px] font-semibold uppercase text-slate-500">Destination</div>
+                <MapPin className="w-4 h-4 text-orange-700" />
+                <div className="text-[10px] font-semibold uppercase text-slate-500">Destination</div>
               </div>
-              <div className="mt-0.5 text-base font-bold uppercase text-slate-900">{data.destination}</div>
+              <div className="mt-0.5 text-lg font-bold uppercase text-slate-900">{data.destination}</div>
             </div>
           </div>
 
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
-              <div className="text-[10px] font-bold uppercase text-slate-800">From (Sender)</div>
+              <div className="text-xs font-bold uppercase text-slate-800">From (Sender)</div>
               <div className="mt-1">
-                <div className="text-xs font-semibold text-slate-900">{data.senderName}</div>
-                <div className="text-[10px] text-slate-700">{data.senderPhone}</div>
-                <div className="mt-0.5 text-[10px] uppercase text-slate-700">{data.senderAddress}</div>
+                <div className="text-sm font-semibold text-slate-900">{data.senderName}</div>
+                <div className="text-xs text-slate-700">{data.senderPhone}</div>
+                <div className="mt-0.5 text-xs uppercase text-slate-700">{data.senderAddress}</div>
               </div>
             </div>
             <div className="border border-slate-200 rounded-lg p-2">
-              <div className="text-[10px] font-bold uppercase text-slate-800">To (Receiver)</div>
+              <div className="text-xs font-bold uppercase text-slate-800">To (Receiver)</div>
               <div className="mt-1">
-                <div className="text-xs font-semibold text-slate-900">{data.receiverName}</div>
-                <div className="text-[10px] text-slate-700">{data.receiverPhone}</div>
-                <div className="mt-0.5 text-[10px] uppercase text-slate-700">{data.receiverAddress}</div>
+                <div className="text-sm font-semibold text-slate-900">{data.receiverName}</div>
+                <div className="text-xs text-slate-700">{data.receiverPhone}</div>
+                <div className="mt-0.5 text-xs uppercase text-slate-700">{data.receiverAddress}</div>
               </div>
             </div>
           </div>
 
           <div className="mt-1.5 border border-slate-200 rounded-lg overflow-hidden">
-            <div className="bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-700">Shipment Particulars</div>
-            <table className="w-full border-collapse text-[10px]">
+            <div className="bg-slate-100 px-2 py-1 text-xs font-bold uppercase text-slate-700">Shipment Particulars</div>
+            <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="bg-white">
                   <th className="border-t border-slate-200 px-2 py-1 text-left font-semibold text-slate-700 w-[35%]">Type</th>
@@ -218,44 +219,44 @@ export default function LabelPage() {
 
           <div className="mt-1.5 border border-slate-200 rounded-lg p-2">
             <div className="flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-blue-800" />
-              <div className="text-[10px] font-bold uppercase text-slate-700">Cargo Details</div>
+              <FileText className="w-4 h-4 text-blue-800" />
+              <div className="text-xs font-bold uppercase text-slate-700">Cargo Details</div>
             </div>
-            <div className="mt-1 text-[10px] text-slate-800">{data.cargoDetails || 'No additional details provided.'}</div>
+            <div className="mt-1 text-xs text-slate-800">{data.cargoDetails || 'No additional details provided.'}</div>
           </div>
 
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
-              <div className="text-[10px] font-bold uppercase text-slate-800">Dispatched By (Dispatcher/Agent)</div>
+              <div className="text-xs font-bold uppercase text-slate-800">Dispatched By (Dispatcher/Agent)</div>
               <div className="mt-1 grid gap-1">
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Name:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold uppercase">{data.dispatcherName || '_________________'}</div>
+                  <div className="text-[10px] text-slate-600">Name:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold uppercase">{data.dispatcherName || '_________________'}</div>
                 </div>
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Sign (ID):</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold uppercase">{data.dispatcherSignature || '_________________'}</div>
+                  <div className="text-[10px] text-slate-600">Sign (ID):</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold uppercase">{data.dispatcherSignature || '_________________'}</div>
                 </div>
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Date:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.createdAt ? new Date(data.createdAt).toLocaleString() : '_________________'}</div>
+                  <div className="text-[10px] text-slate-600">Date:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.createdAt ? new Date(data.createdAt).toLocaleString() : '_________________'}</div>
                 </div>
               </div>
             </div>
 
             <div className="border border-slate-200 rounded-lg p-2">
-              <div className="text-[10px] font-bold uppercase text-slate-800">Received By (Consignee)</div>
+              <div className="text-xs font-bold uppercase text-slate-800">Received By (Consignee)</div>
               <div className="mt-1 grid gap-1">
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Name:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.receivedBy || ''}</div>
+                  <div className="text-[10px] text-slate-600">Name:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.receivedBy || ''}</div>
                 </div>
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">ID No:</div>
+                  <div className="text-[10px] text-slate-600">ID No:</div>
                   <div className="border-b border-dotted border-slate-500" />
                 </div>
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Signature:</div>
+                  <div className="text-[10px] text-slate-600">Signature:</div>
                   <div className="border-b border-dotted border-slate-500 h-6 relative">
                     {data.receiverSignature && (
                       <img
@@ -267,14 +268,14 @@ export default function LabelPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-[50px_1fr] gap-1.5 items-end">
-                  <div className="text-[9px] text-slate-600">Date:</div>
-                  <div className="border-b border-dotted border-slate-500 font-mono text-[10px] font-semibold">{data.currentStatus === 'DELIVERED' ? new Date(data.updatedAt).toLocaleDateString() : ''}</div>
+                  <div className="text-[10px] text-slate-600">Date:</div>
+                  <div className="border-b border-dotted border-slate-500 font-mono text-xs font-semibold">{data.currentStatus === 'DELIVERED' ? new Date(data.updatedAt).toLocaleDateString() : ''}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-1.5 border-t border-slate-200 pt-1 text-[8px] text-slate-500 leading-tight">
+          <div className="mt-1.5 border-t border-slate-200 pt-1 text-[9px] text-slate-500 leading-tight">
             <div className="font-bold text-slate-600">TERMS AND CONDITIONS OF CARRIAGE</div>
             <div className="mt-0.5">
               1. Kapilla Group Limited (hereinafter referred to as "The Carrier") accepts goods for carriage subject to the conditions herein.
