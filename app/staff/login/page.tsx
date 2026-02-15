@@ -49,7 +49,7 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-600/35 via-white to-blue-800/35 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
@@ -83,7 +83,7 @@ export default function StaffLogin() {
                   autoComplete="email"
                   required
                   defaultValue=""
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900 shadow-sm"
+                  className="block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900"
                   placeholder="staff@kapillagroup.com"
                 />
               </div>
@@ -105,7 +105,7 @@ export default function StaffLogin() {
                   autoComplete="current-password"
                   required
                   defaultValue=""
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900 shadow-sm"
+                  className="block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -115,7 +115,7 @@ export default function StaffLogin() {
               <button
                 type="submit"
                 disabled={loading || isPending}
-                className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02] disabled:transform-none"
+                className="w-full flex justify-center items-center py-4 px-6 border-0 rounded-2xl shadow-lg text-base font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
                 {!loading && <ArrowRight className="ml-3 h-5 w-5" />}
