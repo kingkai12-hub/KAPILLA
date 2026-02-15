@@ -346,8 +346,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
         preferCanvas={true}
-        updateWhenZooming={false}
-        updateWhenIdle={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
