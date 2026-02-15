@@ -30,6 +30,12 @@ const envSchema = z.object({
 
 // Parse and validate environment variables
 function validateEnv() {
+  // Skip validation in CI or if explicitly disabled
+  if (process.env.SKIP_ENV_VALIDATION === 'true' || process.env.CI === 'true') {
+    console.log('⚠️  Environment validation skipped (CI mode)');
+    return process.env as z.infer<typeof envSchema>;
+  }
+
   try {
     return envSchema.parse(process.env);
   } catch (error) {

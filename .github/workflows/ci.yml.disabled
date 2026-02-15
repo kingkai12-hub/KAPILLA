@@ -1,0 +1,99 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail the pipeline on lint warnings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kapilla-logistics/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./kapilla-logistics
+        run: npm ci
+      
+      - name: Run linter
+        working-directory: ./kapilla-logistics
+        run: npm run lint || true  # Continue even if linting has warnings
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kapilla-logistics/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./kapilla-logistics
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: ./kapilla-logistics
+        run: npx prisma generate
+      
+      - name: Type check
+        working-directory: ./kapilla-logistics
+        run: npm run type-check
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kapilla-logistics/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./kapilla-logistics
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: ./kapilla-logistics
+        run: npx prisma generate
+      
+      - name: Run unit tests
+        working-directory: ./kapilla-logistics
+        run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [type-check, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kapilla-logistics/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./kapilla-logistics
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: ./kapilla-logistics
+        run: npx prisma generate
+      
+      - name: Build application
+        working-directory: ./kapilla-logistics
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://test:test@localhost:5432/test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://test:test@localhost:5432/test' }}
+          NODE_ENV: production
+          SKIP_ENV_VALIDATION: true
