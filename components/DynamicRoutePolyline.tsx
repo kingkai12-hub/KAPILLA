@@ -71,17 +71,21 @@ export function DynamicRoutePolyline({
       return { completedRoute: null, remainingRoute: null };
     }
 
-    // Completed: from start to current position (inclusive)
-    const completed = routePoints.slice(0, Math.max(1, closestIndex + 1));
+    // Completed: from start to current position (with vehicle position as last point)
+    const completedPoints = routePoints.slice(0, Math.max(1, closestIndex + 1));
+    // Add the actual vehicle position as the last point to ensure blue line ends exactly at vehicle
+    const completed = [...completedPoints, currentPosition];
 
-    // Remaining: from current position to end
-    const remaining = routePoints.slice(Math.max(0, closestIndex), routePoints.length);
+    // Remaining: from current position to end (with vehicle position as first point)
+    const remainingPoints = routePoints.slice(Math.max(0, closestIndex + 1), routePoints.length);
+    // Add the actual vehicle position as the first point to ensure red line starts exactly at vehicle
+    const remaining = [currentPosition, ...remainingPoints];
 
     return {
       completedRoute: completed.length > 1 ? completed : null,
       remainingRoute: remaining.length > 1 ? remaining : null,
     };
-  }, [routePoints, closestIndex]);
+  }, [routePoints, closestIndex, currentPosition]);
 
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
