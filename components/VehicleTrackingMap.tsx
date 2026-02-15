@@ -347,40 +347,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   return (
     <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white group">
       {/* HUD OVERLAY */}
-      <div className="absolute top-6 left-6 right-6 z-[1000] flex justify-between items-start pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="bg-white/95 backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-slate-200 pointer-events-auto min-w-[200px]"
-        >
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-200">
-              <Truck className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter mb-0.5">
-                Live Velocity
-              </p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-slate-900 leading-none">
-                  {Math.round(tracking.speed)}
-                </span>
-                <span className="text-xs font-black text-slate-400 uppercase">KM/H</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-500 uppercase">
-                Signal: Strong
-              </span>
-            </div>
-            <span className="text-[10px] font-black text-blue-600 uppercase">Active</span>
-          </div>
-        </motion.div>
-
+      <div className="absolute top-6 right-6 z-[1000] flex justify-end items-start pointer-events-none">
         <div className="pointer-events-auto">
           <button
             onClick={() => setFollowMode(!followMode)}
@@ -486,16 +453,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
             />
           </div>
         </motion.div>
-
-        <div className="bg-white/90 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 pointer-events-auto">
-          <div>
-            Lat: {displayPos[0].toFixed(5)} Lng: {displayPos[1].toFixed(5)}
-          </div>
-          <div>
-            Segs: {tracking?.segments?.length ?? 0} Speed: {Math.round(tracking.speed)}
-          </div>
-          <div>Updated: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '—'}</div>
-        </div>
 
         {tracking.speed > 80 && (
           <div className="bg-red-600/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest uppercase animate-bounce shadow-2xl border border-red-400/50">
