@@ -106,6 +106,8 @@ model Shipment {
   @@index([senderPhone])
   @@index([receiverPhone])
   @@index([createdAt])
+  @@index([waybillNumber, currentStatus]) // Composite for tracking queries
+  @@index([currentStatus, createdAt]) // For filtered lists
   @@map("Shipment")
 }
 
@@ -195,4 +197,72 @@ model Executive {
   updatedAt DateTime @updatedAt
 
   @@map("Executive")
+}
+
+// Audit Log for tracking all system changes
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userEmail String?
+  action    String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entity    String   // User, Shipment, Document, etc.
+  entityId  String?
+  changes   Json?    // Store before/after values
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("AuditLog")
+}
+
+// System Configuration
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general")
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("SystemConfig")
+}
+
+// API Keys for external integrations
+model ApiKey {
+  id          String    @id @default(uuid())
+  name        String
+  key         String    @unique
+  permissions Json      // Array of allowed endpoints/actions
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([key])
+  @@index([isActive])
+  @@map("ApiKey")
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("Notification")
 }

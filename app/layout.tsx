@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import RefreshHandler from '@/components/RefreshHandler';
 import IdleLogout from '@/components/IdleLogout';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -65,6 +67,8 @@ export default function RootLayout({
           <RefreshHandler />
           <IdleLogout />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>

@@ -5,6 +5,51 @@ import { locationCoords, getLocationCoords } from '@/lib/locations';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type LatLng = [number, number];
+
+const corridorDefinitions: Record<string, string[]> = {
+  'Dar es Salaam|Mwanza': [
+    'Dar es Salaam',
+    'Kibaha',
+    'Chalinze',
+    'Morogoro',
+    'Dodoma',
+    'Singida',
+    'Nzega',
+    'Shinyanga',
+    'Magu',
+    'Mwanza'
+  ],
+  'Mwanza|Dar es Salaam': [
+    'Mwanza',
+    'Magu',
+    'Shinyanga',
+    'Nzega',
+    'Singida',
+    'Dodoma',
+    'Morogoro',
+    'Chalinze',
+    'Kibaha',
+    'Dar es Salaam'
+  ]
+};
+
+function buildCorridorRoute(originName: string, destName: string): LatLng[] | null {
+  const key = `${originName}|${destName}`;
+  const names = corridorDefinitions[key];
+  if (!names) return null;
+  const pts: LatLng[] = [];
+  for (const n of names) {
+    const c = getLocationCoords(n);
+    if (!c) continue;
+    const last = pts[pts.length - 1];
+    if (!last || last[0] !== c.lat || last[1] !== c.lng) {
+      pts.push([c.lat, c.lng]);
+    }
+  }
+  return pts.length > 1 ? pts : null;
+}
+
 const osrmCache: Map<string, { pts: [number, number][], t: number }> = new Map();
 const OSRM_TTL_MS = Number(process.env.OSRM_TTL_MS || 21600000);
 async function getRoadRoute(startLat: number, startLng: number, endLat: number, endLng: number): Promise<[number, number][]> {
@@ -83,8 +128,14 @@ export async function GET(req: Request) {
         }
         const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
         const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
-        const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
-        const cycle = 900000;
+        const corridor = buildCorridorRoute(shipment.origin, shipment.destination);
+        const poly = corridor || await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+        let totalMeters = 0;
+        for (let i = 0; i < poly.length - 1; i++) {
+          totalMeters += haversineMeters(poly[i][0], poly[i][1], poly[i + 1][0], poly[i + 1][1]);
+        }
+        const targetKmh = 65;
+        const cycle = Math.max(3600000, (totalMeters / 1000 / targetKmh) * 3600000);
         const now = Date.now();
         const progress = ((now % cycle) / cycle);
         const idx = Math.min(Math.floor(progress * (poly.length - 1)), poly.length - 2);
@@ -139,7 +190,8 @@ export async function GET(req: Request) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
 
-      const poly = await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+      const corridor = buildCorridorRoute(shipment.origin, shipment.destination);
+      const poly = corridor || await getRoadRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
 
       const numSegments = 100;
       const segmentsData = [];
@@ -429,10 +481,27 @@ export async function GET(req: Request) {
     console.error('[TRACKING_GET]', error);
     // HARDENED FALLBACK: Always return a simulated, valid payload to avoid 500s
     try {
-      const start = { lat: -6.7924, lng: 39.2083 };
-      const end = { lat: -2.5164, lng: 32.9033 };
-      const poly = await getRoadRoute(start.lat, start.lng, end.lat, end.lng);
-      const cycle = 900000;
+      const startName = 'Dar es Salaam';
+      const endName = 'Mwanza';
+      const corr = buildCorridorRoute(startName, endName);
+      const start = getLocationCoords(startName) || { lat: -6.7924, lng: 39.2083 };
+      const end = getLocationCoords(endName) || { lat: -2.5164, lng: 32.9033 };
+      const poly = corr || await getRoadRoute(start.lat, start.lng, end.lat, end.lng);
+      const haversineMeters = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+        const toRad = (d: number) => d * Math.PI / 180;
+        const R = 6371000;
+        const dLat = toRad(bLat - aLat);
+        const dLng = toRad(bLng - aLng);
+        const A = Math.sin(dLat/2)**2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng/2)**2;
+        const C = 2 * Math.atan2(Math.sqrt(A), Math.sqrt(1-A));
+        return R * C;
+      };
+      let totalMeters = 0;
+      for (let i = 0; i < poly.length - 1; i++) {
+        totalMeters += haversineMeters(poly[i][0], poly[i][1], poly[i + 1][0], poly[i + 1][1]);
+      }
+      const targetKmh = 65;
+      const cycle = Math.max(3600000, (totalMeters / 1000 / targetKmh) * 3600000);
       const now = Date.now();
       const progress = ((now % cycle) / cycle);
       const idx = Math.min(Math.floor(progress * (poly.length - 1)), poly.length - 2);

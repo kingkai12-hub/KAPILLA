@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyPassword, migrateToHash } from '@/lib/auth';
+import { loginRateLimit, getClientIp } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +15,27 @@ const cookieOptions = {
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { success, limit, remaining, reset } = await loginRateLimit.limit(ip);
+    
+    if (!success) {
+      return NextResponse.json(
+        { 
+          error: 'Too many login attempts. Please try again later.',
+          retryAfter: new Date(reset).toISOString()
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+          }
+        }
+      );
+    }
+    
     const body = await req.json();
     const { email, password } = body;
 
