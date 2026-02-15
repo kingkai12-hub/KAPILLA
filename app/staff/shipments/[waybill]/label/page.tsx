@@ -78,6 +78,7 @@ export default function LabelPage() {
               padding: 0;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+              overflow: hidden;
             }
             .no-break {
               break-inside: avoid-page;
@@ -89,10 +90,13 @@ export default function LabelPage() {
             .print-container {
               width: 210mm !important;
               height: 297mm !important;
+              max-height: 297mm !important;
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
               transform: scale(1) !important;
+              overflow: hidden !important;
+              page-break-after: avoid !important;
             }
             * {
               box-sizing: border-box;
@@ -109,13 +113,13 @@ export default function LabelPage() {
         Print Waybill
       </button>
 
-      <div className="w-full overflow-x-auto print:overflow-visible">
-        <div className="print-container bg-white w-[210mm] h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break print:shadow-none">
+      <div className="w-full overflow-x-auto print:overflow-visible print:h-[297mm]">
+        <div className="print-container bg-white w-[210mm] h-[297mm] shadow-xl box-border relative text-black font-sans text-sm mx-auto no-break print:shadow-none overflow-hidden">
           <div className="bg-white p-3 border-b border-slate-200">
             <div className="flex justify-between items-start gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="bg-white rounded-lg">
-                  <img src="/logo.png" alt="Logo" className="w-24 h-24 object-contain" />
+                  <img src="/logo.png" alt="Logo" className="w-32 h-32 object-contain" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-lg font-black leading-tight tracking-wide">KAPILLA GROUP LIMITED</div>
@@ -137,7 +141,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-        <div className="p-4">
+        <div className="p-3">
           <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -151,7 +155,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-emerald-700" />
@@ -168,7 +172,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
               <div className="text-[10px] font-bold uppercase text-slate-800">From (Sender)</div>
               <div className="mt-1">
@@ -187,7 +191,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-          <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden">
+          <div className="mt-1.5 border border-slate-200 rounded-lg overflow-hidden">
             <div className="bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-700">Shipment Particulars</div>
             <table className="w-full border-collapse text-[10px]">
               <thead>
@@ -212,7 +216,7 @@ export default function LabelPage() {
             </table>
           </div>
 
-          <div className="mt-2 border border-slate-200 rounded-lg p-2">
+          <div className="mt-1.5 border border-slate-200 rounded-lg p-2">
             <div className="flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-blue-800" />
               <div className="text-[10px] font-bold uppercase text-slate-700">Cargo Details</div>
@@ -220,7 +224,7 @@ export default function LabelPage() {
             <div className="mt-1 text-[10px] text-slate-800">{data.cargoDetails || 'No additional details provided.'}</div>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="border border-slate-200 rounded-lg p-2">
               <div className="text-[10px] font-bold uppercase text-slate-800">Dispatched By (Dispatcher/Agent)</div>
               <div className="mt-1 grid gap-1">
@@ -270,7 +274,7 @@ export default function LabelPage() {
             </div>
           </div>
 
-          <div className="mt-2 border-t border-slate-200 pt-1.5 text-[8px] text-slate-500 leading-tight">
+          <div className="mt-1.5 border-t border-slate-200 pt-1 text-[8px] text-slate-500 leading-tight">
             <div className="font-bold text-slate-600">TERMS AND CONDITIONS OF CARRIAGE</div>
             <div className="mt-0.5">
               1. Kapilla Group Limited (hereinafter referred to as "The Carrier") accepts goods for carriage subject to the conditions herein.
