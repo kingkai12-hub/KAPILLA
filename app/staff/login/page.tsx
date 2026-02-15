@@ -50,10 +50,13 @@ export default function StaffLogin() {
 
   return (
     <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      {/* Background Image */}
+      {/* Background Image - clearly visible */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-        style={{ backgroundImage: 'url(/assets/background.jpg)' }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: 'url(/assets/background.jpg)',
+          opacity: 0.25
+        }}
       />
       
       {/* Content */}
@@ -72,7 +75,7 @@ export default function StaffLogin() {
       </div>
 
       <div className="relative z-10 mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-6 shadow-xl border-0 rounded-3xl sm:px-12">
+        <div className="bg-white/95 backdrop-blur-sm py-10 px-6 shadow-xl border-0 rounded-3xl sm:px-12">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-base font-semibold text-slate-800">
