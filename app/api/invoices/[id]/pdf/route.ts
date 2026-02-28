@@ -3,12 +3,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
-import { renderBillToSection, renderItemsTable } from '@/lib/pdf-helpers';
+import { renderBillToSection, renderItemsTable } from '../../../../../lib/pdf-helpers';
 
 export const dynamic = 'force-dynamic';
 
 async function getDb() {
-  const { db } = await import('@/lib/db');
+  const { db } = await import('../../../../../lib/db');
   return db;
 }
 
