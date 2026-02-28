@@ -1,0 +1,134 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
+import { requireAuth, requireRole } from '@/lib/auth';
+
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ waybill: string }> }
+) {
+  try {
+    const { waybill } = await params;
+
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybill },
+      include: {
+        events: {
+          orderBy: {
+            timestamp: 'desc'
+          }
+        }
+      }
+    });
+
+    if (!shipment) {
+      return NextResponse.json(null, { status: 404 });
+    }
+
+    return NextResponse.json(shipment);
+  } catch (error) {
+    console.error('[GET_SHIPMENT]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ waybill: string }> }
+) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, ['ADMIN'])) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  try {
+    const { waybill } = await params;
+
+    // Find the shipment first to get its ID (needed for relation deletion)
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybill },
+      select: { id: true }
+    });
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
+    // Delete shipment directly - Cascade delete in DB handles related records
+    await db.shipment.delete({
+      where: { waybillNumber: waybill }
+    });
+
+    revalidatePath('/staff/dashboard');
+    revalidatePath('/staff/shipments');
+
+    return NextResponse.json({ message: 'Shipment deleted' });
+  } catch (error) {
+    console.error('[DELETE_SHIPMENT]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ waybill: string }> }
+) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  try {
+    const { waybill } = await params;
+    const body = await req.json();
+    const { status, signature, receivedBy, location } = body;
+
+    const shipment = await db.shipment.findUnique({
+      where: { waybillNumber: waybill },
+    });
+
+    if (!shipment) {
+      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+    }
+
+    if (shipment.currentStatus === 'DELIVERED') {
+      return NextResponse.json({ error: 'Shipment is already delivered and cannot be edited' }, { status: 400 });
+    }
+
+    const updateData: any = { currentStatus: status };
+    if (status === 'DELIVERED') {
+      if (signature) updateData.receiverSignature = signature;
+      if (receivedBy) updateData.receivedBy = receivedBy;
+    }
+
+    // Create a tracking event for the status change
+    await db.trackingEvent.create({
+      data: {
+        shipmentId: shipment.id,
+        status: status,
+        location: location || 'Admin Update', 
+        remarks: `Status updated to ${status}`
+      }
+    });
+
+    const updatedShipment = await db.shipment.update({
+      where: { waybillNumber: waybill },
+      data: updateData
+    });
+
+    revalidatePath('/staff/dashboard');
+    revalidatePath('/staff/shipments');
+
+    return NextResponse.json(updatedShipment);
+  } catch (error) {
+    console.error('[PATCH_SHIPMENT]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

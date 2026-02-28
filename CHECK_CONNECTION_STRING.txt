@@ -1,0 +1,15 @@
+
+My connection test with the new password failed for ALL common regions (Frankfurt, Ireland, London, US, India, Brazil, Singapore).
+
+This usually means one of two things:
+1. The **Region** is still incorrect.
+2. The **Database Password** update hasn't propagated yet (sometimes takes 1-2 mins).
+
+**Please paste the FULL Connection String again (from the Dashboard), just to be 100% sure.**
+
+1. Go to **Settings > Database**.
+2. Scroll to **Connection String** > **Node.js**.
+3. **COPY** the entire string.
+4. **PASTE** it here.
+
+(It will look like: `postgresql://postgres.vbgvcaqxbdtwozacwvhl:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`)

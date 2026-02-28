@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  password         String
+  name             String?
+  role             String           @default("STAFF")
+  workId           String?          @unique
+  phoneNumber      String?
+  image            String?
+  isDisabled       Boolean          @default(false)
+  lastActive       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  documents        Document[]
+  createdFolders   DocumentFolder[]
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  sentMessages     Message[]        @relation("SentMessages")
+
+  @@index([role])
+  @@index([email])
+  @@map("User")
+}
+
+model DocumentFolder {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  creatorId String
+  createdAt DateTime   @default(now())
+  isLocked  Boolean    @default(false)
+  documents Document[]
+  creator   User       @relation(fields: [creatorId], references: [id])
+
+  @@map("DocumentFolder")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  senderId       String
+  receiverId     String
+  content        String?
+  attachment     String?
+  attachmentType String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  receiver       User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("Message")
+}
+
+model Document {
+  id         String          @id @default(uuid())
+  name       String
+  data       String
+  mimeType   String
+  uploaderId String
+  folderId   String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  folder     DocumentFolder? @relation(fields: [folderId], references: [id])
+  uploader   User            @relation(fields: [uploaderId], references: [id])
+
+  @@index([folderId])
+  @@index([uploaderId])
+  @@map("Document")
+}
+
+model Shipment {
+  id                  String           @id @default(uuid())
+  waybillNumber       String           @unique
+  senderName          String
+  senderEmail         String?
+  senderPhone         String
+  senderAddress       String?
+  receiverName        String
+  receiverPhone       String
+  receiverAddress     String?
+  origin              String
+  destination         String
+  weight              Float?
+  price               Float?
+  cargoDetails        String?
+  currentStatus       String           @default("PENDING")
+  dispatcherName      String?
+  dispatcherSignature String?
+  receiverSignature   String?
+  receivedBy          String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  deliveredAt         DateTime?
+  proofOfDelivery     String?
+  events              TrackingEvent[]
+  tracking            VehicleTracking?
+
+  @@index([currentStatus])
+  @@index([senderPhone])
+  @@index([receiverPhone])
+  @@index([createdAt])
+  @@index([waybillNumber, currentStatus])
+  @@index([currentStatus, createdAt])
+  @@map("Shipment")
+}
+
+model VehicleTracking {
+  id                   String         @id @default(uuid())
+  shipmentId           String         @unique
+  currentLat           Float
+  currentLng           Float
+  speed                Float          @default(0)
+  heading              Float          @default(0)
+  lastUpdated          DateTime       @default(now())
+  routePoints          Json?
+  isStopped            Boolean?       @default(false)
+  lastVariationUpdate  BigInt?        @default(0)
+  speedVariationOffset Float?         @default(0)
+  stopReason           String?
+  stopUntil            BigInt?
+  segments             RouteSegment[]
+  shipment             Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@map("VehicleTracking")
+}
+
+model RouteSegment {
+  id          String          @id @default(uuid())
+  trackingId  String
+  startLat    Float
+  startLng    Float
+  endLat      Float
+  endLng      Float
+  isCompleted Boolean         @default(false)
+  order       Int
+  tracking    VehicleTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+
+  @@index([trackingId])
+  @@index([trackingId, isCompleted])
+  @@index([trackingId, order])
+  @@map("RouteSegment")
+}
+
+model TrackingEvent {
+  id         String   @id @default(uuid())
+  shipmentId String
+  status     String
+  location   String
+  remarks    String?
+  timestamp  DateTime @default(now())
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+  @@index([timestamp])
+  @@map("TrackingEvent")
+}
+
+model PickupRequest {
+  id              String   @id @default(uuid())
+  senderName      String
+  senderPhone     String
+  pickupAddress   String
+  destination     String
+  cargoDetails    String
+  estimatedWeight String?
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("PickupRequest")
+}
+
+model ServiceShowcase {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  imageUrl    String
+  icon        String
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("ServiceShowcase")
+}
+
+model Executive {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  bio       String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Executive")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userEmail String?
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("AuditLog")
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general")
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("SystemConfig")
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  name        String
+  key         String    @unique
+  permissions Json
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([key])
+  @@index([isActive])
+  @@map("ApiKey")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("Notification")
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  invoiceNumber     String        @unique
+  type              String        @default("PROFORMA")
+  status            String        @default("DRAFT")
+  proformaInvoiceId String?
+  customerName      String
+  customerEmail     String?
+  customerPhone     String?
+  customerAddress   String?
+  customerTIN       String?
+  issueDate         DateTime      @default(now())
+  dueDate           DateTime?
+  validUntil        DateTime?
+  subtotal          Float         @default(0)
+  taxRate           Float         @default(0)
+  taxAmount         Float         @default(0)
+  discount          Float         @default(0)
+  total             Float         @default(0)
+  currency          String        @default("TZS")
+  notes             String?
+  terms             String?
+  paymentMethod     String?
+  paidAt            DateTime?
+  createdBy         String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  requisitionNumber String?
+  proformaInvoice   Invoice?      @relation("ProformaToFinal", fields: [proformaInvoiceId], references: [id])
+  finalInvoices     Invoice[]     @relation("ProformaToFinal")
+  items             InvoiceItem[]
+
+  @@index([type])
+  @@index([status])
+  @@index([customerName])
+  @@index([issueDate])
+  @@index([proformaInvoiceId])
+  @@index([requisitionNumber])
+  @@map("Invoice")
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float   @default(0)
+  amount      Float   @default(0)
+  order       Int     @default(0)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("InvoiceItem")
+}

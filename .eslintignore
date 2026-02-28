@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+build
+dist
+
+# Test scripts
+test-*.js
+diagnose-*.js

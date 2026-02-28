@@ -1,0 +1,21 @@
+
+I am unable to automatically detect which region your Supabase project is in (Frankfurt, London, New York, etc.).
+Because your internet (or computer) only has IPv4, we MUST use the "Pooler URL" specific to your region.
+
+PLEASE DO THE FOLLOWING:
+
+1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/vbgvcaqxbdtwozacwvhl/settings/database
+   (Or click: Project Settings -> Database)
+
+2. Scroll down to "Connection String".
+
+3. Click "Node.js".
+
+4. Click "Transaction Mode" (Important: NOT Session Mode).
+
+5. Copy the URL. It should look like this:
+   postgresql://postgres.[ref]:[password]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+
+6. Paste that ENTIRE URL into the chat below.
+
+(It will tell me the correct region, e.g., aws-0-eu-west-2, and I can fix the connection instantly).
