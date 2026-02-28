@@ -35,15 +35,15 @@ export async function GET(req: NextRequest) {
         }
       };
       
-      // BANDWIDTH OPTIMIZATION: Send immediately, then every 5s (was 1s)
-      // This reduces bandwidth by 80% while still feeling real-time
+      // EMERGENCY BANDWIDTH FIX: Send immediately, then every 15s (was 5s)
+      // This reduces bandwidth by 67% - necessary due to hitting 10GB limit
       send();
-      timer = setInterval(send, 5000); // Changed from 1000ms to 5000ms
+      timer = setInterval(send, 15000); // Changed from 5000ms to 15000ms
       
-      // BANDWIDTH OPTIMIZATION: Keep-alive every 30s (was 15s)
+      // EMERGENCY: Keep-alive every 45s (was 30s)
       const keepAlive = setInterval(() => {
         controller.enqueue(encoder.encode(': keep-alive\n\n'));
-      }, 30000);
+      }, 45000);
       
       // Handle client disconnect
       (req as any).signal?.addEventListener?.('abort', () => {

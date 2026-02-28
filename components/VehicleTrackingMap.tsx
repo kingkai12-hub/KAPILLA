@@ -8,6 +8,7 @@ import { Truck, LocateFixed, Eye, Radio } from 'lucide-react';
 import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
 import { DynamicRoutePolyline } from './DynamicRoutePolyline';
 import { ClientSideTracker } from '@/lib/client-side-tracking';
+import { FEATURE_FLAGS, logBandwidthConfig } from '@/lib/feature-flags';
 
 // Custom component for the animated marker
 function AnimatedVehicleMarker({
@@ -122,10 +123,10 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   useEffect(() => {
     console.log('[ClientTracker] Initializing for', waybillNumber);
     
-    // BANDWIDTH OPTIMIZATION: Update every 120 seconds (was 60)
-    clientTrackerRef.current = new ClientSideTracker(waybillNumber, 120);
-    clientTrackerRef.current.start();
-    setIsLiveTracking(true);
+    // EMERGENCY: DISABLED to save bandwidth (hit 10GB limit)
+    // clientTrackerRef.current = new ClientSideTracker(waybillNumber, 120);
+    // clientTrackerRef.current.start();
+    setIsLiveTracking(false); // Disabled
 
     // Cleanup on unmount
     return () => {
@@ -198,8 +199,8 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       console.log('[TRACKING] Starting polling fallback');
       connectionStateRef.current.pollingActive = true;
       fetchTrackingData();
-      // BANDWIDTH OPTIMIZATION: Poll every 5s (was 1s) - 80% reduction
-      pollInterval = setInterval(fetchTrackingData, 5000);
+      // EMERGENCY BANDWIDTH FIX: Poll every 15s (was 5s) - 67% reduction
+      pollInterval = setInterval(fetchTrackingData, 15000);
     };
 
     const stopPolling = () => {
