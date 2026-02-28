@@ -1,0 +1,3 @@
+Force Vercel deployment - 2026-02-28 16:00
+Delivery note header changes are in the code but not deployed yet.
+This file triggers a new deployment.
