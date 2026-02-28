@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, Marker, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Truck, LocateFixed, Eye } from 'lucide-react';
+import { Truck, LocateFixed, Eye, Radio } from 'lucide-react';
 import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
 import { DynamicRoutePolyline } from './DynamicRoutePolyline';
+import { ClientSideTracker } from '@/lib/client-side-tracking';
 
 // Custom component for the animated marker
 function AnimatedVehicleMarker({
@@ -87,6 +88,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLiveTracking, setIsLiveTracking] = useState(false);
 
   const currentPos = useRef<[number, number]>([0, 0]);
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
@@ -96,6 +98,7 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const tweenEnd = useRef<number>(0);
   const displayRef = useRef<[number, number]>([0, 0]);
   const lastRenderPos = useRef<[number, number]>([0, 0]);
+  const clientTrackerRef = useRef<ClientSideTracker | null>(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -114,6 +117,23 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   useEffect(() => {
     displayRef.current = displayPos;
   }, [displayPos]);
+
+  // CLIENT-SIDE TRACKING: Start autonomous updates when component mounts
+  useEffect(() => {
+    console.log('[ClientTracker] Initializing for', waybillNumber);
+    
+    // Create and start tracker
+    clientTrackerRef.current = new ClientSideTracker(waybillNumber, 60); // Update every 60 seconds
+    clientTrackerRef.current.start();
+    setIsLiveTracking(true);
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[ClientTracker] Cleaning up');
+      clientTrackerRef.current?.stop();
+      setIsLiveTracking(false);
+    };
+  }, [waybillNumber]);
 
   useEffect(() => {
     // Use refs to track connection state across renders
@@ -395,24 +415,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     return pts;
   }, [tracking?.routePoints]);
 
-  const closestIndex = useMemo(() => {
-    if (!sampledRoute || sampledRoute.length < 2) return 0;
-    const lat = displayPos[0];
-    const lng = displayPos[1];
-    let idx = 0;
-    let minD = Infinity;
-    for (let i = 0; i < sampledRoute.length; i++) {
-      const dLat = sampledRoute[i][0] - lat;
-      const dLng = sampledRoute[i][1] - lng;
-      const d = dLat * dLat + dLng * dLng;
-      if (d < minD) {
-        minD = d;
-        idx = i;
-      }
-    }
-    return idx;
-  }, [sampledRoute, displayPos]);
-
   if (loading)
     return (
       <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
@@ -444,6 +446,16 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
   return (
     <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white group">
+      {/* LIVE TRACKING INDICATOR */}
+      {isLiveTracking && (
+        <div className="absolute top-3 left-3 z-[1000] pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-full shadow-lg text-xs font-bold">
+            <Radio className="w-4 h-4 animate-pulse" />
+            <span>LIVE</span>
+          </div>
+        </div>
+      )}
+
       {/* HUD OVERLAY - Mobile Optimized */}
       <div
         className={`absolute ${isMobile ? 'top-3 right-3' : 'top-6 right-6'} z-[1000] flex justify-end items-start pointer-events-none`}
@@ -468,7 +480,6 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
         preferCanvas={true}
-        tap={isMobile}
         touchZoom={isMobile}
         dragging={true}
         doubleClickZoom={!isMobile}

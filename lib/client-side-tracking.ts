@@ -8,7 +8,7 @@
  * and the daily cron job keeps them updated when no one is online.
  */
 
-import { updateVehiclePosition } from './autonomous-tracking';
+import React from 'react';
 
 export class ClientSideTracker {
   private intervalId: NodeJS.Timeout | null = null;

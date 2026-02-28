@@ -24,19 +24,45 @@ export async function POST(req: Request) {
 
     console.log(`[API] Updating position for ${waybillNumber}`);
 
-    // Update the vehicle position
-    const result = await updateVehiclePosition(waybillNumber);
+    // Get database connection
+    const { db } = await import('@/lib/db');
+    
+    // Find shipment and tracking
+    const shipment = await db.shipment.findFirst({
+      where: { waybillNumber: { equals: waybillNumber, mode: 'insensitive' } },
+      include: { tracking: true },
+    });
 
-    if (!result.success) {
+    if (!shipment || !shipment.tracking) {
       return NextResponse.json(
-        { error: result.error || 'Update failed' },
+        { error: 'Shipment or tracking not found' },
+        { status: 404 }
+      );
+    }
+
+    // Update the vehicle position using tracking ID
+    const result = await updateVehiclePosition(shipment.tracking.id);
+
+    if (!result) {
+      return NextResponse.json(
+        { error: 'Update failed' },
         { status: 400 }
       );
     }
 
+    // Get updated tracking data
+    const updatedTracking = await db.vehicleTracking.findUnique({
+      where: { id: shipment.tracking.id },
+    });
+
     return NextResponse.json({
       success: true,
-      position: result.position,
+      position: {
+        lat: updatedTracking?.currentLat,
+        lng: updatedTracking?.currentLng,
+        speed: updatedTracking?.speed,
+        heading: updatedTracking?.heading,
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
