@@ -704,13 +704,9 @@ function generateDeliveryNote(invoice: {
   doc.text('Position/Title: ____________________________', 17, yPos + 18);
   doc.text('Signature: ___________________', 17, yPos + 26);
   doc.text('Date: ________________________', 17, yPos + 33);
-
-  doc.text('Verification Status:', 110, yPos + 10);
-  doc.text('[ ] All items received as ordered', 112, yPos + 18);
-  doc.text('[ ] Items received with discrepancies', 112, yPos + 26);
+  // Removed verification status checklist and remarks as requested
   doc.text('Remarks: _____________________', 112, yPos + 33);
 
-  yPos += 40;
 
   // Footer
   doc.setDrawColor(203, 213, 225);
