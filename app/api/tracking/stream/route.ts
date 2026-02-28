@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
     start(controller) {
       const encoder = new TextEncoder();
       let timer: NodeJS.Timeout | null = null;
+      let lastData: string | null = null; // Track last sent data
+      
       const send = async () => {
         try {
           const url = `${origin}${pathname.replace('/stream', '')}?waybillNumber=${encodeURIComponent(waybillNumber)}&t=${Date.now()}`;
@@ -22,17 +24,27 @@ export async function GET(req: NextRequest) {
             return;
           }
           const data = await res.text();
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          
+          // BANDWIDTH OPTIMIZATION: Only send if data changed
+          if (data !== lastData) {
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            lastData = data;
+          }
         } catch (e: any) {
           controller.enqueue(encoder.encode(`event: error\ndata: {"message":"stream fetch failed"}\n\n`));
         }
       };
-      // send immediately, then every 1s
+      
+      // BANDWIDTH OPTIMIZATION: Send immediately, then every 5s (was 1s)
+      // This reduces bandwidth by 80% while still feeling real-time
       send();
-      timer = setInterval(send, 1000);
+      timer = setInterval(send, 5000); // Changed from 1000ms to 5000ms
+      
+      // BANDWIDTH OPTIMIZATION: Keep-alive every 30s (was 15s)
       const keepAlive = setInterval(() => {
         controller.enqueue(encoder.encode(': keep-alive\n\n'));
-      }, 15000);
+      }, 30000);
+      
       // Handle client disconnect
       (req as any).signal?.addEventListener?.('abort', () => {
         if (timer) clearInterval(timer);

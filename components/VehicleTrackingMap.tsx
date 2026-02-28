@@ -122,8 +122,8 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   useEffect(() => {
     console.log('[ClientTracker] Initializing for', waybillNumber);
     
-    // Create and start tracker
-    clientTrackerRef.current = new ClientSideTracker(waybillNumber, 60); // Update every 60 seconds
+    // BANDWIDTH OPTIMIZATION: Update every 120 seconds (was 60)
+    clientTrackerRef.current = new ClientSideTracker(waybillNumber, 120);
     clientTrackerRef.current.start();
     setIsLiveTracking(true);
 
@@ -198,7 +198,8 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       console.log('[TRACKING] Starting polling fallback');
       connectionStateRef.current.pollingActive = true;
       fetchTrackingData();
-      pollInterval = setInterval(fetchTrackingData, 1000);
+      // BANDWIDTH OPTIMIZATION: Poll every 5s (was 1s) - 80% reduction
+      pollInterval = setInterval(fetchTrackingData, 5000);
     };
 
     const stopPolling = () => {
