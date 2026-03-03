@@ -97,10 +97,37 @@ export async function POST(req: Request) {
 
     console.log('[INVOICES_POST] Validation passed, generating invoice number...');
 
-    // Generate invoice number
+    // Generate invoice number - find highest existing number and increment
     const prefix = type === 'PROFORMA' ? 'PI' : 'INV';
-    const count = await db.invoice.count({ where: { type } });
-    const invoiceNumber = `${prefix}-${String(count + 1).padStart(4, '0')}`;
+    
+    // Get all invoices of this type and find the highest number
+    const existingInvoices = await db.invoice.findMany({
+      where: { type },
+      select: { invoiceNumber: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let nextNumber = 1;
+    if (existingInvoices.length > 0) {
+      // Extract numbers from invoice numbers and find the max
+      const numbers = existingInvoices
+        .map((inv) => {
+          const match = inv.invoiceNumber.match(/\d+$/);
+          return match ? parseInt(match[0], 10) : 0;
+        })
+        .filter((num) => !isNaN(num));
+      
+      if (numbers.length > 0) {
+        nextNumber = Math.max(...numbers) + 1;
+      }
+    }
+
+    // For regular invoices (INV), ensure we start from at least 73 (since last was 0072)
+    if (type !== 'PROFORMA' && nextNumber < 73) {
+      nextNumber = 73;
+    }
+
+    const invoiceNumber = `${prefix}-${String(nextNumber).padStart(4, '0')}`;
 
     console.log('[INVOICES_POST] Invoice number:', invoiceNumber);
 
