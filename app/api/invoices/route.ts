@@ -97,34 +97,64 @@ export async function POST(req: Request) {
 
     console.log('[INVOICES_POST] Validation passed, generating invoice number...');
 
-    // Generate invoice number - find highest existing number and increment
+    // Generate invoice number - RESET to start from 0073 for regular invoices
     const prefix = type === 'PROFORMA' ? 'PI' : 'INV';
     
-    // Get all invoices of this type and find the highest number
-    const existingInvoices = await db.invoice.findMany({
-      where: { type },
-      select: { invoiceNumber: true },
-      orderBy: { createdAt: 'desc' },
-    });
-
     let nextNumber = 1;
-    if (existingInvoices.length > 0) {
-      // Extract numbers from invoice numbers and find the max
-      const numbers = existingInvoices
-        .map((inv) => {
-          const match = inv.invoiceNumber.match(/\d+$/);
-          return match ? parseInt(match[0], 10) : 0;
-        })
-        .filter((num) => !isNaN(num));
-      
-      if (numbers.length > 0) {
-        nextNumber = Math.max(...numbers) + 1;
-      }
-    }
+    
+    if (type === 'PROFORMA') {
+      // For proforma invoices, continue normal sequence
+      const existingInvoices = await db.invoice.findMany({
+        where: { type },
+        select: { invoiceNumber: true },
+        orderBy: { createdAt: 'desc' },
+      });
 
-    // For regular invoices (INV), ensure we start from at least 73 (since last was 0072)
-    if (type !== 'PROFORMA' && nextNumber < 73) {
-      nextNumber = 73;
+      if (existingInvoices.length > 0) {
+        const numbers = existingInvoices
+          .map((inv) => {
+            const match = inv.invoiceNumber.match(/\d+$/);
+            return match ? parseInt(match[0], 10) : 0;
+          })
+          .filter((num) => !isNaN(num));
+        
+        if (numbers.length > 0) {
+          nextNumber = Math.max(...numbers) + 1;
+        }
+      }
+    } else {
+      // For regular invoices (INV), RESET to start from 73
+      // This resets the numbering sequence to INV-0073, INV-0074, etc.
+      const newSequenceInvoices = await db.invoice.findMany({
+        where: { 
+          type,
+          invoiceNumber: {
+            gte: 'INV-0073',
+            lt: 'INV-0100'
+          }
+        },
+        select: { invoiceNumber: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (newSequenceInvoices.length > 0) {
+        // Continue from the new sequence
+        const numbers = newSequenceInvoices
+          .map((inv) => {
+            const match = inv.invoiceNumber.match(/\d+$/);
+            return match ? parseInt(match[0], 10) : 0;
+          })
+          .filter((num) => !isNaN(num));
+        
+        if (numbers.length > 0) {
+          nextNumber = Math.max(...numbers) + 1;
+        } else {
+          nextNumber = 73;
+        }
+      } else {
+        // Start new sequence from 73
+        nextNumber = 73;
+      }
     }
 
     const invoiceNumber = `${prefix}-${String(nextNumber).padStart(4, '0')}`;
