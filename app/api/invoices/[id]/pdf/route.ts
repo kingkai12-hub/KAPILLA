@@ -197,42 +197,61 @@ export async function GET(
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105); // slate-600
-      doc.text('Bank:', bankBoxX + 3, bankY);
+      doc.text('Bank Name:', bankBoxX + 3, bankY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('CRDB Bank PLC - OYSTERBAY', bankBoxX + 15, bankY);
+      doc.text('CRDB Bank PLC', bankBoxX + 22, bankY);
 
-      bankY += 6;
+      bankY += 5;
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
-      doc.text('Account:', bankBoxX + 3, bankY);
+      doc.text('Branch:', bankBoxX + 3, bankY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('KAPILLA GROUP LIMITED', bankBoxX + 15, bankY);
+      doc.text('OYSTERBAY', bankBoxX + 22, bankY);
 
-      bankY += 6;
+      bankY += 5;
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
-      doc.text('TZS:', bankBoxX + 3, bankY);
+      doc.text('Account Name:', bankBoxX + 3, bankY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('0150868228800', bankBoxX + 15, bankY);
+      doc.text('KAPILLA GROUP LIMITED', bankBoxX + 22, bankY);
 
-      bankY += 6;
+      bankY += 5;
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
-      doc.text('USD:', bankBoxX + 3, bankY);
+      doc.text('TZS Account:', bankBoxX + 3, bankY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('0250868228800', bankBoxX + 15, bankY);
+      doc.text('0150868228800', bankBoxX + 22, bankY);
 
-      bankY += 6;
+      bankY += 5;
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
-      doc.text('Swift:', bankBoxX + 3, bankY);
+      doc.text('USD Account:', bankBoxX + 3, bankY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('CORUTZTZ', bankBoxX + 15, bankY);
+      doc.text('0250868228800', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Swift Code:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('CORUTZTZ', bankBoxX + 22, bankY);
+
+      bankY += 6;
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.3);
+      doc.line(bankBoxX + 3, bankY, bankBoxX + bankBoxW - 3, bankY);
+      bankY += 3;
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100, 116, 139);
+      const refText = doc.splitTextToSize('Please include invoice number in payment reference', bankBoxW - 6);
+      doc.text(refText, bankBoxX + 3, bankY);
 
       // Totals Box (right side) - COMPACT
       const totalsBoxX = 110;
