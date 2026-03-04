@@ -124,33 +124,24 @@ export async function POST(req: Request) {
       }
     } else {
       // For regular invoices (INV), RESET to start from 73
-      // This resets the numbering sequence to INV-0073, INV-0074, etc.
-      const newSequenceInvoices = await db.invoice.findMany({
-        where: { 
-          type,
-          invoiceNumber: {
-            gte: 'INV-0073',
-            lt: 'INV-0100'
-          }
-        },
+      // Get all invoices and filter for new sequence (73-99)
+      const allInvoices = await db.invoice.findMany({
+        where: { type },
         select: { invoiceNumber: true },
         orderBy: { createdAt: 'desc' },
       });
 
-      if (newSequenceInvoices.length > 0) {
-        // Continue from the new sequence
-        const numbers = newSequenceInvoices
-          .map((inv) => {
-            const match = inv.invoiceNumber.match(/\d+$/);
-            return match ? parseInt(match[0], 10) : 0;
-          })
-          .filter((num) => !isNaN(num));
-        
-        if (numbers.length > 0) {
-          nextNumber = Math.max(...numbers) + 1;
-        } else {
-          nextNumber = 73;
-        }
+      // Extract numbers and filter for new sequence only (73-99)
+      const newSequenceNumbers = allInvoices
+        .map((inv) => {
+          const match = inv.invoiceNumber.match(/\d+$/);
+          return match ? parseInt(match[0], 10) : 0;
+        })
+        .filter((num) => !isNaN(num) && num >= 73 && num <= 99);
+
+      if (newSequenceNumbers.length > 0) {
+        // Continue from the highest in new sequence
+        nextNumber = Math.max(...newSequenceNumbers) + 1;
       } else {
         // Start new sequence from 73
         nextNumber = 73;
