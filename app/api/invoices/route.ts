@@ -124,27 +124,29 @@ export async function POST(req: Request) {
       }
     } else {
       // For regular invoices (INV), RESET to start from 73
-      // Get all invoices and filter for new sequence (73-99)
-      const allInvoices = await db.invoice.findMany({
-        where: { type },
+      // Only check for invoices in the NEW sequence (73 onwards)
+      const newSequenceInvoices = await db.invoice.findMany({
+        where: { 
+          type,
+          invoiceNumber: {
+            startsWith: 'INV-00'  // Only check INV-0073, INV-0074, etc. (not INV-3101)
+          }
+        },
         select: { invoiceNumber: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { invoiceNumber: 'desc' },
+        take: 1
       });
 
-      // Extract numbers and filter for new sequence only (73-99)
-      const newSequenceNumbers = allInvoices
-        .map((inv) => {
-          const match = inv.invoiceNumber.match(/\d+$/);
-          return match ? parseInt(match[0], 10) : 0;
-        })
-        .filter((num) => !isNaN(num) && num >= 73 && num <= 99);
-
-      if (newSequenceNumbers.length > 0) {
-        // Continue from the highest in new sequence
-        nextNumber = Math.max(...newSequenceNumbers) + 1;
+      if (newSequenceInvoices.length > 0) {
+        // Extract number from the latest invoice in new sequence
+        const match = newSequenceInvoices[0].invoiceNumber.match(/\d+$/);
+        const lastNumber = match ? parseInt(match[0], 10) : 72;
+        nextNumber = lastNumber + 1;
+        console.log('[INVOICES_POST] Continuing from new sequence:', lastNumber, '→', nextNumber);
       } else {
         // Start new sequence from 73
         nextNumber = 73;
+        console.log('[INVOICES_POST] Starting new sequence from 73');
       }
     }
 
