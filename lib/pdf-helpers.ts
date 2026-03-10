@@ -270,7 +270,7 @@ export function renderItemsTable(
       2: { cellWidth: 35, halign: 'right', fontStyle: 'normal', valign: 'middle' },
       3: { cellWidth: 35, halign: 'right', fontStyle: 'bold', valign: 'middle' },
     },
-    margin: { left: 15, right: 15 },
+    margin: { left: 15, right: 15, bottom: 20 },
     didParseCell: function (data: {
       cell: {
         styles: { minCellHeight: number; cellPadding: number };
@@ -300,9 +300,26 @@ export function renderItemsTable(
         console.log(`Row ${data.row.index} has height: ${data.cell.height}mm`);
       }
     },
+    
   });
 
   // Return Y position after table
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (doc as any).lastAutoTable.finalY;
+}
+
+export function drawFooterOnLastPage(doc: jsPDF) {
+  const pageCount = doc.getNumberOfPages();
+  doc.setPage(pageCount);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const footerY = pageHeight - 12;
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'normal');
+  const footerText =
+    'KAPILLA GROUP LIMITED • CRDB Bank PLC Oysterbay • TZS: 0150868228800 • USD: 0250868228800 • SWIFT: CORUTZTZ';
+  doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
+  const pageLabel = `Page ${pageCount} of ${pageCount}`;
+  doc.text(pageLabel, pageWidth - 15, footerY, { align: 'right' });
 }

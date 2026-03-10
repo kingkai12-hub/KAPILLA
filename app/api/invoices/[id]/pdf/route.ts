@@ -551,18 +551,17 @@ export async function GET(
       yPos += actualTermsHeight + 3; // Reduced from 5mm to 3mm
     }
 
-    // Footer - ensure it's on the last page
+    // Footer - ensure it's on the last page, and show minimal details if space is tight
     const footerPageHeight = doc.internal.pageSize.getHeight();
-    const footerHeight = 30;
+    const contentEndY = yPos;
+    const fullFooterHeight = 30;
+    const minimalFooterHeight = 12;
+    const remainingSpace = footerPageHeight - contentEndY;
 
-    // If not enough space for footer, add new page
-    if (yPos > footerPageHeight - footerHeight) {
-      doc.addPage();
-      yPos = footerPageHeight - footerHeight;
-    } else {
-      // Position footer at bottom of current page
-      yPos = Math.max(yPos, footerPageHeight - footerHeight);
-    }
+    const useMinimalFooter = remainingSpace < fullFooterHeight;
+    const footerHeight = useMinimalFooter ? minimalFooterHeight : fullFooterHeight;
+
+    yPos = footerPageHeight - footerHeight;
     doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
     doc.setLineWidth(0.5);
     doc.line(15, yPos, 195, yPos);
@@ -573,28 +572,30 @@ export async function GET(
     doc.setTextColor(0, 0, 0);
     doc.text('Thank you for your business!', 105, yPos, { align: 'center' });
 
-    yPos += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(71, 85, 105); // slate-600
-    const contactText =
-      'For any questions regarding this invoice, please contact us at kapillagroup@gmail.com or +255 65 860 4772';
-    const splitContact = doc.splitTextToSize(contactText, 180);
-    doc.text(splitContact, 105, yPos, { align: 'center' });
+    if (!useMinimalFooter) {
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105); // slate-600
+      const contactText =
+        'For any questions regarding this invoice, please contact us at kapillagroup@gmail.com or +255 65 860 4772';
+      const splitContact = doc.splitTextToSize(contactText, 180);
+      doc.text(splitContact, 105, yPos, { align: 'center' });
 
-    yPos += splitContact.length * 4 + 4;
-    doc.setFontSize(7);
-    doc.setTextColor(100, 116, 139); // slate-500
-    doc.text('This is a computer-generated document. No signature is required.', 105, yPos, {
-      align: 'center',
-    });
-    yPos += 4;
-    doc.text(
-      'KAPILLA GROUP LIMITED | P.O. BOX 71729, Dar es Salaam, Tanzania | TIN: 157-935-380',
-      105,
-      yPos,
-      { align: 'center' }
-    );
+      yPos += splitContact.length * 4 + 4;
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text('This is a computer-generated document. No signature is required.', 105, yPos, {
+        align: 'center',
+      });
+      yPos += 4;
+      doc.text(
+        'KAPILLA GROUP LIMITED | P.O. BOX 71729, Dar es Salaam, Tanzania | TIN: 157-935-380',
+        105,
+        yPos,
+        { align: 'center' }
+      );
+    }
 
     // Add page numbers if multiple pages
     const pageCount = doc.getNumberOfPages();
