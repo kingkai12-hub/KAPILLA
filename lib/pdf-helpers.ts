@@ -194,7 +194,16 @@ export function renderBillToSection(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    doc.text(data.requisitionNumber, billToX + 2, yPos);
+    const parts = data.requisitionNumber
+      .split(/[,;\n]+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    const formatted = parts.length > 0 ? parts.join(', ') : data.requisitionNumber;
+    const lines = doc.splitTextToSize(formatted, maxTextWidth);
+    lines.forEach((line: string) => {
+      doc.text(line, billToX + 2, yPos);
+      yPos += 4;
+    });
   }
 
   // Return the Y position after the Bill To section
