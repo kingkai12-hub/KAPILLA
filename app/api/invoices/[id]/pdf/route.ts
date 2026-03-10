@@ -556,9 +556,9 @@ export async function GET(
     const contentEndY = yPos;
     const fullFooterHeight = 30;
     const minimalFooterHeight = 12;
-    const remainingSpace = footerPageHeight - contentEndY;
+    const footerRemainingSpace = footerPageHeight - contentEndY;
 
-    const useMinimalFooter = remainingSpace < fullFooterHeight;
+    const useMinimalFooter = footerRemainingSpace < fullFooterHeight;
     const footerHeight = useMinimalFooter ? minimalFooterHeight : fullFooterHeight;
 
     yPos = footerPageHeight - footerHeight;

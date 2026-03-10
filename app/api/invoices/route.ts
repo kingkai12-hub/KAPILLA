@@ -112,11 +112,11 @@ export async function POST(req: Request) {
 
       if (existingInvoices.length > 0) {
         const numbers = existingInvoices
-          .map((inv) => {
+          .map((inv: { invoiceNumber: string }) => {
             const match = inv.invoiceNumber.match(/\d+$/);
             return match ? parseInt(match[0], 10) : 0;
           })
-          .filter((num) => !isNaN(num));
+          .filter((num: number) => !isNaN(num));
         
         if (numbers.length > 0) {
           nextNumber = Math.max(...numbers) + 1;

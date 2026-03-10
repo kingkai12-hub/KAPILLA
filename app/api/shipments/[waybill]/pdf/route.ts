@@ -178,7 +178,8 @@ export async function GET(
       margin: { left: 15, right: 15 },
     });
 
-    yPos = (doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    yPos = (doc as any).lastAutoTable.finalY + 8;
 
     // Cargo Details Section - Single box with header and details
     if (shipment.cargoDetails && shipment.cargoDetails.trim() !== '') {
