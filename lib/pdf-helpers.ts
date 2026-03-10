@@ -45,7 +45,14 @@ export function calculateBillToHeight(
 
   // Requisition section
   if (data.requisitionNumber) {
-    contentHeight += 8;
+    const parts = data.requisitionNumber
+      .split(/[,;\n]+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    const formatted = parts.length > 0 ? parts.join(', ') : data.requisitionNumber;
+    const lines = doc.splitTextToSize(formatted, maxTextWidth);
+    const lineHeight = lines.length > 10 ? 3.2 : lines.length > 5 ? 3.6 : 4;
+    contentHeight += 4 + lines.length * lineHeight;
   }
 
   contentHeight += 5; // Bottom padding
@@ -192,17 +199,19 @@ export function renderBillToSection(
     doc.text('REQUISITION/ORDER NO.', billToX + 2, yPos);
     yPos += 4;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
     const parts = data.requisitionNumber
       .split(/[,;\n]+/)
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
     const formatted = parts.length > 0 ? parts.join(', ') : data.requisitionNumber;
     const lines = doc.splitTextToSize(formatted, maxTextWidth);
+    const reqFontSize = lines.length > 10 ? 7 : lines.length > 5 ? 8 : 9;
+    const lineHeight = reqFontSize <= 7 ? 3.2 : reqFontSize <= 8 ? 3.6 : 4;
+    doc.setFontSize(reqFontSize);
+    doc.setTextColor(0, 0, 0);
     lines.forEach((line: string) => {
       doc.text(line, billToX + 2, yPos);
-      yPos += 4;
+      yPos += lineHeight;
     });
   }
 
