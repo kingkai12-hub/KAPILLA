@@ -326,7 +326,87 @@ export async function GET(
 
       yPos = Math.max(bankBoxY + bankBoxH, totalsBoxY + totalsBoxH) + 5; // Reduced from 10mm to 5mm
     } else {
-      // Proforma: Only Totals (compact, right-aligned)
+      // Proforma: Add Bank Details (left) and Totals (right) - compact
+      // Bank Details Box (left)
+      const bankBoxX = 15;
+      const bankBoxY = yPos;
+      const bankBoxW = 85;
+      const bankBoxH = 45; // Compact height for proforma
+
+      doc.setFillColor(248, 250, 252); // slate-50
+      doc.setDrawColor(203, 213, 225); // slate-300
+      doc.setLineWidth(0.5);
+      doc.roundedRect(bankBoxX, bankBoxY, bankBoxW, bankBoxH, 2, 2, 'FD');
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('PAYMENT INFORMATION', bankBoxX + 3, bankBoxY + 5);
+
+      let bankY = bankBoxY + 10;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105); // slate-600
+      doc.text('Bank Name:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('CRDB Bank PLC', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Branch:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('OYSTERBAY', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Account Name:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('KAPILLA GROUP LIMITED', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('TZS Account:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('0150868228800', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('USD Account:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('0250868228800', bankBoxX + 22, bankY);
+
+      bankY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Swift Code:', bankBoxX + 3, bankY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text('CORUTZTZ', bankBoxX + 22, bankY);
+
+      bankY += 6;
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.3);
+      doc.line(bankBoxX + 3, bankY, bankBoxX + bankBoxW - 3, bankY);
+      bankY += 3;
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100, 116, 139);
+      const refText = doc.splitTextToSize(
+        'Please include invoice number in payment reference',
+        bankBoxW - 6
+      );
+      doc.text(refText, bankBoxX + 3, bankY);
+
+      // Totals Box (right)
       const totalsBoxX = 110;
       const totalsBoxY = yPos;
       const totalsBoxW = 85;
@@ -399,7 +479,8 @@ export async function GET(
         { align: 'right' }
       );
 
-      yPos = totalsBoxY + totalsBoxH + 5; // Reduced from 10mm to 5mm
+      // Advance Y based on the taller of the two boxes
+      yPos = Math.max(bankBoxY + bankBoxH, totalsBoxY + totalsBoxH) + 5;
     }
 
     // Notes
