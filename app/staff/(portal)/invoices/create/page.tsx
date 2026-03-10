@@ -595,12 +595,12 @@ export default function CreateInvoicePage() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Description
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     value={item.description}
                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    placeholder="Item description"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm resize-y min-h-[80px]"
+                    placeholder="Item description (press Enter for new line)"
+                    rows={3}
                     required
                   />
                 </div>
