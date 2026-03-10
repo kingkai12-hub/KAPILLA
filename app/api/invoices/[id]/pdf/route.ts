@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
-import { renderBillToSection, renderItemsTable } from '../../../../../lib/pdf-helpers';
+import { renderBillToSection, renderItemsTable, renderItemsTableCompact } from '../../../../../lib/pdf-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,17 +49,31 @@ export async function GET(
     // Create PDF
     const doc = new jsPDF();
     const isProforma = invoice.type === 'PROFORMA';
+    const itemCount = invoice.items.length;
+    const reqParts =
+      (invoice.requisitionNumber || '')
+        .split(/[,;\n]+/)
+        .map((p: string) => p.trim())
+        .filter((p: string) => p.length > 0).length || 0;
+    const notesLen = (invoice.notes || '').length;
+    const termsLen = (invoice.terms || '').length;
+    const forceCompact =
+      itemCount >= 12 ||
+      reqParts >= 6 ||
+      notesLen > 200 ||
+      termsLen > 200;
 
     // Colors - matching HTML design (both use dark blue)
     const accentColor = [37, 99, 235]; // dark blue for both
     const lightAccentBg = [239, 246, 255]; // light blue for both
 
     // Header - WHITE with BLACK BORDER (matching HTML)
+    const headerH = forceCompact ? 45 : 50;
     doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, 210, 50, 'F');
+    doc.rect(0, 0, 210, headerH, 'F');
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(1);
-    doc.line(0, 50, 210, 50);
+    doc.line(0, headerH, 210, headerH);
 
     // Logo with proper aspect ratio (40x25mm to maintain proportions) - vertically centered
     try {
@@ -146,8 +160,8 @@ export async function GET(
     });
 
     // Items Table - starts after Bill To section with proper spacing
-    yPos += 5; // 5mm spacing after Bill To section
-    yPos = renderItemsTable(
+    yPos += forceCompact ? 3 : 5;
+    yPos = (forceCompact ? renderItemsTableCompact : renderItemsTable)(
       doc,
       yPos,
       invoice.items.map(
@@ -331,7 +345,7 @@ export async function GET(
       const bankBoxX = 15;
       const bankBoxY = yPos;
       const bankBoxW = 85;
-      const bankBoxH = 45; // Compact height for proforma
+      const bankBoxH = forceCompact ? 42 : 45;
 
       doc.setFillColor(248, 250, 252); // slate-50
       doc.setDrawColor(203, 213, 225); // slate-300
@@ -410,7 +424,7 @@ export async function GET(
       const totalsBoxX = 110;
       const totalsBoxY = yPos;
       const totalsBoxW = 85;
-      const totalsBoxH = 30; // Compact height
+      const totalsBoxH = forceCompact ? 28 : 30;
 
       doc.setFillColor(248, 250, 252); // slate-50
       doc.setDrawColor(203, 213, 225);

@@ -332,6 +332,66 @@ export function renderItemsTable(
   return (doc as any).lastAutoTable.finalY;
 }
 
+export function renderItemsTableCompact(
+  doc: jsPDF,
+  startY: number,
+  items: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+  }>,
+  currency: string
+): number {
+  const tableData = items.map((item) => [
+    item.description,
+    item.quantity.toString(),
+    item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+  ]);
+  const autoTable = require('jspdf-autotable').default;
+  autoTable(doc, {
+    startY,
+    head: [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'left',
+      lineWidth: 0.5,
+      lineColor: [203, 213, 225],
+    },
+    bodyStyles: {
+      fontSize: 7.5,
+      textColor: [0, 0, 0],
+      lineWidth: 0.5,
+      lineColor: [203, 213, 225],
+      cellPadding: 2,
+      minCellHeight: 8,
+      overflow: 'linebreak',
+    },
+    columnStyles: {
+      0: { cellWidth: 80, halign: 'left', cellPadding: 2, overflow: 'linebreak', valign: 'top', fontSize: 7.5 },
+      1: { cellWidth: 20, halign: 'center', valign: 'middle' },
+      2: { cellWidth: 33, halign: 'right', fontStyle: 'normal', valign: 'middle' },
+      3: { cellWidth: 33, halign: 'right', fontStyle: 'bold', valign: 'middle' },
+    },
+    margin: { left: 15, right: 15, bottom: 18 },
+    didParseCell: function (data: { cell: { styles: { minCellHeight: number; cellPadding: number } }; section: string; column: { index: number } }) {
+      if (data.section === 'body') {
+        data.cell.styles.minCellHeight = 8;
+        if (data.column.index === 0) {
+          data.cell.styles.cellPadding = 2;
+        }
+      }
+    },
+  });
+  return (doc as any).lastAutoTable.finalY;
+}
+
 export function drawFooterOnLastPage(doc: jsPDF) {
   const pageCount = doc.getNumberOfPages();
   doc.setPage(pageCount);
