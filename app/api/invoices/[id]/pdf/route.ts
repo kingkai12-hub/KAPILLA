@@ -829,23 +829,7 @@ function generateDeliveryNote(invoice: {
   doc.line(15, yPos, 195, yPos);
 
   yPos += 5;
-  doc.setFontSize(7);
-  doc.setTextColor(100, 100, 100);
-  doc.setFont('helvetica', 'bold');
-  doc.text(
-    'IMPORTANT: This delivery note must be signed by both the receiver and cargo inspector.',
-    pageWidth / 2,
-    yPos,
-    { align: 'center' }
-  );
-  yPos += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(
-    'This is a computer-generated document. Please sign and return a copy to the driver.',
-    pageWidth / 2,
-    yPos,
-    { align: 'center' }
-  );
+  // No footer texts per request
 
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
   return new NextResponse(pdfBuffer, {
