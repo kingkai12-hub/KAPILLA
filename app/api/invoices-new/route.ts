@@ -91,25 +91,35 @@ export async function POST(req: Request) {
 
     while (attempts < maxAttempts) {
       try {
-        // Find the highest invoice number for this type
         const lastInvoice = await prisma.invoice.findFirst({
           where: {
             type,
-            invoiceNumber: {
-              startsWith: `${prefix}-`,
-            },
+            invoiceNumber:
+              prefix === 'INV'
+                ? { startsWith: 'INV-00' }
+                : { startsWith: `${prefix}-` },
           },
-          orderBy: {
-            invoiceNumber: 'desc',
-          },
+          orderBy: { invoiceNumber: 'desc' },
         });
 
         let nextNumber = 1;
-        if (lastInvoice) {
-          // Extract the number from the last invoice (e.g., "PI-0001" -> 1)
-          const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
-          if (match) {
-            nextNumber = parseInt(match[0], 10) + 1;
+        if (prefix === 'INV') {
+          if (lastInvoice) {
+            const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+            if (match) {
+              nextNumber = parseInt(match[0], 10) + 1;
+            } else {
+              nextNumber = 76;
+            }
+          } else {
+            nextNumber = 76;
+          }
+        } else {
+          if (lastInvoice) {
+            const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+            if (match) {
+              nextNumber = parseInt(match[0], 10) + 1;
+            }
           }
         }
 
