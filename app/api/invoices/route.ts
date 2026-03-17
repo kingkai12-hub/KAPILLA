@@ -138,15 +138,13 @@ export async function POST(req: Request) {
       });
 
       if (newSequenceInvoices.length > 0) {
-        // Extract number from the latest invoice in new sequence
         const match = newSequenceInvoices[0].invoiceNumber.match(/\d+$/);
-        const lastNumber = match ? parseInt(match[0], 10) : 75;
-        nextNumber = lastNumber + 1;
+        const lastNumber = match ? parseInt(match[0], 10) : 78;
+        nextNumber = Math.max(lastNumber + 1, 79);
         console.log('[INVOICES_POST] Continuing from new sequence:', lastNumber, '→', nextNumber);
       } else {
-        // Start new sequence from 76
-        nextNumber = 76;
-        console.log('[INVOICES_POST] Starting new sequence from 76');
+        nextNumber = 79;
+        console.log('[INVOICES_POST] Starting new sequence from 79');
       }
     }
 

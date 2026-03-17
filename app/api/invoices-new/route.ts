@@ -107,12 +107,13 @@ export async function POST(req: Request) {
           if (lastInvoice) {
             const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
             if (match) {
-              nextNumber = parseInt(match[0], 10) + 1;
+              const lastNumber = parseInt(match[0], 10);
+              nextNumber = Math.max(lastNumber + 1, 79);
             } else {
-              nextNumber = 76;
+              nextNumber = 79;
             }
           } else {
-            nextNumber = 76;
+            nextNumber = 79;
           }
         } else {
           if (lastInvoice) {
