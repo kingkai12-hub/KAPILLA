@@ -140,11 +140,11 @@ export async function POST(req: Request) {
       if (newSequenceInvoices.length > 0) {
         const match = newSequenceInvoices[0].invoiceNumber.match(/\d+$/);
         const lastNumber = match ? parseInt(match[0], 10) : 78;
-        nextNumber = Math.max(lastNumber + 1, 79);
-        console.log('[INVOICES_POST] Continuing from new sequence:', lastNumber, '→', nextNumber);
+        nextNumber = lastNumber + 1;
+        console.log('[INVOICES_POST] Continuing from sequence:', lastNumber, '→', nextNumber);
       } else {
         nextNumber = 79;
-        console.log('[INVOICES_POST] Starting new sequence from 79');
+        console.log('[INVOICES_POST] Starting from 79 (after last INV-0078)');
       }
     }
 
