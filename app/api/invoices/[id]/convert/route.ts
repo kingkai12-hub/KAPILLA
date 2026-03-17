@@ -55,9 +55,17 @@ export async function POST(
       );
     }
 
-    // Generate final invoice number
-    const count = await db.invoice.count({ where: { type: 'FINAL' } });
-    const invoiceNumber = `INV-${String(count + 1).padStart(4, '0')}`;
+    // Generate final invoice number continuing from last INV
+    const lastInvoice = await db.invoice.findFirst({
+      where: { type: 'FINAL', invoiceNumber: { startsWith: 'INV-00' } },
+      orderBy: { invoiceNumber: 'desc' },
+    });
+    let nextNumber = 79;
+    if (lastInvoice) {
+      const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+      if (match) nextNumber = parseInt(match[0], 10) + 1;
+    }
+    const invoiceNumber = `INV-${String(nextNumber).padStart(4, '0')}`;
 
     // Create final invoice from proforma
     const finalInvoice = await db.invoice.create({
