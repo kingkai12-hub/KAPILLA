@@ -48,9 +48,10 @@ export async function GET(
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.text('P.O. BOX 71729, Dar es Salaam, Tanzania', 15, 20);
-    doc.text('Tel: +255 766 724 062 | +255 756 656 218', 15, 24);
-    doc.text('Email: express@kapillagroup.co.tz', 15, 28);
+    doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', 15, 20);
+    doc.text('Dar es Salaam, Tanzania', 15, 24);
+    doc.text('Tel: +255 766 724 062 | +255 756 656 218', 15, 28);
+    doc.text('Email: express@kapillagroup.co.tz', 15, 32);
 
     // Logo in CENTER
     try {

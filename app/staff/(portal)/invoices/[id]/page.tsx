@@ -327,7 +327,7 @@ export default function InvoiceDetailPage() {
                   <div className="space-y-0 sm:space-y-1 text-xs sm:text-sm text-slate-700">
                     <div className="flex items-center gap-1 sm:gap-2">
                       <MapPin className="w-2 h-2 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm">P.O. BOX 71729, DSM</span>
+                      <span className="text-xs sm:text-sm">P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
                       <Phone className="w-2 h-2 sm:w-4 sm:h-4 flex-shrink-0" />

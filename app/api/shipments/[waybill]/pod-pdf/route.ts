@@ -52,9 +52,10 @@ export async function GET(
 
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('P.O. BOX 71729, Dar es Salaam, Tanzania', 15, 21);
-    doc.text('Tel: +255 756 656 218 / +255 766 724 062', 15, 26);
-    doc.text('Email: express@kapillagroup.co.tz', 15, 31);
+    doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', 15, 21);
+    doc.text('Dar es Salaam, Tanzania', 15, 26);
+    doc.text('Tel: +255 756 656 218 / +255 766 724 062', 15, 31);
+    doc.text('Email: express@kapillagroup.co.tz', 15, 36);
 
     // POD Title
     doc.setFontSize(22);

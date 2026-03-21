@@ -65,8 +65,9 @@ export default function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProp
               <div>
                 <h3 className="font-semibold text-slate-900">Visit Us</h3>
                 <p className="text-sm text-slate-600">
-                  P.O. BOX 71729<br/>
-                  DAR ES SALAAM, TANZANIA
+                  P.O Box 71729, Sea Cliff Village<br/>
+                  10 Toure Drive, Msasani<br/>
+                  Dar es Salaam, Tanzania
                 </p>
               </div>
             </div>

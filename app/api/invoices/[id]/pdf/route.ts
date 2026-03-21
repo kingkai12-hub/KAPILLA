@@ -99,10 +99,11 @@ export async function GET(
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(80, 80, 80);
-    doc.text('P.O. BOX 71729, Dar es Salaam, Tanzania', 55, 24);
-    doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', 55, 29);
-    doc.text('Email: kapillagroup@gmail.com', 55, 34);
-    doc.text('TIN: 157-935-380', 55, 39);
+    doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', 55, 24);
+    doc.text('Dar es Salaam, Tanzania', 55, 29);
+    doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', 55, 34);
+    doc.text('Email: kapillagroup@gmail.com', 55, 39);
+    doc.text('TIN: 157-935-380', 55, 44);
 
     // Invoice Type Box - with colored background and border
     const boxX = 140;
@@ -604,7 +605,7 @@ export async function GET(
       });
       yPos += 4;
       doc.text(
-        'KAPILLA GROUP LIMITED | P.O. BOX 71729, Dar es Salaam, Tanzania | TIN: 157-935-380',
+        'KAPILLA GROUP LIMITED | P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania | TIN: 157-935-380',
         105,
         yPos,
         { align: 'center' }
@@ -692,10 +693,11 @@ function generateDeliveryNote(invoice: {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  doc.text('P.O. BOX 71729, Dar es Salaam, Tanzania', detailsX, headerY + 11);
-  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 16);
-  doc.text('Email: kapillagroup@gmail.com', detailsX, headerY + 21);
-  doc.text('TIN: 157-935-380', detailsX, headerY + 26);
+  doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', detailsX, headerY + 11);
+  doc.text('Dar es Salaam, Tanzania', detailsX, headerY + 16);
+  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 21);
+  doc.text('Email: kapillagroup@gmail.com', detailsX, headerY + 26);
+  doc.text('TIN: 157-935-380', detailsX, headerY + 31);
 
   // Separator line between header and body - more compact
   const separatorY = headerY + logoHeight + 4;

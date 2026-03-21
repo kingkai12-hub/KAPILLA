@@ -121,8 +121,9 @@ export default function ProofOfDeliveryPage() {
             <div>
               <h1 className="text-2xl font-black uppercase tracking-wide text-black">Kapilla Group Limited</h1>
               <div className="text-xs font-bold text-gray-600 space-y-0.5 mt-1">
-                <p>P.O. BOX 71729</p>
-                <p>DAR ES SALAAM, TANZANIA</p>
+                <p>P.O Box 71729, Sea Cliff Village</p>
+                <p>10 Toure Drive, Msasani</p>
+                <p>Dar es Salaam, Tanzania</p>
                 <p>Tel: +255 756 656 218 / +255 766 724 062</p>
                 <p>Email: express@kapillagroup.co.tz</p>
               </div>

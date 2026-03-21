@@ -164,7 +164,7 @@ export default function InvoicePrintPage() {
                 <div className="space-y-1 text-xs sm:text-sm text-slate-700">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="text-left">P.O. BOX 71729, Dar es Salaam, Tanzania</span>
+                    <span className="text-left">P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania</span>
                   </div>
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -469,7 +469,7 @@ export default function InvoicePrintPage() {
           <div className="mt-4 text-center text-xs text-slate-500">
             <p>This is a computer-generated document. No signature is required.</p>
             <p className="mt-1 break-words">
-              KAPILLA GROUP LIMITED | P.O. BOX 71729, Dar es Salaam, Tanzania | TIN: 157-935-380
+              KAPILLA GROUP LIMITED | P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania | TIN: 157-935-380
             </p>
           </div>
         </div>
