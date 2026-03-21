@@ -116,7 +116,8 @@ export default function LabelPage() {
             {/* Left: Company Details */}
             <div>
               <h1 className="text-lg font-bold">KAPILLA GROUP LIMITED</h1>
-              <p className="text-xs mt-1">P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani</p>
+              <p className="text-xs mt-1">P.O Box 71729</p>
+              <p className="text-xs">Sea Cliff Village, 10 Toure Drive, Msasani</p>
               <p className="text-xs">Dar es Salaam, Tanzania</p>
               <p className="text-xs">Tel: +255 766 724 062</p>
               <p className="text-xs">Email: express@kapillagroup.co.tz</p>
