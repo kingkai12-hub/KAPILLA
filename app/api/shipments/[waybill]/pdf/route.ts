@@ -37,7 +37,7 @@ export async function GET(
 
     // Modern Professional Header Design
     doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, 210, 38, 'F');
+    doc.rect(0, 0, 210, 42, 'F');
 
     // Company name and details on LEFT
     doc.setTextColor(0, 0, 0);
@@ -52,7 +52,7 @@ export async function GET(
     doc.text('Sea Cliff Village, 10 Toure Drive, Msasani', 15, 24);
     doc.text('Dar es Salaam, Tanzania', 15, 28);
     doc.text('Tel: +255 766 724 062 | +255 756 656 218', 15, 32);
-    doc.text('Email: express@kapillagroup.co.tz', 15, 32);
+    doc.text('Email: express@kapillagroup.co.tz', 15, 36);
 
     // Logo in CENTER
     try {
@@ -89,9 +89,9 @@ export async function GET(
     // Dark Blue Separator Line
     doc.setDrawColor(25, 55, 109);
     doc.setLineWidth(1.5);
-    doc.line(15, 38, 195, 38);
+    doc.line(15, 42, 195, 42);
 
-    let yPos = 45;
+    let yPos = 49;
 
     // Modern Route Section with clean borders - matching light boxes
     // Origin box
