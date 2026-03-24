@@ -15,6 +15,8 @@ import {
   Edit2,
   X,
   Check,
+  DollarSign,
+  Truck,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -171,6 +173,32 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  const handleMarkPaid = async () => {
+    if (!confirm('Mark this invoice as PAID?')) return;
+    try {
+      const res = await fetch(`/api/invoices/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'PAID', paidAt: new Date().toISOString() }),
+      });
+      if (res.ok) { fetchInvoice(); }
+      else { alert('Failed to mark as paid'); }
+    } catch { alert('Failed to update'); }
+  };
+
+  const handleMarkDelivered = async () => {
+    if (!confirm('Mark this invoice as DELIVERED?')) return;
+    try {
+      const res = await fetch(`/api/invoices/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'DELIVERED' }),
+      });
+      if (res.ok) { fetchInvoice(); }
+      else { alert('Failed to mark as delivered'); }
+    } catch { alert('Failed to update'); }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -299,6 +327,26 @@ export default function InvoiceDetailPage() {
               <span className="hidden sm:inline">Delete</span>
               <span className="sm:hidden">Del</span>
             </button>
+            {invoice.type === 'FINAL' && invoice.status !== 'PAID' && invoice.status !== 'DELIVERED' && (
+              <button
+                onClick={handleMarkPaid}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-emerald-600 text-white rounded text-xs sm:text-base hover:bg-emerald-700 font-semibold transition-colors"
+              >
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Mark as Paid</span>
+                <span className="sm:hidden">Paid</span>
+              </button>
+            )}
+            {invoice.type === 'FINAL' && invoice.status === 'PAID' && (
+              <button
+                onClick={handleMarkDelivered}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-purple-600 text-white rounded text-xs sm:text-base hover:bg-purple-700 font-semibold transition-colors"
+              >
+                <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Mark as Delivered</span>
+                <span className="sm:hidden">Delivered</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -374,6 +422,15 @@ export default function InvoiceDetailPage() {
                         <span>{new Date(invoice.validUntil).toLocaleDateString('en-GB')}</span>
                       </p>
                     )}
+                    <p className="flex justify-between gap-2 sm:gap-4 mt-1 sm:mt-2">
+                      <span className="font-semibold">Status:</span>
+                      <span className={`font-bold px-2 py-0.5 rounded text-xs ${
+                        invoice.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                        invoice.status === 'DELIVERED' ? 'bg-purple-100 text-purple-700' :
+                        invoice.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :
+                        'bg-slate-100 text-slate-600'
+                      }`}>{invoice.status}</span>
+                    </p>
                   </div>
                 </div>
               </div>
