@@ -178,6 +178,7 @@ export async function PUT(
       where: { id: params.id },
       data: {
         type: body.type,
+        ...(body.invoiceNumber ? { invoiceNumber: body.invoiceNumber } : {}),
         customerName: body.customerName,
         customerEmail: body.customerEmail,
         customerPhone: body.customerPhone,

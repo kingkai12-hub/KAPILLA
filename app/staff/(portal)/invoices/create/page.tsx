@@ -126,6 +126,7 @@ export default function CreateInvoicePage() {
         setCustomerAddress(invoice.customerAddress || '');
         setCustomerTIN(invoice.customerTIN || '');
         setRequisitionNumber(invoice.requisitionNumber || '');
+        setInvoiceNumberOverride(invoice.invoiceNumber || '');
 
         // Set dates
         if (invoice.validUntil) {
@@ -175,6 +176,7 @@ export default function CreateInvoicePage() {
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerTIN, setCustomerTIN] = useState('');
   const [requisitionNumber, setRequisitionNumber] = useState('');
+  const [invoiceNumberOverride, setInvoiceNumberOverride] = useState('');
 
   // Invoice details
   const [validUntil, setValidUntil] = useState('');
@@ -352,10 +354,11 @@ export default function CreateInvoicePage() {
         customerAddress,
         customerTIN,
         requisitionNumber: requisitionNumber || null,
+        ...(isEditMode && invoiceNumberOverride ? { invoiceNumber: invoiceNumberOverride } : {}),
         validUntil,
         taxRate,
         discount,
-        currency, // Add currency to payload
+        currency,
         notes,
         terms,
         items: items.map(({ id: _id, ...item }) => item),
@@ -559,6 +562,21 @@ export default function CreateInvoicePage() {
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+            {isEditMode && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Invoice Number
+                </label>
+                <input
+                  type="text"
+                  value={invoiceNumberOverride}
+                  onChange={(e) => setInvoiceNumberOverride(e.target.value)}
+                  placeholder="e.g., INV-0001"
+                  className="w-full px-4 py-2 border border-amber-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-amber-50"
+                />
+                <p className="text-xs text-amber-600 mt-1">Editing invoice number — ensure it is unique.</p>
+              </div>
+            )}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2">Address</label>
               <textarea
