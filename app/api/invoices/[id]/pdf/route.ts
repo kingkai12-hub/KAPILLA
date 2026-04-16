@@ -766,74 +766,80 @@ function generateDeliveryNote(invoice: {
     margin: { left: 15, right: 15 },
   });
 
-  // Signature section - THREE SECTIONS: Delivered, Received, and Inspected
+  // Signature sections - THREE PEOPLE: Inspection, User, and Receiver
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  yPos = (doc as any).lastAutoTable.finalY + 15;
+  const tableEndY = (doc as any).lastAutoTable.finalY;
+  
+  // Check if we need a new page for signatures
+  const signHeight = 110; // Total height for all signature blocks
+  if (tableEndY + signHeight > 280) {
+    doc.addPage();
+    yPos = 20;
+  } else {
+    yPos = tableEndY + 12;
+  }
 
-  // Section 1: Delivered by (Left)
+  // 1. INSPECTION SECTION (Full Width)
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235); // blue-600
-  doc.text('DELIVERED BY:', 15, yPos);
+  doc.setTextColor(234, 88, 12); // orange-600
+  doc.text('1. INSPECTION / VERIFICATION:', 15, yPos);
 
   doc.setDrawColor(203, 213, 225);
-  doc.setLineWidth(0.5);
-  doc.rect(15, yPos + 2, 85, 35);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  doc.text('Name: _______________________', 17, yPos + 10);
-  doc.text('Signature: ___________________', 17, yPos + 18);
-  doc.text('Date: ________________________', 17, yPos + 26);
-  doc.text('Time: ________________________', 17, yPos + 33);
+  doc.text('Inspector Name: __________________________', 20, yPos + 10);
+  doc.text('Signature: ________________', 95, yPos + 10);
+  doc.text('Date: ____________', 155, yPos + 10);
+  doc.text('Remarks: __________________________________________________________________________', 20, yPos + 20);
 
-  // Section 2: Received by (Right)
+  yPos += 35;
+
+  // 2. USER SECTION (Full Width)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text('2. USER OF DELIVERED ITEM:', 15, yPos);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.text('User Name: ____________________________', 20, yPos + 10);
+  doc.text('Department: _______________', 95, yPos + 10);
+  doc.text('Sign: ______________', 155, yPos + 10);
+  doc.text('Confirmation: I confirm receipt and usage of items listed above. Date: ______________ Time: _________', 20, yPos + 20);
+
+  yPos += 35;
+
+  // 3. RECEIVER SECTION (Store/Other) (Full Width)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(16, 185, 129); // green-500
-  doc.text('RECEIVED BY:', 110, yPos);
+  doc.text('3. RECEIVED BY (Store / Final Recipient):', 15, yPos);
 
   doc.setDrawColor(203, 213, 225);
-  doc.rect(110, yPos + 2, 85, 35);
+  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  doc.text('Name: _______________________', 112, yPos + 10);
-  doc.text('Signature: ___________________', 112, yPos + 18);
-  doc.text('Date: ________________________', 112, yPos + 26);
-  doc.text('ID No: _______________________', 112, yPos + 33);
+  doc.text('Receiver Name: __________________________', 20, yPos + 10);
+  doc.text('Signature: ________________', 95, yPos + 10);
+  doc.text('Date: ____________', 155, yPos + 10);
+  doc.text('ID/Gate Pass No: _________________________', 20, yPos + 20);
+  doc.text('Store Ref: ____________', 110, yPos + 20);
 
-  yPos += 42;
-
-  // Section 3: Inspected/Checked by (Full width)
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(234, 88, 12); // orange-600
-  doc.text('INSPECTED/CHECKED BY (Cargo Verification):', 15, yPos);
-
-  doc.setDrawColor(203, 213, 225);
-  doc.rect(15, yPos + 2, 180, 35);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Inspector Name: ___________________________', 17, yPos + 10);
-  doc.text('Position/Title: ____________________________', 17, yPos + 18);
-  doc.text('Signature: ___________________', 17, yPos + 26);
-  doc.text('Date: ________________________', 17, yPos + 33);
-  // Removed verification status checklist and remarks as requested
-  doc.text('Remarks: _____________________', 112, yPos + 33);
-
-
-  // Footer
+  // Footer line
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.5);
-  doc.line(15, yPos, 195, yPos);
-
-  yPos += 5;
-  // No footer texts per request
+  doc.line(15, 285, 195, 285);
 
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
   return new NextResponse(pdfBuffer, {
