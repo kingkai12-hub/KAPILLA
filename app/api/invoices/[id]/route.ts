@@ -99,6 +99,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
+    // Check for duplicate invoice number if it's being changed
+    if (status === undefined && updateData.invoiceNumber && updateData.invoiceNumber !== invoice.invoiceNumber) {
+      const existing = await db.invoice.findFirst({
+        where: {
+          invoiceNumber: updateData.invoiceNumber,
+          id: { not: params.id },
+        },
+      });
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: 'Duplicate invoice number',
+            details: `Invoice number ${updateData.invoiceNumber} is already in use by another invoice.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Helper to parse dates safely
     const parseDate = (dateVal: any) => {
       if (!dateVal) return null;
@@ -176,6 +196,26 @@ export async function PUT(
 
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    // Check for duplicate invoice number if it's being changed
+    if (body.invoiceNumber && body.invoiceNumber !== invoice.invoiceNumber) {
+      const existing = await db.invoice.findFirst({
+        where: {
+          invoiceNumber: body.invoiceNumber,
+          id: { not: params.id },
+        },
+      });
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: 'Duplicate invoice number',
+            details: `Invoice number ${body.invoiceNumber} is already in use by another invoice.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Calculate totals
