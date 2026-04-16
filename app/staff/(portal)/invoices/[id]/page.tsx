@@ -103,6 +103,9 @@ export default function InvoiceDetailPage() {
       if (res.ok) {
         alert('Proforma invoice accepted!');
         fetchInvoice();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch {
       alert('Failed to update status');
@@ -122,6 +125,9 @@ export default function InvoiceDetailPage() {
       if (res.ok) {
         alert('Invoice marked as sent!');
         fetchInvoice();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch {
       alert('Failed to update status');
@@ -141,6 +147,9 @@ export default function InvoiceDetailPage() {
       if (res.ok) {
         alert('Invoice cancelled!');
         fetchInvoice();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to cancel invoice'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch {
       alert('Failed to cancel invoice');
@@ -161,7 +170,7 @@ export default function InvoiceDetailPage() {
         router.push(`/staff/invoices/${finalInvoice.id}`);
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to convert');
+        alert(`Error: ${error.error || 'Failed to convert'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch {
       alert('Failed to convert invoice');
@@ -169,6 +178,7 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
     console.log('Delete button clicked - deleting immediately...');
 
     try {
@@ -183,7 +193,7 @@ export default function InvoiceDetailPage() {
       } else {
         const error = await res.json();
         console.error('Delete error response:', error);
-        alert(`Failed to delete invoice: ${error.error || 'Unknown error'}`);
+        alert(`Failed to delete invoice: ${error.error || 'Unknown error'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch (error) {
       console.error('Delete error:', error);
@@ -204,7 +214,8 @@ export default function InvoiceDetailPage() {
         setEditingRequisition(false);
         alert('Requisition number updated successfully!');
       } else {
-        alert('Failed to update requisition number');
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to update requisition number'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch {
       alert('Failed to update requisition number');
@@ -219,9 +230,15 @@ export default function InvoiceDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'PAID', paidAt: new Date().toISOString() }),
       });
-      if (res.ok) { fetchInvoice(); }
-      else { alert('Failed to mark as paid'); }
-    } catch { alert('Failed to update'); }
+      if (res.ok) {
+        fetchInvoice();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to mark as paid'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+      }
+    } catch {
+      alert('Failed to update status');
+    }
   };
 
   const handleMarkDelivered = async () => {
@@ -232,9 +249,15 @@ export default function InvoiceDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'DELIVERED' }),
       });
-      if (res.ok) { fetchInvoice(); }
-      else { alert('Failed to mark as delivered'); }
-    } catch { alert('Failed to update'); }
+      if (res.ok) {
+        fetchInvoice();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error || 'Failed to mark as delivered'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+      }
+    } catch {
+      alert('Failed to update status');
+    }
   };
 
   if (loading) {

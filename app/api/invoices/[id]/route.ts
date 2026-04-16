@@ -87,7 +87,9 @@ export async function PATCH(
     const params = await Promise.resolve(context.params);
     const db = await getDb();
     const body = await req.json();
-    const { status, paymentMethod, paidAt, ...updateData } = body;
+
+    // Destructure to separate specific fields and prevent accidental updates of items/relations
+    const { status, paymentMethod, paidAt, items: _items, ...updateData } = body;
 
     const invoice = await db.invoice.findUnique({
       where: { id: params.id },
@@ -97,14 +99,24 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
+    // Helper to parse dates safely
+    const parseDate = (dateVal: any) => {
+      if (!dateVal) return null;
+      const d = new Date(dateVal);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
     // Update invoice
     const updated = await db.invoice.update({
       where: { id: params.id },
       data: {
         ...updateData,
-        status,
-        paymentMethod,
-        paidAt: paidAt ? new Date(paidAt) : null,
+        status: status !== undefined ? status : invoice.status,
+        paymentMethod: paymentMethod !== undefined ? paymentMethod : invoice.paymentMethod,
+        paidAt: paidAt !== undefined ? parseDate(paidAt) : invoice.paidAt,
+        dueDate: updateData.dueDate !== undefined ? parseDate(updateData.dueDate) : undefined,
+        validUntil:
+          updateData.validUntil !== undefined ? parseDate(updateData.validUntil) : undefined,
       },
       include: {
         items: {
@@ -116,7 +128,13 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error('[INVOICE_PATCH]', error);
-    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to update invoice status',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -165,56 +183,66 @@ export async function PUT(
       (sum: number, item: { amount: number }) => sum + item.amount,
       0
     );
-    const taxAmount = (subtotal * body.taxRate) / 100;
+    const taxAmount = (subtotal * (body.taxRate || 0)) / 100;
     const total = subtotal + taxAmount - (body.discount || 0);
 
-    // Delete existing items
-    await db.invoiceItem.deleteMany({
-      where: { invoiceId: params.id },
-    });
+    // Helper to parse dates safely
+    const parseDate = (dateVal: any) => {
+      if (!dateVal) return null;
+      const d = new Date(dateVal);
+      return isNaN(d.getTime()) ? null : d;
+    };
 
-    // Update invoice with new data
-    const updated = await db.invoice.update({
-      where: { id: params.id },
-      data: {
-        type: body.type,
-        ...(body.invoiceNumber ? { invoiceNumber: body.invoiceNumber } : {}),
-        customerName: body.customerName,
-        customerEmail: body.customerEmail,
-        customerPhone: body.customerPhone,
-        customerAddress: body.customerAddress,
-        customerTIN: body.customerTIN,
-        requisitionNumber: body.requisitionNumber,
-        dueDate: body.dueDate ? new Date(body.dueDate) : null,
-        validUntil: body.validUntil ? new Date(body.validUntil) : null,
-        taxRate: body.taxRate,
-        discount: body.discount || 0,
-        currency: body.currency || 'TZS', // Update currency
-        notes: body.notes,
-        terms: body.terms,
-        subtotal,
-        taxAmount,
-        total,
-        items: {
-          create: body.items.map(
-            (
-              item: { description: string; quantity: number; unitPrice: number; amount: number },
-              index: number
-            ) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              amount: item.amount,
-              order: index,
-            })
-          ),
+    // Use a transaction to ensure atomic update of items
+    const updated = await db.$transaction(async (tx) => {
+      // 1. Delete existing items
+      await tx.invoiceItem.deleteMany({
+        where: { invoiceId: params.id },
+      });
+
+      // 2. Update invoice and create new items
+      return await tx.invoice.update({
+        where: { id: params.id },
+        data: {
+          type: body.type,
+          invoiceNumber: body.invoiceNumber || invoice.invoiceNumber,
+          customerName: body.customerName,
+          customerEmail: body.customerEmail,
+          customerPhone: body.customerPhone,
+          customerAddress: body.customerAddress,
+          customerTIN: body.customerTIN,
+          requisitionNumber: body.requisitionNumber,
+          dueDate: parseDate(body.dueDate),
+          validUntil: parseDate(body.validUntil),
+          taxRate: body.taxRate || 0,
+          discount: body.discount || 0,
+          currency: body.currency || 'TZS',
+          notes: body.notes,
+          terms: body.terms,
+          subtotal,
+          taxAmount,
+          total,
+          items: {
+            create: body.items.map(
+              (
+                item: { description: string; quantity: number; unitPrice: number; amount: number },
+                index: number
+              ) => ({
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                amount: item.amount,
+                order: index,
+              })
+            ),
+          },
         },
-      },
-      include: {
-        items: {
-          orderBy: { order: 'asc' },
+        include: {
+          items: {
+            orderBy: { order: 'asc' },
+          },
         },
-      },
+      });
     });
 
     console.log('[INVOICE_PUT] Invoice updated successfully');

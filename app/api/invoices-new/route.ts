@@ -158,6 +158,13 @@ export async function POST(req: Request) {
     console.log('[INVOICES_NEW_POST] Totals:', { subtotal, taxAmount, discount, total });
     console.log('[INVOICES_NEW_POST] Creating invoice...');
 
+    // Helper to parse dates safely
+    const parseDate = (dateVal: any) => {
+      if (!dateVal) return null;
+      const d = new Date(dateVal);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
     // Validate Prisma client has invoice model
     if (!prisma || !prisma.invoice || typeof prisma.invoice.create !== 'function') {
       console.error('[INVOICES_NEW_POST] Prisma invoice model not available');
@@ -190,8 +197,8 @@ export async function POST(req: Request) {
             customerAddress: customerAddress || null,
             customerTIN: customerTIN || null,
             requisitionNumber: requisitionNumber || null,
-            dueDate: dueDate ? new Date(dueDate) : null,
-            validUntil: validUntil ? new Date(validUntil) : null,
+            dueDate: parseDate(dueDate),
+            validUntil: parseDate(validUntil),
             subtotal,
             taxRate,
             taxAmount,

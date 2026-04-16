@@ -389,7 +389,7 @@ export default function CreateInvoicePage() {
       } else {
         const error = await res.json();
         console.error('Error response:', error);
-        alert(`Error: ${error.error || `Failed to ${isEditMode ? 'update' : 'create'} invoice`}`);
+        alert(`Error: ${error.error || `Failed to ${isEditMode ? 'update' : 'create'} invoice`}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
       }
     } catch (error) {
       console.error('Catch error:', error);
