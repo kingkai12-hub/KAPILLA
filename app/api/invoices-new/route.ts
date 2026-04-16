@@ -94,10 +94,7 @@ export async function POST(req: Request) {
         const lastInvoice = await prisma.invoice.findFirst({
           where: {
             type,
-            invoiceNumber:
-              prefix === 'INV'
-                ? { startsWith: 'INV-00' }
-                : { startsWith: `${prefix}-` },
+            invoiceNumber: { startsWith: `${prefix}-` },
           },
           orderBy: { invoiceNumber: 'desc' },
         });
@@ -105,7 +102,7 @@ export async function POST(req: Request) {
         let nextNumber = 1;
         if (prefix === 'INV') {
           if (lastInvoice) {
-            const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+            const match = lastInvoice.invoiceNumber.match(/\d+$/);
             if (match) {
               const lastNumber = parseInt(match[0], 10);
               nextNumber = lastNumber + 1;
@@ -117,7 +114,7 @@ export async function POST(req: Request) {
           }
         } else {
           if (lastInvoice) {
-            const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+            const match = lastInvoice.invoiceNumber.match(/\d+$/);
             if (match) {
               nextNumber = parseInt(match[0], 10) + 1;
             }

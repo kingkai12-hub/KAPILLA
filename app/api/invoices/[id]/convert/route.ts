@@ -57,12 +57,12 @@ export async function POST(
 
     // Generate final invoice number continuing from last INV
     const lastInvoice = await db.invoice.findFirst({
-      where: { type: 'FINAL', invoiceNumber: { startsWith: 'INV-00' } },
+      where: { type: 'FINAL', invoiceNumber: { startsWith: 'INV-' } },
       orderBy: { invoiceNumber: 'desc' },
     });
     let nextNumber = 79;
     if (lastInvoice) {
-      const match = lastInvoice.invoiceNumber.match(/\d{4}$/);
+      const match = lastInvoice.invoiceNumber.match(/\d+$/);
       if (match) nextNumber = parseInt(match[0], 10) + 1;
     }
     const invoiceNumber = `INV-${String(nextNumber).padStart(4, '0')}`;

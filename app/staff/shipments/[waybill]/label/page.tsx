@@ -111,16 +111,16 @@ export default function LabelPage() {
         style={{ fontFamily: 'Arial, sans-serif' }}
       >
         {/* Header with logo in center */}
-        <div className="border-b pb-3 mb-3">
-          <div className="grid grid-cols-3 gap-4 items-start">
+        <div className="border-b pb-1 mb-1">
+          <div className="grid grid-cols-3 gap-2 items-start">
             {/* Left: Company Details */}
             <div>
-              <h1 className="text-lg font-bold">KAPILLA GROUP LIMITED</h1>
-              <p className="text-xs mt-1">P.O Box 71729</p>
-              <p className="text-xs">Sea Cliff Village, 10 Toure Drive, Msasani</p>
-              <p className="text-xs">Dar es Salaam, Tanzania</p>
-              <p className="text-xs">Tel: +255 766 724 062</p>
-              <p className="text-xs">Email: express@kapillagroup.co.tz</p>
+              <h1 className="text-sm font-bold">KAPILLA GROUP LIMITED</h1>
+              <p className="text-[10px] mt-0.5">P.O Box 71729</p>
+              <p className="text-[10px]">Sea Cliff Village, 10 Toure Drive, Msasani</p>
+              <p className="text-[10px]">Dar es Salaam, Tanzania</p>
+              <p className="text-[10px]">Tel: +255 766 724 062</p>
+              <p className="text-[10px]">Email: express@kapillagroup.co.tz</p>
             </div>
 
             {/* Center: Logo - moderate size */}
@@ -128,23 +128,21 @@ export default function LabelPage() {
               <img
                 src="/kapila logo.png"
                 alt="Kapilla Logo"
-                className="h-20 w-auto object-contain"
+                className="h-14 w-auto object-contain"
               />
             </div>
 
             {/* Right: Waybill Info */}
             <div className="text-right">
-              <p className="text-xs uppercase">Waybill / Consignment Note</p>
-              <p className="text-lg font-bold mt-1">{data.waybillNumber}</p>
-              <p className="text-xs">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
+              <p className="text-[10px] uppercase">Waybill / Consignment Note</p>
+              <p className="text-base font-bold mt-0.5">{data.waybillNumber}</p>
+              <p className="text-[10px]">Date: {new Date(data.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
         </div>
 
-        {/* Removed logo and QR code section from here */}
-
         {/* Origin and Destination */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="bg-gray-100 p-3">
             <p className="text-xs font-bold">ORIGIN</p>
             <p className="text-lg font-bold uppercase">{data.origin}</p>
@@ -168,34 +166,6 @@ export default function LabelPage() {
             <p className="font-semibold">{data.receiverName}</p>
             <p className="text-sm">{data.receiverPhone}</p>
             <p className="text-sm">{data.receiverAddress}</p>
-          </div>
-        </div>
-
-        {/* Shipment Particulars */}
-        <table className="w-full border-collapse mb-4">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left text-sm font-bold">Type</th>
-              <th className="border p-2 text-left text-sm font-bold">Weight</th>
-              <th className="border p-2 text-left text-sm font-bold">Service</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border p-2 text-sm">{data.type || 'Standard'}</td>
-              <td className="border p-2 text-sm">{data.weight || 0} kg</td>
-              <td className="border p-2 text-sm">Standard Delivery</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Cargo Details */}
-        <div className="mb-4">
-          <div className="bg-gray-100 p-2">
-            <p className="text-sm font-bold">CARGO DETAILS</p>
-          </div>
-          <div className="border border-t-0 p-3">
-            <p className="text-sm">{data.cargoDetails || 'No additional details provided.'}</p>
           </div>
         </div>
 

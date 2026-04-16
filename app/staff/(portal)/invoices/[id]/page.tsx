@@ -109,6 +109,44 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  const handleMarkSent = async () => {
+    if (!confirm('Mark this invoice as SENT?')) return;
+
+    try {
+      const res = await fetch(`/api/invoices/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'SENT' }),
+      });
+
+      if (res.ok) {
+        alert('Invoice marked as sent!');
+        fetchInvoice();
+      }
+    } catch {
+      alert('Failed to update status');
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm('CANCEL this invoice? This action cannot be undone.')) return;
+
+    try {
+      const res = await fetch(`/api/invoices/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+
+      if (res.ok) {
+        alert('Invoice cancelled!');
+        fetchInvoice();
+      }
+    } catch {
+      alert('Failed to cancel invoice');
+    }
+  };
+
   const handleConvert = async () => {
     if (!confirm('Convert this proforma invoice to a final invoice?')) return;
 
@@ -279,7 +317,20 @@ export default function InvoiceDetailPage() {
               <span className="hidden sm:inline">Edit Invoice</span>
               <span className="sm:hidden">Edit</span>
             </button>
+
+            {/* Proforma specific buttons */}
             {invoice.type === 'PROFORMA' && invoice.status === 'DRAFT' && (
+              <button
+                onClick={handleMarkSent}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded text-xs sm:text-base hover:bg-blue-600 font-semibold transition-colors"
+              >
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Mark as Sent</span>
+                <span className="sm:hidden">Sent</span>
+              </button>
+            )}
+
+            {invoice.type === 'PROFORMA' && (invoice.status === 'DRAFT' || invoice.status === 'SENT') && (
               <button
                 onClick={handleAccept}
                 className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-green-600 text-white rounded text-xs sm:text-base hover:bg-green-700 font-semibold transition-colors"
@@ -289,6 +340,7 @@ export default function InvoiceDetailPage() {
                 <span className="sm:hidden">OK</span>
               </button>
             )}
+
             {invoice.type === 'PROFORMA' &&
               invoice.status === 'ACCEPTED' &&
               !invoice.finalInvoices?.length && (
@@ -301,33 +353,20 @@ export default function InvoiceDetailPage() {
                   <span className="sm:hidden">Convert</span>
                 </button>
               )}
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-slate-900 text-white rounded text-xs sm:text-base hover:bg-slate-800 font-semibold transition-colors"
-            >
-              <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Print Invoice</span>
-              <span className="sm:hidden">Print</span>
-            </button>
-            <button
-              onClick={() =>
-                window.open(`/api/invoices/${params.id}/pdf?type=delivery-note`, '_blank')
-              }
-              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-xs sm:text-base hover:bg-blue-700 font-semibold transition-colors"
-            >
-              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Delivery Note</span>
-              <span className="sm:hidden">DN</span>
-            </button>
-            <button
-              onClick={handleDelete}
-              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-red-600 text-white rounded text-xs sm:text-base hover:bg-red-700 font-semibold transition-colors"
-            >
-              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Delete</span>
-              <span className="sm:hidden">Del</span>
-            </button>
-            {invoice.type === 'FINAL' && invoice.status !== 'PAID' && invoice.status !== 'DELIVERED' && (
+
+            {/* Final specific buttons */}
+            {invoice.type === 'FINAL' && invoice.status === 'DRAFT' && (
+              <button
+                onClick={handleMarkSent}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded text-xs sm:text-base hover:bg-blue-600 font-semibold transition-colors"
+              >
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Mark as Sent</span>
+                <span className="sm:hidden">Sent</span>
+              </button>
+            )}
+
+            {invoice.type === 'FINAL' && (invoice.status === 'SENT' || invoice.status === 'DRAFT') && (
               <button
                 onClick={handleMarkPaid}
                 className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-emerald-600 text-white rounded text-xs sm:text-base hover:bg-emerald-700 font-semibold transition-colors"
@@ -337,6 +376,7 @@ export default function InvoiceDetailPage() {
                 <span className="sm:hidden">Paid</span>
               </button>
             )}
+
             {invoice.type === 'FINAL' && invoice.status === 'PAID' && (
               <button
                 onClick={handleMarkDelivered}
@@ -347,6 +387,47 @@ export default function InvoiceDetailPage() {
                 <span className="sm:hidden">Delivered</span>
               </button>
             )}
+
+            {/* Common buttons */}
+            {invoice.status !== 'CANCELLED' && (
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-slate-500 text-white rounded text-xs sm:text-base hover:bg-slate-600 font-semibold transition-colors"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Cancel</span>
+                <span className="sm:hidden">X</span>
+              </button>
+            )}
+
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-slate-900 text-white rounded text-xs sm:text-base hover:bg-slate-800 font-semibold transition-colors"
+            >
+              <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Print Invoice</span>
+              <span className="sm:hidden">Print</span>
+            </button>
+
+            <button
+              onClick={() =>
+                window.open(`/api/invoices/${params.id}/pdf?type=delivery-note`, '_blank')
+              }
+              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-xs sm:text-base hover:bg-blue-700 font-semibold transition-colors"
+            >
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Delivery Note</span>
+              <span className="sm:hidden">DN</span>
+            </button>
+
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-red-600 text-white rounded text-xs sm:text-base hover:bg-red-700 font-semibold transition-colors"
+            >
+              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Delete</span>
+              <span className="sm:hidden">Del</span>
+            </button>
           </div>
         </div>
 
