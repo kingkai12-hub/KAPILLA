@@ -238,11 +238,12 @@ export function renderItemsTable(
 ): number {
   let currentY = startY;
   if (itemsHeader) {
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(37, 99, 235);
-    doc.text(itemsHeader.toUpperCase(), 15, currentY);
-    currentY += 6;
+    const splitHeader = doc.splitTextToSize(itemsHeader, 180);
+    doc.text(splitHeader, 15, currentY);
+    currentY += splitHeader.length * 5 + 2;
   }
   const tableData = items.map((item) => [
     item.description,
@@ -350,11 +351,12 @@ export function renderItemsTableCompact(
 ): number {
   let currentY = startY;
   if (itemsHeader) {
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(37, 99, 235);
-    doc.text(itemsHeader.toUpperCase(), 15, currentY);
-    currentY += 5;
+    const splitHeader = doc.splitTextToSize(itemsHeader, 180);
+    doc.text(splitHeader, 15, currentY);
+    currentY += splitHeader.length * 4 + 2;
   }
   const tableData = items.map((item) => [
     item.description,
