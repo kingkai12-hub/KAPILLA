@@ -259,6 +259,7 @@ export async function PUT(
           currency: body.currency || 'TZS',
           notes: body.notes,
           terms: body.terms,
+          itemsHeader: body.itemsHeader || null,
           subtotal,
           taxAmount,
           total,

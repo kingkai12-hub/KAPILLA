@@ -232,14 +232,18 @@ export function renderBillToSection(
 export function renderItemsTable(
   doc: jsPDF,
   startY: number,
-  items: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    amount: number;
-  }>,
-  currency: string
+  items: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>,
+  currency: string,
+  itemsHeader?: string | null
 ): number {
+  let currentY = startY;
+  if (itemsHeader) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text(itemsHeader.toUpperCase(), 15, currentY);
+    currentY += 6;
+  }
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -252,7 +256,7 @@ export function renderItemsTable(
   const autoTable = require('jspdf-autotable').default;
 
   autoTable(doc, {
-    startY: startY,
+    startY: currentY,
     head: [
       [
         'DESCRIPTION',
@@ -341,8 +345,17 @@ export function renderItemsTableCompact(
     unitPrice: number;
     amount: number;
   }>,
-  currency: string
+  currency: string,
+  itemsHeader?: string | null
 ): number {
+  let currentY = startY;
+  if (itemsHeader) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text(itemsHeader.toUpperCase(), 15, currentY);
+    currentY += 5;
+  }
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -351,7 +364,7 @@ export function renderItemsTableCompact(
   ]);
   const autoTable = require('jspdf-autotable').default;
   autoTable(doc, {
-    startY,
+    startY: currentY,
     head: [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
     body: tableData,
     theme: 'grid',

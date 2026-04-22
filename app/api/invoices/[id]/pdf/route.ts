@@ -174,7 +174,8 @@ export async function GET(
           amount: item.amount,
         })
       ),
-      invoice.currency || 'TZS'
+      invoice.currency || 'TZS',
+      invoice.itemsHeader
     );
 
     // Get final Y position after table - REDUCED SPACING
