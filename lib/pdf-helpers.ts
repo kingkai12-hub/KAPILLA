@@ -237,14 +237,6 @@ export function renderItemsTable(
   itemsHeader?: string | null
 ): number {
   let currentY = startY;
-  if (itemsHeader) {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(37, 99, 235);
-    const splitHeader = doc.splitTextToSize(itemsHeader, 180);
-    doc.text(splitHeader, 15, currentY);
-    currentY += splitHeader.length * 5 + 2;
-  }
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -258,14 +250,12 @@ export function renderItemsTable(
 
   autoTable(doc, {
     startY: currentY,
-    head: [
-      [
-        'DESCRIPTION',
-        'QTY',
-        `UNIT PRICE (${currency})`, // Currency in header
-        `AMOUNT (${currency})`, // Currency in header
-      ],
-    ],
+    head: itemsHeader
+      ? [
+          [{ content: itemsHeader, colSpan: 4, styles: { halign: 'left', fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 } }],
+          ['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`],
+        ]
+      : [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -350,14 +340,6 @@ export function renderItemsTableCompact(
   itemsHeader?: string | null
 ): number {
   let currentY = startY;
-  if (itemsHeader) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(37, 99, 235);
-    const splitHeader = doc.splitTextToSize(itemsHeader, 180);
-    doc.text(splitHeader, 15, currentY);
-    currentY += splitHeader.length * 4 + 2;
-  }
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -367,7 +349,12 @@ export function renderItemsTableCompact(
   const autoTable = require('jspdf-autotable').default;
   autoTable(doc, {
     startY: currentY,
-    head: [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
+    head: itemsHeader
+      ? [
+          [{ content: itemsHeader, colSpan: 4, styles: { halign: 'left', fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 } }],
+          ['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`],
+        ]
+      : [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
     body: tableData,
     theme: 'grid',
     headStyles: {
