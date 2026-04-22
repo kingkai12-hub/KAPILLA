@@ -174,7 +174,8 @@ export async function GET(
           amount: item.amount,
         })
       ),
-      invoice.currency || 'TZS'
+      invoice.currency || 'TZS',
+      invoice.itemsHeader
     );
 
     // Get final Y position after table - REDUCED SPACING
@@ -779,7 +780,12 @@ function generateDeliveryNote(invoice: {
     yPos = tableEndY + 12;
   }
 
-  // 1. INSPECTION SECTION (Full Width)
+  const blockWidth = 180;
+  const blockHeight = 30; // Slightly taller for vertical arrangement
+  const textX = 20;
+  const lineX = 110;
+
+  // 1. INSPECTION SECTION
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(234, 88, 12); // orange-600
@@ -787,54 +793,50 @@ function generateDeliveryNote(invoice: {
 
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.4);
-  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
+  doc.roundedRect(15, yPos + 2, blockWidth, blockHeight, 1, 1, 'D');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  doc.text('Inspector Name: __________________________', 20, yPos + 10);
-  doc.text('Signature: ________________', 95, yPos + 10);
-  doc.text('Date: ____________', 155, yPos + 10);
-  doc.text('Remarks: __________________________________________________________________________', 20, yPos + 20);
+  doc.text('Inspector Name: _________________________________', textX, yPos + 10);
+  doc.text('Signature / Date: _______________________________', textX, yPos + 18);
+  doc.text('Remarks: __________________________________________________________________________', textX, yPos + 26);
 
-  yPos += 35;
+  yPos += blockHeight + 10;
 
-  // 2. USER SECTION (Full Width)
+  // 2. USER SECTION
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(37, 99, 235); // blue-600
   doc.text('2. USER OF DELIVERED ITEM:', 15, yPos);
 
   doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
+  doc.roundedRect(15, yPos + 2, blockWidth, blockHeight, 1, 1, 'D');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  doc.text('User Name: ____________________________', 20, yPos + 10);
-  doc.text('Department: _______________', 95, yPos + 10);
-  doc.text('Sign: ______________', 155, yPos + 10);
-  doc.text('Confirmation: I confirm receipt and usage of items listed above. Date: ______________ Time: _________', 20, yPos + 20);
+  doc.text('User Name / Dept: _______________________________', textX, yPos + 10);
+  doc.text('Signature / Date: _______________________________', textX, yPos + 18);
+  doc.text('Confirmation: I confirm receipt and usage of items listed above.', textX, yPos + 26);
 
-  yPos += 35;
+  yPos += blockHeight + 10;
 
-  // 3. RECEIVER SECTION (Store/Other) (Full Width)
+  // 3. RECEIVER SECTION
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(16, 185, 129); // green-500
   doc.text('3. RECEIVED BY (Store / Final Recipient):', 15, yPos);
 
   doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(15, yPos + 2, 180, 25, 1, 1, 'D');
+  doc.roundedRect(15, yPos + 2, blockWidth, blockHeight, 1, 1, 'D');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  doc.text('Receiver Name: __________________________', 20, yPos + 10);
-  doc.text('Signature: ________________', 95, yPos + 10);
-  doc.text('Date: ____________', 155, yPos + 10);
-  doc.text('ID/Gate Pass No: _________________________', 20, yPos + 20);
-  doc.text('Store Ref: ____________', 110, yPos + 20);
+  doc.text('Receiver Name: __________________________________', textX, yPos + 10);
+  doc.text('Signature / Date: _______________________________', textX, yPos + 18);
+  doc.text('Time: _______________', textX, yPos + 26);
 
   // Footer line
   doc.setDrawColor(203, 213, 225);

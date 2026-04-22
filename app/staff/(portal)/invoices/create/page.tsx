@@ -127,6 +127,7 @@ export default function CreateInvoicePage() {
         setCustomerTIN(invoice.customerTIN || '');
         setRequisitionNumber(invoice.requisitionNumber || '');
         setInvoiceNumberOverride(invoice.invoiceNumber || '');
+        setItemsHeader(invoice.itemsHeader || '');
 
         // Set dates
         if (invoice.validUntil) {
@@ -177,6 +178,7 @@ export default function CreateInvoicePage() {
   const [customerTIN, setCustomerTIN] = useState('');
   const [requisitionNumber, setRequisitionNumber] = useState('');
   const [invoiceNumberOverride, setInvoiceNumberOverride] = useState('');
+  const [itemsHeader, setItemsHeader] = useState('');
 
   // Invoice details
   const [validUntil, setValidUntil] = useState('');
@@ -361,6 +363,7 @@ export default function CreateInvoicePage() {
         currency,
         notes,
         terms,
+        itemsHeader: itemsHeader || null,
         items: items.map(({ id: _id, ...item }) => item),
       };
 
@@ -846,6 +849,19 @@ export default function CreateInvoicePage() {
                 />
               </div>
             )}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Items Section Header <span className="text-slate-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={itemsHeader}
+                onChange={(e) => setItemsHeader(e.target.value)}
+                placeholder="e.g., FREIGHT CHARGES, LOGISTICS SERVICES, CARGO HANDLING..."
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-slate-400 mt-1">This title will appear above the items table on the invoice PDF.</p>
+            </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2">Notes</label>
               <textarea
