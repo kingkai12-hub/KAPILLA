@@ -238,20 +238,8 @@ export function renderItemsTable(
     unitPrice: number;
     amount: number;
   }>,
-  currency: string,
-  itemsHeader?: string | null
+  currency: string
 ): number {
-  let currentY = startY;
-
-  // Render optional items header
-  if (itemsHeader) {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(37, 99, 235); // blue-600
-    doc.text(itemsHeader.toUpperCase(), 15, currentY);
-    currentY += 6;
-  }
-
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -264,7 +252,7 @@ export function renderItemsTable(
   const autoTable = require('jspdf-autotable').default;
 
   autoTable(doc, {
-    startY: currentY,
+    startY: startY,
     head: [
       [
         'DESCRIPTION',
@@ -353,19 +341,8 @@ export function renderItemsTableCompact(
     unitPrice: number;
     amount: number;
   }>,
-  currency: string,
-  itemsHeader?: string | null
+  currency: string
 ): number {
-  let currentY = startY;
-
-  if (itemsHeader) {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(37, 99, 235);
-    doc.text(itemsHeader.toUpperCase(), 15, currentY);
-    currentY += 5;
-  }
-
   const tableData = items.map((item) => [
     item.description,
     item.quantity.toString(),
@@ -374,7 +351,7 @@ export function renderItemsTableCompact(
   ]);
   const autoTable = require('jspdf-autotable').default;
   autoTable(doc, {
-    startY: currentY,
+    startY,
     head: [['DESCRIPTION', 'QTY', `UNIT PRICE (${currency})`, `AMOUNT (${currency})`]],
     body: tableData,
     theme: 'grid',

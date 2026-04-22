@@ -295,7 +295,6 @@ model Invoice {
   currency          String        @default("TZS")
   notes             String?
   terms             String?
-  itemsHeader       String?
   paymentMethod     String?
   paidAt            DateTime?
   createdBy         String?

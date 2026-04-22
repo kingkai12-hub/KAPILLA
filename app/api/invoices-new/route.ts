@@ -70,7 +70,6 @@ export async function POST(req: Request) {
       currency = 'TZS',
       notes,
       terms,
-      itemsHeader,
       items = [],
     } = body;
 
@@ -208,7 +207,6 @@ export async function POST(req: Request) {
             currency,
             notes: notes || null,
             terms: terms || null,
-            itemsHeader: itemsHeader || null,
             items: {
               create: invoiceItems,
             },

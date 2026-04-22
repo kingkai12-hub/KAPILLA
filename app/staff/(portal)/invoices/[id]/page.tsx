@@ -42,7 +42,6 @@ interface Invoice {
   currency: string;
   notes: string | null;
   terms: string | null;
-  itemsHeader: string | null;
   items: InvoiceItem[];
   finalInvoices?: Invoice[];
 }
@@ -651,15 +650,7 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* Items Table */}
-            <div className="mb-2 sm:mb-8">
-              {invoice.itemsHeader && (
-                <div className="mb-1 sm:mb-2 px-1">
-                  <span className="text-sm sm:text-base font-bold text-blue-600 uppercase tracking-wide">
-                    {invoice.itemsHeader}
-                  </span>
-                </div>
-              )}
-              <div className="overflow-x-auto border sm:border-2 border-slate-300">
+            <div className="mb-2 sm:mb-8 overflow-x-auto border sm:border-2 border-slate-300">
               <table className="w-full border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-slate-100">
@@ -704,7 +695,6 @@ export default function InvoiceDetailPage() {
                   ))}
                 </tbody>
               </table>
-              </div>
             </div>
 
             {/* Totals and Payment Info */}
