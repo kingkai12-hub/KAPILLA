@@ -676,35 +676,33 @@ function generateDeliveryNote(invoice: {
   }
 
   // Header with logo (transparent PNG with blue details only)
-  const logoWidth = 38; // width in mm (keeps header compact)
-  const logoHeight = 24; // height in mm (preserves original aspect ratio)
-  const logoX = 15; // left margin
-  const headerY = 14; // slight upward shift to balance spacing
+  const logoWidth = 35;
+  const logoHeight = 22;
+  const logoX = 15;
+  const headerY = 10;
 
   if (logoBase64) {
     doc.addImage(logoBase64, 'PNG', logoX, headerY, logoWidth, logoHeight);
   }
 
-  // Company details on the right side - UNIFORM FONT SIZE
-  const detailsX = 60; // start closer to logo to reduce empty space
-  doc.setFontSize(9); // slightly smaller for compact header
+  // Company details - right of logo, compact spacing
+  const detailsX = 55;
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('KAPILLA GROUP LIMITED', detailsX, headerY + 5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(7.5);
   doc.setTextColor(60, 60, 60);
-  doc.text('P.O Box 71729', detailsX, headerY + 11);
-  doc.text('Sea Cliff Village, 10 Toure Drive, Msasani', detailsX, headerY + 16);
-  doc.text('Dar es Salaam, Tanzania', detailsX, headerY + 21);
-  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 26);
-  doc.text('Email: kapillagroup@gmail.com', detailsX, headerY + 31);
-  doc.text('TIN: 157-935-380', detailsX, headerY + 36);
+  doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', detailsX, headerY + 10);
+  doc.text('Dar es Salaam, Tanzania', detailsX, headerY + 15);
+  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 20);
+  doc.text('Email: kapillagroup@gmail.com  |  TIN: 157-935-380', detailsX, headerY + 25);
 
-  // Separator line between header and body - more compact
-  const separatorY = headerY + logoHeight + 4;
-  doc.setDrawColor(37, 99, 235); // blue-600
+  // Separator line - below all header content
+  const separatorY = headerY + logoHeight + 8;
+  doc.setDrawColor(37, 99, 235);
   doc.setLineWidth(0.6);
   doc.line(15, separatorY, 195, separatorY);
 
@@ -781,9 +779,8 @@ function generateDeliveryNote(invoice: {
   }
 
   const blockWidth = 180;
-  const blockHeight = 30; // Slightly taller for vertical arrangement
+  const blockHeight = 30;
   const textX = 20;
-  const lineX = 110;
 
   // 1. INSPECTION SECTION
   doc.setFontSize(9);
@@ -800,7 +797,7 @@ function generateDeliveryNote(invoice: {
   doc.setTextColor(0, 0, 0);
   doc.text('Inspector Name: _________________________________', textX, yPos + 10);
   doc.text('Signature / Date: _______________________________', textX, yPos + 18);
-  doc.text('Remarks: __________________________________________________________________________', textX, yPos + 26);
+  doc.text('Remarks: _______________________________________________', textX, yPos + 26);
 
   yPos += blockHeight + 10;
 
