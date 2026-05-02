@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Truck, CheckCheck, Hourglass, Layers, FileText, Plus, Users, MapPin, DollarSign, Settings, ArrowRight } from 'lucide-react';
+import { Package, Truck, CheckCheck, Hourglass, Layers, FileText, Plus, Users, MapPin, DollarSign, Settings, ArrowRight, Megaphone } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Link from 'next/link';
@@ -115,6 +115,13 @@ export default async function StaffDashboard() {
       bg: 'bg-emerald-50 dark:bg-emerald-900/20',
     },
     {
+      title: 'Manage Ads',
+      href: '/staff/admin/advertisements',
+      icon: Megaphone,
+      color: 'from-rose-600 to-pink-600',
+      bg: 'bg-rose-50 dark:bg-rose-900/20',
+    },
+    {
       title: 'Pickup Requests',
       href: '/staff/pickup-requests',
       icon: MapPin,
@@ -153,7 +160,7 @@ export default async function StaffDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {quickActions.map((action, idx) => {
           const Icon = action.icon;
           return (
