@@ -116,12 +116,190 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any; fallb
   return <span>{formatted}</span>;
 };
 
+function AdvertisementCard({ ad }: { ad: any }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={cn(
+        "relative overflow-hidden rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01]",
+        ad.linkUrl ? "cursor-pointer" : ""
+      )}
+      onClick={() => {
+        if (ad.linkUrl) {
+          window.open(ad.linkUrl, "_blank");
+        }
+      }}
+    >
+      {ad.imageUrl ? (
+        <div className="relative h-48 md:h-64 bg-slate-200">
+          <Image
+            src={ad.imageUrl}
+            alt={ad.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+            <h2 className="text-2xl md:text-4xl font-black mb-2">{ad.title}</h2>
+            {ad.description && (
+              <p className="text-sm md:text-lg text-blue-100 max-w-3xl">{ad.description}</p>
+            )}
+            {ad.linkUrl && (
+              <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white/25 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white/35 transition-colors">
+                Learn More
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="p-6 md:p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+          <h2 className="text-2xl md:text-3xl font-black mb-2">{ad.title}</h2>
+          {ad.description && (
+            <p className="text-blue-100 mb-4">{ad.description}</p>
+          )}
+          {ad.linkUrl && (
+            <div className="inline-flex items-center gap-2 text-sm font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 transition-colors">
+              Learn More
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % advertisements.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [advertisements.length]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % advertisements.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length);
+  };
+
+  return (
+    <div className="relative">
+      <div className="overflow-hidden rounded-2xl">
+        <div
+          className="flex transition-transform duration-700 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {advertisements.map((ad, index) => (
+            <div key={ad.id} className="min-w-full">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className={cn(
+                  "relative overflow-hidden rounded-2xl border shadow-lg transition-all duration-300",
+                  ad.linkUrl ? "cursor-pointer" : ""
+                )}
+                onClick={() => {
+                  if (ad.linkUrl) {
+                    window.open(ad.linkUrl, "_blank");
+                  }
+                }}
+              >
+                {ad.imageUrl ? (
+                  <div className="relative h-48 md:h-64 bg-slate-200">
+                    <Image
+                      src={ad.imageUrl}
+                      alt={ad.title}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+                      <h2 className="text-2xl md:text-4xl font-black mb-2">{ad.title}</h2>
+                      {ad.description && (
+                        <p className="text-sm md:text-lg text-blue-100 max-w-3xl">{ad.description}</p>
+                      )}
+                      {ad.linkUrl && (
+                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white/25 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white/35 transition-colors">
+                          Learn More
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 md:p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                    <h2 className="text-2xl md:text-3xl font-black mb-2">{ad.title}</h2>
+                    {ad.description && (
+                      <p className="text-blue-100 mb-4">{ad.description}</p>
+                    )}
+                    {ad.linkUrl && (
+                      <div className="inline-flex items-center gap-2 text-sm font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 transition-colors">
+                        Learn More
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all duration-300 z-10"
+      >
+        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all duration-300 z-10"
+      >
+        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Indicator dots */}
+      <div className="flex justify-center gap-2 mt-4">
+        {advertisements.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={cn(
+              "w-2.5 h-2.5 rounded-full transition-all duration-300",
+              index === currentIndex
+                ? "bg-blue-600 w-8 rounded-full"
+                : "bg-slate-300 hover:bg-slate-400"
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface HomeClientProps {
   initialServices: any[];
   initialExecutives: any[];
+  initialAdvertisements: any[];
 }
 
-export default function HomeClient({ initialServices, initialExecutives }: HomeClientProps) {
+export default function HomeClient({ initialServices, initialExecutives, initialAdvertisements }: HomeClientProps) {
   // Forced update trigger: 2026-01-31-12-30
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
@@ -132,6 +310,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [executives, setExecutives] = useState<any[]>(initialExecutives);
   const [services, setServices] = useState<any[]>(initialServices);
+  const [advertisements, setAdvertisements] = useState<any[]>(initialAdvertisements);
 
   const iconMap: Record<string, any> = {
     Truck,
@@ -367,20 +546,20 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           <div className="flex gap-2 md:gap-3">
             <button
               onClick={() => setIsPickupModalOpen(true)}
-              className="cursor-pointer p-2 md:px-4 md:py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              className="cursor-pointer p-2 md:px-4 md:py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:scale-105"
               aria-label="Request Pickup"
             >
               <Truck className="w-4 h-4 md:w-3.5 md:h-3.5" />
               <span className="hidden md:inline">Request Pickup</span>
             </button>
-            <a
+            <Link
               href="/staff/login"
-              className="p-2 md:px-4 md:py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2"
+              className="p-2 md:px-4 md:py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 flex items-center gap-2 hover:scale-105"
               aria-label="Staff Portal"
             >
               <User className="w-4 h-4 md:hidden" />
               <span className="hidden md:inline">Staff Portal</span>
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
@@ -554,6 +733,19 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
         </div>
       </section>
 
+      {/* Advertisements Section */}
+      {advertisements.length > 0 && (
+        <section className="py-8 bg-gradient-to-r from-blue-50 to-indigo-50 relative z-10 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            {advertisements.length === 1 ? (
+              <AdvertisementCard ad={advertisements[0]} />
+            ) : (
+              <AdvertisementCarousel advertisements={advertisements} />
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Services & Fleet Showcase */}
       <section className="py-16 bg-white relative z-10">
         <div className="max-w-7xl mx-auto px-6">
@@ -601,42 +793,56 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                 icon: Package,
                 title: 'Courier Services',
                 desc: 'Fast, reliable delivery for documents and parcels. Important items reach their destination safely and on time.',
+                color: 'from-blue-500 to-indigo-600',
+                bg: 'bg-blue-50',
               },
               {
                 icon: Truck,
                 title: 'Transportation Services',
                 desc: 'Comprehensive multi-modal logistics solutions. Road, rail, air and sea freight to move your cargo efficiently.',
+                color: 'from-emerald-500 to-teal-600',
+                bg: 'bg-emerald-50',
               },
               {
                 icon: FileText,
                 title: 'Clearing & Forwarding',
                 desc: 'Expert customs brokerage and freight forwarding. We navigate complex regulations for smooth border crossings.',
+                color: 'from-amber-500 to-orange-600',
+                bg: 'bg-amber-50',
               },
               {
                 icon: Zap,
                 title: 'ADC Express',
                 desc: 'Premium express delivery service for your most urgent shipments. Lightning-fast transit times with priority handling.',
+                color: 'from-purple-500 to-pink-600',
+                bg: 'bg-purple-50',
               },
               {
                 icon: Clock,
                 title: 'Real-Time Updates',
                 desc: "Monitor your shipment 24/7 with status updates at every major checkpoint. Instant visibility into your cargo's journey.",
+                color: 'from-cyan-500 to-blue-600',
+                bg: 'bg-cyan-50',
               },
               {
                 icon: Globe,
                 title: 'Global Network',
                 desc: 'Seamless shipping to over 200 countries. Leverage our integrated international network to expand worldwide.',
+                color: 'from-rose-500 to-red-600',
+                bg: 'bg-rose-50',
               },
             ].map((feature, i) => (
               <div
                 key={i}
-                className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-300 group hover:-translate-y-1"
+                className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/10 transition-all duration-300 group hover:-translate-y-2"
               >
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 text-blue-600">
-                  <feature.icon className="w-5 h-5" />
+                <div className={`w-12 h-12 ${feature.bg} rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-all duration-300`}>
+                  <div className={`w-8 h-8 bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center`}>
+                    <feature.icon className="w-5 h-5 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed text-xs">{feature.desc}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">{feature.desc}</p>
               </div>
             ))}
           </div>

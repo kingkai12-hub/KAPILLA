@@ -328,3 +328,21 @@ model InvoiceItem {
   @@index([invoiceId])
   @@map("InvoiceItem")
 }
+
+model Advertisement {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("Advertisement")
+}

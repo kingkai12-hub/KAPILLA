@@ -24,11 +24,40 @@ async function getExecutives() {
   }
 }
 
+async function getAdvertisements() {
+  try {
+    const now = new Date();
+    return await db.advertisement.findMany({
+      where: {
+        isActive: true,
+        AND: [
+          {
+            OR: [
+              { startDate: null },
+              { startDate: { lte: now } }
+            ]
+          },
+          {
+            OR: [
+              { endDate: null },
+              { endDate: { gte: now } }
+            ]
+          }
+        ]
+      },
+      orderBy: { sortOrder: 'asc' },
+    });
+  } catch (error) {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [services, executives] = await Promise.all([
+  const [services, executives, advertisements] = await Promise.all([
     getServices(),
     getExecutives(),
+    getAdvertisements(),
   ]);
 
-  return <HomeClient initialServices={services} initialExecutives={executives} />;
+  return <HomeClient initialServices={services} initialExecutives={executives} initialAdvertisements={advertisements} />;
 }

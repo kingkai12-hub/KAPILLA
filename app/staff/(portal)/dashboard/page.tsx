@@ -1,7 +1,8 @@
 import React from 'react';
-import { Package, Truck, CheckCheck, Hourglass, Layers } from 'lucide-react';
+import { Package, Truck, CheckCheck, Hourglass, Layers, FileText, Plus, Users, MapPin, DollarSign, Settings, ArrowRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Link from 'next/link';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -98,6 +99,37 @@ export default async function StaffDashboard() {
     },
   ];
 
+  const quickActions = [
+    {
+      title: 'New Waybill',
+      href: '/staff/shipments/create',
+      icon: Package,
+      color: 'from-blue-600 to-indigo-600',
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+    },
+    {
+      title: 'Create Invoice',
+      href: '/staff/invoices/create',
+      icon: FileText,
+      color: 'from-emerald-600 to-teal-600',
+      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    },
+    {
+      title: 'Pickup Requests',
+      href: '/staff/pickup-requests',
+      icon: MapPin,
+      color: 'from-amber-600 to-orange-600',
+      bg: 'bg-amber-50 dark:bg-amber-900/20',
+    },
+    {
+      title: 'Documents',
+      href: '/staff/documents',
+      icon: FileText,
+      color: 'from-purple-600 to-pink-600',
+      bg: 'bg-purple-50 dark:bg-purple-900/20',
+    },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex justify-between items-end relative z-10">
@@ -110,14 +142,48 @@ export default async function StaffDashboard() {
           </p>
         </div>
         <div className="hidden sm:flex gap-3">
-          <a
+          <Link
             href="/staff/shipments/create"
             className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-105 transition-all duration-300 flex items-center gap-2"
           >
             <Package className="w-5 h-5" />
             New Waybill
-          </a>
+          </Link>
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {quickActions.map((action, idx) => {
+          const Icon = action.icon;
+          return (
+            <Link
+              key={idx}
+              href={action.href}
+              className={cn(
+                'group relative p-5 rounded-2xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-xl',
+                action.bg,
+                'border-slate-200 dark:border-slate-700'
+              )}
+            >
+              <div
+                className={cn(
+                  'w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300',
+                  action.color
+                )}
+              >
+                <Icon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                {action.title}
+              </h3>
+              <div className="flex items-center mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <span>Quick access</span>
+                <ArrowRight className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Stats Grid */}
