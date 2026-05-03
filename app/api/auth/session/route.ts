@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
+import { verifySessionToken, SESSION_COOKIE } from '@/lib/session';
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const userId = cookieStore.get('kapilla_uid')?.value;
+
+    // Try new signed session first
+    const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
+    let userId: string | undefined;
+
+    if (sessionToken) {
+      const payload = await verifySessionToken(sessionToken);
+      userId = payload?.id;
+    }
+
+    // Fall back to legacy cookie
+    if (!userId) {
+      const legacyAuth = cookieStore.get('kapilla_auth')?.value;
+      const legacyUid = cookieStore.get('kapilla_uid')?.value;
+      if (legacyAuth === '1' && legacyUid) {
+        userId = legacyUid;
+      }
+    }
 
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -22,7 +40,7 @@ export async function GET() {
         phoneNumber: true,
         image: true,
         isDisabled: true,
-      }
+      },
     });
 
     if (!user || user.isDisabled) {

@@ -7,6 +7,9 @@ const envSchema = z.object({
   
   // Node environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+
+  // Session signing secret — required in production (min 32 chars)
+  SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters').optional(),
   
   // Optional services
   REDIS_URL: z.string().url().optional(),

@@ -1,10 +1,13 @@
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import { verifySessionToken, SESSION_COOKIE } from '@/lib/session';
 
 const SALT_ROUNDS = 10;
-const AUTH_COOKIE = 'kapilla_auth';
-const SESSION_USER_ID = 'kapilla_uid';
+
+// Legacy cookie names — kept for backward-compat read during transition
+const LEGACY_AUTH_COOKIE = 'kapilla_auth';
+const LEGACY_UID_COOKIE = 'kapilla_uid';
 
 /** Hash a password for storage */
 export async function hashPassword(password: string): Promise<string> {
@@ -32,8 +35,27 @@ export async function migrateToHash(userId: string, plainPassword: string): Prom
 export async function getSession(req: Request): Promise<{ id: string; role: string } | null> {
   try {
     const cookieStore = await cookies();
-    const auth = cookieStore.get(AUTH_COOKIE)?.value;
-    const userId = cookieStore.get(SESSION_USER_ID)?.value;
+
+    // --- New signed-token path ---
+    const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
+    if (sessionToken) {
+      const payload = await verifySessionToken(sessionToken);
+      if (payload) {
+        // Verify user still exists and is active
+        const user = await db.user.findUnique({
+          where: { id: payload.id },
+          select: { id: true, role: true, isDisabled: true },
+        });
+        if (user && !user.isDisabled) {
+          return { id: user.id, role: user.role };
+        }
+        return null;
+      }
+    }
+
+    // --- Legacy cookie path (backward compat — remove after all sessions rotate) ---
+    const auth = cookieStore.get(LEGACY_AUTH_COOKIE)?.value;
+    const userId = cookieStore.get(LEGACY_UID_COOKIE)?.value;
     if (!auth || auth !== '1' || !userId) return null;
 
     const user = await db.user.findUnique({

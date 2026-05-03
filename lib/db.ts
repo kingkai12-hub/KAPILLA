@@ -3,43 +3,39 @@ let prisma: any;
 
 try {
   if (typeof window === 'undefined') {
-    // Import Prisma in server-side environment (development and production)
     const { PrismaClient } = require('@prisma/client');
-    
+
     const globalForPrisma = globalThis as unknown as { prisma: any };
-    
+
     const prismaClientSingleton = () => {
       let url = process.env.DATABASE_URL;
-      
-      // Fix for "prepared statement already exists" error with Supabase Transaction Pooler
+
+      // Fix for "prepared statement already exists" with Supabase Transaction Pooler.
+      // Guard against appending the param twice.
       if (url && !url.includes('pgbouncer=true')) {
         url += url.includes('?') ? '&pgbouncer=true' : '?pgbouncer=true';
       }
 
       return new PrismaClient({
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-        datasources: url ? {
-          db: {
-            url: url,
-          },
-        } : undefined,
+        datasources: url ? { db: { url } } : undefined,
       });
     };
 
     prisma = globalForPrisma.prisma ?? prismaClientSingleton();
-    
-    // EXPLICITLY check and log if models are missing from the real client
+
     if (prisma && !prisma.shipment) {
       console.warn('⚠️ Prisma client initialized but "shipment" model is missing. Check schema mapping.');
     }
-    
-    if (process.env.NODE_ENV === 'development') {
+
+    if (process.env.NODE_ENV !== 'production') {
       globalForPrisma.prisma = prisma;
     }
   }
 } catch (error) {
   console.log('⚠️ Prisma not available, using mock for build');
-  // Mock Prisma only for build time
+  // Minimal mock — only used at build time when Prisma client hasn't been generated yet.
+  // This does NOT hide runtime schema issues because at runtime Prisma is always available.
   const noop = () => Promise.resolve(null);
   const noopArr = () => Promise.resolve([]);
   const noopObj = () => Promise.resolve({});
@@ -50,16 +46,19 @@ try {
     create: noopObj,
     update: noopObj,
     delete: noopObj,
+    count: () => Promise.resolve(0),
+    upsert: noopObj,
   };
   prisma = {
     $connect: () => Promise.resolve(),
     $disconnect: () => Promise.resolve(),
+    $queryRaw: noopArr,
+    $executeRaw: () => Promise.resolve(0),
+    $transaction: (fn: any) => (typeof fn === 'function' ? fn(prisma) : Promise.resolve([])),
     shipment: { ...mockModel },
-    trackingEvent: { findMany: noopArr, create: noopObj },
+    trackingEvent: { ...mockModel },
     vehicleTracking: { ...mockModel },
     routeSegment: { ...mockModel },
-    trip: { ...mockModel },
-    checkIn: { findMany: noopArr, create: noopObj },
     user: { ...mockModel },
     document: { ...mockModel },
     documentFolder: { ...mockModel },
@@ -67,10 +66,13 @@ try {
     pickupRequest: { ...mockModel },
     serviceShowcase: { ...mockModel },
     executive: { ...mockModel },
-    invoice: { ...mockModel, count: () => Promise.resolve(0) },
+    invoice: { ...mockModel },
     invoiceItem: { ...mockModel },
-    $queryRaw: noopArr,
-    $executeRaw: () => Promise.resolve(0),
+    auditLog: { ...mockModel },
+    systemConfig: { ...mockModel },
+    apiKey: { ...mockModel },
+    notification: { ...mockModel },
+    advertisement: { ...mockModel },
   };
 }
 

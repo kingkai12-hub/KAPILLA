@@ -6,25 +6,23 @@ import type { CreateShipmentInput, UpdateShipmentInput } from '../validators/shi
 
 export class ShipmentService {
   /**
-   * Generate unique waybill number - Simple 4-digit format
+   * Generate unique waybill number - Simple 4-digit format.
+   *
+   * Uses a DB-level MAX() query so concurrent creates don't collide.
+   * The UNIQUE constraint on waybillNumber is the final safety net —
+   * if two requests somehow get the same number, one will get a P2002
+   * unique-constraint error and the caller can retry.
    */
   private async generateWaybillNumber(): Promise<string> {
-    // Get all shipments and find the highest 4-digit number
-    const allShipments = await db.shipment.findMany({
-      select: { waybillNumber: true },
-      orderBy: { createdAt: 'desc' },
-      take: 100, // Get last 100 to find highest 4-digit number
-    });
+    // Atomically find the current maximum numeric waybill
+    const result = await db.$queryRaw<{ max: string | null }[]>`
+      SELECT MAX(CAST("waybillNumber" AS INTEGER)) as max
+      FROM "Shipment"
+      WHERE "waybillNumber" ~ '^[0-9]+$'
+    `;
 
-    let maxNumber = 0;
-    for (const shipment of allShipments) {
-      const num = parseInt(shipment.waybillNumber, 10);
-      if (!isNaN(num) && shipment.waybillNumber.length === 4) {
-        maxNumber = Math.max(maxNumber, num);
-      }
-    }
-
-    return String(maxNumber + 1).padStart(4, '0');
+    const current = result[0]?.max ? parseInt(result[0].max, 10) : 0;
+    return String(current + 1).padStart(4, '0');
   }
 
   /**

@@ -146,10 +146,7 @@ export async function POST(req: Request) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
     }
-    return NextResponse.json({ 
-      error: 'Failed to create user', 
-      details: error.message || 'Unknown error' 
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 }
 
@@ -227,6 +224,6 @@ export async function DELETE(req: Request) {
       throw error;
     }
   } catch (error: any) {
-    return NextResponse.json({ error: 'Failed to delete user', details: error?.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }
