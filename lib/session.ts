@@ -1,58 +1,43 @@
 /**
  * Signed session tokens using HMAC-SHA256 via the Web Crypto API.
- * Replaces the insecure kapilla_auth=1 + kapilla_uid cookie pair with a
- * single signed token so the session cannot be forged by setting cookies.
- *
- * Format: base64url(payload) + "." + base64url(signature)
- * Payload: { id, role, iat }
- *
- * Backward-compatible: getSession() in auth.ts still accepts the old cookies
- * during the transition window; new logins always get the signed token.
  */
 
-const ALGORITHM = { name: 'HMAC', hash: 'SHA-256' };
-const SESSION_COOKIE = 'kapilla_session';
-const SESSION_DURATION_SECONDS = 60 * 60 * 8; // 8 hours
-
-// Access process.env safely — Next.js inlines these at build time
 declare const process: { env: Record<string, string | undefined> };
 
-function getSecret(): string {
-  const secret = process.env.SESSION_SECRET;
-  if (secret && secret.length >= 32) return secret;
+const ALGORITHM = { name: 'HMAC', hash: 'SHA-256' };
+export const SESSION_COOKIE = 'kapilla_session';
+export const SESSION_DURATION_SECONDS = 60 * 60 * 8; // 8 hours
 
-  // Fallback: derive a stable secret from DATABASE_URL (always present).
-  // This is weaker than a dedicated secret but keeps the app running.
-  // Set SESSION_SECRET in Vercel env vars to use a proper secret.
-  const fallback = process.env.DATABASE_URL || process.env.DIRECT_URL || 'kapilla-fallback-secret-set-SESSION_SECRET';
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('[session] SESSION_SECRET not set — using derived fallback. Set SESSION_SECRET in Vercel env vars for proper security.');
-  }
-  // Pad/truncate to ensure at least 32 chars
-  return (fallback + fallback).slice(0, Math.max(32, fallback.length));
+// Fixed fallback — consistent across all Vercel instances.
+// Set SESSION_SECRET env var in Vercel for a proper secret.
+const FALLBACK_SECRET = 'kapilla-group-ltd-session-secret-2026-fixed-key';
+
+function getSecret(): string {
+  const s = process.env.SESSION_SECRET;
+  if (s && s.length >= 32) return s;
+  return FALLBACK_SECRET;
 }
 
 async function importKey(secret: string): Promise<CryptoKey> {
-  const enc = new TextEncoder();
-  return crypto.subtle.importKey('raw', enc.encode(secret), ALGORITHM, false, ['sign', 'verify']);
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    ALGORITHM,
+    false,
+    ['sign', 'verify']
+  );
 }
 
 function toBase64Url(bytes: Uint8Array): string {
-  // Convert Uint8Array to base64 using btoa with char codes
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function fromBase64Url(str: string): Uint8Array {
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(padded);
+  const binary = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
 
@@ -62,27 +47,21 @@ export interface SessionPayload {
   iat: number;
 }
 
-/** Create a signed session token for the given user */
 export async function createSessionToken(payload: Omit<SessionPayload, 'iat'>): Promise<string> {
   const data: SessionPayload = { ...payload, iat: Math.floor(Date.now() / 1000) };
   const enc = new TextEncoder();
-  const payloadBytes = enc.encode(JSON.stringify(data));
-  const payloadB64 = toBase64Url(payloadBytes);
+  const payloadB64 = toBase64Url(enc.encode(JSON.stringify(data)));
   const key = await importKey(getSecret());
-  const sigBuffer = await crypto.subtle.sign(ALGORITHM, key, enc.encode(payloadB64));
-  const sigB64 = toBase64Url(new Uint8Array(sigBuffer));
-  return `${payloadB64}.${sigB64}`;
+  const sig = await crypto.subtle.sign(ALGORITHM, key, enc.encode(payloadB64));
+  return `${payloadB64}.${toBase64Url(new Uint8Array(sig))}`;
 }
 
-/** Verify and decode a session token. Returns null if invalid or expired. */
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
-    const dotIndex = token.lastIndexOf('.');
-    if (dotIndex === -1) return null;
-
-    const payloadB64 = token.slice(0, dotIndex);
-    const sigB64 = token.slice(dotIndex + 1);
-
+    const dot = token.lastIndexOf('.');
+    if (dot === -1) return null;
+    const payloadB64 = token.slice(0, dot);
+    const sigB64 = token.slice(dot + 1);
     if (!payloadB64 || !sigB64) return null;
 
     const enc = new TextEncoder();
@@ -95,18 +74,12 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
     );
     if (!valid) return null;
 
-    const payloadBytes = fromBase64Url(payloadB64);
-    const payloadStr = new TextDecoder().decode(payloadBytes);
-    const payload: SessionPayload = JSON.parse(payloadStr);
-
-    // Check expiry
-    const age = Math.floor(Date.now() / 1000) - payload.iat;
-    if (age > SESSION_DURATION_SECONDS) return null;
-
+    const payload: SessionPayload = JSON.parse(
+      new TextDecoder().decode(fromBase64Url(payloadB64))
+    );
+    if (Math.floor(Date.now() / 1000) - payload.iat > SESSION_DURATION_SECONDS) return null;
     return payload;
   } catch {
     return null;
   }
 }
-
-export { SESSION_COOKIE, SESSION_DURATION_SECONDS };
