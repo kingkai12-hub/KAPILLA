@@ -25,8 +25,9 @@ export default function StaffLogin() {
       });
 
       if (res.ok) {
-        // Don't store anything in localStorage - rely on HTTP-only cookies
-        // Redirect to dashboard
+        const userData = await res.json();
+        // Store user in localStorage so the portal layout can read it immediately
+        localStorage.setItem('kapilla_user', JSON.stringify(userData));
         window.location.href = '/staff/dashboard';
       } else {
         const data = await res.json();
