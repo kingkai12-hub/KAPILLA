@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyPassword, migrateToHash } from '@/lib/auth';
 import { loginRateLimit, getClientIp } from '@/lib/ratelimit';
-import { createSessionToken, SESSION_COOKIE, SESSION_DURATION_SECONDS } from '@/lib/session';
 
 export const runtime = 'nodejs';
 
@@ -11,29 +10,18 @@ const cookieOptions = {
   sameSite: 'strict' as const,
   secure: process.env.NODE_ENV === 'production',
   path: '/',
-  maxAge: SESSION_DURATION_SECONDS,
+  maxAge: 60 * 60 * 8,
 };
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting
     const ip = getClientIp(req);
     const { success, limit, remaining, reset } = await loginRateLimit.limit(ip);
 
     if (!success) {
       return NextResponse.json(
-        {
-          error: 'Too many login attempts. Please try again later.',
-          retryAfter: new Date(reset).toISOString(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': limit.toString(),
-            'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': reset.toString(),
-          },
-        }
+        { error: 'Too many login attempts. Please try again later.', retryAfter: new Date(reset).toISOString() },
+        { status: 429, headers: { 'X-RateLimit-Limit': limit.toString(), 'X-RateLimit-Remaining': remaining.toString(), 'X-RateLimit-Reset': reset.toString() } }
       );
     }
 
@@ -45,11 +33,7 @@ export async function POST(req: Request) {
     }
 
     if (!db || !db.user) {
-      console.error('[AUTH_LOGIN] Database not initialized');
-      return NextResponse.json(
-        { error: 'Database connection error. Please contact administrator.', code: 'DB_NOT_INITIALIZED' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection error. Please contact administrator.' }, { status: 500 });
     }
 
     let user;
@@ -61,10 +45,7 @@ export async function POST(req: Request) {
       user = await Promise.race([queryPromise, timeoutPromise]);
     } catch (dbError) {
       console.error('[AUTH_LOGIN] Database query failed:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection error. Please try again in a moment.', code: 'DB_QUERY_FAILED' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection error. Please try again.' }, { status: 500 });
     }
 
     if (!user || !(await verifyPassword(user.password, password))) {
@@ -77,40 +58,22 @@ export async function POST(req: Request) {
 
     // One-time migration: hash plain-text passwords
     if (!user.password.startsWith('$2')) {
-      try {
-        await migrateToHash(user.id, password);
-      } catch (e) {
-        console.error('Password migration failed:', e);
-      }
+      try { await migrateToHash(user.id, password); } catch (e) { console.error('Password migration failed:', e); }
     }
-
-    // Issue signed session token
-    const token = await createSessionToken({ id: user.id, role: user.role });
 
     const { password: _pwd, ...userWithoutPassword } = user;
     const res = NextResponse.json(userWithoutPassword);
 
-    // Set new signed session cookie
-    res.cookies.set(SESSION_COOKIE, token, cookieOptions);
+    // Set original working cookies
+    res.cookies.set('kapilla_auth', '1', cookieOptions);
+    res.cookies.set('kapilla_uid', user.id, cookieOptions);
 
-    // Clear legacy cookies if present (graceful rotation)
-    res.cookies.set('kapilla_auth', '', { ...cookieOptions, maxAge: 0 });
-    res.cookies.set('kapilla_uid', '', { ...cookieOptions, maxAge: 0 });
+    // Also clear the new session cookie if present from previous attempts
+    res.cookies.set('kapilla_session', '', { ...cookieOptions, maxAge: 0 });
 
     return res;
   } catch (error) {
     console.error('[AUTH_LOGIN] Unexpected error:', error);
-    // Never expose stack traces or internal details in production
-    return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        code: 'UNEXPECTED_ERROR',
-        ...(process.env.NODE_ENV === 'development' && {
-          details: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-        }),
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

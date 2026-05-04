@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE } from '@/lib/session';
 
 export const runtime = 'nodejs';
 
@@ -12,10 +11,8 @@ export async function POST() {
     path: '/',
     maxAge: 0,
   };
-  // Clear new signed session cookie
-  res.cookies.set(SESSION_COOKIE, '', opts);
-  // Clear legacy cookies (backward compat)
   res.cookies.set('kapilla_auth', '', opts);
   res.cookies.set('kapilla_uid', '', opts);
+  res.cookies.set('kapilla_session', '', opts);
   return res;
 }
