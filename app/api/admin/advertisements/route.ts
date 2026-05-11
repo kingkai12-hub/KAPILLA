@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { requireAuth, requireRole } from '@/lib/auth';
 
-const ALLOWED_ROLES = ['ADMIN', 'MD', 'CEO'];
+const ALLOWED_ROLES = ['ADMIN', 'MD', 'CEO', 'MANAGER', 'OPERATION_MANAGER'];
 
 export async function GET(req: Request) {
   const auth = await requireAuth(req);
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     });
     return NextResponse.json(advertisements);
   } catch (error) {
-    console.error('[AD_FETCH]', error);
+    console.error('[AD_GET]', error);
     return NextResponse.json({ error: 'Failed to fetch advertisements' }, { status: 500 });
   }
 }
