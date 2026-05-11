@@ -20,6 +20,8 @@ import {
   type RouteContext,
 } from '@/lib/speed-manager';
 import { calculateHeading } from '@/lib/tracking-utils';
+import { sendEmail } from '@/lib/email';
+import { sendShipmentUpdateSMS } from '@/lib/sms';
 
 /**
  * Update single vehicle position autonomously
@@ -231,6 +233,68 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
               remarks: 'Cargo has arrived at destination. Waiting for pickup.',
             },
           });
+
+          // Send arrival notifications to sender and receiver
+          const trackingUrl = `https://kapillagroup.vercel.app/?waybill=${shipment.waybillNumber}`;
+          const arrivalMessage = `Your cargo (Waybill: ${shipment.waybillNumber}) has ARRIVED at ${shipment.destination}. Please confirm receipt. Track: ${trackingUrl}`;
+
+          // SMS to receiver
+          if (shipment.receiverPhone) {
+            sendShipmentUpdateSMS(
+              shipment.receiverPhone,
+              shipment.waybillNumber,
+              `ARRIVED at ${shipment.destination} - Please confirm receipt`,
+              shipment.receiverName || 'Customer'
+            ).catch((e: unknown) => console.error('[AUTONOMOUS] Receiver SMS failed:', e));
+          }
+
+          // SMS to sender
+          if (shipment.senderPhone) {
+            sendShipmentUpdateSMS(
+              shipment.senderPhone,
+              shipment.waybillNumber,
+              `ARRIVED at ${shipment.destination} - Awaiting recipient confirmation`,
+              shipment.senderName || 'Sender'
+            ).catch((e: unknown) => console.error('[AUTONOMOUS] Sender SMS failed:', e));
+          }
+
+          // Email to receiver
+          if (shipment.receiverEmail || shipment.senderEmail) {
+            const emailHtml = `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                <div style="background:linear-gradient(135deg,#16a34a,#15803d);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+                  <h1 style="color:white;margin:0;font-size:26px;">📦 Cargo Arrived!</h1>
+                  <p style="color:rgba(255,255,255,0.9);margin:8px 0 0 0;">Kapilla Group Ltd</p>
+                </div>
+                <div style="background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px;">
+                  <p style="color:#333;font-size:16px;">Your shipment has arrived at its destination and is awaiting pickup confirmation.</p>
+                  <div style="background:white;padding:20px;border-left:4px solid #16a34a;margin:20px 0;border-radius:5px;">
+                    <p style="margin:0;font-size:18px;font-weight:bold;color:#333;">Waybill: ${shipment.waybillNumber}</p>
+                    <p style="margin:8px 0 0 0;color:#555;">From: <strong>${shipment.origin}</strong></p>
+                    <p style="margin:4px 0 0 0;color:#555;">To: <strong>${shipment.destination}</strong></p>
+                    <p style="margin:8px 0 0 0;font-size:16px;color:#16a34a;font-weight:bold;">✅ Status: ARRIVED — Awaiting Confirmation</p>
+                  </div>
+                  <p style="color:#666;">Please confirm receipt of your cargo at the destination.</p>
+                  <div style="text-align:center;margin-top:24px;">
+                    <a href="${trackingUrl}" style="background:#16a34a;color:white;padding:12px 30px;text-decoration:none;border-radius:25px;display:inline-block;font-weight:bold;">
+                      Track Shipment
+                    </a>
+                  </div>
+                  <div style="margin-top:30px;padding-top:16px;border-top:1px solid #eee;text-align:center;color:#999;font-size:12px;">
+                    <p>© 2026 Kapilla Group Ltd. | express@kapillagroup.co.tz</p>
+                  </div>
+                </div>
+              </div>`;
+
+            const recipients = [shipment.receiverEmail, shipment.senderEmail].filter(Boolean) as string[];
+            if (recipients.length > 0) {
+              sendEmail({
+                to: recipients,
+                subject: `📦 Cargo Arrived — Waybill ${shipment.waybillNumber}`,
+                html: emailHtml,
+              }).catch((e: unknown) => console.error('[AUTONOMOUS] Arrival email failed:', e));
+            }
+          }
         }
       }
     }
