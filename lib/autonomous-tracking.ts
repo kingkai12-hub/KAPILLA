@@ -63,6 +63,12 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
       return false;
     }
 
+    // Skip if already arrived at destination (waiting for staff confirmation)
+    if (tracking.isStopped && tracking.stopReason === 'Arrived at destination') {
+      console.log(`[AUTONOMOUS] Shipment ${shipment.waybillNumber} already at destination, waiting for confirmation`);
+      return true;
+    }
+
     // Find current position on route
     let iClosest = 0;
     let minD = Infinity;
@@ -120,6 +126,7 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
     };
 
     // Calculate movement (60 seconds since this runs every minute)
+    // Cap to 60s max to prevent teleporting if cron was delayed
     const movement = calculateMovement(vehicleState, routeContext, DEFAULT_SPEED_CONFIG);
 
     // Move vehicle along route

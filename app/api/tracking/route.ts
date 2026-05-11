@@ -356,18 +356,62 @@ export async function GET(req: Request) {
       };
 
       // Create vehicle state
+      // Cap lastUpdated to max 30s ago to prevent teleporting on stale/old shipments
+      const rawLastUpdated = tracking.lastUpdated ? new Date(tracking.lastUpdated as any) : new Date();
+      const cappedLastUpdated = new Date(Math.max(rawLastUpdated.getTime(), Date.now() - 30000));
+
       const vehicleState: VehicleState = {
         currentLat: tracking.currentLat,
         currentLng: tracking.currentLng,
         speed: typeof tracking.speed === 'number' ? tracking.speed : 0,
         heading: tracking.heading || 0,
-        lastUpdated: tracking.lastUpdated ? new Date(tracking.lastUpdated as any) : new Date(),
+        lastUpdated: cappedLastUpdated,
         isStopped: (tracking as any).isStopped || false,
         stopUntil: (tracking as any).stopUntil || undefined,
         stopReason: (tracking as any).stopReason || undefined,
         speedVariationOffset: (tracking as any).speedVariationOffset || 0,
         lastVariationUpdate: (tracking as any).lastVariationUpdate || 0,
       };
+
+      // If vehicle already arrived at destination, skip movement and return arrived flag
+      const distToDestCheck = haversineDistance(
+        tracking.currentLat, tracking.currentLng, dest[0], dest[1]
+      );
+      if (distToDestCheck < 50 || (tracking as any).stopReason === 'Arrived at destination') {
+        // Ensure vehicle is snapped to destination
+        if (distToDestCheck >= 50) {
+          await vehicleTrackingModel.update({
+            where: { id: tracking.id },
+            data: { currentLat: dest[0], currentLng: dest[1], speed: 0, isStopped: true, stopReason: 'Arrived at destination' },
+          });
+        }
+        // Create ARRIVED event if not exists
+        if (trackingEventModel && shipment.currentStatus !== 'DELIVERED') {
+          const existingArrival = await trackingEventModel.findFirst({
+            where: { shipmentId: shipment.id, status: 'ARRIVED' },
+          });
+          if (!existingArrival) {
+            await trackingEventModel.create({
+              data: {
+                shipmentId: shipment.id,
+                status: 'ARRIVED',
+                location: shipment.destination,
+                remarks: 'Cargo has arrived at destination. Waiting for delivery confirmation.',
+              },
+            });
+          }
+        }
+        const arrivedTracking = await vehicleTrackingModel.findUnique({
+          where: { id: tracking.id },
+          include: { segments: { orderBy: { order: 'asc' } } },
+        }) || tracking;
+        return NextResponse.json({
+          ...arrivedTracking,
+          arrived: true,
+          isSimulated: true,
+          serverTime: new Date().toISOString(),
+        });
+      }
 
       // Speed configuration (can be customized via env vars)
       const speedConfig: SpeedConfig = {

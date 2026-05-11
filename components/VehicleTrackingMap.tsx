@@ -50,6 +50,7 @@ interface TrackingData {
   isSimulated?: boolean;
   serverTime?: string;
   routePoints?: [number, number][];
+  arrived?: boolean;
   segments: {
     id: string;
     startLat: number;
@@ -90,6 +91,8 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isLiveTracking, setIsLiveTracking] = useState(false);
+  const [showArrivalPopup, setShowArrivalPopup] = useState(false);
+  const arrivalShownRef = useRef(false);
 
   const currentPos = useRef<[number, number]>([0, 0]);
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
@@ -161,6 +164,12 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           const data = await res.json();
           setTracking(data);
           setErrorText(null);
+
+          // Show arrival popup once when vehicle reaches destination
+          if (data.arrived && !arrivalShownRef.current) {
+            arrivalShownRef.current = true;
+            setShowArrivalPopup(true);
+          }
 
           if (currentPos.current[0] === 0) {
             currentPos.current = [data.currentLat, data.currentLng];
@@ -278,6 +287,12 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
           const data = JSON.parse(evt.data);
           setTracking(data);
           setErrorText(null);
+
+          // Show arrival popup once when vehicle reaches destination
+          if (data.arrived && !arrivalShownRef.current) {
+            arrivalShownRef.current = true;
+            setShowArrivalPopup(true);
+          }
 
           if (currentPos.current[0] === 0) {
             currentPos.current = [data.currentLat, data.currentLng];
@@ -549,6 +564,40 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
         <MapController position={displayPos} followMode={followMode} />
       </MapContainer>
+
+      {/* ARRIVAL POPUP */}
+      {showArrivalPopup && (
+        <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 mx-4 max-w-sm w-full text-center animate-bounce-in">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Cargo Arrived!</h2>
+            <p className="text-slate-600 text-sm mb-1">
+              Your shipment <span className="font-bold text-blue-600">#{waybillNumber}</span> has reached its destination.
+            </p>
+            <p className="text-slate-500 text-xs mb-6">
+              Please contact the recipient to confirm pickup and delivery.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowArrivalPopup(false)}
+                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-colors text-sm"
+              >
+                Confirm Arrival
+              </button>
+              <button
+                onClick={() => setShowArrivalPopup(false)}
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors text-sm"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
