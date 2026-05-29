@@ -2,13 +2,11 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Dynamically import db
 async function getDb() {
   const { db } = await import('@/lib/db');
   return db;
 }
 
-// POST convert proforma to final invoice
 export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
@@ -16,13 +14,10 @@ export async function POST(
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
+
     const proforma = await db.invoice.findUnique({
       where: { id: params.id },
-      include: {
-        items: {
-          orderBy: { order: 'asc' },
-        },
-      },
+      include: { items: { orderBy: { order: 'asc' } } },
     });
 
     if (!proforma) {
@@ -30,15 +25,12 @@ export async function POST(
     }
 
     if (proforma.type !== 'PROFORMA') {
-      return NextResponse.json(
-        { error: 'Only proforma invoices can be converted' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Only proforma invoices can be converted' }, { status: 400 });
     }
 
     if (proforma.status !== 'ACCEPTED') {
       return NextResponse.json(
-        { error: 'Proforma must be accepted before conversion' },
+        { error: `Proforma must be accepted before conversion. Current status: ${proforma.status}` },
         { status: 400 }
       );
     }
@@ -47,7 +39,6 @@ export async function POST(
     const existing = await db.invoice.findFirst({
       where: { proformaInvoiceId: proforma.id },
     });
-
     if (existing) {
       return NextResponse.json(
         { error: 'Proforma already converted to invoice', invoice: existing },
@@ -55,28 +46,31 @@ export async function POST(
       );
     }
 
-    // Generate final invoice number continuing from last INV with retry mechanism
+    // Generate unique invoice number
     let invoiceNumber = '';
-    let nextNumber = 79;
-    let createAttempts = 0;
-    const maxCreateAttempts = 5;
-    let finalInvoice;
+    let finalInvoice = null;
 
-    while (createAttempts < maxCreateAttempts) {
+    for (let attempt = 0; attempt < 10; attempt++) {
       const lastInvoice = await db.invoice.findFirst({
         where: { type: 'FINAL', invoiceNumber: { startsWith: 'INV-' } },
-        orderBy: { invoiceNumber: 'desc' },
+        orderBy: { createdAt: 'desc' },
       });
 
+      let nextNumber = 1;
       if (lastInvoice) {
-        const match = lastInvoice.invoiceNumber.match(/\d+$/);
-        if (match) nextNumber = Math.max(nextNumber, parseInt(match[0], 10) + 1);
+        const match = lastInvoice.invoiceNumber.match(/(\d+)$/);
+        if (match) nextNumber = parseInt(match[1], 10) + 1 + attempt;
+      } else {
+        nextNumber = 1 + attempt;
       }
 
-      invoiceNumber = `INV-${String(nextNumber + createAttempts).padStart(4, '0')}`;
+      invoiceNumber = `INV-${String(nextNumber).padStart(4, '0')}`;
+
+      // Check this number isn't taken
+      const taken = await db.invoice.findUnique({ where: { invoiceNumber } });
+      if (taken) continue;
 
       try {
-        // Create final invoice from proforma
         finalInvoice = await db.invoice.create({
           data: {
             invoiceNumber,
@@ -84,68 +78,60 @@ export async function POST(
             status: 'SENT',
             proformaInvoiceId: proforma.id,
             customerName: proforma.customerName,
-            customerEmail: proforma.customerEmail,
-            customerPhone: proforma.customerPhone,
-            customerAddress: proforma.customerAddress,
-            customerTIN: proforma.customerTIN,
-            requisitionNumber: proforma.requisitionNumber, // Copy from proforma, can be edited later
-            dueDate: proforma.dueDate,
+            customerEmail: proforma.customerEmail ?? null,
+            customerPhone: proforma.customerPhone ?? null,
+            customerAddress: proforma.customerAddress ?? null,
+            customerTIN: proforma.customerTIN ?? null,
+            requisitionNumber: proforma.requisitionNumber ?? null,
+            issueDate: new Date(),
+            dueDate: proforma.dueDate ?? null,
             subtotal: proforma.subtotal,
             taxRate: proforma.taxRate,
             taxAmount: proforma.taxAmount,
             discount: proforma.discount,
             total: proforma.total,
             currency: proforma.currency,
-            notes: proforma.notes,
-            terms: proforma.terms,
+            notes: proforma.notes ?? null,
+            terms: proforma.terms ?? null,
+            itemsHeader: proforma.itemsHeader ?? null,
+            paymentMethod: proforma.paymentMethod ?? null,
+            createdBy: proforma.createdBy ?? null,
             items: {
-              create: proforma.items.map(
-                (item: {
-                  description: string;
-                  quantity: number;
-                  unitPrice: number;
-                  amount: number;
-                  order: number;
-                }) => ({
-                  description: item.description,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  amount: item.amount,
-                  order: item.order,
-                })
-              ),
+              create: proforma.items.map((item: {
+                description: string;
+                quantity: number;
+                unitPrice: number;
+                amount: number;
+                order: number;
+              }) => ({
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                amount: item.amount,
+                order: item.order,
+              })),
             },
           },
-          include: {
-            items: {
-              orderBy: { order: 'asc' },
-            },
-          },
+          include: { items: { orderBy: { order: 'asc' } } },
         });
-        break; // Success!
-      } catch (createError) {
-        createAttempts++;
-        // If unique constraint error, retry with incremented number
-        if (
-          createError &&
-          typeof createError === 'object' &&
-          'code' in createError &&
-          createError.code === 'P2002'
-        ) {
-          console.log(`[INVOICE_CONVERT] Duplicate INV number ${invoiceNumber}, retrying...`);
-          if (createAttempts < maxCreateAttempts) continue;
-        }
+        break;
+      } catch (createError: unknown) {
+        const err = createError as { code?: string };
+        if (err?.code === 'P2002') continue; // duplicate, retry
         throw createError;
       }
     }
 
     if (!finalInvoice) {
-      throw new Error('Failed to create final invoice after multiple attempts');
+      return NextResponse.json({ error: 'Could not generate a unique invoice number. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json(finalInvoice);
   } catch (error) {
     console.error('[INVOICE_CONVERT]', error);
-    return NextResponse.json({ error: 'Failed to convert invoice' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to convert invoice',
+      details: error instanceof Error ? error.message : String(error),
+    }, { status: 500 });
   }
 }
