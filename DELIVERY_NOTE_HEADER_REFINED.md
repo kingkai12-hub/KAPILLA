@@ -43,7 +43,7 @@ Refined the delivery note header to be more compact with uniform font sizing and
 │  │          │    KAPILLA GROUP LIMITED (10pt bold)      │
 │  │   LOGO   │    P.O. BOX 71729, Dar es Salaam (10pt)   │
 │  │  40x40mm │    Tel: +255 65 860 4772 / ... (10pt)     │
-│  │          │    Email: kapillagroup@gmail.com (10pt)   │
+│  │          │    Email: info@kapillagroup.co.tz (10pt)   │
 │  └──────────┘    TIN: 123-456-789 (10pt)                │
 │                                                          │
 ├══════════════════════════════════════════════════════════┤
@@ -82,7 +82,7 @@ Refined the delivery note header to be more compact with uniform font sizing and
 - **Content**:
   - P.O. BOX 71729, Dar es Salaam, Tanzania
   - Tel: +255 65 860 4772 / +255 76 062 9563
-  - Email: kapillagroup@gmail.com
+  - Email: info@kapillagroup.co.tz
   - TIN: 123-456-789
 
 ### Separator Line

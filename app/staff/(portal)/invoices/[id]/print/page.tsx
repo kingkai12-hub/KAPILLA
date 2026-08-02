@@ -461,7 +461,7 @@ export default function InvoicePrintPage() {
             <p className="text-xs sm:text-sm text-slate-600">
               For any questions regarding this invoice, please contact us at{' '}
               <span className={`font-semibold ${accentColor} break-all`}>
-                kapillagroup@gmail.com
+                info@kapillagroup.co.tz
               </span>{' '}
               or <span className={`font-semibold ${accentColor}`}>+255 65 860 4772</span>
             </p>

@@ -19,7 +19,7 @@ Redesigned the delivery note header with a professional layout featuring a large
 │  │     LOGO     │         Dar es Salaam, Tanzania              │
 │  │   (50x50mm)  │         Tel: +255 65 860 4772                │
 │  │              │         Tel: +255 76 062 9563                │
-│  │              │         Email: kapillagroup@gmail.com        │
+│  │              │         Email: info@kapillagroup.co.tz        │
 │  └──────────────┘         TIN: 123-456-789                     │
 │                                                                 │
 ├═════════════════════════════════════════════════════════════════┤ ← Blue separator line

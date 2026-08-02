@@ -103,7 +103,7 @@ export async function GET(
     doc.text('Sea Cliff Village, 10 Toure Drive, Msasani', 55, 29);
     doc.text('Dar es Salaam, Tanzania', 55, 34);
     doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', 55, 39);
-    doc.text('Email: kapillagroup@gmail.com', 55, 44);
+    doc.text('Email: info@kapillagroup.co.tz', 55, 44);
     doc.text('TIN: 157-935-380', 55, 49);
 
     // Invoice Type Box - with colored background and border
@@ -595,7 +595,7 @@ export async function GET(
       doc.setFontSize(8);
       doc.setTextColor(71, 85, 105); // slate-600
       const contactText =
-        'For any questions regarding this invoice, please contact us at kapillagroup@gmail.com or +255 65 860 4772';
+        'For any questions regarding this invoice, please contact us at info@kapillagroup.co.tz or +255 65 860 4772';
       const splitContact = doc.splitTextToSize(contactText, 180);
       doc.text(splitContact, 105, yPos, { align: 'center' });
 
@@ -698,7 +698,7 @@ function generateDeliveryNote(invoice: {
   doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', detailsX, headerY + 10);
   doc.text('Dar es Salaam, Tanzania', detailsX, headerY + 15);
   doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 20);
-  doc.text('Email: kapillagroup@gmail.com  |  TIN: 157-935-380', detailsX, headerY + 25);
+  doc.text('Email: info@kapillagroup.co.tz  |  TIN: 157-935-380', detailsX, headerY + 25);
 
   // Separator line - below all header content
   const separatorY = headerY + logoHeight + 8;

@@ -838,7 +838,7 @@ export default function InvoiceDetailPage() {
                 </p>
                 <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">
                   For any questions regarding this invoice, please contact us at{' '}
-                  <span className={`font-semibold ${accentColor}`}>kapillagroup@gmail.com</span> or{' '}
+                  <span className={`font-semibold ${accentColor}`}>info@kapillagroup.co.tz</span> or{' '}
                   <span className={`font-semibold ${accentColor}`}>+255 65 860 4772</span>
                 </p>
               </div>
