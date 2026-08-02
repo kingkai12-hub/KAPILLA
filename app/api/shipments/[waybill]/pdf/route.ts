@@ -52,7 +52,7 @@ export async function GET(
     doc.text('Sea Cliff Village, 10 Toure Drive, Msasani', 15, 24);
     doc.text('Dar es Salaam, Tanzania', 15, 28);
     doc.text('Tel: +255 766 724 062 | +255 756 656 218', 15, 32);
-    doc.text('Email: express@kapillagroup.co.tz', 15, 36);
+    doc.text('Email: info@kapillagroup.co.tz', 15, 36);
 
     // Logo in CENTER
     try {

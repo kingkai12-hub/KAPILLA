@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       }
     });
     return NextResponse.json(users);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
       });
       
       // Also notify admin about new user creation
-      const adminEmail = process.env.ADMIN_EMAIL || 'express@kapillagroup.co.tz';
+      const adminEmail = process.env.ADMIN_EMAIL || 'info@kapillagroup.co.tz';
       await sendEmail({
         to: adminEmail,
         subject: `New Staff Account Created - ${name}`,
@@ -141,9 +141,9 @@ export async function POST(req: Request) {
 
     const { password: _, ...userWithoutPassword } = newUser;
     return NextResponse.json(userWithoutPassword);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create User Error:', error);
-    if (error.code === 'P2002') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
@@ -179,8 +179,8 @@ export async function PUT(req: Request) {
 
     const { password: _, ...userWithoutPassword } = updatedUser;
     return NextResponse.json(userWithoutPassword);
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
@@ -214,8 +214,8 @@ export async function DELETE(req: Request) {
     try {
       await db.user.delete({ where: { id } });
       return NextResponse.json({ success: true });
-    } catch (error: any) {
-      if (error.code === 'P2003') {
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2003') {
         return NextResponse.json(
           { error: 'Cannot delete: user has related records (e.g., shipments, documents, requests). Remove or reassign related data first.' },
           { status: 409 }
@@ -223,7 +223,7 @@ export async function DELETE(req: Request) {
       }
       throw error;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

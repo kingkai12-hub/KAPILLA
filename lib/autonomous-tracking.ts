@@ -281,7 +281,7 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
                     </a>
                   </div>
                   <div style="margin-top:30px;padding-top:16px;border-top:1px solid #eee;text-align:center;color:#999;font-size:12px;">
-                    <p>© 2026 Kapilla Group Ltd. | express@kapillagroup.co.tz</p>
+                    <p>© 2026 Kapilla Group Ltd. | info@kapillagroup.co.tz</p>
                   </div>
                 </div>
               </div>`;

@@ -120,7 +120,7 @@ export default function LabelPage() {
               <p className="text-[10px]">Sea Cliff Village, 10 Toure Drive, Msasani</p>
               <p className="text-[10px]">Dar es Salaam, Tanzania</p>
               <p className="text-[10px]">Tel: +255 766 724 062</p>
-              <p className="text-[10px]">Email: express@kapillagroup.co.tz</p>
+              <p className="text-[10px]">Email: info@kapillagroup.co.tz</p>
             </div>
 
             {/* Center: Logo - moderate size */}

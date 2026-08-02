@@ -26,13 +26,13 @@ Your SMS is set to `SMS_PROVIDER=simulation`, which means:
 Replace your .env.local file with:
 ```bash
 # Email Configuration - Outlook (No DNS required)
-EMAIL_USER=express@kapillagroup.co.tz
+EMAIL_USER=info@kapillagroup.co.tz
 EMAIL_PASS=Kapilla@2024
 SMTP_HOST=smtp-mail.outlook.com
 SMTP_PORT=587
 
 # Admin Email
-ADMIN_EMAIL=express@kapillagroup.co.tz
+ADMIN_EMAIL=info@kapillagroup.co.tz
 
 # SMS Configuration - Africa's Talking (REAL SMS)
 SMS_PROVIDER=africastalking

@@ -16,7 +16,7 @@
 3. **Fill in**:
    - First Name: Your name
    - Last Name: Your surname
-   - Email: express@kapillagroup.co.tz
+   - Email: info@kapillagroup.co.tz
    - Phone: +255712345678
    - Company: Kapilla Group Ltd
 4. **Click**: "Create Account"

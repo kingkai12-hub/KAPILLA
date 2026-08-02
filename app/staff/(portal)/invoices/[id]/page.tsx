@@ -488,7 +488,7 @@ export default function InvoiceDetailPage() {
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 hidden sm:flex">
                       <Mail className="w-4 h-4" />
-                      <span>express@kapillagroup.co.tz</span>
+                      <span>info@kapillagroup.co.tz</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 hidden sm:flex">
                       <Building2 className="w-4 h-4" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { X, Mail, Phone, MapPin } from 'lucide-react';
 
 interface HelpCenterModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ export default function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProp
         <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Help Center</h2>
-            <p className="text-sm text-slate-500 mt-1">We're here to help you</p>
+            <p className="text-sm text-slate-500 mt-1">We&apos;re here to help you</p>
           </div>
           <button 
             onClick={onClose}
@@ -34,8 +34,8 @@ export default function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProp
               <div>
                 <h3 className="font-semibold text-slate-900">Email Support</h3>
                 <p className="text-sm text-slate-600 mb-2">For general inquiries and support</p>
-                <a href="mailto:express@kapillagroup.co.tz" className="text-blue-600 font-medium hover:underline text-sm break-all">
-                  express@kapillagroup.co.tz
+                <a href="mailto:info@kapillagroup.co.tz" className="text-blue-600 font-medium hover:underline text-sm break-all">
+                  info@kapillagroup.co.tz
                 </a>
               </div>
             </div>

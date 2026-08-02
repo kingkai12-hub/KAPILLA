@@ -172,7 +172,7 @@ export default function InvoicePrintPage() {
                   </div>
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span>express@kapillagroup.co.tz</span>
+                    <span>info@kapillagroup.co.tz</span>
                   </div>
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Building2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />

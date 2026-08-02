@@ -35,7 +35,7 @@
 2. **Click**: "Sign Up Free"
 3. **Fill in**:
    - Company: Kapilla Group Ltd
-   - Email: express@kapillagroup.co.tz
+   - Email: info@kapillagroup.co.tz
    - Phone: +255712345678
 
 ### **Step 2: Get API Key**

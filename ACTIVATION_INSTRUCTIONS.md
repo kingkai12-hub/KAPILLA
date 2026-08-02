@@ -12,7 +12,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 
 # Admin notification email
-ADMIN_EMAIL=express@kapillagroup.co.tz
+ADMIN_EMAIL=info@kapillagroup.co.tz
 
 # SMS Configuration (Start with Simulation for testing)
 SMS_PROVIDER=simulation

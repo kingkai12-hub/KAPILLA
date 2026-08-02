@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       }
 
       // Send admin notification
-      const adminEmail = process.env.ADMIN_EMAIL || 'express@kapillagroup.co.tz';
+      const adminEmail = process.env.ADMIN_EMAIL || 'info@kapillagroup.co.tz';
       await sendEmail({
         to: adminEmail,
         subject: `New Pickup Request - #${request.id}`,

@@ -125,7 +125,7 @@ export default function ProofOfDeliveryPage() {
                 <p>10 Toure Drive, Msasani</p>
                 <p>Dar es Salaam, Tanzania</p>
                 <p>Tel: +255 756 656 218 / +255 766 724 062</p>
-                <p>Email: express@kapillagroup.co.tz</p>
+                <p>Email: info@kapillagroup.co.tz</p>
               </div>
             </div>
           </div>

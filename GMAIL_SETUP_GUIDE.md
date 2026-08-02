@@ -30,7 +30,7 @@ Once I update the password:
 3. You'll receive real emails!
 
 ## 📧 What Email Address Will Be Used?
-I set it to: `express@kapillagroup.co.tz`
+I set it to: `info@kapillagroup.co.tz`
 **Is this the correct email you want to use?**
 
 ## 🎯 Ready?

@@ -72,7 +72,7 @@ export const emailTemplates = {
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 12px;">
             <p>&copy; 2024 Kapilla Group Ltd. All rights reserved.</p>
-            <p>express@kapillagroup.co.tz | +255 712 345 678</p>
+            <p>info@kapillagroup.co.tz | +255 712 345 678</p>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export const emailTemplates = {
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 12px;">
             <p>&copy; 2024 Kapilla Group Ltd. All rights reserved.</p>
-            <p>express@kapillagroup.co.tz | +255 712 345 678</p>
+            <p>info@kapillagroup.co.tz | +255 712 345 678</p>
           </div>
         </div>
       </div>
@@ -146,7 +146,7 @@ export const emailTemplates = {
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 12px;">
             <p>&copy; 2024 Kapilla Group Ltd. All rights reserved.</p>
-            <p>express@kapillagroup.co.tz | +255 712 345 678</p>
+            <p>info@kapillagroup.co.tz | +255 712 345 678</p>
           </div>
         </div>
       </div>
