@@ -17,6 +17,8 @@ import {
   Check,
   DollarSign,
   Truck,
+  Camera,
+  Upload,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -63,6 +65,11 @@ export default function InvoiceDetailPage() {
   const [editingRequisition, setEditingRequisition] = useState(false);
   const [requisitionNumber, setRequisitionNumber] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -261,6 +268,40 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handlePrintWithPhoto = async () => {
+    setGeneratingPDF(true);
+    try {
+      const formData = new FormData();
+      if (photoFile) {
+        formData.append('photo', photoFile);
+      }
+      const res = await fetch(`/api/invoices/${params.id}/pdf`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setShowPhotoModal(false);
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    } catch {
+      alert('Failed to generate PDF with photo. Please try again.');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -432,6 +473,18 @@ export default function InvoiceDetailPage() {
               <span className="hidden sm:inline">Print Invoice</span>
               <span className="sm:hidden">Print</span>
             </button>
+
+            {/* Photo evidence button - Proforma only */}
+            {invoice.type === 'PROFORMA' && (
+              <button
+                onClick={() => setShowPhotoModal(true)}
+                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded text-xs sm:text-base hover:bg-indigo-700 font-semibold transition-colors"
+              >
+                <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Print with Photo</span>
+                <span className="sm:hidden">📷</span>
+              </button>
+            )}
 
             <button
               onClick={() =>
@@ -852,6 +905,88 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Photo Evidence Modal ─────────────────────────────────────────── */}
+      {showPhotoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-indigo-600">
+              <div className="flex items-center gap-3">
+                <Camera className="w-5 h-5 text-white" />
+                <h2 className="text-lg font-bold text-white">Attach Evidence Photo</h2>
+              </div>
+              <button
+                onClick={() => { setShowPhotoModal(false); setPhotoFile(null); setPhotoPreview(null); }}
+                className="p-1 hover:bg-indigo-500 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-600">
+                Upload a photo as evidence for this proforma invoice. It will be added as the last page of the PDF.
+              </p>
+
+              {/* Drop zone / file picker */}
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50 cursor-pointer hover:bg-indigo-100 transition-colors relative overflow-hidden">
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-indigo-400">
+                    <Upload className="w-10 h-10" />
+                    <span className="text-sm font-medium">Click to select photo</span>
+                    <span className="text-xs text-slate-400">JPG, PNG, HEIC supported</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoSelect}
+                />
+              </label>
+
+              {photoFile && (
+                <p className="text-xs text-slateigo-600 flex items-center gap-1">
+                  <Check className="w-3 h-3 text-green-500" />
+                  <span className="truncate text-slate-700">{photoFile.name}</span>
+                  <span className="text-slate-400">({(photoFile.size / 1024).toFixed(0)} KB)</span>
+                </p>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { setShowPhotoModal(false); setPhotoFile(null); setPhotoPreview(null); }}
+                  className="flex-1 py-2 px-4 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePrintWithPhoto}
+                  disabled={generatingPDF}
+                  className="flex-1 py-2 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {generatingPDF ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4" />
+                      {photoFile ? 'Generate PDF with Photo' : 'Generate PDF (blank photo page)'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

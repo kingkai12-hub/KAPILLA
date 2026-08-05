@@ -12,6 +12,46 @@ async function getDb() {
   return db;
 }
 
+// ─── POST: Generate PDF with attached evidence photo ─────────────────────────
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const params = await Promise.resolve(context.params);
+    const db = await getDb();
+    const formData = await req.formData();
+    const photoFile = formData.get('photo') as File | null;
+
+    let photoBase64: string | null = null;
+    let photoMime = 'image/jpeg';
+
+    if (photoFile && photoFile.size > 0) {
+      const buffer = await photoFile.arrayBuffer();
+      photoBase64 = Buffer.from(buffer).toString('base64');
+      photoMime = photoFile.type || 'image/jpeg';
+    }
+
+    const invoice = await db.invoice.findUnique({
+      where: { id: params.id },
+      include: { items: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!invoice) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    return buildInvoicePDF(invoice, photoBase64, photoMime);
+  } catch (error) {
+    console.error('[INVOICE_PDF_POST]', error);
+    return NextResponse.json(
+      { error: 'Failed to generate PDF', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── GET: Generate PDF (optionally with blank evidence page) ─────────────────
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
@@ -46,7 +86,45 @@ export async function GET(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    // Create PDF
+    return buildInvoicePDF(invoice, null, 'image/jpeg');
+  } catch (error) {
+    console.error('[INVOICE_PDF]', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to generate PDF',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── Shared PDF builder ───────────────────────────────────────────────────────
+function buildInvoicePDF(
+  invoice: {
+    invoiceNumber: string;
+    type: string;
+    customerName: string;
+    customerAddress: string | null;
+    customerPhone: string | null;
+    customerTIN: string | null;
+    requisitionNumber: string | null;
+    validUntil: Date | null;
+    subtotal: number;
+    taxRate: number;
+    taxAmount: number;
+    discount: number;
+    total: number;
+    currency: string;
+    notes: string | null;
+    terms: string | null;
+    itemsHeader: string | null;
+    items: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
+  },
+  photoBase64: string | null,
+  photoMime: string
+): NextResponse {
+  try {
     const doc = new jsPDF();
     const isProforma = invoice.type === 'PROFORMA';
     const itemCount = invoice.items.length;
@@ -628,6 +706,132 @@ export async function GET(
           { align: 'right' }
         );
       }
+    }
+
+    // ─── Evidence Photo Page (Proforma only) ──────────────────────────────────
+    if (invoice.type === 'PROFORMA') {
+      doc.addPage();
+      const pw = doc.internal.pageSize.getWidth();
+      const ph = doc.internal.pageSize.getHeight();
+
+      // Page header bar
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, pw, 18, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EVIDENCE / CONFIRMATION PHOTO', pw / 2, 11, { align: 'center' });
+
+      // Invoice reference
+      doc.setFillColor(239, 246, 255);
+      doc.rect(0, 18, pw, 10, 'F');
+      doc.setTextColor(37, 99, 235);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Proforma Invoice: ${invoice.invoiceNumber}  |  Customer: ${invoice.customerName}`, pw / 2, 25, { align: 'center' });
+
+      if (photoBase64) {
+        // Embed actual photo - fit within a bordered frame
+        const frameX = 15;
+        const frameY = 35;
+        const frameW = pw - 30;
+        const frameH = ph - 80;
+
+        // Border frame
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(0.8);
+        doc.rect(frameX, frameY, frameW, frameH, 'D');
+
+        // Embed image - determine format from mime
+        const imgFormat = photoMime.includes('png') ? 'PNG' : 'JPEG';
+        const imgData = `data:${photoMime};base64,${photoBase64}`;
+
+        // Calculate image dimensions to fit frame while maintaining aspect ratio
+        // We'll add it centered within the frame with 5mm padding
+        const padding = 5;
+        doc.addImage(
+          imgData,
+          imgFormat,
+          frameX + padding,
+          frameY + padding,
+          frameW - padding * 2,
+          frameH - padding * 2,
+          undefined,
+          'FAST'
+        );
+
+        // Caption below frame
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 116, 139);
+        doc.text('Photo evidence attached for confirmation of proforma invoice items.', pw / 2, frameY + frameH + 8, { align: 'center' });
+      } else {
+        // Blank placeholder with instructions
+        const frameX = 15;
+        const frameY = 35;
+        const frameW = pw - 30;
+        const frameH = ph - 90;
+
+        // Dashed border
+        doc.setDrawColor(150, 180, 240);
+        doc.setLineWidth(0.5);
+        doc.setLineDashPattern([3, 2], 0);
+        doc.rect(frameX, frameY, frameW, frameH, 'D');
+        doc.setLineDashPattern([], 0);
+
+        // Placeholder icon area
+        doc.setFillColor(239, 246, 255);
+        doc.roundedRect(frameX + 2, frameY + 2, frameW - 4, frameH - 4, 3, 3, 'F');
+
+        doc.setTextColor(150, 180, 240);
+        doc.setFontSize(40);
+        doc.text('📎', pw / 2 - 8, frameY + frameH / 2 - 15, { align: 'center' });
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100, 140, 220);
+        doc.text('ATTACH EVIDENCE PHOTO HERE', pw / 2, frameY + frameH / 2 + 5, { align: 'center' });
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 160, 180);
+        doc.text('Use the "Print with Photo" button on the invoice page to attach a photo.', pw / 2, frameY + frameH / 2 + 15, { align: 'center' });
+        doc.text('Supported formats: JPG, PNG, HEIC', pw / 2, frameY + frameH / 2 + 22, { align: 'center' });
+
+        // Signature / stamp area at bottom of placeholder
+        const sigY = frameY + frameH - 25;
+        doc.setDrawColor(180, 200, 230);
+        doc.setLineWidth(0.3);
+        doc.line(frameX + 15, sigY, frameX + 85, sigY);
+        doc.line(frameX + frameW - 85, sigY, frameX + frameW - 15, sigY);
+        doc.setFontSize(7);
+        doc.setTextColor(150, 160, 180);
+        doc.text('Authorized Signature', frameX + 50, sigY + 5, { align: 'center' });
+        doc.text('Company Stamp', frameX + frameW - 50, sigY + 5, { align: 'center' });
+      }
+
+      // Footer
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.4);
+      doc.line(15, ph - 12, pw - 15, ph - 12);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text('KAPILLA GROUP LIMITED  |  info@kapillagroup.co.tz  |  TIN: 157-935-380', pw / 2, ph - 7, { align: 'center' });
+    }
+
+    // Update page numbers to include the new evidence page
+    const finalPageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= finalPageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(
+        `Page ${i} of ${finalPageCount}`,
+        doc.internal.pageSize.getWidth() - 20,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'right' }
+      );
     }
 
     // Generate PDF as buffer
