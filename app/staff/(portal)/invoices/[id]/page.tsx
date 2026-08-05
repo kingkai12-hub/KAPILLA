@@ -282,7 +282,11 @@ export default function InvoiceDetailPage() {
     try {
       const formData = new FormData();
       if (photoFile) {
-        formData.append('photo', photoFile);
+        formData.append('photo_0', photoFile);
+        formData.append('caption_0', '');
+        formData.append('photoCount', '1');
+      } else {
+        formData.append('photoCount', '0');
       }
       const res = await fetch(`/api/invoices/${params.id}/pdf`, {
         method: 'POST',

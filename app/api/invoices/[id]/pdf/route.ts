@@ -12,7 +12,7 @@ async function getDb() {
   return db;
 }
 
-// ─── POST: Generate PDF with attached evidence photo ─────────────────────────
+// ─── POST: Generate PDF with attached evidence photo(s) ──────────────────────
 export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
@@ -21,15 +21,35 @@ export async function POST(
     const params = await Promise.resolve(context.params);
     const db = await getDb();
     const formData = await req.formData();
-    const photoFile = formData.get('photo') as File | null;
 
-    let photoBase64: string | null = null;
-    let photoMime = 'image/jpeg';
+    // Support multiple photos: photo_0, photo_1, photo_2 ...
+    const photoCount = parseInt(formData.get('photoCount') as string || '1');
+    const photos: Array<{ base64: string; mime: string; caption: string }> = [];
 
-    if (photoFile && photoFile.size > 0) {
-      const buffer = await photoFile.arrayBuffer();
-      photoBase64 = Buffer.from(buffer).toString('base64');
-      photoMime = photoFile.type || 'image/jpeg';
+    for (let i = 0; i < photoCount; i++) {
+      const file = formData.get(`photo_${i}`) as File | null;
+      const caption = (formData.get(`caption_${i}`) as string) || '';
+      if (file && file.size > 0) {
+        const buffer = await file.arrayBuffer();
+        photos.push({
+          base64: Buffer.from(buffer).toString('base64'),
+          mime: file.type || 'image/jpeg',
+          caption,
+        });
+      }
+    }
+
+    // Fallback: legacy single `photo` field
+    if (photos.length === 0) {
+      const singleFile = formData.get('photo') as File | null;
+      if (singleFile && singleFile.size > 0) {
+        const buffer = await singleFile.arrayBuffer();
+        photos.push({
+          base64: Buffer.from(buffer).toString('base64'),
+          mime: singleFile.type || 'image/jpeg',
+          caption: '',
+        });
+      }
     }
 
     const invoice = await db.invoice.findUnique({
@@ -41,7 +61,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    return buildInvoicePDF(invoice, photoBase64, photoMime);
+    return buildInvoicePDF(invoice, photos);
   } catch (error) {
     console.error('[INVOICE_PDF_POST]', error);
     return NextResponse.json(
@@ -86,7 +106,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    return buildInvoicePDF(invoice, null, 'image/jpeg');
+    return buildInvoicePDF(invoice, []);
   } catch (error) {
     console.error('[INVOICE_PDF]', error);
     return NextResponse.json(
@@ -121,8 +141,7 @@ function buildInvoicePDF(
     itemsHeader: string | null;
     items: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
   },
-  photoBase64: string | null,
-  photoMime: string
+  photos: Array<{ base64: string; mime: string; caption: string }>
 ): NextResponse {
   try {
     const doc = new jsPDF();
@@ -708,116 +727,79 @@ function buildInvoicePDF(
       }
     }
 
-    // ─── Evidence Photo Page (Proforma only) ──────────────────────────────────
-    if (invoice.type === 'PROFORMA') {
-      doc.addPage();
-      const pw = doc.internal.pageSize.getWidth();
-      const ph = doc.internal.pageSize.getHeight();
+    // ─── Evidence Photo Page(s) — one full-size photo per page ───────────────
+    if (photos.length > 0) {
+      photos.forEach((photo, photoIndex) => {
+        doc.addPage();
+        const pw = doc.internal.pageSize.getWidth();
+        const ph = doc.internal.pageSize.getHeight();
 
-      // Page header bar
-      doc.setFillColor(37, 99, 235);
-      doc.rect(0, 0, pw, 18, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(13);
-      doc.setFont('helvetica', 'bold');
-      doc.text('EVIDENCE / CONFIRMATION PHOTO', pw / 2, 11, { align: 'center' });
+        // Page header bar
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, pw, 18, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(
+          `EVIDENCE PHOTO ${photos.length > 1 ? `(${photoIndex + 1} of ${photos.length})` : ''}`,
+          pw / 2, 11, { align: 'center' }
+        );
 
-      // Invoice reference
-      doc.setFillColor(239, 246, 255);
-      doc.rect(0, 18, pw, 10, 'F');
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Proforma Invoice: ${invoice.invoiceNumber}  |  Customer: ${invoice.customerName}`, pw / 2, 25, { align: 'center' });
+        // Invoice reference bar
+        doc.setFillColor(239, 246, 255);
+        doc.rect(0, 18, pw, 10, 'F');
+        doc.setTextColor(37, 99, 235);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+          `Invoice: ${invoice.invoiceNumber}  |  Customer: ${invoice.customerName}`,
+          pw / 2, 25, { align: 'center' }
+        );
 
-      if (photoBase64) {
-        // Embed actual photo - fit within a bordered frame
-        const frameX = 15;
-        const frameY = 35;
-        const frameW = pw - 30;
-        const frameH = ph - 80;
+        // Photo frame — full page with padding
+        const frameX = 10;
+        const frameY = 32;
+        const frameW = pw - 20;
+        const frameH = ph - 50;
 
-        // Border frame
         doc.setDrawColor(37, 99, 235);
-        doc.setLineWidth(0.8);
+        doc.setLineWidth(0.5);
         doc.rect(frameX, frameY, frameW, frameH, 'D');
 
-        // Embed image - determine format from mime
-        const imgFormat = photoMime.includes('png') ? 'PNG' : 'JPEG';
-        const imgData = `data:${photoMime};base64,${photoBase64}`;
-
-        // Calculate image dimensions to fit frame while maintaining aspect ratio
-        // We'll add it centered within the frame with 5mm padding
-        const padding = 5;
+        // Embed photo
+        const imgFormat = photo.mime.includes('png') ? 'PNG' : 'JPEG';
+        const imgData = `data:${photo.mime};base64,${photo.base64}`;
         doc.addImage(
           imgData,
           imgFormat,
-          frameX + padding,
-          frameY + padding,
-          frameW - padding * 2,
-          frameH - padding * 2,
+          frameX + 2,
+          frameY + 2,
+          frameW - 4,
+          frameH - 4,
           undefined,
           'FAST'
         );
 
-        // Caption below frame
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'italic');
-        doc.setTextColor(100, 116, 139);
-        doc.text('Photo evidence attached for confirmation of proforma invoice items.', pw / 2, frameY + frameH + 8, { align: 'center' });
-      } else {
-        // Blank placeholder with instructions
-        const frameX = 15;
-        const frameY = 35;
-        const frameW = pw - 30;
-        const frameH = ph - 90;
+        // Caption (if any)
+        if (photo.caption) {
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(71, 85, 105);
+          doc.text(photo.caption, pw / 2, frameY + frameH + 6, { align: 'center' });
+        }
 
-        // Dashed border
-        doc.setDrawColor(150, 180, 240);
-        doc.setLineWidth(0.5);
-        doc.setLineDashPattern([3, 2], 0);
-        doc.rect(frameX, frameY, frameW, frameH, 'D');
-        doc.setLineDashPattern([], 0);
-
-        // Placeholder icon area
-        doc.setFillColor(239, 246, 255);
-        doc.roundedRect(frameX + 2, frameY + 2, frameW - 4, frameH - 4, 3, 3, 'F');
-
-        doc.setTextColor(150, 180, 240);
-        doc.setFontSize(40);
-        doc.text('📎', pw / 2 - 8, frameY + frameH / 2 - 15, { align: 'center' });
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(100, 140, 220);
-        doc.text('ATTACH EVIDENCE PHOTO HERE', pw / 2, frameY + frameH / 2 + 5, { align: 'center' });
-
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(150, 160, 180);
-        doc.text('Use the "Print with Photo" button on the invoice page to attach a photo.', pw / 2, frameY + frameH / 2 + 15, { align: 'center' });
-        doc.text('Supported formats: JPG, PNG, HEIC', pw / 2, frameY + frameH / 2 + 22, { align: 'center' });
-
-        // Signature / stamp area at bottom of placeholder
-        const sigY = frameY + frameH - 25;
-        doc.setDrawColor(180, 200, 230);
+        // Footer
+        doc.setDrawColor(203, 213, 225);
         doc.setLineWidth(0.3);
-        doc.line(frameX + 15, sigY, frameX + 85, sigY);
-        doc.line(frameX + frameW - 85, sigY, frameX + frameW - 15, sigY);
-        doc.setFontSize(7);
-        doc.setTextColor(150, 160, 180);
-        doc.text('Authorized Signature', frameX + 50, sigY + 5, { align: 'center' });
-        doc.text('Company Stamp', frameX + frameW - 50, sigY + 5, { align: 'center' });
-      }
-
-      // Footer
-      doc.setDrawColor(203, 213, 225);
-      doc.setLineWidth(0.4);
-      doc.line(15, ph - 12, pw - 15, ph - 12);
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 116, 139);
-      doc.text('KAPILLA GROUP LIMITED  |  info@kapillagroup.co.tz  |  TIN: 157-935-380', pw / 2, ph - 7, { align: 'center' });
+        doc.line(10, ph - 8, pw - 10, ph - 8);
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        doc.text(
+          'KAPILLA GROUP LIMITED  |  info@kapillagroup.co.tz  |  TIN: 157-935-380',
+          pw / 2, ph - 4, { align: 'center' }
+        );
+      });
     }
 
     // Update page numbers to include the new evidence page

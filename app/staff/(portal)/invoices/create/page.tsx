@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Trash2, Save, Calculator } from 'lucide-react';
+import { Plus, Trash2, Save, Calculator, Camera, X, ImagePlus } from 'lucide-react';
 
 interface InvoiceItem {
   id: string;
@@ -221,6 +221,10 @@ export default function CreateInvoicePage() {
     setCurrency(newCurrency);
   };
 
+  // Evidence photos (optional - attached as last page(s) in PDF)
+  const [evidencePhotos, setEvidencePhotos] = useState<Array<{ file: File; preview: string; caption: string }>>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   // Items
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: '1', description: '', quantity: 1, unitPrice: 0, amount: 0 },
@@ -323,6 +327,33 @@ export default function CreateInvoicePage() {
     }
   };
 
+  // Handle photo selection
+  const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setEvidencePhotos((prev) => [
+          ...prev,
+          { file, preview: ev.target?.result as string, caption: '' },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset input so same file can be re-selected
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  };
+
+  const handlePhotoRemove = (index: number) => {
+    setEvidencePhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePhotoCaptionChange = (index: number, caption: string) => {
+    setEvidencePhotos((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, caption } : p))
+    );
+  };
+
   // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,9 +416,38 @@ export default function CreateInvoicePage() {
       if (res.ok) {
         const invoice = await res.json();
         console.log(isEditMode ? 'Invoice updated:' : 'Invoice created:', invoice);
-        alert(
-          `${type === 'PROFORMA' ? 'Proforma Invoice' : 'Invoice'} ${isEditMode ? 'updated' : 'created'} successfully!`
-        );
+
+        // If photos were attached, generate PDF with photos and open it
+        if (evidencePhotos.length > 0) {
+          alert(
+            `${type === 'PROFORMA' ? 'Proforma Invoice' : 'Invoice'} ${isEditMode ? 'updated' : 'created'} successfully!\n\nOpening PDF with ${evidencePhotos.length} evidence photo${evidencePhotos.length > 1 ? 's' : ''}...`
+          );
+          // Build FormData with all photos
+          const formData = new FormData();
+          evidencePhotos.forEach((p, i) => {
+            formData.append(`photo_${i}`, p.file);
+            formData.append(`caption_${i}`, p.caption);
+          });
+          formData.append('photoCount', String(evidencePhotos.length));
+          // POST to PDF endpoint with photos, open result in new tab
+          try {
+            const pdfRes = await fetch(`/api/invoices/${invoice.id}/pdf`, {
+              method: 'POST',
+              body: formData,
+            });
+            if (pdfRes.ok) {
+              const blob = await pdfRes.blob();
+              const url = URL.createObjectURL(blob);
+              window.open(url, '_blank');
+            }
+          } catch {
+            // PDF generation failed silently — user can still print from invoice page
+          }
+        } else {
+          alert(
+            `${type === 'PROFORMA' ? 'Proforma Invoice' : 'Invoice'} ${isEditMode ? 'updated' : 'created'} successfully!`
+          );
+        }
         router.push(`/staff/invoices/${invoice.id}`);
       } else {
         const error = await res.json();
@@ -884,6 +944,89 @@ export default function CreateInvoicePage() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Evidence Photos - Optional */}
+        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Camera className="w-5 h-5 text-indigo-500" />
+              <h2 className="text-lg font-bold text-slate-900">Evidence Photos</h2>
+              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">Optional</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors"
+            >
+              <ImagePlus className="w-4 h-4" />
+              Add Photo
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoAdd}
+            />
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Attach photos as evidence — they will be added as the last page(s) of the PDF. If no photos are added, the invoice prints normally.
+          </p>
+
+          {evidencePhotos.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="w-full flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-400 transition-colors"
+            >
+              <Camera className="w-8 h-8" />
+              <span className="text-sm font-medium">Click to add evidence photos</span>
+              <span className="text-xs">JPG, PNG, HEIC supported • Multiple photos allowed</span>
+            </button>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {evidencePhotos.map((photo, index) => (
+                <div key={index} className="relative group flex flex-col gap-1">
+                  <div className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.preview}
+                      alt={`Evidence ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePhotoRemove(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                      Photo {index + 1}
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={photo.caption}
+                    onChange={(e) => handlePhotoCaptionChange(index, e.target.value)}
+                    placeholder="Caption (optional)"
+                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+                  />
+                </div>
+              ))}
+              {/* Add more button */}
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 hover:border-indigo-300 hover:text-indigo-400 transition-colors"
+              >
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-xs font-medium">Add more</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Submit Button */}
