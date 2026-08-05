@@ -70,10 +70,24 @@ export default function InvoiceDetailPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  // Stored photos from creation (sessionStorage)
+  const [storedPhotos, setStoredPhotos] = useState<Array<{ base64: string; caption: string; name: string; type: string }>>([]);
+  const [showPhotoBanner, setShowPhotoBanner] = useState(false);
 
   useEffect(() => {
     if (params.id) {
       fetchInvoice();
+      // Check if photos were stored from invoice creation
+      const stored = sessionStorage.getItem(`invoice_photos_${params.id}`);
+      if (stored) {
+        try {
+          const photos = JSON.parse(stored);
+          if (photos.length > 0) {
+            setStoredPhotos(photos);
+            setShowPhotoBanner(true);
+          }
+        } catch { /* ignore */ }
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
@@ -281,13 +295,28 @@ export default function InvoiceDetailPage() {
     setGeneratingPDF(true);
     try {
       const formData = new FormData();
+
       if (photoFile) {
+        // New photo selected in modal
         formData.append('photo_0', photoFile);
         formData.append('caption_0', '');
         formData.append('photoCount', '1');
+      } else if (storedPhotos.length > 0) {
+        // Use photos stored from invoice creation
+        // Convert base64 data URLs back to Blobs
+        for (let i = 0; i < storedPhotos.length; i++) {
+          const p = storedPhotos[i];
+          const res = await fetch(p.base64);
+          const blob = await res.blob();
+          const file = new File([blob], p.name || `photo_${i}.jpg`, { type: p.type || 'image/jpeg' });
+          formData.append(`photo_${i}`, file);
+          formData.append(`caption_${i}`, p.caption || '');
+        }
+        formData.append('photoCount', String(storedPhotos.length));
       } else {
         formData.append('photoCount', '0');
       }
+
       const res = await fetch(`/api/invoices/${params.id}/pdf`, {
         method: 'POST',
         body: formData,
@@ -509,6 +538,37 @@ export default function InvoiceDetailPage() {
             </button>
           </div>
         </div>
+
+        {/* Photo banner — shown if photos were saved from creation */}
+        {showPhotoBanner && storedPhotos.length > 0 && (
+          <div className="print-hidden flex items-center justify-between gap-3 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+            <div className="flex items-center gap-2 text-sm text-indigo-800">
+              <Camera className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+              <span className="font-semibold">{storedPhotos.length} evidence photo{storedPhotos.length > 1 ? 's' : ''} attached.</span>
+              <span className="text-indigo-600 hidden sm:inline">Use &ldquo;Print with Photo&rdquo; to include them in the PDF.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setShowPhotoModal(true); }}
+                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                <Printer className="w-3 h-3" />
+                Print with Photo
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem(`invoice_photos_${params.id}`);
+                  setShowPhotoBanner(false);
+                  setStoredPhotos([]);
+                }}
+                className="p-1 text-indigo-400 hover:text-indigo-600 transition-colors"
+                title="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Invoice Document - Printable */}
         <div className="print-container bg-white shadow-lg sm:shadow-2xl rounded-lg sm:rounded-xl overflow-hidden border border-slate-200 no-break">
@@ -916,7 +976,7 @@ export default function InvoiceDetailPage() {
             <div className="flex items-center justify-between px-6 py-4 bg-indigo-600">
               <div className="flex items-center gap-3">
                 <Camera className="w-5 h-5 text-white" />
-                <h2 className="text-lg font-bold text-white">Attach Evidence Photo</h2>
+                <h2 className="text-lg font-bold text-white">Print with Evidence Photo</h2>
               </div>
               <button
                 onClick={() => { setShowPhotoModal(false); setPhotoFile(null); setPhotoPreview(null); }}
@@ -927,19 +987,38 @@ export default function InvoiceDetailPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-600">
-                Upload a photo as evidence for this proforma invoice. It will be added as the last page of the PDF.
-              </p>
+              {/* Show stored photos from creation if available */}
+              {storedPhotos.length > 0 && !photoFile && (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-slate-700">
+                    {storedPhotos.length} photo{storedPhotos.length > 1 ? 's' : ''} from invoice creation:
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {storedPhotos.map((p, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.base64} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 text-center truncate">
+                          {p.caption || `Photo ${i + 1}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400">These will be added as the last page(s) of the PDF. Or select a different photo below to override.</p>
+                </div>
+              )}
 
-              {/* Drop zone / file picker */}
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50 cursor-pointer hover:bg-indigo-100 transition-colors relative overflow-hidden">
+              {/* File picker — override or new photo */}
+              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50 cursor-pointer hover:bg-indigo-100 transition-colors relative overflow-hidden">
                 {photoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoPreview} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-indigo-400">
-                    <Upload className="w-10 h-10" />
-                    <span className="text-sm font-medium">Click to select photo</span>
+                    <Upload className="w-8 h-8" />
+                    <span className="text-sm font-medium">
+                      {storedPhotos.length > 0 ? 'Select different photo (optional)' : 'Click to select photo'}
+                    </span>
                     <span className="text-xs text-slate-400">JPG, PNG, HEIC supported</span>
                   </div>
                 )}
@@ -952,11 +1031,14 @@ export default function InvoiceDetailPage() {
               </label>
 
               {photoFile && (
-                <p className="text-xs text-slateigo-600 flex items-center gap-1">
-                  <Check className="w-3 h-3 text-green-500" />
+                <div className="flex items-center gap-2 text-xs">
+                  <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
                   <span className="truncate text-slate-700">{photoFile.name}</span>
                   <span className="text-slate-400">({(photoFile.size / 1024).toFixed(0)} KB)</span>
-                </p>
+                  <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); }} className="ml-auto text-red-400 hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               )}
 
               {/* Actions */}
@@ -969,7 +1051,7 @@ export default function InvoiceDetailPage() {
                 </button>
                 <button
                   onClick={handlePrintWithPhoto}
-                  disabled={generatingPDF}
+                  disabled={generatingPDF || (!photoFile && storedPhotos.length === 0)}
                   className="flex-1 py-2 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {generatingPDF ? (
@@ -980,7 +1062,7 @@ export default function InvoiceDetailPage() {
                   ) : (
                     <>
                       <Printer className="w-4 h-4" />
-                      {photoFile ? 'Generate PDF with Photo' : 'Generate PDF (blank photo page)'}
+                      Generate PDF with Photo
                     </>
                   )}
                 </button>

@@ -417,37 +417,19 @@ export default function CreateInvoicePage() {
         const invoice = await res.json();
         console.log(isEditMode ? 'Invoice updated:' : 'Invoice created:', invoice);
 
-        // If photos were attached, generate PDF with photos and open it
+        // If photos were attached, store them in sessionStorage so invoice page can use them
         if (evidencePhotos.length > 0) {
-          alert(
-            `${type === 'PROFORMA' ? 'Proforma Invoice' : 'Invoice'} ${isEditMode ? 'updated' : 'created'} successfully!\n\nOpening PDF with ${evidencePhotos.length} evidence photo${evidencePhotos.length > 1 ? 's' : ''}...`
-          );
-          // Build FormData with all photos
-          const formData = new FormData();
-          evidencePhotos.forEach((p, i) => {
-            formData.append(`photo_${i}`, p.file);
-            formData.append(`caption_${i}`, p.caption);
-          });
-          formData.append('photoCount', String(evidencePhotos.length));
-          // POST to PDF endpoint with photos, open result in new tab
-          try {
-            const pdfRes = await fetch(`/api/invoices/${invoice.id}/pdf`, {
-              method: 'POST',
-              body: formData,
-            });
-            if (pdfRes.ok) {
-              const blob = await pdfRes.blob();
-              const url = URL.createObjectURL(blob);
-              window.open(url, '_blank');
-            }
-          } catch {
-            // PDF generation failed silently — user can still print from invoice page
-          }
-        } else {
-          alert(
-            `${type === 'PROFORMA' ? 'Proforma Invoice' : 'Invoice'} ${isEditMode ? 'updated' : 'created'} successfully!`
-          );
+          // Convert photos to base64 strings for sessionStorage
+          const photoData = evidencePhotos.map((p) => ({
+            base64: p.preview, // already base64 data URL from FileReader
+            caption: p.caption,
+            name: p.file.name,
+            type: p.file.type,
+          }));
+          sessionStorage.setItem(`invoice_photos_${invoice.id}`, JSON.stringify(photoData));
         }
+
+        // Navigate to invoice — no popup
         router.push(`/staff/invoices/${invoice.id}`);
       } else {
         const error = await res.json();
