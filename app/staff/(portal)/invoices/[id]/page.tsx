@@ -474,17 +474,15 @@ export default function InvoiceDetailPage() {
               <span className="sm:hidden">Print</span>
             </button>
 
-            {/* Photo evidence button - Proforma only */}
-            {invoice.type === 'PROFORMA' && (
-              <button
-                onClick={() => setShowPhotoModal(true)}
-                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded text-xs sm:text-base hover:bg-indigo-700 font-semibold transition-colors"
-              >
-                <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Print with Photo</span>
-                <span className="sm:hidden">📷</span>
-              </button>
-            )}
+            {/* Photo evidence button - all invoice types */}
+            <button
+              onClick={() => setShowPhotoModal(true)}
+              className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded text-xs sm:text-base hover:bg-indigo-700 font-semibold transition-colors"
+            >
+              <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Print with Photo</span>
+              <span className="sm:hidden">📷</span>
+            </button>
 
             <button
               onClick={() =>
