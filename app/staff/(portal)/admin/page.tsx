@@ -2,6 +2,7 @@ import React from 'react';
 import { Users, DollarSign, TrendingUp, Package, Search, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import Link from 'next/link';
+import MaintenanceToggle from '@/components/MaintenanceToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,9 @@ export default async function AdminDashboard() {
         <h1 className="text-4xl font-black text-slate-900 dark:text-white">Admin Analytics Dashboard</h1>
         <p className="text-lg text-slate-600 dark:text-slate-400 font-medium mt-2">Restricted Area: Administrators Only</p>
       </div>
+
+      {/* System Maintenance Mode Toggle */}
+      <MaintenanceToggle />
 
       {/* Quick Tracking Search */}
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-blue-200 dark:border-blue-800">
