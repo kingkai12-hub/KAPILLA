@@ -1,12 +1,47 @@
 import React from 'react';
-import { Users, DollarSign, TrendingUp, Package, Search, ArrowRight } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Package, Search, ArrowRight, ShieldAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import MaintenanceToggle from '@/components/MaintenanceToggle';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('kapilla_uid')?.value;
+
+  let isAdmin = false;
+  if (userId) {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    isAdmin = user?.role === 'ADMIN';
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
+            <ShieldAlert className="w-10 h-10 text-red-600 dark:text-red-400" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-3">Access Restricted</h1>
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
+            Only administrators can access this dashboard.
+          </p>
+          <Link
+            href="/staff/dashboard"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-colors"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Fetch real stats
   const totalShipments = await db.shipment.count();
   const totalUsers = await db.user.count();
