@@ -26,6 +26,7 @@ import {
   LayoutTemplate,
   Briefcase,
   Bell,
+  BarChart3,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -221,6 +222,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       href: '/staff/shipments',
       icon: Boxes,
       roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+    },
+    {
+      name: 'Reports',
+      href: '/staff/reports',
+      icon: BarChart3,
+      roles: ['ADMIN', 'ACCOUNTANT', 'MANAGER', 'MD', 'CEO'],
     },
     {
       name: 'Create Shipment',
