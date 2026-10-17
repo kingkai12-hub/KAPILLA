@@ -26,7 +26,6 @@ import {
   LayoutTemplate,
   Briefcase,
   Bell,
-  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -216,12 +215,6 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         'CEO',
         'ACCOUNTANT',
       ],
-    },
-    {
-      name: 'Admin Dashboard',
-      href: '/staff/admin',
-      icon: ShieldCheck,
-      roles: ['ADMIN'],
     },
     {
       name: 'All Shipments',

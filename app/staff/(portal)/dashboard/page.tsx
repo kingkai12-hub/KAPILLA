@@ -4,6 +4,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { cookies } from 'next/headers';
+import MaintenanceToggle from '@/components/MaintenanceToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +64,21 @@ export default async function StaffDashboard() {
   } catch (e) {
     console.error('Dashboard DB Error or Timeout:', e);
     recentShipments = [];
+  }
+
+  // Only admins may control maintenance mode. Guarded so a DB hiccup can't crash the page.
+  let isAdmin = false;
+  try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('kapilla_uid')?.value;
+    if (userId) {
+      const user = await withTimeout(
+        db.user.findUnique({ where: { id: userId }, select: { role: true } })
+      );
+      isAdmin = user?.role === 'ADMIN';
+    }
+  } catch (e) {
+    console.error('Dashboard admin check failed:', e);
   }
 
   const stats = [
@@ -158,6 +175,9 @@ export default async function StaffDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* System Maintenance Mode (admins only) */}
+      {isAdmin && <MaintenanceToggle />}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
