@@ -106,7 +106,19 @@ export async function PATCH(
     if (status === 'DELIVERED') {
       if (signature) updateData.receiverSignature = signature;
       if (receivedBy) updateData.receivedBy = receivedBy;
+      if (!shipment.deliveredAt) updateData.deliveredAt = new Date();
     }
+    if (status === 'PICKED_UP' && !shipment.pickedUpAt) updateData.pickedUpAt = new Date();
+    if ((status === 'IN_TRANSIT' || status === 'OUT_FOR_DELIVERY') && !shipment.dispatchedAt) {
+      updateData.dispatchedAt = new Date();
+    }
+
+    // Identify the staff member performing this update (audit trail).
+    const staff = await db.user.findUnique({
+      where: { id: auth.user!.id },
+      select: { name: true },
+    });
+    const staffName = staff?.name || null;
 
     // Create a tracking event for the status change
     await db.trackingEvent.create({
@@ -114,7 +126,9 @@ export async function PATCH(
         shipmentId: shipment.id,
         status: status,
         location: location || 'Admin Update', 
-        remarks: `Status updated to ${status}`
+        remarks: `Status updated to ${status}`,
+        staffId: auth.user!.id,
+        staffName,
       }
     });
 

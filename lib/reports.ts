@@ -11,32 +11,54 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = TIMEOUT_M
   ]);
 }
 
-export type ReportRange = '7d' | '30d' | '90d' | 'year' | 'all';
+export type ReportPeriod = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all';
 
-export const REPORT_RANGES: { key: ReportRange; label: string }[] = [
-  { key: '7d', label: 'Last 7 days' },
-  { key: '30d', label: 'Last 30 days' },
-  { key: '90d', label: 'Last 90 days' },
-  { key: 'year', label: 'This year' },
+export const REPORT_PERIODS: { key: ReportPeriod; label: string }[] = [
+  { key: 'day', label: 'Daily' },
+  { key: 'week', label: 'Weekly' },
+  { key: 'month', label: 'Monthly' },
+  { key: 'quarter', label: 'Quarterly' },
+  { key: 'year', label: 'Yearly' },
   { key: 'all', label: 'All time' },
 ];
 
-export function parseRange(value?: string): ReportRange {
-  return REPORT_RANGES.find((r) => r.key === value)?.key ?? '30d';
+export function parsePeriod(value?: string): ReportPeriod {
+  return REPORT_PERIODS.find((r) => r.key === value)?.key ?? 'month';
 }
 
-export function rangeLabel(range: ReportRange): string {
-  return REPORT_RANGES.find((r) => r.key === range)?.label ?? 'Last 30 days';
+export function periodLabel(period: ReportPeriod): string {
+  return REPORT_PERIODS.find((r) => r.key === period)?.label ?? 'Monthly';
 }
 
-function rangeStart(range: ReportRange): Date | null {
-  const now = new Date();
-  if (range === 'all') return null;
-  if (range === 'year') return new Date(now.getFullYear(), 0, 1);
-  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
-  const d = new Date(now);
-  d.setDate(d.getDate() - days);
+function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
   return d;
+}
+
+function periodStart(period: ReportPeriod): Date | null {
+  const now = new Date();
+  switch (period) {
+    case 'all':
+      return null;
+    case 'day':
+      return startOfDay(now);
+    case 'week': {
+      // Week starts on Monday.
+      const d = startOfDay(now);
+      const offset = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - offset);
+      return d;
+    }
+    case 'month':
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'quarter': {
+      const q = Math.floor(now.getMonth() / 3);
+      return new Date(now.getFullYear(), q * 3, 1);
+    }
+    case 'year':
+      return new Date(now.getFullYear(), 0, 1);
+  }
 }
 
 function monthKey(date: Date): string {
@@ -79,10 +101,25 @@ export interface AgeingBucket {
   amount: number;
 }
 
+export interface CargoRow {
+  waybillNumber: string;
+  status: string;
+  senderName: string;
+  receiverName: string;
+  origin: string;
+  destination: string;
+  bookedAt: string;
+  pickedUpAt: string | null;
+  dispatchedAt: string | null;
+  deliveredAt: string | null;
+  staff: string | null;
+}
+
 export interface ReportSummary {
-  range: ReportRange;
-  rangeLabel: string;
+  period: ReportPeriod;
+  periodLabel: string;
   since: string | null;
+  customer: string | null;
   generatedAt: string;
   shipments: {
     total: number;
@@ -91,6 +128,7 @@ export interface ReportSummary {
     byRoute: RouteCount[];
     byMonth: MonthCount[];
     avgLeadTimeDays: number | null;
+    rows: CargoRow[];
   };
   invoices: {
     count: number;
@@ -102,11 +140,16 @@ export interface ReportSummary {
   };
 }
 
-function emptySummary(range: ReportRange, since: Date | null): ReportSummary {
+function emptySummary(
+  period: ReportPeriod,
+  since: Date | null,
+  customer: string | null
+): ReportSummary {
   return {
-    range,
-    rangeLabel: rangeLabel(range),
+    period,
+    periodLabel: periodLabel(period),
     since: since ? since.toISOString() : null,
+    customer,
     generatedAt: new Date().toISOString(),
     shipments: {
       total: 0,
@@ -115,6 +158,7 @@ function emptySummary(range: ReportRange, since: Date | null): ReportSummary {
       byRoute: [],
       byMonth: [],
       avgLeadTimeDays: null,
+      rows: [],
     },
     invoices: {
       count: 0,
@@ -139,9 +183,15 @@ function bucketOverdue(dueDate: Date | null): string {
 
 const AGEING_ORDER = ['Not yet due', '1-30 days', '31-60 days', '61-90 days', '90+ days', 'No due date'];
 
-export async function getReportSummary(range: ReportRange): Promise<ReportSummary> {
-  const since = rangeStart(range);
-  const summary = emptySummary(range, since);
+const MAX_CARGO_ROWS = 500;
+
+export async function getReportSummary(
+  period: ReportPeriod,
+  customer?: string
+): Promise<ReportSummary> {
+  const since = periodStart(period);
+  const customerFilter = customer?.trim() ? customer.trim() : null;
+  const summary = emptySummary(period, since, customerFilter);
 
   // Month buckets always cover the last six months so the trend chart is stable.
   const sixMonthsAgo = new Date();
@@ -149,10 +199,26 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
   sixMonthsAgo.setDate(1);
   sixMonthsAgo.setHours(0, 0, 0, 0);
 
-  const shipmentWhere = since ? { createdAt: { gte: since } } : {};
+  // Customer name can be either the sender or the receiver of a shipment.
+  const customerMatch =
+    customerFilter !== null
+      ? [
+          { senderName: { contains: customerFilter, mode: 'insensitive' as const } },
+          { receiverName: { contains: customerFilter, mode: 'insensitive' as const } },
+        ]
+      : null;
+
+  const shipmentWhere: Record<string, unknown> = {};
+  if (since) shipmentWhere.createdAt = { gte: since };
+  if (customerMatch) shipmentWhere.OR = customerMatch;
+
+  const trendWhere: Record<string, unknown> = { createdAt: { gte: sixMonthsAgo } };
+  if (customerMatch) trendWhere.OR = customerMatch;
+
   // Drafts are excluded: they have not been issued to a customer yet.
   const invoiceWhere: Record<string, unknown> = { status: { not: 'DRAFT' } };
   if (since) invoiceWhere.issueDate = { gte: since };
+  if (customerFilter) invoiceWhere.customerName = { contains: customerFilter, mode: 'insensitive' };
 
   try {
     const [
@@ -165,6 +231,7 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
       paidAgg,
       customerGroups,
       unpaidRows,
+      cargoRows,
     ] = await Promise.all([
       withTimeout(db.shipment.count({ where: shipmentWhere })),
       withTimeout(
@@ -183,7 +250,7 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
       ),
       withTimeout(
         db.shipment.findMany({
-          where: { createdAt: { gte: sixMonthsAgo } },
+          where: trendWhere,
           select: { createdAt: true },
           take: 20000,
         })
@@ -222,6 +289,27 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
           where: { ...invoiceWhere, paidAt: null },
           select: { customerName: true, dueDate: true, total: true },
           take: 5000,
+        })
+      ),
+      withTimeout(
+        db.shipment.findMany({
+          where: shipmentWhere,
+          orderBy: { createdAt: 'desc' },
+          take: MAX_CARGO_ROWS,
+          select: {
+            waybillNumber: true,
+            currentStatus: true,
+            senderName: true,
+            receiverName: true,
+            origin: true,
+            destination: true,
+            createdAt: true,
+            pickedUpAt: true,
+            dispatchedAt: true,
+            deliveredAt: true,
+            createdByName: true,
+            dispatcherName: true,
+          },
         })
       ),
     ]);
@@ -272,6 +360,20 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
         10;
     }
 
+    const rows: CargoRow[] = (cargoRows ?? []).map((row: any) => ({
+      waybillNumber: String(row.waybillNumber ?? ''),
+      status: String(row.currentStatus ?? 'UNKNOWN'),
+      senderName: String(row.senderName ?? ''),
+      receiverName: String(row.receiverName ?? ''),
+      origin: String(row.origin ?? ''),
+      destination: String(row.destination ?? ''),
+      bookedAt: row.createdAt ? new Date(row.createdAt).toISOString() : '',
+      pickedUpAt: row.pickedUpAt ? new Date(row.pickedUpAt).toISOString() : null,
+      dispatchedAt: row.dispatchedAt ? new Date(row.dispatchedAt).toISOString() : null,
+      deliveredAt: row.deliveredAt ? new Date(row.deliveredAt).toISOString() : null,
+      staff: row.createdByName ?? row.dispatcherName ?? null,
+    }));
+
     const customerTotals = new Map<string, { invoiced: number; collected: number }>();
     (customerGroups ?? []).forEach((g: any) => {
       const name = String(g.customerName ?? 'Unknown');
@@ -294,7 +396,7 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
       if (entry) entry.collected = Number(g._sum?.total ?? 0);
     });
     const topCustomers: CustomerTotal[] = Array.from(customerTotals.entries())
-      .map(([customer, v]) => ({ customer, invoiced: v.invoiced, collected: v.collected }))
+      .map(([customerName, v]) => ({ customer: customerName, invoiced: v.invoiced, collected: v.collected }))
       .sort((a, b) => b.invoiced - a.invoiced)
       .slice(0, 5);
 
@@ -321,6 +423,7 @@ export async function getReportSummary(range: ReportRange): Promise<ReportSummar
       byRoute,
       byMonth: monthBuckets,
       avgLeadTimeDays,
+      rows,
     };
     summary.invoices = {
       count: Number(invoiceAgg?._count?._all ?? 0),

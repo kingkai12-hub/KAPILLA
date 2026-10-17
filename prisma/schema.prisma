@@ -97,6 +97,10 @@ model Shipment {
   dispatcherSignature String?
   receiverSignature   String?
   receivedBy          String?
+  createdById         String?
+  createdByName       String?
+  pickedUpAt          DateTime?
+  dispatchedAt        DateTime?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
   deliveredAt         DateTime?
@@ -156,6 +160,8 @@ model TrackingEvent {
   status     String
   location   String
   remarks    String?
+  staffId    String?
+  staffName  String?
   timestamp  DateTime @default(now())
   shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 

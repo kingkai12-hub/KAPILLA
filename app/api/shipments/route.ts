@@ -54,6 +54,13 @@ export async function POST(req: Request) {
       dispatcherSignature,
     } = body;
 
+    // Record which staff member processed this waybill (audit trail).
+    const creator = await db.user.findUnique({
+      where: { id: auth.user!.id },
+      select: { name: true },
+    });
+    const createdByName = creator?.name || dispatcherName || null;
+
     async function nextWaybill() {
       // Simple 4-digit waybill number
       // Get all shipments and find the highest 4-digit number
@@ -96,11 +103,15 @@ export async function POST(req: Request) {
             currentStatus: 'PENDING',
             dispatcherName,
             dispatcherSignature,
+            createdById: auth.user!.id,
+            createdByName,
             events: {
               create: {
                 status: 'PENDING',
                 location: origin,
                 remarks: 'Shipment created',
+                staffId: auth.user!.id,
+                staffName: createdByName,
               },
             },
           },

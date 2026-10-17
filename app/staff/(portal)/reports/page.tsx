@@ -12,7 +12,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { db } from '@/lib/db';
-import { getReportSummary, parseRange, REPORT_RANGES, rangeLabel } from '@/lib/reports';
+import { getReportSummary, parsePeriod, REPORT_PERIODS, periodLabel } from '@/lib/reports';
 import ReportExportButtons from '@/components/ReportExportButtons';
 
 export const dynamic = 'force-dynamic';
@@ -34,13 +34,26 @@ const currency = new Intl.NumberFormat('en-TZ', {
   maximumFractionDigits: 0,
 });
 
+function fmtDateTime(value: string | null): string {
+  if (!value) return '—';
+  return new Date(value).toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export default async function ReportsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const range = parseRange(typeof params.range === 'string' ? params.range : undefined);
+  const period = parsePeriod(typeof params.period === 'string' ? params.period : undefined);
+  const customer =
+    typeof params.customer === 'string' && params.customer.trim() ? params.customer.trim() : '';
 
   // Role gate — guarded so a DB hiccup degrades to "restricted" instead of crashing.
   let role: string | null = null;
@@ -81,14 +94,14 @@ export default async function ReportsPage({
     );
   }
 
-  const summary = await getReportSummary(range);
+  const summary = await getReportSummary(period, customer);
   const maxMonth = Math.max(1, ...summary.shipments.byMonth.map((m) => m.count));
 
   const kpis = [
     {
       label: 'Shipments',
       value: summary.shipments.total.toLocaleString(),
-      sub: rangeLabel(range),
+      sub: periodLabel(period),
       icon: Package,
       tone: 'from-blue-500 to-blue-600',
     },
@@ -140,24 +153,51 @@ export default async function ReportsPage({
             Reports &amp; Analytics
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            Operations and revenue performance — {rangeLabel(range).toLowerCase()}.
+            Operations and revenue performance — {periodLabel(period).toLowerCase()}
+            {customer ? ` · filtered by “${customer}”` : ''}.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {REPORT_RANGES.map((r) => (
-            <Link
-              key={r.key}
-              href={`/staff/reports?range=${r.key}`}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${
-                r.key === range
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
-              }`}
+        <div className="flex flex-col gap-3 items-start lg:items-end">
+          <form method="GET" action="/staff/reports" className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="period" value={period} />
+            <input
+              type="text"
+              name="customer"
+              defaultValue={customer}
+              placeholder="Company / customer name"
+              className="px-4 py-2 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 transition-colors"
             >
-              {r.label}
-            </Link>
-          ))}
-          <ReportExportButtons summary={summary} />
+              Search
+            </button>
+            {customer && (
+              <Link
+                href={`/staff/reports?period=${period}`}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400 transition-colors"
+              >
+                Clear
+              </Link>
+            )}
+          </form>
+          <div className="flex flex-wrap items-center gap-2">
+            {REPORT_PERIODS.map((r) => (
+              <Link
+                key={r.key}
+                href={`/staff/reports?period=${r.key}${customer ? `&customer=${encodeURIComponent(customer)}` : ''}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${
+                  r.key === period
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                }`}
+              >
+                {r.label}
+              </Link>
+            ))}
+            <ReportExportButtons summary={summary} />
+          </div>
         </div>
       </div>
 
@@ -209,6 +249,96 @@ export default async function ReportsPage({
               <span className="text-[11px] text-slate-500 dark:text-slate-400">{m.label}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Cargo report — full waybill detail */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              Cargo report
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Every shipment with its pick-up, dispatch and delivery times.
+              {customer ? ` Filtered by “${customer}”.` : ''}
+            </p>
+          </div>
+          <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            {summary.shipments.rows.length.toLocaleString()} shown
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
+            <thead className="bg-slate-50/60 dark:bg-slate-900/40">
+              <tr>
+                {['Waybill', 'Sender', 'Receiver', 'Route', 'Booked', 'Picked up', 'Dispatched', 'Delivered', 'Staff', 'Status'].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+              {summary.shipments.rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="px-6 py-8 text-center text-slate-500 dark:text-slate-400"
+                  >
+                    No shipments in this period.
+                  </td>
+                </tr>
+              ) : (
+                summary.shipments.rows.map((row) => (
+                  <tr key={row.waybillNumber}>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <Link
+                        href={`/staff/shipments/${row.waybillNumber}`}
+                        className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {row.waybillNumber}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {row.senderName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {row.receiverName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      {row.origin} → {row.destination}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {fmtDateTime(row.bookedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {fmtDateTime(row.pickedUpAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {fmtDateTime(row.dispatchedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {fmtDateTime(row.deliveredAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {row.staff || '—'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                        {row.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

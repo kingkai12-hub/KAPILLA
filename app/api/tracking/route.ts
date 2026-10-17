@@ -14,9 +14,12 @@ import {
 import { calculateHeading } from '@/lib/tracking-utils';
 import { deduplicateByWaybill } from '@/lib/request-deduplication';
 import { updateVehiclePosition } from '@/lib/autonomous-tracking';
+import { requireAuth, requireRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
 
 const osrmCache: Map<string, { pts: [number, number][]; t: number }> = new Map();
 const OSRM_TTL_MS = Number(process.env.OSRM_TTL_MS || 21600000); // 6 hours
@@ -660,6 +663,11 @@ function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number)
   return R * c;
 }
 export async function POST(req: Request) {
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+  if (!requireRole(auth.user!, STAFF_ROLES)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const {
@@ -671,6 +679,13 @@ export async function POST(req: Request) {
       estimatedDeliveryTime,
       transportType,
     } = body;
+
+    // Resolve the staff member making this update (audit trail).
+    const staff = await db.user.findUnique({
+      where: { id: auth.user!.id },
+      select: { name: true },
+    });
+    const staffName = staff?.name || null;
 
     const shipmentModel = (db as any).Shipment || (db as any).shipment;
     const trackingEventModel = (db as any).TrackingEvent || (db as any).trackingEvent;
@@ -696,6 +711,14 @@ export async function POST(req: Request) {
       updateData.deliveredAt = new Date();
     }
 
+    // Picked up / dispatched milestones — recorded once, when first reached.
+    if (status === 'PICKED_UP' && !shipment.pickedUpAt) {
+      updateData.pickedUpAt = new Date();
+    }
+    if ((status === 'IN_TRANSIT' || status === 'OUT_FOR_DELIVERY') && !shipment.dispatchedAt) {
+      updateData.dispatchedAt = new Date();
+    }
+
     // Update shipment if not already delivered
     if (shipment.currentStatus !== 'DELIVERED') {
       await shipmentModel.update({
@@ -711,6 +734,8 @@ export async function POST(req: Request) {
         status: status,
         location: location || 'Unknown',
         remarks: remarks || `Shipment is ${status.toLowerCase().replace('_', ' ')}`,
+        staffId: auth.user!.id,
+        staffName,
         timestamp: new Date(),
       },
     });

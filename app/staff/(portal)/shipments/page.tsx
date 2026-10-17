@@ -326,7 +326,13 @@ export default function ShipmentsPage() {
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                     >
                       <td className="px-3 sm:px-6 py-4 font-mono font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900">
-                        {shipment.waybillNumber}
+                        <Link
+                          href={`/staff/shipments/${shipment.waybillNumber}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:text-blue-600 hover:underline"
+                        >
+                          {shipment.waybillNumber}
+                        </Link>
                       </td>
                       <td className="px-3 sm:px-6 py-4 text-slate-600 dark:text-slate-300">
                         <div className="font-medium">{shipment.senderName}</div>
@@ -374,6 +380,15 @@ export default function ShipmentsPage() {
                                 Track
                               </Link>
                             )}
+
+                            {/* Full Report */}
+                            <Link
+                              href={`/staff/shipments/${shipment.waybillNumber}`}
+                              className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+                            >
+                              <FileText className="w-5 h-5" />
+                              Full Report
+                            </Link>
 
                             {/* Print Waybill */}
                             <button

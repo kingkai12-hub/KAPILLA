@@ -27,7 +27,7 @@ function download(blob: Blob, filename: string) {
 export default function ReportExportButtons({ summary }: { summary: ReportSummary }) {
   const [busy, setBusy] = useState<null | 'csv' | 'pdf'>(null);
 
-  const fileBase = `kapilla-report-${summary.range}-${summary.generatedAt.slice(0, 10)}`;
+  const fileBase = `kapilla-report-${summary.period}-${summary.generatedAt.slice(0, 10)}`;
 
   function buildSections(): { title: string; head: string[]; rows: (string | number)[][] }[] {
     const currency = new Intl.NumberFormat('en-TZ', {
@@ -36,12 +36,24 @@ export default function ReportExportButtons({ summary }: { summary: ReportSummar
       maximumFractionDigits: 0,
     });
 
+    const fmtDateTime = (value: string | null) =>
+      value
+        ? new Date(value).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '—';
+
     return [
       {
         title: 'Summary',
         head: ['Metric', 'Value'],
         rows: [
-          ['Range', summary.rangeLabel],
+          ['Period', summary.periodLabel],
+          ['Customer filter', summary.customer || 'All customers'],
           ['Generated', new Date(summary.generatedAt).toLocaleString()],
           ['Total shipments', summary.shipments.total],
           ['Delivered shipments', summary.shipments.delivered],
@@ -54,6 +66,33 @@ export default function ReportExportButtons({ summary }: { summary: ReportSummar
           ['Collected', currency.format(summary.invoices.collected)],
           ['Outstanding', currency.format(summary.invoices.outstanding)],
         ],
+      },
+      {
+        title: 'Cargo report',
+        head: [
+          'Waybill',
+          'Sender',
+          'Receiver',
+          'Route',
+          'Booked',
+          'Picked up',
+          'Dispatched',
+          'Delivered',
+          'Staff',
+          'Status',
+        ],
+        rows: summary.shipments.rows.map((r) => [
+          r.waybillNumber,
+          r.senderName,
+          r.receiverName,
+          `${r.origin} → ${r.destination}`,
+          fmtDateTime(r.bookedAt),
+          fmtDateTime(r.pickedUpAt),
+          fmtDateTime(r.dispatchedAt),
+          fmtDateTime(r.deliveredAt),
+          r.staff || '—',
+          r.status.replace(/_/g, ' '),
+        ]),
       },
       {
         title: 'Shipments by status',
@@ -116,7 +155,13 @@ export default function ReportExportButtons({ summary }: { summary: ReportSummar
       doc.setFontSize(16);
       doc.text('Kapilla Logistics — Report', 40, 40);
       doc.setFontSize(10);
-      doc.text(`${summary.rangeLabel} · generated ${new Date(summary.generatedAt).toLocaleString()}`, 40, 58);
+      doc.text(
+        `${summary.periodLabel}${summary.customer ? ` · ${summary.customer}` : ''} · generated ${new Date(
+          summary.generatedAt
+        ).toLocaleString()}`,
+        40,
+        58
+      );
 
       let cursorY = 80;
       buildSections().forEach((section) => {
