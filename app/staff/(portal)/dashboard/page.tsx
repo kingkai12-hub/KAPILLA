@@ -261,19 +261,19 @@ export default async function StaffDashboard() {
                     </td>
                   </tr>
                 ) : (
-                  recentShipments.map((shipment) => (
+                  recentShipments.map((shipment, idx) => (
                     <tr
-                      key={shipment.waybillNumber}
+                      key={shipment.waybillNumber ?? idx}
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                          {shipment.waybillNumber}
+                          {shipment.waybillNumber ?? '—'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-slate-700 dark:text-slate-300">
-                          {shipment.destination}
+                          {shipment.destination ?? '—'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -287,11 +287,11 @@ export default async function StaffDashboard() {
                                 : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
                           )}
                         >
-                          {shipment.currentStatus.replace(/_/g, ' ')}
+                          {String(shipment.currentStatus ?? 'PENDING').replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                        {new Date(shipment.createdAt).toLocaleDateString()}
+                        {shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString() : '—'}
                       </td>
                     </tr>
                   ))

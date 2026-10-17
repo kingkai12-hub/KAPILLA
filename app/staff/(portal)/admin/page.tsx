@@ -169,7 +169,7 @@ export default async function AdminDashboard() {
                   </dt>
                   <dd className="text-3xl font-black text-slate-900 dark:text-white">
                     {new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(
-                      totalRevenue
+                      Number(totalRevenue) || 0
                     )}
                   </dd>
                 </dl>
