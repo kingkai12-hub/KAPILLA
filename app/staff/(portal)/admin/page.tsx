@@ -1,5 +1,13 @@
 import React from 'react';
-import { Users, DollarSign, TrendingUp, Package, Search, ArrowRight, ShieldAlert } from 'lucide-react';
+import {
+  Users,
+  DollarSign,
+  TrendingUp,
+  Package,
+  Search,
+  ArrowRight,
+  ShieldAlert,
+} from 'lucide-react';
 import { db } from '@/lib/db';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
@@ -11,13 +19,26 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('kapilla_uid')?.value;
 
+  // Guard DB calls with a timeout so a slow/unavailable database never crashes the page.
+  const withTimeout = (promise: Promise<any>, timeoutMs: number = 5000): Promise<any> =>
+    Promise.race([
+      promise,
+      new Promise<any>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
+    ]);
+
   let isAdmin = false;
-  if (userId) {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-    isAdmin = user?.role === 'ADMIN';
+  try {
+    if (userId) {
+      const user = await withTimeout(
+        db.user.findUnique({
+          where: { id: userId },
+          select: { role: true },
+        })
+      );
+      isAdmin = user?.role === 'ADMIN';
+    }
+  } catch (error) {
+    console.error('Admin dashboard role check failed:', error);
   }
 
   if (!isAdmin) {
@@ -27,7 +48,9 @@ export default async function AdminDashboard() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
             <ShieldAlert className="w-10 h-10 text-red-600 dark:text-red-400" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-3">Access Restricted</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-3">
+            Access Restricted
+          </h1>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
             Only administrators can access this dashboard.
           </p>
@@ -42,33 +65,54 @@ export default async function AdminDashboard() {
     );
   }
 
-  // Fetch real stats
-  const totalShipments = await db.shipment.count();
-  const totalUsers = await db.user.count();
-  
-  const revenueResult = await db.shipment.aggregate({
-    _sum: {
-      price: true
-    }
-  });
-  const totalRevenue = revenueResult._sum.price || 0;
+  // Fetch real stats (each call guarded so a DB failure degrades gracefully)
+  let totalShipments = 0;
+  let totalUsers = 0;
+  let totalRevenue = 0;
+  let pendingShipments = 0;
+  let recentUsers: any[] = [];
 
-  // Use "Pending Shipments" instead of Growth for now as it's a real metric
-  const pendingShipments = await db.shipment.count({
-    where: { currentStatus: 'PENDING' }
-  });
+  try {
+    totalShipments = await withTimeout(db.shipment.count());
+    totalUsers = await withTimeout(db.user.count());
 
-  // Fetch recent users
-  const recentUsers = await db.user.findMany({
-    take: 5,
-    orderBy: { createdAt: 'desc' }
-  });
+    const revenueResult = await withTimeout(
+      db.shipment.aggregate({
+        _sum: {
+          price: true,
+        },
+      })
+    );
+    totalRevenue = revenueResult?._sum?.price || 0;
+
+    // Use "Pending Shipments" instead of Growth for now as it's a real metric
+    pendingShipments = await withTimeout(
+      db.shipment.count({
+        where: { currentStatus: 'PENDING' },
+      })
+    );
+
+    // Fetch recent users
+    recentUsers = await withTimeout(
+      db.user.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+      })
+    );
+  } catch (error) {
+    console.error('Admin dashboard stats failed:', error);
+    recentUsers = [];
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white">Admin Analytics Dashboard</h1>
-        <p className="text-lg text-slate-600 dark:text-slate-400 font-medium mt-2">Restricted Area: Administrators Only</p>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white">
+          Admin Analytics Dashboard
+        </h1>
+        <p className="text-lg text-slate-600 dark:text-slate-400 font-medium mt-2">
+          Restricted Area: Administrators Only
+        </p>
       </div>
 
       {/* System Maintenance Mode Toggle */}
@@ -78,7 +122,9 @@ export default async function AdminDashboard() {
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-blue-200 dark:border-blue-800">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex-1 w-full">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Quick Track Shipment</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              Quick Track Shipment
+            </h3>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -87,7 +133,10 @@ export default async function AdminDashboard() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    window.open(`/?waybill=${encodeURIComponent(e.currentTarget.value.trim())}`, '_blank');
+                    window.open(
+                      `/?waybill=${encodeURIComponent(e.currentTarget.value.trim())}`,
+                      '_blank'
+                    );
                   }
                 }}
               />
@@ -115,9 +164,13 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-6 w-0 flex-1">
                 <dl>
-                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">Total Revenue</dt>
+                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">
+                    Total Revenue
+                  </dt>
                   <dd className="text-3xl font-black text-slate-900 dark:text-white">
-                    {new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(totalRevenue)}
+                    {new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(
+                      totalRevenue
+                    )}
                   </dd>
                 </dl>
               </div>
@@ -135,8 +188,12 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-6 w-0 flex-1">
                 <dl>
-                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">Total Users</dt>
-                  <dd className="text-3xl font-black text-slate-900 dark:text-white">{totalUsers}</dd>
+                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">
+                    Total Users
+                  </dt>
+                  <dd className="text-3xl font-black text-slate-900 dark:text-white">
+                    {totalUsers}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -153,8 +210,12 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-6 w-0 flex-1">
                 <dl>
-                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">Pending Shipments</dt>
-                  <dd className="text-3xl font-black text-slate-900 dark:text-white">{pendingShipments}</dd>
+                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">
+                    Pending Shipments
+                  </dt>
+                  <dd className="text-3xl font-black text-slate-900 dark:text-white">
+                    {pendingShipments}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -171,8 +232,12 @@ export default async function AdminDashboard() {
               </div>
               <div className="ml-6 w-0 flex-1">
                 <dl>
-                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">Total Shipments</dt>
-                  <dd className="text-3xl font-black text-slate-900 dark:text-white">{totalShipments}</dd>
+                  <dt className="text-base font-semibold text-slate-600 dark:text-slate-400 truncate">
+                    Total Shipments
+                  </dt>
+                  <dd className="text-3xl font-black text-slate-900 dark:text-white">
+                    {totalShipments}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -189,22 +254,42 @@ export default async function AdminDashboard() {
           <table className="min-w-[680px] w-full divide-y divide-slate-200 dark:divide-slate-800">
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <tr>
-                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Name</th>
-                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Role</th>
-                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email</th>
+                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-8 py-4 text-left text-base font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Email
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
               {recentUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-8 py-8 text-center text-base text-slate-500 dark:text-slate-400">No users found.</td>
+                  <td
+                    colSpan={3}
+                    className="px-8 py-8 text-center text-base text-slate-500 dark:text-slate-400"
+                  >
+                    No users found.
+                  </td>
                 </tr>
               ) : (
                 recentUsers.map((user: any) => (
-                  <tr key={user.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-slate-50 dark:hover:from-blue-900/20 dark:hover:to-slate-800/60 transition-all duration-200">
-                    <td className="px-8 py-5 whitespace-nowrap text-base font-semibold text-slate-900 dark:text-white">{user.name}</td>
-                    <td className="px-8 py-5 whitespace-nowrap text-base text-slate-600 dark:text-slate-400">{user.role}</td>
-                    <td className="px-8 py-5 whitespace-nowrap text-base text-slate-600 dark:text-slate-400">{user.email}</td>
+                  <tr
+                    key={user.id}
+                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-slate-50 dark:hover:from-blue-900/20 dark:hover:to-slate-800/60 transition-all duration-200"
+                  >
+                    <td className="px-8 py-5 whitespace-nowrap text-base font-semibold text-slate-900 dark:text-white">
+                      {user.name}
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-base text-slate-600 dark:text-slate-400">
+                      {user.role}
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-base text-slate-600 dark:text-slate-400">
+                      {user.email}
+                    </td>
                   </tr>
                 ))
               )}
