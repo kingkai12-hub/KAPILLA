@@ -135,7 +135,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="sticky top-0 z-[100] w-full bg-amber-500 border-b border-amber-600 px-4 py-2.5 flex items-center justify-center gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-900 shrink-0" />
               <p className="text-sm font-semibold text-amber-900 text-center">
-                Maintenance mode is ACTIVE — non-admin users see a maintenance message. Turn it off from the Admin Dashboard when done.
+                Maintenance mode is ACTIVE — non-admin users see a maintenance message. Turn it off
+                from the Admin Dashboard when done.
               </p>
             </div>
           )}
