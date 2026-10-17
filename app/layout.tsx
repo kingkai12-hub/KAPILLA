@@ -1,9 +1,10 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import RefreshHandler from '@/components/RefreshHandler';
 import IdleLogout from '@/components/IdleLogout';
+import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { cookies } from 'next/headers';
@@ -23,12 +24,6 @@ export const metadata: Metadata = {
     template: '%s | Kapilla Logistics',
   },
   description: 'Global Logistics & Tracking System - Fast, Reliable, Secure.',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
   alternates: {
     canonical: 'https://kapilla-logistics.vercel.app',
   },
@@ -57,6 +52,13 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.png',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -98,6 +100,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             enableSystem
             disableTransitionOnChange
           >
+            <ServiceWorkerCleanup />
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 px-4">
               <div className="max-w-lg w-full text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-500/20 mb-8 animate-pulse">
@@ -137,6 +140,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           )}
           <div className="blob-extra" />
+          <ServiceWorkerCleanup />
           <RefreshHandler />
           <IdleLogout />
           {children}

@@ -1,45 +1,33 @@
-// Service Worker for PWA
-const CACHE_NAME = 'kapilla-logistics-v1';
-const urlsToCache = [
-  '/',
-  '/favicon.png',
-  '/logo.png',
-];
+// Self-destructing service worker.
+//
+// An earlier build shipped a cache-first service worker that cached the `/`
+// document forever under a hard-coded cache name. After a deploy, affected
+// browsers kept serving that stale document, which referenced JS chunk hashes
+// that no longer exist — producing "We couldn't load this component".
+//
+// Nothing in the app registers a service worker anymore, but a previously
+// installed copy keeps running until the browser re-checks this file. Because
+// this file changed, the browser will fetch it on the next navigation and run
+// the activate handler below, which unregisters the worker, clears every cache
+// and reloads open tabs so they pick up a fresh document.
 
-// Install event
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
-  );
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
-// Fetch event
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Cache hit - return response
-      if (response) {
-        return response;
-      }
-      return fetch(event.request);
-    })
-  );
-});
-
-// Activate event
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    (async () => {
+      // Drop every cache this origin created (including the stale document cache).
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+
+      // Remove ourselves so no future request is served from a stale worker.
+      await self.registration.unregister();
+
+      // Reload any open tab so it fetches a fresh document + current JS chunks.
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach((client) => client.navigate(client.url));
+    })()
   );
 });
