@@ -749,7 +749,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth">
           <div className="max-w-7xl mx-auto">
-            <ErrorBoundary>{children}</ErrorBoundary>
+            <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
           </div>
         </main>
         {chatOpen && user?.id && chatPeer && (
