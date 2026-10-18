@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Trash2, Edit, Save, X, Search, UserCheck } from 'lucide-react';
+import { UserPlus, Trash2, Edit, Save, X, Search, UserCheck, BarChart3 } from 'lucide-react';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -18,7 +18,8 @@ export default function UserManagement() {
     password: '',
     role: 'STAFF',
     workId: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    canViewReports: false
   });
 
   useEffect(() => {
@@ -71,6 +72,25 @@ export default function UserManagement() {
     }
   };
 
+  const handleToggleReports = async (user: any) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.id, canViewReports: !user.canViewReports })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, canViewReports: updated.canViewReports } : u));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to update report access');
+      }
+    } catch {
+      alert('Network error updating report access');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) {
@@ -94,7 +114,7 @@ export default function UserManagement() {
         await fetchUsers();
         setNewUserMode(false);
         setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '' });
+        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '', canViewReports: false });
         alert(isEdit ? 'User updated successfully' : 'User created successfully');
       } else {
         const data = await res.json();
@@ -117,7 +137,8 @@ export default function UserManagement() {
       password: '', // Leave blank to keep existing
       role: user.role || 'STAFF',
       workId: user.workId || '',
-      phoneNumber: user.phoneNumber || ''
+      phoneNumber: user.phoneNumber || '',
+      canViewReports: !!user.canViewReports
     });
     setNewUserMode(true);
   };
@@ -142,7 +163,8 @@ export default function UserManagement() {
               password: '', 
               role: 'STAFF',
               workId: '',
-              phoneNumber: ''
+              phoneNumber: '',
+              canViewReports: false
             });
           }}
           className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold w-full sm:w-auto"
@@ -236,6 +258,21 @@ export default function UserManagement() {
                   <option value="ADMIN">Admin</option>
                 </select>
               </div>
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600">
+                <input
+                  id="canViewReports"
+                  type="checkbox"
+                  checked={!!formData.canViewReports}
+                  onChange={e => setFormData({...formData, canViewReports: e.target.checked})}
+                  className="mt-1 w-4 h-4 accent-blue-600"
+                />
+                <label htmlFor="canViewReports" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <span className="font-medium block">Allow Reports access</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    When enabled, this staff member can open and generate reports.
+                  </span>
+                </label>
+              </div>
               <div className="pt-4">
                 <button 
                   type="submit" 
@@ -266,6 +303,7 @@ export default function UserManagement() {
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 dark:bg-slate-900/50 z-10">User</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Reports</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Created</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
               </tr>
@@ -321,10 +359,27 @@ export default function UserManagement() {
                         {user.role}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                        user.role === 'ADMIN' || user.canViewReports
+                          ? 'bg-green-50 text-green-700 border-green-100'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}>
+                        {user.role === 'ADMIN' ? 'Always' : user.canViewReports ? 'Allowed' : 'Denied'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end gap-2">
+                      <button
+                        onClick={() => handleToggleReports(user)}
+                        className={`p-1 rounded ${user.role === 'ADMIN' ? 'text-slate-300 cursor-not-allowed' : (user.canViewReports ? 'text-green-600 hover:bg-green-50' : 'text-slate-500 hover:bg-slate-100')}`}
+                        title={user.role === 'ADMIN' ? 'Admins always have report access' : (user.canViewReports ? 'Revoke Reports access' : 'Allow Reports access')}
+                        disabled={user.role === 'ADMIN'}
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={() => startEdit(user)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded"

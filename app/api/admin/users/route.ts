@@ -40,6 +40,7 @@ export async function GET(req: Request) {
         workId: true,
         phoneNumber: true,
         isDisabled: true,
+        canViewReports: true,
         lastActive: true,
         createdAt: true,
         // Exclude password
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
   }
   try {
     const body = await req.json();
-    const { name, email, password, role, workId, phoneNumber, isDisabled } = body;
+    const { name, email, password, role, workId, phoneNumber, isDisabled, canViewReports } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
@@ -89,7 +90,8 @@ export async function POST(req: Request) {
         role: role || 'STAFF',
         workId: finalWorkId,
         phoneNumber: phoneNumber || null,
-        isDisabled: !!isDisabled
+        isDisabled: !!isDisabled,
+        canViewReports: !!canViewReports
       }
     });
 
@@ -159,10 +161,11 @@ export async function PUT(req: Request) {
   }
   try {
     const body = await req.json();
-    const { id, name, email, role, password, workId, phoneNumber, isDisabled } = body;
+    const { id, name, email, role, password, workId, phoneNumber, isDisabled, canViewReports } = body;
 
     const data: Record<string, unknown> = { name, email, role, workId, phoneNumber };
     if (password) data.password = await hashPassword(password);
+    if (typeof canViewReports === 'boolean') data.canViewReports = canViewReports;
     if (typeof isDisabled === 'boolean') {
       // Prevent disabling executive/admin accounts to avoid lockout
       const target = await db.user.findUnique({ where: { id } });

@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft, Package, Construction } from 'lucide-react';
 import AccessRestricted from '@/components/AccessRestricted';
-import { canViewReports, getReportRole } from '@/lib/reports';
+import { hasReportAccess } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GeneralSupplyReportPage() {
-  const role = await getReportRole();
-  if (!canViewReports(role)) return <AccessRestricted />;
+  if (!(await hasReportAccess())) return <AccessRestricted />;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

@@ -12,25 +12,26 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = TIMEOUT_M
   ]);
 }
 
-export const REPORT_ALLOWED_ROLES = ['ADMIN', 'ACCOUNTANT', 'MANAGER', 'MD', 'CEO'];
-
-export function canViewReports(role: string | null): boolean {
-  return !!role && REPORT_ALLOWED_ROLES.includes(role);
-}
-
-/** Resolve the signed-in staff member's role, degrading to null on any failure. */
-export async function getReportRole(): Promise<string | null> {
+/**
+ * Report access is granted per-user by an admin (User.canViewReports).
+ * Admins always have access so they can manage the permission.
+ */
+export async function hasReportAccess(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get('kapilla_uid')?.value;
-    if (!userId) return null;
+    if (!userId) return false;
     const user = await withTimeout(
-      db.user.findUnique({ where: { id: userId }, select: { role: true } })
+      db.user.findUnique({
+        where: { id: userId },
+        select: { role: true, canViewReports: true },
+      })
     );
-    return user?.role ?? null;
+    if (!user) return false;
+    return user.role === 'ADMIN' || user.canViewReports;
   } catch (error) {
-    console.error('[REPORTS] role check failed', error);
-    return null;
+    console.error('[REPORTS] access check failed', error);
+    return false;
   }
 }
 

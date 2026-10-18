@@ -18,6 +18,7 @@ model User {
   phoneNumber      String?
   image            String?
   isDisabled       Boolean          @default(false)
+  canViewReports   Boolean          @default(false)
   lastActive       DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

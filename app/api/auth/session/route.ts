@@ -23,6 +23,7 @@ export async function GET() {
         phoneNumber: true,
         image: true,
         isDisabled: true,
+        canViewReports: true,
       },
     });
 

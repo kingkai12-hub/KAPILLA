@@ -47,6 +47,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     email?: string;
     role?: string;
     image?: string;
+    canViewReports?: boolean;
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPeer, setChatPeer] = useState<string>('');
@@ -227,7 +228,17 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       name: 'Reports',
       href: '/staff/reports',
       icon: BarChart3,
-      roles: ['ADMIN', 'ACCOUNTANT', 'MANAGER', 'MD', 'CEO'],
+      roles: [
+        'ADMIN',
+        'STAFF',
+        'DRIVER',
+        'OPERATION_MANAGER',
+        'MANAGER',
+        'MD',
+        'CEO',
+        'ACCOUNTANT',
+      ],
+      requiresReportAccess: true,
     },
     {
       name: 'Create Shipment',
@@ -539,6 +550,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
             </div>
             {navigation.map((item) => {
               if (item.roles && (!user?.role || !item.roles.includes(user.role))) return null;
+              if (
+                'requiresReportAccess' in item &&
+                item.requiresReportAccess &&
+                !(user?.role === 'ADMIN' || user?.canViewReports)
+              )
+                return null;
               const isActive = pathname === item.href;
 
               return (

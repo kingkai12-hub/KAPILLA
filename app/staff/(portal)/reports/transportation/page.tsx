@@ -14,8 +14,7 @@ import AccessRestricted from '@/components/AccessRestricted';
 import PrintButton from '@/components/PrintButton';
 import TransportReportPdfButton from '@/components/TransportReportPdfButton';
 import {
-  canViewReports,
-  getReportRole,
+  hasReportAccess,
   parsePeriod,
   periodLabel,
   REPORT_PERIODS,
@@ -24,8 +23,6 @@ import {
 } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
-
-const ALLOWED_ROLES = ['ADMIN', 'ACCOUNTANT', 'MANAGER', 'MD', 'CEO'];
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -48,8 +45,7 @@ export default async function TransportationReportPage({
 }: {
   searchParams: Promise<{ q?: string; period?: string }>;
 }) {
-  const role = await getReportRole();
-  if (!canViewReports(role)) {
+  if (!(await hasReportAccess())) {
     return <AccessRestricted />;
   }
 
