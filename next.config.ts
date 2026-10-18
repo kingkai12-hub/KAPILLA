@@ -22,7 +22,13 @@ const nextConfig: NextConfig = {
   },
   // Reduce build time by optimizing dependencies
   experimental: {
-    optimizePackageImports: ['react', 'react-dom'],
+    optimizePackageImports: ['react', 'react-dom', 'lucide-react'],
+    // Reuse recently visited pages on the client so moving back and forth
+    // between portal screens is instant instead of re-hitting the server.
+    staleTimes: {
+      dynamic: 60,
+      static: 300,
+    },
   },
   // Turbopack config for faster builds
   turbopack: {},

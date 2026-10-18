@@ -169,7 +169,11 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         sessionManagerRef.current.stop();
       }
     };
-  }, [router, pathname]);
+    // Run once per session. Re-running this on every route change fired three
+    // extra API calls per navigation (session, profile, pickup count) and made
+    // the portal feel slow. Server components re-validate auth on every page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Heartbeat Effect
   useEffect(() => {
@@ -574,6 +578,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
