@@ -164,7 +164,20 @@ export default async function proxy(request: NextRequest) {
   // Create response with security headers
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // 5. SECURITY HEADERS
+  // 5. NO-STORE FOR PORTAL HTML DOCUMENTS
+  // Ever-serving a stale portal document left users stuck on an old build
+  // (e.g. seeing the maintenance screen after it was turned off). RSC and
+  // prefetch requests are excluded so the client router cache configured via
+  // `staleTimes` keeps portal navigation fast.
+  const isRscRequest =
+    request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc');
+  if (isAuthPage && !isRscRequest) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+  }
+
+  // 6. SECURITY HEADERS
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -174,7 +187,7 @@ export default async function proxy(request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   );
 
-  // 6. CSRF protection for API routes
+  // 7. CSRF protection for API routes
   if (isApiRoute && request.method !== 'GET') {
     const origin = request.headers.get('origin');
     const host = request.headers.get('host');
