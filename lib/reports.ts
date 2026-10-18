@@ -46,11 +46,11 @@ export const REPORT_PERIODS: { key: ReportPeriod; label: string }[] = [
 ];
 
 export function parsePeriod(value?: string): ReportPeriod {
-  return REPORT_PERIODS.find((r) => r.key === value)?.key ?? 'month';
+  return REPORT_PERIODS.find((r) => r.key === value)?.key ?? 'all';
 }
 
 export function periodLabel(period: ReportPeriod): string {
-  return REPORT_PERIODS.find((r) => r.key === period)?.label ?? 'Monthly';
+  return REPORT_PERIODS.find((r) => r.key === period)?.label ?? 'All time';
 }
 
 function startOfDay(date: Date): Date {
@@ -226,11 +226,12 @@ export async function searchTransportReport(
       return report;
     }
 
-    // 2) Company / customer name search — all their cargo in the period.
+    // 2) Company / customer / partial-waybill search — all matches in the period.
     const where: Record<string, unknown> = {
       OR: [
         { senderName: { contains: q, mode: 'insensitive' as const } },
         { receiverName: { contains: q, mode: 'insensitive' as const } },
+        { waybillNumber: { contains: q, mode: 'insensitive' as const } },
       ],
     };
     if (since) where.createdAt = { gte: since };

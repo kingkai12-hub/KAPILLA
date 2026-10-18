@@ -78,7 +78,12 @@ export default async function TransportationReportPage({
             Search a waybill number, company name or sender name, then choose the period.
           </p>
         </div>
-        {report && (report.waybill || report.rows.length > 0) && <PrintButton label="Print report" />}
+        {report && (report.waybill || report.rows.length > 0) && (
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <TransportReportPdfButton report={report} periodLabel={periodLabel(period)} />
+            <PrintButton label="Print" />
+          </div>
+        )}
       </div>
 
       {/* Search + period */}
@@ -338,9 +343,23 @@ export default async function TransportationReportPage({
                   <tr>
                     <td
                       colSpan={10}
-                      className="px-6 py-8 text-center text-slate-500 dark:text-slate-400"
+                      className="px-6 py-10 text-center text-slate-500 dark:text-slate-400"
                     >
-                      No shipments found for “{report.query}” in the {periodLabel(period).toLowerCase()} period.
+                      <p>
+                        No shipments found for “{report.query}” in the{' '}
+                        {periodLabel(period).toLowerCase()} period.
+                      </p>
+                      {period !== 'all' && (
+                        <p className="mt-3 text-sm">
+                          The cargo may have been booked outside this period.{' '}
+                          <Link
+                            href={`/staff/reports/transportation?period=all&q=${encodeURIComponent(report.query)}`}
+                            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Search all time
+                          </Link>
+                        </p>
+                      )}
                     </td>
                   </tr>
                 ) : (
