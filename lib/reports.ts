@@ -331,6 +331,7 @@ const clientSelect = {
   email: true,
   address: true,
   contactPerson: true,
+  notes: true,
   isActive: true,
 } as const;
 

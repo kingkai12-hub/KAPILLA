@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Users, Search, FileText, Phone, Mail } from 'lucide-react';
 import ClientRegistrationForm from '@/components/ClientRegistrationForm';
+import ClientEditForm from '@/components/ClientEditForm';
 import { listClients } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
@@ -64,40 +65,40 @@ export default async function ClientsPage({
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {clients.map((client) => (
-              <div
-                key={client.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4"
-              >
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white">
-                    {client.name}
-                    {!client.isActive && (
-                      <span className="ml-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                        (inactive)
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                    <span>{client.code}</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5" />
-                      {client.phone}
-                    </span>
-                    {client.email && (
+              <div key={client.id} className="px-6 py-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white">
+                      {client.name}
+                      {!client.isActive && (
+                        <span className="ml-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                          (inactive)
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <span>{client.code}</span>
                       <span className="inline-flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        {client.email}
+                        <Phone className="w-3.5 h-3.5" />
+                        {client.phone}
                       </span>
-                    )}
-                  </p>
+                      {client.email && (
+                        <span className="inline-flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5" />
+                          {client.email}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/staff/reports/transportation/client?clientId=${client.id}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-navy-800 dark:text-accent border border-navy-100 dark:border-navy-800 hover:bg-navy-50 dark:hover:bg-navy-800 transition-colors shrink-0"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View report
+                  </Link>
                 </div>
-                <Link
-                  href={`/staff/reports/transportation/client?clientId=${client.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-navy-800 dark:text-accent border border-navy-100 dark:border-navy-800 hover:bg-navy-50 dark:hover:bg-navy-800 transition-colors shrink-0"
-                >
-                  <FileText className="w-4 h-4" />
-                  View report
-                </Link>
+                <ClientEditForm client={client} />
               </div>
             ))}
           </div>
