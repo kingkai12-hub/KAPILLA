@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import AccessRestricted from '@/components/AccessRestricted';
 import PrintButton from '@/components/PrintButton';
+import TransportReportPdfButton from '@/components/TransportReportPdfButton';
 import {
   canViewReports,
   getReportRole,

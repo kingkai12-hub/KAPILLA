@@ -98,6 +98,14 @@ export interface CargoRow {
   staff: string | null;
 }
 
+export interface WaybillEvent {
+  timestamp: string;
+  status: string;
+  location: string;
+  remarks: string | null;
+  staffName: string | null;
+}
+
 export interface WaybillReport {
   waybillNumber: string;
   status: string;
@@ -118,6 +126,7 @@ export interface WaybillReport {
   deliveredAt: string | null;
   staff: string | null;
   receivedBy: string | null;
+  events: WaybillEvent[];
 }
 
 export interface TransportReport {
@@ -198,6 +207,7 @@ export async function searchTransportReport(
     const shipment = await withTimeout(
       db.shipment.findFirst({
         where: { waybillNumber: { equals: q, mode: 'insensitive' } },
+        include: { events: { orderBy: { timestamp: 'asc' } } },
       })
     );
 
@@ -222,6 +232,13 @@ export async function searchTransportReport(
         deliveredAt: shipment.deliveredAt ? shipment.deliveredAt.toISOString() : null,
         staff: shipment.createdByName ?? shipment.dispatcherName ?? null,
         receivedBy: shipment.receivedBy,
+        events: shipment.events.map((event) => ({
+          timestamp: event.timestamp.toISOString(),
+          status: event.status,
+          location: event.location,
+          remarks: event.remarks,
+          staffName: event.staffName,
+        })),
       };
       return report;
     }

@@ -122,10 +122,30 @@ export default function TransportReportPdfButton({
           body: [
             ['Route', `${w.origin} → ${w.destination}`],
             ['Weight', w.weight != null ? `${w.weight} kg` : '—'],
+            ['Price', w.price != null ? `TZS ${w.price.toLocaleString()}` : '—'],
             ['Processed by (staff)', w.staff || '—'],
             ['Received by', w.receivedBy || '—'],
             ['Cargo details', w.cargoDetails || '—'],
           ],
+        });
+        cursor = lastY(doc, cursor) + 16;
+
+        autoTable(doc, {
+          startY: cursor,
+          theme: 'grid',
+          headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 4 },
+          head: [['Date & time', 'Status', 'Location', 'Remarks', 'Staff']],
+          body:
+            w.events.length > 0
+              ? w.events.map((e) => [
+                  fmt(e.timestamp),
+                  e.status.replace(/_/g, ' '),
+                  e.location,
+                  e.remarks || '—',
+                  e.staffName || '—',
+                ])
+              : [['—', 'No updates recorded yet.', '', '', '']],
         });
       } else {
         autoTable(doc, {
