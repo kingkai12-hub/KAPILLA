@@ -7,7 +7,7 @@ import IdleLogout from '@/components/IdleLogout';
 import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { getMaintenanceStatus } from '@/lib/maintenance';
 import { Wrench, ShieldAlert } from 'lucide-react';
@@ -65,6 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let isMaintenance = false;
   let maintenanceMessage = '';
   let isAdmin = false;
+  let isLoginRoute = false;
 
   try {
     const status = await getMaintenanceStatus();
@@ -75,22 +76,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   if (isMaintenance) {
-    try {
-      const cookieStore = await cookies();
-      const userId = cookieStore.get('kapilla_uid')?.value;
-      if (userId) {
-        const user = await db.user.findUnique({
-          where: { id: userId },
-          select: { role: true },
-        });
-        isAdmin = user?.role === 'ADMIN';
+    // The login page must stay reachable so an admin can sign in and turn
+    // maintenance off — otherwise nobody can get back in.
+    const pathname = (await headers()).get('x-pathname') ?? '';
+    isLoginRoute = pathname === '/staff/login';
+
+    if (!isLoginRoute) {
+      try {
+        const cookieStore = await cookies();
+        const userId = cookieStore.get('kapilla_uid')?.value;
+        if (userId) {
+          const user = await db.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+          });
+          isAdmin = user?.role === 'ADMIN';
+        }
+      } catch (e) {
+        console.error('[LAYOUT] admin check failed', e);
       }
-    } catch (e) {
-      console.error('[LAYOUT] admin check failed', e);
     }
   }
 
-  if (isMaintenance && !isAdmin) {
+  if (isMaintenance && !isAdmin && !isLoginRoute) {
     return (
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>

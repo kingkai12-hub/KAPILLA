@@ -64,6 +64,11 @@ export default async function proxy(request: NextRequest) {
   const authCookie = request.cookies.get('kapilla_auth');
   const userId = request.cookies.get('kapilla_uid');
   const pathname = request.nextUrl.pathname;
+
+  // Expose the pathname to server components (used to keep /staff/login
+  // reachable while maintenance mode is on).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
   const isAuthPage = pathname.startsWith('/staff');
   const isApiRoute = pathname.startsWith('/api');
   const isPublicShipmentRoute = pathname.startsWith('/shipments/');
@@ -140,7 +145,7 @@ export default async function proxy(request: NextRequest) {
 
     if (!authCookie?.value || !userId?.value) {
       if (isLogin) {
-        return NextResponse.next();
+        return NextResponse.next({ request: { headers: requestHeaders } });
       }
       // Redirect unauthenticated users to home page to avoid confusion
       const url = request.nextUrl.clone();
@@ -157,7 +162,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   // Create response with security headers
-  const response = NextResponse.next();
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // 5. SECURITY HEADERS
   response.headers.set('X-Content-Type-Options', 'nosniff');
