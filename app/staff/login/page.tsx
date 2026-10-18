@@ -42,48 +42,50 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 bg-navy-900">
       {/* Background Image - Full Screen */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: 'url(/background.jpg)',
-          opacity: 0.25,
-        }}
+      <Image
+        src="/background.jpg"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-20"
       />
+      <div className="absolute inset-0 bg-navy-900/85" />
 
       {/* Content */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
+          <div className="bg-white p-3 rounded-md border border-navy-100">
             <Image
               src="/logo.png"
-              alt="Kapilla Logo"
+              alt="Kapilla Group Ltd"
               width={96}
               height={96}
-              className="w-28 h-28 object-contain"
+              className="w-24 h-24 object-contain"
               priority
             />
           </div>
         </div>
-        <h2 className="mt-8 text-center text-4xl font-extrabold text-white uppercase">
-          STAFF PORTAL
-        </h2>
-        <p className="mt-3 text-center text-lg text-white font-medium uppercase">
-          KAPILLA GROUP LTD. INTERNAL SYSTEMS
+        <h1 className="mt-8 text-center text-3xl font-bold text-white tracking-tight">
+          Staff Portal
+        </h1>
+        <p className="mt-3 text-center text-sm font-semibold text-navy-100 uppercase tracking-wider">
+          Kapilla Group Ltd. Internal Systems
         </p>
       </div>
 
       <div className="relative z-10 mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white/95 backdrop-blur-sm py-10 px-6 shadow-xl border-0 rounded-3xl sm:px-12">
+        <div className="bg-white py-10 px-6 shadow-soft-lg border border-navy-100 rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="email" className="block text-base font-semibold text-slate-800">
+              <label htmlFor="email" className="block text-sm font-semibold text-navy-900">
                 Email address
               </label>
-              <div className="mt-2 relative rounded-xl">
+              <div className="mt-2 relative rounded-md">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-6 w-6 text-slate-400" />
+                  <Mail className="h-5 w-5 text-charcoal-muted" />
                 </div>
                 <input
                   ref={emailRef}
@@ -93,19 +95,19 @@ export default function StaffLogin() {
                   autoComplete="email"
                   required
                   defaultValue=""
-                  className="block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900"
+                  className="block w-full pl-12 text-base border border-navy-200 rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
                   placeholder="staff@kapillagroup.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-base font-semibold text-slate-800">
+              <label htmlFor="password" className="block text-sm font-semibold text-navy-900">
                 Password
               </label>
-              <div className="mt-2 relative rounded-xl">
+              <div className="mt-2 relative rounded-md">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-6 w-6 text-slate-400" />
+                  <Lock className="h-5 w-5 text-charcoal-muted" />
                 </div>
                 <input
                   ref={passwordRef}
@@ -115,7 +117,7 @@ export default function StaffLogin() {
                   autoComplete="current-password"
                   required
                   defaultValue=""
-                  className="block w-full pl-12 text-base border-slate-300 rounded-xl py-4 border text-slate-900"
+                  className="block w-full pl-12 text-base border border-navy-200 rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
                   placeholder="••••••••"
                 />
               </div>
@@ -125,7 +127,7 @@ export default function StaffLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-4 px-6 border-0 rounded-2xl shadow-lg text-base font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="w-full flex justify-center items-center py-3.5 px-6 rounded-md text-base font-semibold text-navy-900 bg-accent hover:bg-accent-dark disabled:opacity-60 transition-colors"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
                 {!loading && <ArrowRight className="ml-3 h-5 w-5" />}
@@ -133,7 +135,7 @@ export default function StaffLogin() {
             </div>
           </form>
         </div>
-        <div className="mt-8 text-center text-xs font-mono text-blue-900/60 font-bold tracking-widest">
+        <div className="mt-8 text-center text-[10px] font-mono text-navy-300 font-bold tracking-widest">
           DEVELOPED BY KAISI
         </div>
       </div>

@@ -4,66 +4,72 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+  KAPILLA brand system
+  ------------------------------------------------------------------
+  Navy   -> headers, navigation, primary brand markings
+  Charcoal -> secondary body text and non-interactive UI
+  White  -> page background and intentional negative space
+  Yellow -> accent only: calls to action and critical status
+  ------------------------------------------------------------------
+*/
+@theme {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-navy-50: #f4f7fb;
+  --color-navy-100: #e7edf6;
+  --color-navy-200: #c9d6e8;
+  --color-navy-300: #9cb2cf;
+  --color-navy-400: #5f7fa8;
+  --color-navy-500: #2e63a8;
+  --color-navy-600: #234e88;
+  --color-navy-700: #1b3d6b;
+  --color-navy-800: #122e52;
+  --color-navy-900: #0b1f3a;
+  --color-navy-950: #061428;
+
+  --color-charcoal: #2b333b;
+  --color-charcoal-light: #4a545e;
+  --color-charcoal-muted: #6b7680;
+
+  --color-accent: #ffc72c;
+  --color-accent-dark: #e6b01f;
+  --color-accent-light: #fff6dc;
+
+  /* Soft, intentional UI elevation (2-4px) */
+  --shadow-soft: 0 2px 4px rgba(11, 31, 58, 0.06);
+  --shadow-soft-lg: 0 4px 10px rgba(11, 31, 58, 0.08);
+}
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #2b333b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-@keyframes blob-bounce {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-}
-
-@keyframes gradient-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  /* Richer, more vibrant gradient with animation support */
-  background: linear-gradient(-45deg, #e0f2fe, #c7d2fe, #e0e7ff, #f0f9ff);
-  background-size: 400% 400%;
-  animation: gradient-flow 15s ease infinite;
+  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
-  /* Improve text rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Accessible, consistent focus treatment (WCAG 2.1 AA) */
+:focus-visible {
+  outline: 2px solid var(--color-navy-500);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Responsive touch targets - minimum 44x44px for mobile */
@@ -107,63 +113,6 @@ img {
   padding-top: max(16px, env(safe-area-inset-top, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
-}
-
-/* Animated Blobs - Increased intensity and added a third blob */
-body::before,
-body::after,
-.blob-extra {
-  content: '';
-  position: fixed;
-  width: 80vw;
-  height: 80vw;
-  max-width: 800px;
-  max-height: 800px;
-  border-radius: 50%;
-  filter: blur(80px);
-  z-index: -1;
-  animation: blob-bounce 20s infinite ease-in-out alternate;
-  pointer-events: none;
-}
-
-body::before {
-  top: -200px;
-  left: -200px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(14, 165, 233, 0) 70%);
-}
-
-body::after {
-  bottom: -200px;
-  right: -200px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0) 70%);
-  animation-delay: -10s;
-}
-
-.blob-extra {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
-  animation-delay: -5s;
-  width: 60vw;
-  height: 60vw;
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: linear-gradient(-45deg, #0f172a, #1e1b4b, #172554, #020617);
-    background-size: 400% 400%;
-  }
-  body::before {
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(56, 189, 248, 0) 70%);
-  }
-  body::after {
-    background: radial-gradient(circle, rgba(129, 140, 248, 0.25) 0%, rgba(129, 140, 248, 0) 70%);
-  }
-  .blob-extra {
-    background: radial-gradient(circle, rgba(192, 132, 252, 0.2) 0%, rgba(192, 132, 252, 0) 70%);
-  }
 }
 
 button,

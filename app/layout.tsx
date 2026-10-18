@@ -148,7 +148,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </p>
             </div>
           )}
-          <div className="blob-extra" />
           <ServiceWorkerCleanup />
           <RefreshHandler />
           <IdleLogout />

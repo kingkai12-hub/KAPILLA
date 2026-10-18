@@ -9,7 +9,6 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Search,
   Package,
   ArrowRight,
   Truck,
@@ -18,7 +17,6 @@ import {
   CheckCircle,
   MapPin,
   Loader2,
-  Calendar,
   X,
   Plane,
   Ship,
@@ -119,36 +117,33 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any; fallb
 function AdvertisementCard({ ad }: { ad: any }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01]",
-        ad.linkUrl ? "cursor-pointer" : ""
+        'relative overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-shadow duration-300 hover:shadow-soft-lg',
+        ad.linkUrl ? 'cursor-pointer' : ''
       )}
       onClick={() => {
         if (ad.linkUrl) {
-          window.open(ad.linkUrl, "_blank");
+          window.open(ad.linkUrl, '_blank');
         }
       }}
     >
       {ad.imageUrl ? (
-        <div className="relative h-48 md:h-64 bg-slate-200">
-          <Image
-            src={ad.imageUrl}
-            alt={ad.title}
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
-            <h2 className="text-2xl md:text-4xl font-black mb-2">{ad.title}</h2>
+        <div className="relative h-56 md:h-72 bg-navy-100">
+          <Image src={ad.imageUrl} alt={ad.title} fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-navy-950/70" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">{ad.title}</h2>
             {ad.description && (
-              <p className="text-sm md:text-lg text-blue-100 max-w-3xl">{ad.description}</p>
+              <p className="text-sm md:text-base text-navy-100 max-w-3xl leading-relaxed">
+                {ad.description}
+              </p>
             )}
             {ad.linkUrl && (
-              <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white/25 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white/35 transition-colors">
+              <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-md hover:bg-accent-dark transition-colors">
                 Learn More
                 <ArrowRight className="w-4 h-4" />
               </div>
@@ -156,13 +151,11 @@ function AdvertisementCard({ ad }: { ad: any }) {
           </div>
         </div>
       ) : (
-        <div className="p-6 md:p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          <h2 className="text-2xl md:text-3xl font-black mb-2">{ad.title}</h2>
-          {ad.description && (
-            <p className="text-blue-100 mb-4">{ad.description}</p>
-          )}
+        <div className="p-8 md:p-12 bg-navy-900 text-white">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">{ad.title}</h2>
+          {ad.description && <p className="text-navy-100 mb-6 leading-relaxed">{ad.description}</p>}
           {ad.linkUrl && (
-            <div className="inline-flex items-center gap-2 text-sm font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 transition-colors">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-md hover:bg-accent-dark transition-colors">
               Learn More
               <ArrowRight className="w-4 h-4" />
             </div>
@@ -193,7 +186,7 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
 
   return (
     <div className="relative">
-      <div className="overflow-hidden rounded-2xl">
+      <div className="overflow-hidden rounded-lg">
         <div
           className="flex transition-transform duration-700 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -205,31 +198,28 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
                 className={cn(
-                  "relative overflow-hidden rounded-2xl border shadow-lg transition-all duration-300",
-                  ad.linkUrl ? "cursor-pointer" : ""
+                  'relative overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-shadow duration-300',
+                  ad.linkUrl ? 'cursor-pointer' : ''
                 )}
                 onClick={() => {
                   if (ad.linkUrl) {
-                    window.open(ad.linkUrl, "_blank");
+                    window.open(ad.linkUrl, '_blank');
                   }
                 }}
               >
                 {ad.imageUrl ? (
-                  <div className="relative h-48 md:h-64 bg-slate-200">
-                    <Image
-                      src={ad.imageUrl}
-                      alt={ad.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
-                      <h2 className="text-2xl md:text-4xl font-black mb-2">{ad.title}</h2>
+                  <div className="relative h-56 md:h-72 bg-navy-100">
+                    <Image src={ad.imageUrl} alt={ad.title} fill className="object-cover" />
+                    <div className="absolute inset-0 bg-navy-950/70" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white">
+                      <h2 className="text-2xl md:text-3xl font-bold mb-3">{ad.title}</h2>
                       {ad.description && (
-                        <p className="text-sm md:text-lg text-blue-100 max-w-3xl">{ad.description}</p>
+                        <p className="text-sm md:text-base text-navy-100 max-w-3xl leading-relaxed">
+                          {ad.description}
+                        </p>
                       )}
                       {ad.linkUrl && (
-                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white/25 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white/35 transition-colors">
+                        <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-md hover:bg-accent-dark transition-colors">
                           Learn More
                           <ArrowRight className="w-4 h-4" />
                         </div>
@@ -237,13 +227,13 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-6 md:p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                    <h2 className="text-2xl md:text-3xl font-black mb-2">{ad.title}</h2>
+                  <div className="p-8 md:p-12 bg-navy-900 text-white">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-3">{ad.title}</h2>
                     {ad.description && (
-                      <p className="text-blue-100 mb-4">{ad.description}</p>
+                      <p className="text-navy-100 mb-6 leading-relaxed">{ad.description}</p>
                     )}
                     {ad.linkUrl && (
-                      <div className="inline-flex items-center gap-2 text-sm font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 transition-colors">
+                      <div className="inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-md hover:bg-accent-dark transition-colors">
                         Learn More
                         <ArrowRight className="w-4 h-4" />
                       </div>
@@ -259,32 +249,33 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all duration-300 z-10"
+        aria-label="Previous advertisement"
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white rounded-md shadow-soft-lg flex items-center justify-center text-navy-900 hover:bg-navy-50 transition-colors z-10"
       >
-        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all duration-300 z-10"
+        aria-label="Next advertisement"
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white rounded-md shadow-soft-lg flex items-center justify-center text-navy-900 hover:bg-navy-50 transition-colors z-10"
       >
-        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
 
       {/* Indicator dots */}
-      <div className="flex justify-center gap-2 mt-4">
+      <div className="flex justify-center gap-2 mt-6">
         {advertisements.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
+            aria-label={`Go to advertisement ${index + 1}`}
             className={cn(
-              "w-2.5 h-2.5 rounded-full transition-all duration-300",
-              index === currentIndex
-                ? "bg-blue-600 w-8 rounded-full"
-                : "bg-slate-300 hover:bg-slate-400"
+              'h-2.5 rounded-full transition-all duration-300',
+              index === currentIndex ? 'bg-navy-900 w-8' : 'bg-navy-200 hover:bg-navy-300 w-2.5'
             )}
           />
         ))}
@@ -299,7 +290,11 @@ interface HomeClientProps {
   initialAdvertisements: any[];
 }
 
-export default function HomeClient({ initialServices, initialExecutives, initialAdvertisements }: HomeClientProps) {
+export default function HomeClient({
+  initialServices,
+  initialExecutives,
+  initialAdvertisements,
+}: HomeClientProps) {
   // Forced update trigger: 2026-01-31-12-30
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
@@ -333,27 +328,27 @@ export default function HomeClient({ initialServices, initialExecutives, initial
           return (
             <motion.div
               key={service.id || index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="group relative h-64 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg"
+              className="group relative h-72 md:h-80 rounded-lg overflow-hidden cursor-pointer shadow-soft border border-navy-100"
             >
               <Image
                 src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
                 alt={service.title}
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
                 priority={index < 2}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-              <div className="absolute bottom-0 left-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                <div className="bg-blue-600/90 p-2 rounded-lg w-fit mb-3 backdrop-blur-sm">
-                  <IconComponent className="w-5 h-5" />
+              <div className="absolute inset-0 bg-navy-950/75 group-hover:bg-navy-950/85 transition-colors" />
+              <div className="absolute bottom-0 left-0 p-6 text-white">
+                <div className="bg-accent p-2 rounded-md w-fit mb-4">
+                  <IconComponent className="w-5 h-5 text-navy-900" />
                 </div>
-                <h3 className="text-xl font-bold mb-1">{service.title}</h3>
-                <p className="text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                <h3 className="text-lg font-semibold mb-2">{service.title}</h3>
+                <p className="text-sm text-navy-100 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {service.description}
                 </p>
               </div>
@@ -370,27 +365,27 @@ export default function HomeClient({ initialServices, initialExecutives, initial
         {executives.map((exec, index) => (
           <motion.div
             key={exec.id || index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.2 }}
-            className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 flex flex-col md:flex-row"
+            transition={{ duration: 0.5, delay: index * 0.15 }}
+            className="bg-white rounded-lg overflow-hidden shadow-soft border border-navy-100 hover:shadow-soft-lg transition-shadow duration-300 flex flex-col md:flex-row"
           >
-            <div className="relative w-full md:w-48 h-64 md:h-64 shrink-0 bg-slate-100">
+            <div className="relative w-full md:w-44 h-64 md:h-auto shrink-0 bg-navy-50">
               <Image
                 src={exec.imageUrl || '/logo.png'}
                 alt={exec.name}
                 fill
-                sizes="(max-width: 768px) 100vw, 192px"
+                sizes="(max-width: 768px) 100vw, 176px"
                 className="object-cover"
               />
             </div>
             <div className="p-6 flex flex-col justify-center">
-              <div className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+              <div className="text-navy-600 font-semibold text-xs uppercase tracking-wider mb-2">
                 {exec.role}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">{exec.name}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{exec.bio}</p>
+              <h3 className="text-xl font-semibold text-navy-900 mb-3">{exec.name}</h3>
+              <p className="text-charcoal-light text-sm leading-relaxed">{exec.bio}</p>
             </div>
           </motion.div>
         ))}
@@ -483,212 +478,290 @@ export default function HomeClient({ initialServices, initialExecutives, initial
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-white to-cyan-200 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-white font-sans text-charcoal">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
+      >
+        Skip to content
+      </a>
       <Suspense fallback={null}>
         <SearchParamsHandler onSearch={performSearch} />
       </Suspense>
+
       {/* Navigation */}
-      <nav className="absolute w-full z-10 safe-nav">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-white p-1 rounded-lg shadow-sm">
-              <Image
-                src="/logo.png"
-                alt="Kapilla Logo"
-                width={40}
-                height={40}
-                className="w-8 h-8 md:w-10 md:h-10 object-contain"
-                priority
-              />
-            </div>
-            <span className="text-lg font-bold text-slate-900 tracking-tight">
-              Kapilla <span className="text-blue-600 hidden sm:inline">Group Ltd</span>
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-4 text-slate-500">
-            <a
-              href="https://www.instagram.com/kapilla.group_ltd/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-pink-600 transition-colors p-2 hover:bg-pink-50 rounded-full"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a
-              href="https://x.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-full"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-full"
-            >
-              <Facebook className="w-5 h-5" />
-            </a>
-            <a
-              href="https://tiktok.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-full"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-              </svg>
-            </a>
-          </div>
-          <div className="flex gap-2 md:gap-3">
-            <button
-              onClick={() => setIsPickupModalOpen(true)}
-              className="cursor-pointer p-2 md:px-4 md:py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:scale-105"
-              aria-label="Request Pickup"
-            >
-              <Truck className="w-4 h-4 md:w-3.5 md:h-3.5" />
-              <span className="hidden md:inline">Request Pickup</span>
-            </button>
-            <Link
-              href="/staff/login"
-              className="p-2 md:px-4 md:py-2 rounded-full bg-white text-slate-900 text-xs font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 flex items-center gap-2 hover:scale-105"
-              aria-label="Staff Portal"
-            >
-              <User className="w-4 h-4 md:hidden" />
-              <span className="hidden md:inline">Staff Portal</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-8 lg:pt-28 lg:pb-16 overflow-hidden">
-        {/* Background Blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-blue-100/40 rounded-full blur-xl -z-10 opacity-60 mix-blend-normal pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[700px] h-[520px] bg-yellow-50/40 rounded-full blur-xl -z-10 opacity-50 mix-blend-normal pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-semibold uppercase tracking-wide mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-              Global Logistics Partner
-            </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
-              Your{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">
-                Trusted Partner
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto mb-6">
-              Experience the next generation of logistics. Real-time tracking, global reach, and
-              unmatched reliability for your business needs.
-            </p>
-          </motion.div>
-
-          {/* Search Widget */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="max-w-lg mx-auto relative z-20"
-          >
-            <div className="text-center mb-3">
-              <span className="text-sm font-bold text-blue-900 uppercase tracking-wider">
-                Track Your Cargo Here
-              </span>
-            </div>
-            <form onSubmit={handleSearch} className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative flex items-center bg-white rounded-xl shadow-xl p-1.5 pr-2">
-                <div className="pl-3 pr-2 text-slate-400">
-                  <Package className="w-5 h-5" />
-                </div>
-                <input
-                  type="text"
-                  value={waybill}
-                  onChange={(e) => setWaybill(e.target.value)}
-                  placeholder="Enter Waybill Number (e.g., KPL-8829)"
-                  className="flex-1 py-3 bg-transparent text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
+      <header className="sticky top-0 z-50 bg-navy-900 border-b border-navy-800">
+        <nav aria-label="Primary" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-16 md:h-20 flex items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3 shrink-0">
+              <span className="bg-white p-1.5 rounded-md">
+                <Image
+                  src="/logo.png"
+                  alt="Kapilla Group Ltd"
+                  width={40}
+                  height={40}
+                  className="w-8 h-8 md:w-9 md:h-9 object-contain"
+                  priority
                 />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg transition-all duration-200 shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <ArrowRight className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
+              </span>
+              <span className="text-base md:text-lg font-semibold text-white tracking-tight">
+                Kapilla <span className="text-accent">Group</span>
+              </span>
+            </Link>
 
-          <AnimatePresence>
-            {hasSearched && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="max-w-xl md:max-w-5xl mx-auto mt-4 md:mt-6 text-left"
+            <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-100">
+              <a href="#tracking" className="hover:text-white transition-colors">
+                Track
+              </a>
+              <a href="#services" className="hover:text-white transition-colors">
+                Services
+              </a>
+              <a href="#fleet" className="hover:text-white transition-colors">
+                Freight
+              </a>
+              <a href="#leadership" className="hover:text-white transition-colors">
+                Leadership
+              </a>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="hidden xl:flex items-center gap-1 text-navy-200">
+                <a
+                  href="https://www.instagram.com/kapilla.group_ltd/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kapilla Group on Instagram"
+                  className="p-2 hover:text-white transition-colors rounded-md"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://x.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kapilla Group on X"
+                  className="p-2 hover:text-white transition-colors rounded-md"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kapilla Group on Facebook"
+                  className="p-2 hover:text-white transition-colors rounded-md"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://tiktok.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kapilla Group on TikTok"
+                  className="p-2 hover:text-white transition-colors rounded-md"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                  </svg>
+                </a>
+              </div>
+              <button
+                onClick={() => setIsPickupModalOpen(true)}
+                className="p-2.5 md:px-5 md:py-2.5 rounded-md bg-accent text-navy-900 text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center gap-2"
+                aria-label="Request a pickup"
               >
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
+                <Truck className="w-4 h-4" />
+                <span className="hidden md:inline">Request a Pickup</span>
+              </button>
+              <Link
+                href="/staff/login"
+                className="p-2.5 md:px-5 md:py-2.5 rounded-md border border-navy-400/60 text-white text-sm font-semibold hover:bg-navy-800 transition-colors flex items-center gap-2"
+                aria-label="Staff portal"
+              >
+                <User className="w-4 h-4 md:hidden" />
+                <span className="hidden md:inline">Staff Portal</span>
+              </Link>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <main id="main">
+        {/* Hero */}
+        <section className="relative bg-navy-900 overflow-hidden">
+          <Image
+            src="/background.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-navy-900/80" />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-navy-800 border border-navy-700 text-navy-100 text-xs font-semibold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  Transportation &amp; General Supply
+                </div>
+                <h1 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                  Freight that moves on schedule, and stays visible end to end.
+                </h1>
+                <p className="mt-6 text-base lg:text-lg text-navy-100 max-w-xl leading-relaxed">
+                  Kapilla Group transports cargo by road, sea and air across Tanzania, East Africa
+                  and 200+ international destinations — with customs clearing, forwarding and
+                  last-mile delivery handled by one accountable partner.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <button
+                    onClick={() => setIsPickupModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-accent text-navy-900 font-semibold hover:bg-accent-dark transition-colors"
+                  >
+                    Request a Pickup
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <a
+                    href="#tracking"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-md border border-navy-400/60 text-white font-semibold hover:bg-navy-800 transition-colors"
+                  >
+                    Track a Consignment
+                  </a>
+                </div>
+
+                <ul className="mt-10 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-navy-100">
+                  {[
+                    'Live waybill tracking, 24/7',
+                    'Road, sea and air freight',
+                    'Customs clearing and forwarding',
+                    'Pickup and delivery nationwide',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-accent shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Tracking card */}
+              <motion.div
+                id="tracking"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="w-full max-w-lg lg:ml-auto"
+              >
+                <div className="bg-white rounded-lg shadow-soft-lg p-6 lg:p-8">
+                  <h2 className="text-lg font-semibold text-navy-900">Track your consignment</h2>
+                  <p className="mt-2 text-sm text-charcoal-light">
+                    Enter the waybill number printed on your receipt to see the latest status and
+                    location.
+                  </p>
+                  <form onSubmit={handleSearch} className="mt-6">
+                    <label htmlFor="waybill" className="sr-only">
+                      Waybill number
+                    </label>
+                    <div className="flex items-center gap-2 rounded-md border border-navy-200 bg-white p-1.5 focus-within:border-navy-500">
+                      <span className="pl-2 text-charcoal-muted" aria-hidden="true">
+                        <Package className="w-5 h-5" />
+                      </span>
+                      <input
+                        id="waybill"
+                        type="text"
+                        value={waybill}
+                        onChange={(e) => setWaybill(e.target.value)}
+                        placeholder="e.g. KPL-8829"
+                        className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 bg-accent text-navy-900 px-4 py-2.5 rounded-md font-semibold hover:bg-accent-dark transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <span className="hidden sm:inline">Track</span>
+                        )}
+                        {!loading && <ArrowRight className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Search results */}
+        <AnimatePresence>
+          {hasSearched && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="bg-navy-50 py-12 lg:py-16"
+            >
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="bg-white border border-navy-100 rounded-lg shadow-soft p-6 lg:p-8">
                   {error ? (
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-2">
-                        <X className="w-6 h-6 text-red-500" />
+                    <div className="text-center py-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-red-50 mb-4">
+                        <X className="w-6 h-6 text-red-600" />
                       </div>
-                      <div className="font-bold text-slate-900">Something went wrong</div>
-                      <div className="text-slate-500 text-sm mt-1">{error}</div>
+                      <div className="font-semibold text-navy-900">Something went wrong</div>
+                      <div className="text-charcoal-light text-sm mt-2">{error}</div>
                       <button
                         onClick={() => performSearch(waybill)}
-                        className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        className="mt-6 px-5 py-2.5 bg-accent text-navy-900 rounded-md text-sm font-semibold hover:bg-accent-dark transition-colors"
                       >
                         Try Again
                       </button>
                     </div>
                   ) : !searchResult ? (
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-2">
-                        <Package className="w-6 h-6 text-red-500" />
+                    <div className="text-center py-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-red-50 mb-4">
+                        <Package className="w-6 h-6 text-red-600" />
                       </div>
-                      <div className="font-bold text-slate-900">Shipment Not Found</div>
-                      <div className="text-slate-500 text-sm mt-1">
-                        We couldn't find any shipment with that Waybill Number.
+                      <div className="font-semibold text-navy-900">Shipment not found</div>
+                      <div className="text-charcoal-light text-sm mt-2">
+                        We couldn't find any shipment with that waybill number. Please check the
+                        number and try again.
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                          <div className="text-xs text-slate-500 font-medium mb-1">
-                            Waybill Number
+                          <div className="text-xs text-charcoal-muted font-semibold uppercase tracking-wider mb-2">
+                            Waybill number
                           </div>
-                          <div className="text-xl md:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                          <div className="text-xl md:text-2xl font-bold text-navy-900 font-mono tracking-tight">
                             {searchResult.waybillNumber}
                           </div>
                         </div>
                         <div className="flex flex-col md:items-end">
-                          <div className="text-xs text-slate-500 font-medium mb-1">
-                            Current Status
+                          <div className="text-xs text-charcoal-muted font-semibold uppercase tracking-wider mb-2">
+                            Current status
                           </div>
                           <div
                             className={cn(
-                              'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm',
+                              'px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide border',
                               searchResult.currentStatus === 'DELIVERED'
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-navy-100 text-navy-800 border-navy-200'
                                 : searchResult.currentStatus === 'PENDING'
-                                  ? 'bg-slate-100 text-slate-700'
-                                  : 'bg-blue-100 text-blue-700'
+                                  ? 'bg-navy-50 text-charcoal-light border-navy-200'
+                                  : 'bg-accent-light text-navy-900 border-accent'
                             )}
                           >
                             {(searchResult.currentStatus || 'UNKNOWN').replace(/_/g, ' ')}
@@ -697,7 +770,7 @@ export default function HomeClient({ initialServices, initialExecutives, initial
                       </div>
 
                       {/* Delivery Status View or Map */}
-                      <div className="mt-6">
+                      <div>
                         {searchResult.currentStatus === 'DELIVERED' ? (
                           <DeliveryStatusView
                             status={searchResult.currentStatus}
@@ -713,13 +786,13 @@ export default function HomeClient({ initialServices, initialExecutives, initial
                             <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
                           </MapErrorBoundary>
                         ) : (
-                          <div className="bg-slate-50 rounded-xl p-8 text-center">
-                            <Package className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                            <p className="text-slate-600 font-medium">
-                              Shipment is pending processing
+                          <div className="bg-navy-50 rounded-md p-10 text-center border border-navy-100">
+                            <Package className="w-12 h-12 text-charcoal-muted mx-auto mb-4" />
+                            <p className="text-charcoal font-medium">
+                              Shipment is awaiting processing
                             </p>
-                            <p className="text-sm text-slate-500 mt-1">
-                              Tracking will be available once the shipment is in transit
+                            <p className="text-sm text-charcoal-light mt-2">
+                              Tracking will be available as soon as the shipment is in transit.
                             </p>
                           </div>
                         )}
@@ -727,223 +800,219 @@ export default function HomeClient({ initialServices, initialExecutives, initial
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </section>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
-      {/* Advertisements Section */}
-      {advertisements.length > 0 && (
-        <section className="py-8 bg-gradient-to-r from-blue-50 to-indigo-50 relative z-10 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            {advertisements.length === 1 ? (
-              <AdvertisementCard ad={advertisements[0]} />
-            ) : (
-              <AdvertisementCarousel advertisements={advertisements} />
-            )}
+        {/* Advertisements Section */}
+        {advertisements.length > 0 && (
+          <section className="py-16 lg:py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {advertisements.length === 1 ? (
+                <AdvertisementCard ad={advertisements[0]} />
+              ) : (
+                <AdvertisementCarousel advertisements={advertisements} />
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Services & Fleet Showcase */}
+        <section id="fleet" className="py-16 lg:py-20 bg-navy-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="max-w-2xl mb-12 lg:mb-16"
+            >
+              <h2 className="text-2xl md:text-3xl font-bold text-navy-900 tracking-tight">
+                Freight solutions built around your supply chain
+              </h2>
+              <p className="mt-4 text-charcoal-light leading-relaxed">
+                From a single parcel to full container loads, our land, sea and air capabilities
+                move cargo to schedule — with a documented handover at every stage.
+              </p>
+            </motion.div>
+
+            <ServicesGrid services={services} iconMap={iconMap} />
           </div>
         </section>
-      )}
 
-      {/* Services & Fleet Showcase */}
-      <section className="py-16 bg-white relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
-              Global Logistics Infrastructure
-            </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">
-              Our comprehensive network of land, sea, and air transportation ensures your cargo
-              reaches its destination safely and on time.
-            </p>
-          </motion.div>
+        {/* Services & Features Grid */}
+        <section id="services" className="py-16 lg:py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mb-12 lg:mb-16">
+              <h2 className="text-2xl md:text-3xl font-bold text-navy-900 tracking-tight">
+                End-to-end logistics services
+              </h2>
+              <p className="mt-4 text-charcoal-light leading-relaxed">
+                One partner for collection, freight, border clearance and final delivery — so you
+                deal with one team, one reference number and one point of accountability.
+              </p>
+            </div>
 
-          <ServicesGrid services={services} iconMap={iconMap} />
-        </div>
-      </section>
-
-      {/* Services & Features Grid */}
-      <section className="py-8 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-slate-50/50 skew-y-3 transform origin-bottom-left -z-10" />
-
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-8">
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 tracking-tight">
-              Our{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                Global Services
-              </span>
-            </h2>
-            <p className="text-slate-600 text-sm">
-              In the line of our Global Network, Real Tracking, and ADC Express, we now offer a
-              comprehensive suite of logistics solutions tailored to your needs.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {
-                icon: Package,
-                title: 'Courier Services',
-                desc: 'Fast, reliable delivery for documents and parcels. Important items reach their destination safely and on time.',
-                color: 'from-blue-500 to-indigo-600',
-                bg: 'bg-blue-50',
-              },
-              {
-                icon: Truck,
-                title: 'Transportation Services',
-                desc: 'Comprehensive multi-modal logistics solutions. Road, rail, air and sea freight to move your cargo efficiently.',
-                color: 'from-emerald-500 to-teal-600',
-                bg: 'bg-emerald-50',
-              },
-              {
-                icon: FileText,
-                title: 'Clearing & Forwarding',
-                desc: 'Expert customs brokerage and freight forwarding. We navigate complex regulations for smooth border crossings.',
-                color: 'from-amber-500 to-orange-600',
-                bg: 'bg-amber-50',
-              },
-              {
-                icon: Zap,
-                title: 'ADC Express',
-                desc: 'Premium express delivery service for your most urgent shipments. Lightning-fast transit times with priority handling.',
-                color: 'from-purple-500 to-pink-600',
-                bg: 'bg-purple-50',
-              },
-              {
-                icon: Clock,
-                title: 'Real-Time Updates',
-                desc: "Monitor your shipment 24/7 with status updates at every major checkpoint. Instant visibility into your cargo's journey.",
-                color: 'from-cyan-500 to-blue-600',
-                bg: 'bg-cyan-50',
-              },
-              {
-                icon: Globe,
-                title: 'Global Network',
-                desc: 'Seamless shipping to over 200 countries. Leverage our integrated international network to expand worldwide.',
-                color: 'from-rose-500 to-red-600',
-                bg: 'bg-rose-50',
-              },
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/10 transition-all duration-300 group hover:-translate-y-2"
-              >
-                <div className={`w-12 h-12 ${feature.bg} rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-all duration-300`}>
-                  <div className={`w-8 h-8 bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center`}>
-                    <feature.icon className="w-5 h-5 text-white" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: Package,
+                  title: 'Express Courier',
+                  desc: 'Time-critical documents and parcels collected, consolidated and delivered with proof of delivery.',
+                },
+                {
+                  icon: Truck,
+                  title: 'Freight Transportation',
+                  desc: 'Road, rail, sea and air freight moved on planned schedules, with live status on every leg.',
+                },
+                {
+                  icon: FileText,
+                  title: 'Customs Clearing & Forwarding',
+                  desc: 'Licensed brokerage that prepares documentation and duties so cargo keeps moving across borders.',
+                },
+                {
+                  icon: Zap,
+                  title: 'ADC Express',
+                  desc: 'Priority handling for urgent consignments, using the fastest available transit window.',
+                },
+                {
+                  icon: Clock,
+                  title: 'Real-Time Tracking',
+                  desc: 'Every consignment carries a waybill you can track from booking through to delivery, 24/7.',
+                },
+                {
+                  icon: Globe,
+                  title: 'Global Network',
+                  desc: 'Connections into 200+ destinations let you ship internationally from a single point of contact.',
+                },
+              ].map((feature, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
+                  className="p-6 rounded-lg bg-white border border-navy-100 shadow-soft hover:shadow-soft-lg hover:border-navy-200 transition-all duration-300"
+                >
+                  <div className="w-12 h-12 bg-navy-50 border border-navy-100 rounded-md flex items-center justify-center mb-6">
+                    <feature.icon className="w-6 h-6 text-navy-700" />
                   </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed text-sm">{feature.desc}</p>
-              </div>
-            ))}
+                  <h3 className="text-lg font-semibold text-navy-900 mb-3">{feature.title}</h3>
+                  <p className="text-charcoal-light leading-relaxed text-sm">{feature.desc}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Executive Leadership */}
-      <section className="py-16 bg-slate-50 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 tracking-tight">
-              Executive <span className="text-blue-600">Leadership</span>
-            </h2>
-            <p className="text-slate-600 text-sm">
-              Meet the visionaries driving Kapilla Group towards excellence and global standards.
-            </p>
+        {/* Executive Leadership */}
+        <section id="leadership" className="py-16 lg:py-20 bg-navy-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mb-12 lg:mb-16">
+              <h2 className="text-2xl md:text-3xl font-bold text-navy-900 tracking-tight">
+                Leadership
+              </h2>
+              <p className="mt-4 text-charcoal-light leading-relaxed">
+                The team accountable for Kapilla Group's service standards, safety record and
+                day-to-day freight operations.
+              </p>
+            </div>
+
+            <ExecSection executives={executives} />
           </div>
-
-          <ExecSection executives={executives} />
-        </div>
-      </section>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8">
-          <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <Image
-                src="/logo.png"
-                alt="Kapilla Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain brightness-0 invert"
-              />
-              <span className="text-base font-bold text-white tracking-tight">
-                Kapilla <span className="text-blue-500">Group Ltd</span>
+      <footer className="bg-navy-900 text-navy-200 py-16 border-t border-navy-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-12">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="bg-white p-1.5 rounded-md">
+                <Image
+                  src="/logo.png"
+                  alt="Kapilla Group Ltd"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
+                />
+              </span>
+              <span className="text-base font-semibold text-white tracking-tight">
+                Kapilla <span className="text-accent">Group</span>
               </span>
             </div>
-            <p className="max-w-xs text-xs leading-relaxed mb-4">
-              Setting the standard for modern logistics in East Africa and beyond. Fast, Secure,
-              Reliable.
+            <p className="max-w-sm text-sm leading-relaxed mb-6">
+              Transportation and general supply for Tanzania and beyond. We move cargo on schedule,
+              clear it through borders and deliver it with a documented handover.
             </p>
-            <div className="text-xs">© 2026 Kapilla Group Ltd.</div>
-            <div className="mt-4 text-[10px] font-mono text-slate-500 font-bold tracking-wider">
+            <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
+              <MapPin className="w-4 h-4 text-accent" />
+              Dar es Salaam, Tanzania
+            </div>
+            <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
+            <div className="mt-4 text-[10px] font-mono text-navy-400 font-bold tracking-wider">
               DEVELOPED BY KAISI
               <span className="mx-2">|</span>
-              <a href="/staff/login" className="hover:text-slate-300 transition-colors">
+              <a href="/staff/login" className="hover:text-white transition-colors">
                 STAFF LOGIN
               </a>
             </div>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Company</h4>
-            <ul className="space-y-1.5 text-xs">
+            <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-blue-400">
-                  About Us
+                <a href="#services" className="hover:text-white transition-colors">
+                  Services
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-400">
-                  Careers
+                <a href="#fleet" className="hover:text-white transition-colors">
+                  Freight
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-400">
-                  Press
+                <a href="#leadership" className="hover:text-white transition-colors">
+                  Leadership
                 </a>
               </li>
               <li>
-                <Link href="/staff/login" className="hover:text-blue-400">
+                <Link href="/staff/login" className="hover:text-white transition-colors">
                   Staff Portal
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Support</h4>
-            <ul className="space-y-1.5 text-xs">
+            <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
+            <ul className="space-y-3 text-sm">
               <li>
                 <button
                   onClick={() => setIsHelpCenterOpen(true)}
-                  className="hover:text-blue-400 text-left"
+                  className="hover:text-white transition-colors text-left"
                 >
                   Help Center
                 </button>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-400">
-                  Terms of Service
-                </a>
+                <button
+                  onClick={() => setIsPickupModalOpen(true)}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  Request a Pickup
+                </button>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-400">
-                  Privacy Policy
+                <a href="#tracking" className="hover:text-white transition-colors">
+                  Track a Consignment
                 </a>
               </li>
             </ul>
           </div>
         </div>
       </footer>
+
       {/* Pickup Modal */}
       <PickupRequestModal isOpen={isPickupModalOpen} onClose={() => setIsPickupModalOpen(false)} />
 
