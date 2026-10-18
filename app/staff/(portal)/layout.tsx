@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import ChatBell from '@/components/ChatBell';
 import ChatModal from '@/components/ChatModal';
 import HelpCenterModal from '@/components/HelpCenterModal';
@@ -27,6 +27,7 @@ import {
   Briefcase,
   Bell,
   BarChart3,
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -37,6 +38,17 @@ import { SessionManager, clearSession } from '@/lib/session-manager';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
+}
+
+/** Shows a spinner on the sidebar item whose page is still loading. */
+function NavPendingIndicator() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return (
+    <span className="absolute right-4 top-1/2 -translate-y-1/2">
+      <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+    </span>
+  );
 }
 
 export default function StaffPortalLayout({ children }: { children: React.ReactNode }) {
@@ -583,6 +595,8 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                       {pendingPickupCount}
                     </span>
                   )}
+
+                  <NavPendingIndicator />
                 </Link>
               );
             })}
