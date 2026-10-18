@@ -103,6 +103,8 @@ export default function CreateShipment() {
     weight: '',
     type: 'Parcel',
     cargoDetails: '',
+    clientReference: '',
+    packageCount: '',
   });
   const [generatedWaybill, setGeneratedWaybill] = useState<string | null>(null);
 
@@ -115,6 +117,10 @@ export default function CreateShipment() {
     // Phone Number Validation: Only numbers, max 10 digits
     if (name === 'senderPhone' || name === 'receiverPhone') {
       newValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
+    // Package count: whole numbers only
+    else if (name === 'packageCount') {
+      newValue = value.replace(/[^0-9]/g, '');
     }
     // Weight Validation: Only numbers and decimal point
     else if (name === 'weight') {
@@ -197,6 +203,8 @@ export default function CreateShipment() {
       weight: '',
       type: 'Parcel',
       cargoDetails: '',
+      clientReference: '',
+      packageCount: '',
     });
   };
 
@@ -492,6 +500,32 @@ export default function CreateShipment() {
                 <option>Fragile</option>
                 <option>Heavy Cargo</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                No. of Packages
+              </label>
+              <input
+                type="text"
+                name="packageCount"
+                value={formData.packageCount}
+                onChange={handleChange}
+                placeholder="e.g. 3"
+                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Client Reference (optional)
+              </label>
+              <input
+                type="text"
+                name="clientReference"
+                value={formData.clientReference}
+                onChange={handleChange}
+                placeholder="Client's own ref / PO no."
+                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+              />
             </div>
           </div>
           <div className="mt-4">

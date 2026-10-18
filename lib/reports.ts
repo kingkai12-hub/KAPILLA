@@ -269,3 +269,249 @@ export async function searchTransportReport(
 
   return report;
 }
+
+/* ---------------------------------------------------------------------------
+ * Client (customer) reports — operational only, no financial figures.
+ * ------------------------------------------------------------------------- */
+
+/** An unfinished consignment is flagged as delayed this many days after booking. */
+export const PENDING_ALERT_DAYS = 7;
+
+export interface ClientSummary {
+  id: string;
+  code: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  address: string | null;
+  contactPerson: string | null;
+  isActive: boolean;
+}
+
+export interface ClientCargoRow extends CargoRow {
+  clientReference: string | null;
+  cargoDetails: string | null;
+  packages: number | null;
+  weight: number | null;
+  serviceType: string | null;
+  receiverPhone: string;
+}
+
+export interface ClientException {
+  waybillNumber: string;
+  reason: string;
+  days: number;
+}
+
+export interface ClientReportTotals {
+  total: number;
+  delivered: number;
+  inTransit: number;
+  pending: number;
+  returned: number;
+  cancelled: number;
+  totalWeight: number;
+  totalPackages: number;
+  averageTransitHours: number | null;
+}
+
+export interface ClientReport {
+  client: ClientSummary;
+  period: ReportPeriod;
+  totals: ClientReportTotals;
+  rows: ClientCargoRow[];
+  exceptions: ClientException[];
+}
+
+const clientSelect = {
+  id: true,
+  code: true,
+  name: true,
+  phone: true,
+  email: true,
+  address: true,
+  contactPerson: true,
+  isActive: true,
+} as const;
+
+/** Find clients by name, code or phone — used to pick the report subject. */
+export async function searchClients(query: string, limit = 10): Promise<ClientSummary[]> {
+  const q = query.trim();
+  if (!q) return [];
+  try {
+    return await withTimeout(
+      db.customer.findMany({
+        where: {
+          OR: [
+            { name: { contains: q, mode: 'insensitive' as const } },
+            { code: { contains: q, mode: 'insensitive' as const } },
+            { phone: { contains: q } },
+          ],
+        },
+        orderBy: { name: 'asc' },
+        take: limit,
+        select: clientSelect,
+      })
+    );
+  } catch (error) {
+    console.error('[REPORTS] client search failed:', error);
+    return [];
+  }
+}
+
+function isOpen(status: string): boolean {
+  return status !== 'DELIVERED' && status !== 'CANCELLED';
+}
+
+function buildTotals(rows: ClientCargoRow[]): ClientReportTotals {
+  const totals: ClientReportTotals = {
+    total: rows.length,
+    delivered: 0,
+    inTransit: 0,
+    pending: 0,
+    returned: 0,
+    cancelled: 0,
+    totalWeight: 0,
+    totalPackages: 0,
+    averageTransitHours: null,
+  };
+
+  let transitSum = 0;
+  let transitCount = 0;
+
+  for (const row of rows) {
+    if (row.status === 'DELIVERED') totals.delivered += 1;
+    else if (row.status === 'PENDING') totals.pending += 1;
+    else if (row.status === 'RETURNED') totals.returned += 1;
+    else if (row.status === 'CANCELLED') totals.cancelled += 1;
+    else totals.inTransit += 1;
+
+    if (typeof row.weight === 'number') totals.totalWeight += row.weight;
+    if (typeof row.packages === 'number') totals.totalPackages += row.packages;
+
+    if (row.deliveredAt && row.pickedUpAt) {
+      const ms = new Date(row.deliveredAt).getTime() - new Date(row.pickedUpAt).getTime();
+      if (ms > 0) {
+        transitSum += ms;
+        transitCount += 1;
+      }
+    }
+  }
+
+  if (transitCount > 0) {
+    totals.averageTransitHours = Math.round((transitSum / transitCount / 3600000) * 10) / 10;
+  }
+
+  return totals;
+}
+
+function buildExceptions(rows: ClientCargoRow[]): ClientException[] {
+  const now = Date.now();
+  const exceptions: ClientException[] = [];
+
+  for (const row of rows) {
+    if (!isOpen(row.status)) continue;
+    const days = Math.floor((now - new Date(row.bookedAt).getTime()) / 86400000);
+    if (days < PENDING_ALERT_DAYS) continue;
+    exceptions.push({
+      waybillNumber: row.waybillNumber,
+      reason:
+        row.status === 'RETURNED'
+          ? 'Returned — awaiting action'
+          : `Still ${row.status.replace(/_/g, ' ').toLowerCase()}`,
+      days,
+    });
+  }
+
+  return exceptions.sort((a, b) => b.days - a.days);
+}
+
+function toClientRow(row: {
+  waybillNumber: string;
+  currentStatus: string;
+  senderName: string;
+  receiverName: string;
+  receiverPhone: string;
+  origin: string;
+  destination: string;
+  createdAt: Date;
+  pickedUpAt: Date | null;
+  dispatchedAt: Date | null;
+  deliveredAt: Date | null;
+  createdByName: string | null;
+  dispatcherName: string | null;
+  clientReference: string | null;
+  cargoDetails: string | null;
+  packageCount: number | null;
+  weight: number | null;
+  serviceType: string | null;
+}): ClientCargoRow {
+  return {
+    ...toCargoRow(row),
+    clientReference: row.clientReference,
+    cargoDetails: row.cargoDetails,
+    packages: row.packageCount,
+    weight: row.weight,
+    serviceType: row.serviceType,
+    receiverPhone: row.receiverPhone,
+  };
+}
+
+/** Full operational report for one client over a period. */
+export async function getClientReport(
+  customerId: string,
+  period: ReportPeriod
+): Promise<ClientReport | null> {
+  try {
+    const client = await withTimeout(
+      db.customer.findUnique({ where: { id: customerId }, select: clientSelect })
+    );
+    if (!client) return null;
+
+    const since = periodStart(period);
+    const where: Record<string, unknown> = { customerId };
+    if (since) where.createdAt = { gte: since };
+
+    const shipments = await withTimeout(
+      db.shipment.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: MAX_ROWS,
+        select: {
+          waybillNumber: true,
+          currentStatus: true,
+          senderName: true,
+          receiverName: true,
+          receiverPhone: true,
+          origin: true,
+          destination: true,
+          createdAt: true,
+          pickedUpAt: true,
+          dispatchedAt: true,
+          deliveredAt: true,
+          createdByName: true,
+          dispatcherName: true,
+          clientReference: true,
+          cargoDetails: true,
+          packageCount: true,
+          weight: true,
+          serviceType: true,
+        },
+      })
+    );
+
+    const rows = shipments.map(toClientRow);
+
+    return {
+      client,
+      period,
+      totals: buildTotals(rows),
+      rows,
+      exceptions: buildExceptions(rows),
+    };
+  } catch (error) {
+    console.error('[REPORTS] client report failed:', error);
+    return null;
+  }
+}
+

@@ -52,6 +52,11 @@ export async function POST(req: Request) {
       cargoDetails,
       dispatcherName,
       dispatcherSignature,
+      customerId,
+      clientReference,
+      packageCount,
+      packagingType,
+      serviceType,
     } = body;
 
     // Record which staff member processed this waybill (audit trail).
@@ -60,6 +65,46 @@ export async function POST(req: Request) {
       select: { name: true },
     });
     const createdByName = creator?.name || dispatcherName || null;
+
+    // Every consignment belongs to a client. If the staff picked one explicitly
+    // we use it; otherwise we match (or create) the client from the sender phone
+    // so the client report always has something to group on.
+    async function resolveCustomerId(): Promise<string | null> {
+      if (customerId) return customerId;
+
+      const phone = String(senderPhone || '').replace(/[^\d+]/g, '');
+      if (!phone) return null;
+
+      const existing = await db.customer.findFirst({
+        where: { phone },
+        select: { id: true },
+      });
+      if (existing) return existing.id;
+
+      let counter = await db.customer.count();
+      for (let i = 0; i < 5; i++) {
+        counter += 1;
+        const code = `KPL-${String(counter).padStart(4, '0')}`;
+        const clash = await db.customer.findUnique({ where: { code }, select: { id: true } });
+        if (clash) continue;
+        const created = await db.customer.create({
+          data: {
+            code,
+            name: senderName || 'Unknown client',
+            phone,
+            email: senderEmail || null,
+            address: senderAddress || null,
+            createdById: auth.user!.id,
+            createdByName,
+          },
+          select: { id: true },
+        });
+        return created.id;
+      }
+      return null;
+    }
+
+    const resolvedCustomerId = await resolveCustomerId();
 
     async function nextWaybill() {
       // Simple 4-digit waybill number
@@ -101,6 +146,11 @@ export async function POST(req: Request) {
             price: price ? parseFloat(price) : null,
             cargoDetails,
             currentStatus: 'PENDING',
+            customerId: resolvedCustomerId,
+            clientReference: clientReference || null,
+            packageCount: packageCount ? parseInt(packageCount, 10) : null,
+            packagingType: packagingType || null,
+            serviceType: serviceType || null,
             dispatcherName,
             dispatcherSignature,
             createdById: auth.user!.id,

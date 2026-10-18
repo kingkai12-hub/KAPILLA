@@ -78,9 +78,35 @@ model Document {
   @@map("Document")
 }
 
+/// A client / customer of the company. Shipments link here so per-client
+/// transportation reports are exact instead of name-matched free text.
+model Customer {
+  id            String     @id @default(uuid())
+  code          String     @unique
+  name          String
+  phone         String
+  email         String?
+  address       String?
+  contactPerson String?
+  notes         String?
+  isActive      Boolean    @default(true)
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  shipments     Shipment[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([isActive])
+  @@map("Customer")
+}
+
 model Shipment {
   id                  String           @id @default(uuid())
   waybillNumber       String           @unique
+  customerId          String?
+  clientReference     String?
   senderName          String
   senderEmail         String?
   senderPhone         String
@@ -106,6 +132,10 @@ model Shipment {
   updatedAt           DateTime         @updatedAt
   deliveredAt         DateTime?
   proofOfDelivery     String?
+  packageCount        Int?
+  packagingType       String?
+  serviceType         String?
+  customer            Customer?        @relation(fields: [customerId], references: [id])
   events              TrackingEvent[]
   tracking            VehicleTracking?
 
@@ -113,6 +143,8 @@ model Shipment {
   @@index([senderPhone])
   @@index([receiverPhone])
   @@index([createdAt])
+  @@index([customerId, createdAt])
+  @@index([customerId, currentStatus])
   @@index([waybillNumber, currentStatus])
   @@index([currentStatus, createdAt])
   @@map("Shipment")

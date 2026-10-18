@@ -13,6 +13,11 @@ export const createShipmentSchema = z.object({
   weight: z.number().positive('Weight must be positive').optional(),
   price: z.number().positive('Price must be positive').optional(),
   cargoDetails: z.string().optional(),
+  customerId: z.string().uuid('Invalid customer ID').optional(),
+  clientReference: z.string().optional(),
+  packageCount: z.number().int().positive().optional(),
+  packagingType: z.string().optional(),
+  serviceType: z.string().optional(),
 });
 
 export const updateShipmentSchema = createShipmentSchema.partial();

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Package,
   FileText,
+  Users,
 } from 'lucide-react';
 import AccessRestricted from '@/components/AccessRestricted';
 import PrintButton from '@/components/PrintButton';
@@ -74,6 +75,13 @@ export default async function TransportationReportPage({
           <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
             Search a waybill number, company name or sender name, then choose the period.
           </p>
+          <Link
+            href="/staff/reports/transportation/client"
+            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline print:hidden"
+          >
+            <Users className="w-4 h-4" />
+            Open full client report
+          </Link>
         </div>
         {report && (report.waybill || report.rows.length > 0) && (
           <div className="flex flex-wrap items-center gap-2 print:hidden">
