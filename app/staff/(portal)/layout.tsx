@@ -244,16 +244,6 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       name: 'Reports',
       href: '/staff/reports',
       icon: BarChart3,
-      roles: [
-        'ADMIN',
-        'STAFF',
-        'DRIVER',
-        'OPERATION_MANAGER',
-        'MANAGER',
-        'MD',
-        'CEO',
-        'ACCOUNTANT',
-      ],
       requiresReportAccess: true,
     },
     {
@@ -565,7 +555,8 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               Menu
             </div>
             {navigation.map((item) => {
-              if (item.roles && (!user?.role || !item.roles.includes(user.role))) return null;
+              const itemRoles = 'roles' in item ? item.roles : undefined;
+              if (itemRoles && (!user?.role || !itemRoles.includes(user.role))) return null;
               if (
                 'requiresReportAccess' in item &&
                 item.requiresReportAccess &&

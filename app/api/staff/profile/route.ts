@@ -70,6 +70,7 @@ export async function GET(req: Request) {
         phoneNumber: true,
         image: true,
         isDisabled: true,
+        canViewReports: true,
         lastActive: true,
         createdAt: true,
         updatedAt: true,
