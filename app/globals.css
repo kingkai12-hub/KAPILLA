@@ -72,6 +72,22 @@ body {
   border-radius: 4px;
 }
 
+/* Respect the user's motion preference */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Responsive touch targets - minimum 44x44px for mobile */
 @media (max-width: 768px) {
   button,

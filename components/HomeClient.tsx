@@ -24,7 +24,7 @@ import {
   Zap,
   Facebook,
   Instagram,
-  User,
+  Menu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -303,6 +303,7 @@ export default function HomeClient({
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [executives, setExecutives] = useState<any[]>(initialExecutives);
   const [services, setServices] = useState<any[]>(initialServices);
   const [advertisements, setAdvertisements] = useState<any[]>(initialAdvertisements);
@@ -423,6 +424,11 @@ export default function HomeClient({
     }
   } catch (e) {}
 
+  // Chronological (oldest first) event history for the public tracking timeline
+  const events: any[] = Array.isArray(searchResult?.events)
+    ? [...searchResult.events].reverse()
+    : [];
+
   const performSearch = async (wb: string) => {
     setWaybill(wb);
     setLoading(true);
@@ -473,8 +479,9 @@ export default function HomeClient({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!waybill.trim()) return;
-    performSearch(waybill);
+    const term = waybill.trim();
+    if (!term) return;
+    performSearch(term);
   };
 
   return (
@@ -577,14 +584,61 @@ export default function HomeClient({
               </button>
               <Link
                 href="/staff/login"
-                className="p-2.5 md:px-5 md:py-2.5 rounded-md border border-navy-400/60 text-white text-sm font-semibold hover:bg-navy-800 transition-colors flex items-center gap-2"
+                className="hidden md:flex px-5 py-2.5 rounded-md border border-navy-400/60 text-white text-sm font-semibold hover:bg-navy-800 transition-colors items-center gap-2"
                 aria-label="Staff portal"
               >
-                <User className="w-4 h-4 md:hidden" />
-                <span className="hidden md:inline">Staff Portal</span>
+                <span>Staff Portal</span>
               </Link>
+              <button
+                onClick={() => setIsMenuOpen((v) => !v)}
+                aria-label="Toggle navigation menu"
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+                className="lg:hidden p-2.5 rounded-md border border-navy-400/60 text-white hover:bg-navy-800 transition-colors"
+              >
+                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
             </div>
           </div>
+
+          {isMenuOpen && (
+            <div id="mobile-menu" className="lg:hidden border-t border-navy-800 pb-6">
+              <div className="flex flex-col">
+                {[
+                  ['#tracking', 'Track a consignment'],
+                  ['#services', 'Services'],
+                  ['#fleet', 'Freight'],
+                  ['#leadership', 'Leadership'],
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="py-3.5 text-sm font-medium text-navy-100 border-b border-navy-800 hover:text-white transition-colors"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsPickupModalOpen(true);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-md bg-accent text-navy-900 text-sm font-semibold hover:bg-accent-dark transition-colors"
+                >
+                  Request a Pickup
+                </button>
+                <Link
+                  href="/staff/login"
+                  className="px-4 py-3 rounded-md border border-navy-400/60 text-white text-sm font-semibold hover:bg-navy-800 transition-colors"
+                >
+                  Staff Portal
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
       </header>
 
@@ -658,7 +712,7 @@ export default function HomeClient({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 }}
-                className="w-full max-w-lg lg:ml-auto"
+                className="w-full max-w-lg lg:ml-auto scroll-mt-24"
               >
                 <div className="bg-white rounded-lg shadow-soft-lg p-6 lg:p-8">
                   <h2 className="text-lg font-semibold text-navy-900">Track your consignment</h2>
@@ -713,8 +767,19 @@ export default function HomeClient({
               className="bg-navy-50 py-12 lg:py-16"
             >
               <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white border border-navy-100 rounded-lg shadow-soft p-6 lg:p-8">
-                  {error ? (
+                <div
+                  aria-live="polite"
+                  className="bg-white border border-navy-100 rounded-lg shadow-soft p-6 lg:p-8"
+                >
+                  {loading ? (
+                    <div className="py-10 flex flex-col items-center text-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-navy-500" />
+                      <p className="mt-4 text-sm text-charcoal-light">
+                        Looking up{' '}
+                        <span className="font-semibold text-navy-900">{waybill.trim()}</span> …
+                      </p>
+                    </div>
+                  ) : error ? (
                     <div className="text-center py-4">
                       <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-red-50 mb-4">
                         <X className="w-6 h-6 text-red-600" />
@@ -769,6 +834,79 @@ export default function HomeClient({
                         </div>
                       </div>
 
+                      {/* Consignment summary */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-navy-100 border border-navy-100 rounded-md overflow-hidden">
+                        <div className="bg-white p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Route
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            {searchResult.origin}
+                            <span className="mx-1 text-charcoal-muted">→</span>
+                            {searchResult.destination}
+                          </div>
+                        </div>
+                        <div className="bg-white p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Booked
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            <FormattedDate dateStr={searchResult.createdAt} fallback="-" />
+                          </div>
+                        </div>
+                        <div className="bg-white p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Service
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            {searchResult.serviceType || '—'}
+                          </div>
+                        </div>
+                        <div className="bg-white p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Cargo
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            {[
+                              searchResult.packageCount
+                                ? `${searchResult.packageCount} ${
+                                    searchResult.packagingType || 'pkg'
+                                  }`
+                                : null,
+                              searchResult.weight ? `${searchResult.weight} kg` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ') || '—'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sender / recipient */}
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="border border-navy-100 rounded-md p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Sender
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            {searchResult.senderName || '—'}
+                          </div>
+                          <div className="text-xs text-charcoal-light mt-1">
+                            {searchResult.senderAddress || searchResult.senderPhone || ''}
+                          </div>
+                        </div>
+                        <div className="border border-navy-100 rounded-md p-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
+                            Recipient
+                          </div>
+                          <div className="text-sm font-semibold text-navy-900">
+                            {searchResult.receiverName || '—'}
+                          </div>
+                          <div className="text-xs text-charcoal-light mt-1">
+                            {searchResult.receiverAddress || searchResult.receiverPhone || ''}
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Delivery Status View or Map */}
                       <div>
                         {searchResult.currentStatus === 'DELIVERED' ? (
@@ -797,6 +935,44 @@ export default function HomeClient({
                           </div>
                         )}
                       </div>
+
+                      {/* Tracking history */}
+                      {events.length > 0 && (
+                        <div>
+                          <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted mb-6">
+                            Tracking history
+                          </h3>
+                          <ol className="relative border-l-2 border-navy-100 ml-3 space-y-8">
+                            {events.map((ev: any, i: number) => (
+                              <li key={ev.id || i} className="relative pl-8">
+                                <span
+                                  className={cn(
+                                    'absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white',
+                                    i === events.length - 1 ? 'bg-accent' : 'bg-navy-300'
+                                  )}
+                                />
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <span className="text-sm font-semibold text-navy-900">
+                                    {(ev.status || '').replace(/_/g, ' ')}
+                                  </span>
+                                  <span className="text-xs text-charcoal-muted">
+                                    <FormattedDate dateStr={ev.timestamp} fallback="-" />
+                                  </span>
+                                </div>
+                                <div className="text-sm text-charcoal-light mt-1">
+                                  {ev.location}
+                                  {ev.remarks ? ` — ${ev.remarks}` : ''}
+                                </div>
+                                {ev.staffName && (
+                                  <div className="text-xs text-charcoal-muted mt-1">
+                                    Handled by {ev.staffName}
+                                  </div>
+                                )}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -819,7 +995,7 @@ export default function HomeClient({
         )}
 
         {/* Services & Fleet Showcase */}
-        <section id="fleet" className="py-16 lg:py-20 bg-navy-50">
+        <section id="fleet" className="py-16 lg:py-20 bg-navy-50 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -907,7 +1083,7 @@ export default function HomeClient({
         </section>
 
         {/* Executive Leadership */}
-        <section id="leadership" className="py-16 lg:py-20 bg-navy-50">
+        <section id="leadership" className="py-16 lg:py-20 bg-navy-50 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-12 lg:mb-16">
               <h2 className="text-2xl md:text-3xl font-bold text-navy-900 tracking-tight">
@@ -920,6 +1096,36 @@ export default function HomeClient({
             </div>
 
             <ExecSection executives={executives} />
+          </div>
+        </section>
+
+        {/* Closing call to action */}
+        <section className="bg-navy-900 border-t border-navy-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="max-w-2xl">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                Ready to move your cargo?
+              </h2>
+              <p className="mt-3 text-navy-100 leading-relaxed">
+                Book a pickup and we will confirm collection, routing and documentation before the
+                consignment leaves your site.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-4 shrink-0">
+              <button
+                onClick={() => setIsPickupModalOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-accent text-navy-900 font-semibold hover:bg-accent-dark transition-colors"
+              >
+                Request a Pickup
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <a
+                href="#tracking"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-md border border-navy-400/60 text-white font-semibold hover:bg-navy-800 transition-colors"
+              >
+                Track a Consignment
+              </a>
+            </div>
           </div>
         </section>
       </main>
