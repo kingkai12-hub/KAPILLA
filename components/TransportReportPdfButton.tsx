@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FileDown } from 'lucide-react';
 import type { TransportReport } from '@/lib/reports';
+import { loadPdfLogo } from '@/lib/pdf-logo';
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -37,8 +38,10 @@ export default function TransportReportPdfButton({
       const JsPDF =
         (jspdfModule as unknown as { jsPDF?: unknown }).jsPDF ??
         (jspdfModule as unknown as { default?: unknown }).default;
-      const autoTable = ((atModule as unknown as { default?: unknown }).default ??
-        atModule) as (doc: unknown, options: Record<string, unknown>) => void;
+      const autoTable = ((atModule as unknown as { default?: unknown }).default ?? atModule) as (
+        doc: unknown,
+        options: Record<string, unknown>
+      ) => void;
 
       const isWaybill = report.waybill !== null;
       const doc = new (JsPDF as new (opts: Record<string, unknown>) => unknown)({
@@ -51,10 +54,32 @@ export default function TransportReportPdfButton({
         setFont: (name: string, style?: string) => void;
         text: (t: string, x: number, y: number) => void;
         save: (name: string) => void;
+        addImage: (
+          dataUrl: string,
+          format: string,
+          x: number,
+          y: number,
+          w: number,
+          h: number
+        ) => void;
         internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
       };
 
       const margin = 40;
+
+      const logo = await loadPdfLogo();
+      if (logo) {
+        const logoHeight = 44;
+        const logoWidth = (logo.width / logo.height) * logoHeight;
+        d.addImage(
+          logo.dataUrl,
+          'PNG',
+          d.internal.pageSize.getWidth() - margin - logoWidth,
+          30,
+          logoWidth,
+          logoHeight
+        );
+      }
 
       d.setFontSize(20);
       d.setFont('helvetica', 'bold');
