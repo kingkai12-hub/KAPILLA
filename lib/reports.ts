@@ -359,6 +359,33 @@ export async function searchClients(query: string, limit = 10): Promise<ClientSu
   }
 }
 
+/** List registered clients, optionally filtered by name, code or phone. */
+export async function listClients(query = '', limit = 100): Promise<ClientSummary[]> {
+  const q = query.trim();
+  try {
+    return await withTimeout(
+      db.customer.findMany({
+        where: q
+          ? {
+              OR: [
+                { name: { contains: q, mode: 'insensitive' as const } },
+                { code: { contains: q, mode: 'insensitive' as const } },
+                { phone: { contains: q } },
+                { contactPerson: { contains: q, mode: 'insensitive' as const } },
+              ],
+            }
+          : undefined,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: clientSelect,
+      })
+    );
+  } catch (error) {
+    console.error('[REPORTS] client list failed:', error);
+    return [];
+  }
+}
+
 function isOpen(status: string): boolean {
   return status !== 'DELIVERED' && status !== 'CANCELLED';
 }
@@ -514,4 +541,3 @@ export async function getClientReport(
     return null;
   }
 }
-

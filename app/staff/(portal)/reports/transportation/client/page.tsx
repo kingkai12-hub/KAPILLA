@@ -124,10 +124,19 @@ export default async function ClientReportPage({
           {query && (
             <div className="divide-y divide-slate-100 dark:divide-slate-700 border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden">
               {matches.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                  No client matches “{query}”. Clients are created automatically from shipments or
-                  when staff register them.
-                </p>
+                <div className="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  <p>
+                    No client matches “{query}”. Clients are created automatically from shipments,
+                    or registered by staff.
+                  </p>
+                  <Link
+                    href="/staff/clients"
+                    className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl text-sm font-semibold bg-navy-800 text-white hover:bg-navy-900 transition-colors"
+                  >
+                    <Users className="w-4 h-4" />
+                    Register a client
+                  </Link>
+                </div>
               ) : (
                 matches.map((client) => (
                   <Link

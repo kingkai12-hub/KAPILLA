@@ -18,6 +18,7 @@ import {
   X,
   UserCircle,
   UserCog,
+  Users,
   Receipt,
   Truck,
   Sun,
@@ -172,7 +173,6 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     // Run once per session. Re-running this on every route change fired three
     // extra API calls per navigation (session, profile, pickup count) and made
     // the portal feel slow. Server components re-validate auth on every page.
-     
   }, []);
 
   // Heartbeat Effect
@@ -238,6 +238,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       name: 'All Shipments',
       href: '/staff/shipments',
       icon: Boxes,
+      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+    },
+    {
+      name: 'Clients',
+      href: '/staff/clients',
+      icon: Users,
       roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
     },
     {
