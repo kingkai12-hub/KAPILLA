@@ -8,6 +8,7 @@ import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { cookies, headers } from 'next/headers';
+import Link from 'next/link';
 import { db } from '@/lib/db';
 import { getMaintenanceStatus } from '@/lib/maintenance';
 import { Wrench, ShieldAlert } from 'lucide-react';
@@ -86,10 +87,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         const cookieStore = await cookies();
         const userId = cookieStore.get('kapilla_uid')?.value;
         if (userId) {
-          const user = await db.user.findUnique({
-            where: { id: userId },
-            select: { role: true },
-          });
+          // Race the lookup against a timeout: a slow database must never hang
+          // every page, and a false "not admin" would lock the admin out.
+          const user = await Promise.race([
+            db.user.findUnique({
+              where: { id: userId },
+              select: { role: true },
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+          ]);
           isAdmin = user?.role === 'ADMIN';
         }
       } catch (e) {
@@ -109,7 +115,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             disableTransitionOnChange
           >
             <ServiceWorkerCleanup />
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 px-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 px-4">
               <div className="max-w-lg w-full text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-500/20 mb-8 animate-pulse">
                   <Wrench className="w-12 h-12 text-amber-400" />
@@ -117,10 +123,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
                   System Under Maintenance
                 </h1>
-                <p className="text-lg text-slate-300 mb-8">{maintenanceMessage}</p>
-                <div className="inline-flex items-center gap-2 px-5 py-3 bg-slate-800/60 rounded-full text-sm text-slate-400 border border-slate-700">
+                <p className="text-lg text-navy-200 mb-8">{maintenanceMessage}</p>
+                <div className="inline-flex items-center gap-2 px-5 py-3 bg-navy-800/60 rounded-full text-sm text-navy-300 border border-navy-700">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                   We will be back shortly
+                </div>
+                <div className="mt-10">
+                  <Link
+                    href="/staff/login"
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-md bg-accent text-navy-900 text-sm font-semibold hover:bg-accent-dark transition-colors"
+                  >
+                    Staff sign in
+                  </Link>
                 </div>
               </div>
             </div>
