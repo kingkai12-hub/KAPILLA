@@ -25,7 +25,7 @@ async function getServices() {
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -35,7 +35,7 @@ async function getExecutives() {
     return await db.executive.findMany({
       orderBy: { createdAt: 'asc' },
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -48,22 +48,16 @@ async function getAdvertisements() {
         isActive: true,
         AND: [
           {
-            OR: [
-              { startDate: null },
-              { startDate: { lte: now } }
-            ]
+            OR: [{ startDate: null }, { startDate: { lte: now } }],
           },
           {
-            OR: [
-              { endDate: null },
-              { endDate: { gte: now } }
-            ]
-          }
-        ]
+            OR: [{ endDate: null }, { endDate: { gte: now } }],
+          },
+        ],
       },
       orderBy: { sortOrder: 'asc' },
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -75,5 +69,11 @@ export default async function Home() {
     getAdvertisements(),
   ]);
 
-  return <HomeClient initialServices={services} initialExecutives={executives} initialAdvertisements={advertisements} />;
+  return (
+    <HomeClient
+      initialServices={services}
+      initialExecutives={executives}
+      initialAdvertisements={advertisements}
+    />
+  );
 }
