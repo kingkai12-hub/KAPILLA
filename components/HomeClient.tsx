@@ -55,36 +55,85 @@ const HelpCenterModal = dynamic(() => import('@/components/HelpCenterModal'), { 
      4 · 6 · 8 · 12 · 16 · 24   →   16 · 24 · 32 · 48 · 64 · 96 px
 
    Layout   : a single container + a single section rhythm
-   Surfaces : rounded-xl, hairline navy border, soft elevation
+   Surfaces : rounded-2xl, hairline navy border, soft elevation
    Controls : rounded-lg, two sizes only (sm, lg)
-   Type     : one size per role (display / h2 / h3 / body / small / meta)
+   Type     : one size per role, with real contrast between the steps
+              h1 56-72px · h2 30-48px · h3 18px · body 14px · meta 12px
    --------------------------------------------------------------------------- */
 
 const CONTAINER = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
-const SECTION = 'py-16 lg:py-24';
-const SECTION_HEAD = 'mb-12 max-w-2xl lg:mb-16';
+const SECTION = 'py-16 lg:py-28';
+const SECTION_HEAD = 'mb-12 lg:mb-16';
 
-const EYEBROW = 'text-xs font-semibold uppercase tracking-[0.14em] text-navy-600';
-const EYEBROW_ON_DARK = 'text-xs font-semibold uppercase tracking-[0.14em] text-accent';
+/* Type roles — the jump between h1 / h2 / h3 / body is what carries hierarchy. */
+const EYEBROW = 'text-xs font-semibold uppercase tracking-[0.18em] text-navy-600';
+const EYEBROW_ON_DARK = 'text-xs font-semibold uppercase tracking-[0.18em] text-accent';
 const H1 =
-  'mt-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl';
-const H2 = 'text-2xl font-bold tracking-tight text-navy-900 md:text-3xl';
-const H3 = 'text-lg font-semibold text-navy-900';
-const LEAD = 'mt-4 text-base leading-relaxed text-charcoal-light';
+  'mt-6 text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-white sm:text-5xl lg:text-6xl xl:text-7xl';
+const H2 =
+  'text-3xl font-bold leading-[1.12] tracking-[-0.02em] text-navy-900 md:text-4xl lg:text-5xl';
+const H3 = 'text-lg font-semibold tracking-tight text-navy-900';
+const LEAD = 'text-base leading-relaxed text-charcoal-light lg:text-lg';
 const BODY = 'text-sm leading-relaxed text-charcoal-light';
 const META = 'text-xs text-charcoal-muted';
 const META_ON_DARK = 'text-xs text-navy-300';
 
-const CARD = 'rounded-xl border border-navy-100 bg-white shadow-soft';
+const CARD = 'rounded-2xl border border-navy-100 bg-white shadow-soft';
 const GRID = 'grid gap-6';
-const SPLIT = 'grid gap-12 lg:grid-cols-2 lg:gap-16';
 
 const BTN =
   'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors';
 const BTN_PRIMARY = `${BTN} bg-accent text-navy-900 hover:bg-accent-dark`;
-const BTN_LG = 'px-6 py-3 text-sm';
+const BTN_LG = 'px-7 py-3.5 text-sm';
 const BTN_SM = 'px-5 py-2.5 text-sm';
-const BTN_ON_DARK = `${BTN} border border-navy-400/60 text-white hover:bg-navy-800`;
+const BTN_ON_DARK = `${BTN} border border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15`;
+
+/**
+ * Section label: a short rule then the label. The rule is what makes the
+ * eyebrow read as a deliberate marker instead of stray small text.
+ */
+function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDark?: boolean }) {
+  return (
+    <span className={cn('inline-flex items-center gap-3', onDark ? EYEBROW_ON_DARK : EYEBROW)}>
+      <span
+        aria-hidden="true"
+        className={cn('h-px w-8 shrink-0', onDark ? 'bg-accent' : 'bg-navy-400')}
+      />
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Editorial section header: label + title on the left, standfirst on the right.
+ * Splitting them across the grid gives each section a consistent, asymmetric
+ * opening instead of a stack of centred blocks.
+ */
+function SectionHeader({
+  eyebrow,
+  title,
+  intro,
+}: {
+  eyebrow: string;
+  title: string;
+  intro?: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.55 }}
+      className={cn('grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-16', SECTION_HEAD)}
+    >
+      <div className="lg:col-span-7">
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h2 className={cn(H2, 'mt-5')}>{title}</h2>
+      </div>
+      {intro && <p className={cn(LEAD, 'lg:col-span-5 lg:pb-2')}>{intro}</p>}
+    </motion.div>
+  );
+}
 
 /** Arrow glyph used inside buttons — nudges on hover, never distracts. */
 function ArrowIcon() {
@@ -110,15 +159,15 @@ function IconTile({
   return (
     <span
       className={cn(
-        'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors duration-300',
+        'inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-xl transition-colors duration-300',
         tone === 'accent'
-          ? 'bg-accent text-navy-900'
+          ? 'bg-accent text-navy-900 group-hover:bg-white'
           : 'border border-navy-100 bg-navy-50 text-navy-700 group-hover:border-navy-900 group-hover:bg-navy-900 group-hover:text-accent'
       )}
     >
       <Glyph
         aria-hidden="true"
-        className="h-6 w-6 transition-transform duration-300 group-hover:scale-105"
+        className="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
       />
     </span>
   );
@@ -199,18 +248,21 @@ function AdPanel({ ad }: { ad: any }) {
   return (
     <>
       {ad.imageUrl ? (
-        <div className="relative h-56 bg-navy-100 md:h-72">
+        <div className="relative h-72 bg-navy-100 md:h-96">
           <Image src={ad.imageUrl} alt={ad.title} fill className="object-cover" />
-          <div className="absolute inset-0 bg-navy-950/70" />
-          <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-10">
-            <h2 className="mb-3 text-2xl font-bold tracking-tight md:text-3xl">{ad.title}</h2>
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/10" />
+          <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-12">
+            <span className={EYEBROW_ON_DARK}>Announcement</span>
+            <h2 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+              {ad.title}
+            </h2>
             {ad.description && (
-              <p className="max-w-3xl text-sm leading-relaxed text-navy-100 md:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-navy-100 md:text-base">
                 {ad.description}
               </p>
             )}
             {ad.linkUrl && (
-              <div className={cn(BTN_PRIMARY, BTN_SM, 'group mt-6')}>
+              <div className={cn(BTN_PRIMARY, BTN_SM, 'group mt-7')}>
                 Learn More
                 <ArrowIcon />
               </div>
@@ -218,15 +270,26 @@ function AdPanel({ ad }: { ad: any }) {
           </div>
         </div>
       ) : (
-        <div className="bg-navy-900 p-8 text-white md:p-12">
-          <h2 className="mb-3 text-2xl font-bold tracking-tight md:text-3xl">{ad.title}</h2>
-          {ad.description && <p className="mb-6 leading-relaxed text-navy-100">{ad.description}</p>}
-          {ad.linkUrl && (
-            <div className={cn(BTN_PRIMARY, BTN_SM, 'group')}>
-              Learn More
-              <ArrowIcon />
-            </div>
-          )}
+        <div className="relative overflow-hidden bg-navy-900 p-9 text-white md:p-14">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_120%_at_85%_0%,rgba(255,199,44,0.16),transparent_65%)]"
+          />
+          <div className="relative">
+            <span className={EYEBROW_ON_DARK}>Announcement</span>
+            <h2 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+              {ad.title}
+            </h2>
+            {ad.description && (
+              <p className="mt-3 max-w-2xl leading-relaxed text-navy-100">{ad.description}</p>
+            )}
+            {ad.linkUrl && (
+              <div className={cn(BTN_PRIMARY, BTN_SM, 'group mt-7')}>
+                Learn More
+                <ArrowIcon />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
@@ -384,11 +447,11 @@ const ServicesGrid = React.memo(function ServicesGrid({
         return (
           <motion.div
             key={service.id || index}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="group relative h-72 cursor-pointer overflow-hidden rounded-xl border border-navy-100 shadow-soft md:h-80"
+            transition={{ duration: 0.5, delay: index * 0.08 }}
+            className="group relative h-80 cursor-pointer overflow-hidden rounded-2xl border border-navy-100 bg-navy-950 shadow-soft md:h-96"
           >
             <Image
               src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
@@ -398,13 +461,22 @@ const ServicesGrid = React.memo(function ServicesGrid({
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               priority={index < 2}
             />
-            <div className="absolute inset-0 bg-navy-950/75 transition-colors group-hover:bg-navy-950/85" />
-            <div className="absolute bottom-0 left-0 p-6 text-white">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/55 to-navy-950/5 transition-colors duration-300 group-hover:via-navy-950/75"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute right-6 top-6 font-mono text-xs font-semibold tracking-[0.2em] text-white/55"
+            >
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
               <IconTile icon={IconComponent} tone="accent" />
-              <h3 className={cn(H3, 'mb-2 mt-4 text-white')}>{service.title}</h3>
-              <p className="text-sm leading-relaxed text-navy-100 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                {service.description}
-              </p>
+              <h3 className="mt-5 text-xl font-semibold tracking-tight text-white">
+                {service.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-navy-100/90">{service.description}</p>
             </div>
           </motion.div>
         );
@@ -419,29 +491,33 @@ const ExecSection = React.memo(function ExecSection({ executives }: { executives
       {executives.map((exec, index) => (
         <motion.div
           key={exec.id || index}
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: index * 0.15 }}
+          transition={{ duration: 0.55, delay: index * 0.12 }}
           className={cn(
-            'group flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-soft-lg md:flex-row',
+            'group overflow-hidden transition-shadow duration-300 hover:shadow-soft-lg',
             CARD
           )}
         >
-          <div className="relative h-64 w-full shrink-0 bg-navy-50 md:h-auto md:w-44">
+          <div className="relative h-80 w-full bg-navy-50 md:h-96">
             <Image
               src={exec.imageUrl || '/logo.png'}
               alt={exec.name}
               fill
-              sizes="(max-width: 768px) 100vw, 176px"
-              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 480px"
+              className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
             />
-          </div>
-          <div className="flex flex-col justify-center p-6">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-navy-600">
-              {exec.role}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-navy-950/90 via-navy-950/45 to-transparent"
+            />
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+              <div className={EYEBROW_ON_DARK}>{exec.role}</div>
+              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">{exec.name}</h3>
             </div>
-            <h3 className="mb-3 text-xl font-semibold text-navy-900">{exec.name}</h3>
+          </div>
+          <div className="p-7">
             <p className={BODY}>{exec.bio}</p>
           </div>
         </motion.div>
@@ -664,10 +740,18 @@ export default function HomeClient({
                 </span>
               </Link>
 
-              <div className="hidden items-center gap-8 text-sm font-medium text-navy-100 lg:flex">
+              <div className="hidden items-center gap-9 text-sm font-medium text-navy-100 lg:flex">
                 {navLinks.map(([href, label]) => (
-                  <a key={href} href={href} className="transition-colors hover:text-white">
+                  <a
+                    key={href}
+                    href={href}
+                    className="group relative py-1 transition-colors hover:text-white"
+                  >
                     {label}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 rounded-full bg-accent transition-transform duration-300 group-hover:scale-x-100"
+                    />
                   </a>
                 ))}
               </div>
@@ -753,38 +837,47 @@ export default function HomeClient({
 
         <main id="main">
           {/* Hero */}
-          <section className={cn('relative overflow-hidden bg-navy-900', SECTION)}>
+          <section className={cn('relative isolate overflow-hidden bg-navy-950', SECTION)}>
             <Image
               src="/background.jpg"
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover opacity-25"
+              className="object-cover object-center opacity-70"
             />
-            <div className="absolute inset-0 bg-navy-900/80" />
+            {/* Directional scrim: copy stays legible on the left, the photograph opens up right. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/95 to-navy-950/45"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-navy-950/60"
+            />
 
             <div className={cn(CONTAINER, 'relative')}>
-              <div className={SPLIT}>
+              <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  className="lg:col-span-7"
+                  initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
+                  transition={{ duration: 0.7 }}
                 >
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-800 px-3 py-1.5">
+                  <div className="inline-flex items-center gap-2.5 rounded-full border border-accent/35 bg-accent/10 px-4 py-2 backdrop-blur">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     <span className={EYEBROW_ON_DARK}>Transportation &amp; General Supply</span>
                   </div>
                   <h1 className={H1}>
                     Freight that moves on schedule, and stays visible end to end.
                   </h1>
-                  <p className="mt-6 max-w-xl text-base leading-relaxed text-navy-100 lg:text-lg">
+                  <p className="mt-7 max-w-xl text-base leading-relaxed text-navy-100 lg:text-lg">
                     Kapilla Group transports cargo by road, sea and air across Tanzania, East Africa
                     and 200+ international destinations — with customs clearing, forwarding and
                     last-mile delivery handled by one accountable partner.
                   </p>
 
-                  <div className="mt-8 flex flex-wrap gap-4">
+                  <div className="mt-10 flex flex-wrap gap-4">
                     <button
                       onClick={() => setIsPickupModalOpen(true)}
                       className={cn(BTN_PRIMARY, BTN_LG, 'group')}
@@ -797,9 +890,9 @@ export default function HomeClient({
                     </a>
                   </div>
 
-                  <ul className="mt-10 grid gap-x-8 gap-y-3 text-sm text-navy-100 sm:grid-cols-2">
+                  <ul className="mt-14 grid gap-x-8 gap-y-5 border-t border-white/15 pt-8 text-sm text-navy-100 sm:grid-cols-2">
                     {heroPromises.map((item) => (
-                      <li key={item} className="flex items-center gap-2">
+                      <li key={item} className="flex items-center gap-3">
                         <CheckCircle aria-hidden="true" className="h-4 w-4 shrink-0 text-accent" />
                         {item}
                       </li>
@@ -807,55 +900,70 @@ export default function HomeClient({
                   </ul>
                 </motion.div>
 
-                {/* Tracking card */}
+                {/* Tracking card — the one high-contrast surface in the hero. */}
                 <motion.div
                   id="tracking"
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                  className="w-full max-w-lg lg:ml-auto"
+                  transition={{ duration: 0.7, delay: 0.15 }}
+                  className="w-full max-w-lg lg:col-span-5 lg:ml-auto"
                 >
-                  <div className={cn(CARD, 'p-6 shadow-soft-lg lg:p-8')}>
-                    <h2 className="text-lg font-semibold text-navy-900">Track your consignment</h2>
-                    <p className={cn(BODY, 'mt-2')}>
-                      Enter the waybill number printed on your receipt to see the latest status and
-                      location.
-                    </p>
-                    <form onSubmit={handleSearch} className="mt-6">
-                      <label htmlFor="waybill" className="sr-only">
-                        Waybill number
-                      </label>
-                      <div className="flex items-center gap-2 rounded-lg border border-navy-200 bg-white p-1.5 focus-within:border-navy-500">
-                        <span className="pl-2 text-charcoal-muted" aria-hidden="true">
-                          <Package className="h-5 w-5" />
+                  <div className="overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-navy-900/5">
+                    <div className="flex items-center justify-between gap-4 border-b border-navy-100 px-7 py-5">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-navy-900">
+                          <Package aria-hidden="true" className="h-5 w-5" />
                         </span>
-                        <input
-                          id="waybill"
-                          type="text"
-                          value={waybill}
-                          onChange={(e) => setWaybill(e.target.value)}
-                          placeholder="e.g. KPL-8829"
-                          className="flex-1 bg-transparent py-2.5 text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className={cn(
-                            BTN_PRIMARY,
-                            'group px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-70'
-                          )}
-                        >
-                          {loading ? (
-                            <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="hidden sm:inline">Track</span>
-                              <ArrowIcon />
-                            </>
-                          )}
-                        </button>
+                        <h2 className="text-base font-semibold tracking-tight text-navy-900">
+                          Track your consignment
+                        </h2>
                       </div>
-                    </form>
+                      <span className="shrink-0 rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-navy-600">
+                        24/7
+                      </span>
+                    </div>
+
+                    <div className="p-7">
+                      <p className={BODY}>
+                        Enter the waybill number printed on your receipt to see the latest status
+                        and location.
+                      </p>
+                      <form onSubmit={handleSearch} className="mt-6">
+                        <label htmlFor="waybill" className="sr-only">
+                          Waybill number
+                        </label>
+                        <div className="flex items-center gap-2 rounded-xl border border-navy-200 bg-white p-2 transition-colors focus-within:border-navy-500">
+                          <span className="pl-2 text-charcoal-muted" aria-hidden="true">
+                            <Package className="h-5 w-5" />
+                          </span>
+                          <input
+                            id="waybill"
+                            type="text"
+                            value={waybill}
+                            onChange={(e) => setWaybill(e.target.value)}
+                            placeholder="e.g. KPL-8829"
+                            className="flex-1 bg-transparent py-2 text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className={cn(
+                              BTN_PRIMARY,
+                              'group px-5 py-3 disabled:cursor-not-allowed disabled:opacity-70'
+                            )}
+                          >
+                            {loading ? (
+                              <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <>
+                                <span className="hidden sm:inline">Track</span>
+                                <ArrowIcon />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 </motion.div>
               </div>
@@ -1142,20 +1250,11 @@ export default function HomeClient({
           {/* Services & Fleet Showcase */}
           <section id="fleet" className={cn('bg-navy-50', SECTION)}>
             <div className={CONTAINER}>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className={SECTION_HEAD}
-              >
-                <span className={EYEBROW}>Fleet &amp; capabilities</span>
-                <h2 className={cn(H2, 'mt-3')}>Freight solutions built around your supply chain</h2>
-                <p className={LEAD}>
-                  From a single parcel to full container loads, our land, sea and air capabilities
-                  move cargo to schedule — with a documented handover at every stage.
-                </p>
-              </motion.div>
+              <SectionHeader
+                eyebrow="Fleet &amp; capabilities"
+                title="Freight solutions built around your supply chain"
+                intro="From a single parcel to full container loads, our land, sea and air capabilities move cargo to schedule — with a documented handover at every stage."
+              />
 
               <ServicesGrid services={services} iconMap={iconMap} />
             </div>
@@ -1164,31 +1263,39 @@ export default function HomeClient({
           {/* Services & Features Grid */}
           <section id="services" className={cn('bg-white', SECTION)}>
             <div className={CONTAINER}>
-              <div className={SECTION_HEAD}>
-                <span className={EYEBROW}>What we do</span>
-                <h2 className={cn(H2, 'mt-3')}>End-to-end logistics services</h2>
-                <p className={LEAD}>
-                  One partner for collection, freight, border clearance and final delivery — so you
-                  deal with one team, one reference number and one point of accountability.
-                </p>
-              </div>
+              <SectionHeader
+                eyebrow="What we do"
+                title="End-to-end logistics services"
+                intro="One partner for collection, freight, border clearance and final delivery — so you deal with one team, one reference number and one point of accountability."
+              />
 
               <div className={cn(GRID, 'sm:grid-cols-2 lg:grid-cols-3')}>
                 {serviceFeatures.map((feature, i) => (
                   <motion.div
                     key={feature.title}
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
+                    transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
                     className={cn(
                       CARD,
-                      'group p-6 transition-all duration-300 hover:border-navy-200 hover:shadow-soft-lg'
+                      'group relative overflow-hidden p-7 transition-all duration-300 hover:-translate-y-1 hover:border-navy-200 hover:shadow-soft-lg'
                     )}
                   >
+                    {/* Ghost index — gives each card a focal point beyond the icon. */}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-6 top-5 text-5xl font-bold leading-none tracking-tighter text-navy-50 transition-colors duration-300 group-hover:text-navy-100"
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
                     <IconTile icon={feature.icon} />
-                    <h3 className={cn(H3, 'mb-3 mt-6')}>{feature.title}</h3>
+                    <h3 className={cn(H3, 'mb-3 mt-7')}>{feature.title}</h3>
                     <p className={BODY}>{feature.desc}</p>
+                    <span
+                      aria-hidden="true"
+                      className="mt-7 block h-0.5 w-10 rounded-full bg-accent transition-all duration-300 group-hover:w-20"
+                    />
                   </motion.div>
                 ))}
               </div>
@@ -1198,33 +1305,37 @@ export default function HomeClient({
           {/* Executive Leadership */}
           <section id="leadership" className={cn('bg-navy-50', SECTION)}>
             <div className={CONTAINER}>
-              <div className={SECTION_HEAD}>
-                <span className={EYEBROW}>Our team</span>
-                <h2 className={cn(H2, 'mt-3')}>Leadership</h2>
-                <p className={LEAD}>
-                  The team accountable for Kapilla Group's service standards, safety record and
-                  day-to-day freight operations.
-                </p>
-              </div>
+              <SectionHeader
+                eyebrow="Our team"
+                title="Leadership"
+                intro="The team accountable for Kapilla Group's service standards, safety record and day-to-day freight operations."
+              />
 
               <ExecSection executives={executives} />
             </div>
           </section>
 
           {/* Closing call to action */}
-          <section className={cn('border-t border-navy-800 bg-navy-900', SECTION)}>
-            <div className={CONTAINER}>
-              <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-                <div className="max-w-2xl">
-                  <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
-                    Ready to move your cargo?
-                  </h2>
-                  <p className="mt-3 leading-relaxed text-navy-100">
-                    Book a pickup and we will confirm collection, routing and documentation before
-                    the consignment leaves your site.
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-4">
+          <section
+            className={cn(
+              'relative isolate overflow-hidden border-t border-navy-800 bg-navy-900',
+              SECTION
+            )}
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(255,199,44,0.16),transparent_65%)]"
+            />
+            <div className={cn(CONTAINER, 'relative')}>
+              <div className="mx-auto max-w-3xl text-center">
+                <h2 className="text-3xl font-bold leading-[1.12] tracking-[-0.02em] text-white sm:text-4xl lg:text-5xl">
+                  Ready to move your cargo?
+                </h2>
+                <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-navy-100 lg:text-lg">
+                  Book a pickup and we will confirm collection, routing and documentation before the
+                  consignment leaves your site.
+                </p>
+                <div className="mt-10 flex flex-wrap justify-center gap-4">
                   <button
                     onClick={() => setIsPickupModalOpen(true)}
                     className={cn(BTN_PRIMARY, BTN_LG, 'group')}
@@ -1277,7 +1388,9 @@ export default function HomeClient({
               </div>
             </div>
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-white">Company</h3>
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                Company
+              </h3>
               <ul className="space-y-3 text-sm">
                 <li>
                   <a href="#services" className="transition-colors hover:text-white">
@@ -1302,7 +1415,9 @@ export default function HomeClient({
               </ul>
             </div>
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-white">Support</h3>
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                Support
+              </h3>
               <ul className="space-y-3 text-sm">
                 <li>
                   <button
