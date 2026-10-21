@@ -50,7 +50,19 @@
 
 html {
   scroll-behavior: smooth;
+  /*
+    Single source of truth for anchor offsets: every in-page jump lands with
+    8px of clearance below the sticky header, so sections never tuck under it.
+    Header height is 64px on mobile and 80px from md up.
+  */
+  scroll-padding-top: 4.5rem;
   -webkit-text-size-adjust: 100%;
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 5.5rem;
+  }
 }
 
 body {
