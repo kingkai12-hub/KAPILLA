@@ -597,21 +597,31 @@ export default function HomeClient({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (index % 4) * 0.08 }}
-              className="group relative h-72 md:h-80 overflow-hidden rounded-lg border border-navy-800 bg-navy-900 shadow-soft transition-all duration-300 hover:shadow-soft-lg"
+              className="group relative h-72 md:h-80 overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg"
             >
+              <Image
+                src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
+                alt={service.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                priority={index < 2}
+              />
               {/*
-                The card photograph is hidden: the description carries the
-                message, and a solid navy surface keeps the white text at full
-                contrast without needing a scrim.
+                The description used to be reveal-on-hover only, which hid it
+                from keyboard and touch users. It is now always present, and the
+                scrim is a gradient so the text keeps its contrast at any size.
               */}
-              <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/85 to-navy-950/30 transition-colors duration-300 group-hover:via-navy-950/90"
+              />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
                 <VehicleTile icon={IconComponent} />
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 tracking-tight">{service.title}</h3>
-                  <p className="text-sm text-navy-100 leading-relaxed text-pretty">
-                    {service.description}
-                  </p>
-                </div>
+                <h3 className="text-lg font-semibold mb-2 tracking-tight">{service.title}</h3>
+                <p className="text-sm text-navy-100 leading-relaxed text-pretty">
+                  {service.description}
+                </p>
               </div>
             </motion.article>
           );
