@@ -631,8 +631,10 @@ export default function HomeClient({
   });
 
   const ExecSection = React.memo(function ExecSection({ executives }: { executives: any[] }) {
+    // One card per leader in a single row on laptops and up, so every portrait
+    // sits on the same line.
     return (
-      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
         {executives.map((exec, index) => (
           <motion.div
             key={exec.id || index}
@@ -641,20 +643,20 @@ export default function HomeClient({
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.15 }}
             className={cn(
-              'group flex flex-col md:flex-row overflow-hidden rounded-lg border border-navy-100 bg-white shadow-soft',
+              'group flex flex-col overflow-hidden rounded-lg border border-navy-100 bg-white shadow-soft',
               CARD_LIFT
             )}
           >
-            <div className="relative w-full md:w-44 h-64 md:h-auto shrink-0 bg-navy-50">
+            <div className="relative w-full h-64 shrink-0 bg-navy-50">
               <Image
                 src={exec.imageUrl || '/logo.png'}
                 alt={exec.name}
                 fill
-                sizes="(max-width: 768px) 100vw, 176px"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
-            <div className="p-6 flex flex-col justify-center">
+            <div className="p-6 flex flex-col">
               <div className="text-navy-600 font-semibold text-xs uppercase tracking-wider mb-2">
                 {exec.role}
               </div>
