@@ -285,6 +285,7 @@ export interface ClientSummary {
   email: string | null;
   address: string | null;
   contactPerson: string | null;
+  notes: string | null;
   isActive: boolean;
 }
 
