@@ -9,22 +9,22 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Package,
   ArrowRight,
-  Truck,
-  Globe,
-  Clock,
   CheckCircle,
-  MapPin,
+  Clock,
+  Facebook,
+  FileText,
+  Globe,
+  Instagram,
   Loader2,
-  X,
+  MapPin,
+  Menu,
+  Package,
   Plane,
   Ship,
-  FileText,
+  Truck,
+  X,
   Zap,
-  Facebook,
-  Instagram,
-  Menu,
 } from 'lucide-react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -47,68 +47,70 @@ const PickupRequestModal = dynamic(() => import('@/components/PickupRequestModal
 const HelpCenterModal = dynamic(() => import('@/components/HelpCenterModal'), { ssr: false });
 
 /* ---------------------------------------------------------------------------
-   Design system
+   Layout + type contracts
    ---------------------------------------------------------------------------
-   One spacing scale (4px base) drives every section, so the vertical rhythm and
-   the gutters are identical page-wide:
+   Element dimensions are frozen at the pre-redesign baseline: every font size,
+   line height, icon size, image box and spacing utility below is one that the
+   original page already used. The refresh is carried by colour, surface,
+   motion and structure instead — never by making anything larger.
 
-     4 · 6 · 8 · 12 · 16 · 24   →   16 · 24 · 32 · 48 · 64 · 96 px
-
-   Layout   : a single container + a single section rhythm
-   Surfaces : rounded-2xl, hairline navy border, soft elevation
-   Controls : rounded-lg, two sizes only (sm, lg)
-   Type     : one size per role, with real contrast between the steps
-              h1 56-72px · h2 30-48px · h3 18px · body 14px · meta 12px
+     container   max-w-7xl · px-4 / sm:px-6 / lg:px-8
+     section     py-16 / lg:py-20   (hero py-16 / lg:py-24)
+     h1          text-3xl / sm:text-4xl / lg:text-5xl
+     h2          text-2xl / md:text-3xl
+     h3          text-lg   (text-xl in leadership)
+     body        text-sm / text-base / lg:text-lg · text-xs meta
+     icons       h-4 w-4 · h-5 w-5 · h-6 w-6 · tiles h-12 w-12 and p-2
+     imagery     h-56 md:h-72 · h-72 md:h-80 · h-64 md:h-auto md:w-44
    --------------------------------------------------------------------------- */
 
 const CONTAINER = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
-const SECTION = 'py-16 lg:py-28';
-const SECTION_HEAD = 'mb-12 lg:mb-16';
+const CONTAINER_NARROW = 'mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8';
+const SECTION_HEAD = 'max-w-2xl mb-12 lg:mb-16';
 
-/* Type roles — the jump between h1 / h2 / h3 / body is what carries hierarchy. */
-const EYEBROW = 'text-xs font-semibold uppercase tracking-[0.18em] text-navy-600';
-const EYEBROW_ON_DARK = 'text-xs font-semibold uppercase tracking-[0.18em] text-accent';
+/* Type roles. Sizes and leading are unchanged; weight and colour carry rank. */
+const EYEBROW = 'text-xs font-semibold uppercase tracking-wider text-navy-600';
+const LABEL = 'text-xs font-semibold uppercase tracking-wider text-charcoal-muted';
 const H1 =
-  'mt-6 text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-white sm:text-5xl lg:text-6xl xl:text-7xl';
-const H2 =
-  'text-3xl font-bold leading-[1.12] tracking-[-0.02em] text-navy-900 md:text-4xl lg:text-5xl';
-const H3 = 'text-lg font-semibold tracking-tight text-navy-900';
-const LEAD = 'text-base leading-relaxed text-charcoal-light lg:text-lg';
-const BODY = 'text-sm leading-relaxed text-charcoal-light';
+  'mt-6 text-3xl font-bold tracking-tight text-white leading-tight sm:text-4xl lg:text-5xl';
+const H2 = 'mt-4 text-2xl font-bold tracking-tight text-navy-900 md:text-3xl';
+const H3 = 'text-lg font-semibold text-navy-900';
+const LEAD = 'text-base text-navy-100 leading-relaxed lg:text-lg';
+const SECTION_INTRO = 'mt-4 text-charcoal-light leading-relaxed text-pretty';
+const BODY = 'text-sm text-charcoal-light leading-relaxed text-pretty';
 const META = 'text-xs text-charcoal-muted';
-const META_ON_DARK = 'text-xs text-navy-300';
 
-const CARD = 'rounded-2xl border border-navy-100 bg-white shadow-soft';
-const GRID = 'grid gap-6';
+/* Surfaces: one radius, one hairline, one elevation step per rank. */
+const CARD = 'rounded-lg border border-navy-100 bg-white shadow-soft';
+const CARD_LIFT =
+  'transition-all duration-300 hover:-translate-y-1 hover:border-navy-200 hover:shadow-soft-lg';
 
+/* Controls: a single radius and a single interaction model. */
 const BTN =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors';
-const BTN_PRIMARY = `${BTN} bg-accent text-navy-900 hover:bg-accent-dark`;
-const BTN_LG = 'px-7 py-3.5 text-sm';
-const BTN_SM = 'px-5 py-2.5 text-sm';
-const BTN_ON_DARK = `${BTN} border border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15`;
+  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 active:scale-95';
+const BTN_PADDING_LG = 'px-6 py-3';
+const BTN_PADDING_SM = 'px-5 py-2.5 text-sm';
+const BTN_PADDING_INPUT = 'px-4 py-2.5';
+const BTN_PRIMARY = `${BTN} bg-accent text-navy-900 shadow-soft hover:bg-accent-dark hover:shadow-soft-lg`;
+const BTN_GHOST_DARK = `${BTN} border border-navy-400/60 text-white hover:bg-navy-800 focus-visible:outline-accent`;
+const BTN_QUIET = `${BTN} border border-navy-200 bg-white text-navy-800 hover:border-navy-400 hover:bg-navy-50`;
 
-/**
- * Section label: a short rule then the label. The rule is what makes the
- * eyebrow read as a deliberate marker instead of stray small text.
- */
+const FOCUS_DARK = 'focus-visible:outline-accent';
+
+/** Short rule + label: the marker that opens every section. */
 function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDark?: boolean }) {
   return (
-    <span className={cn('inline-flex items-center gap-3', onDark ? EYEBROW_ON_DARK : EYEBROW)}>
+    <span className={cn('inline-flex items-center gap-2', onDark ? 'text-accent' : '', EYEBROW)}>
       <span
         aria-hidden="true"
-        className={cn('h-px w-8 shrink-0', onDark ? 'bg-accent' : 'bg-navy-400')}
+        className={cn('block w-4 border-t-2', onDark ? 'border-accent' : 'border-navy-500')}
       />
       {children}
     </span>
   );
 }
 
-/**
- * Editorial section header: label + title on the left, standfirst on the right.
- * Splitting them across the grid gives each section a consistent, asymmetric
- * opening instead of a stack of centred blocks.
- */
+/** Consistent opening for every section: marker, title, standfirst. */
 function SectionHeader({
   eyebrow,
   title,
@@ -116,21 +118,19 @@ function SectionHeader({
 }: {
   eyebrow: string;
   title: string;
-  intro?: string;
+  intro: string;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.55 }}
-      className={cn('grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-16', SECTION_HEAD)}
+      transition={{ duration: 0.5 }}
+      className={SECTION_HEAD}
     >
-      <div className="lg:col-span-7">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className={cn(H2, 'mt-5')}>{title}</h2>
-      </div>
-      {intro && <p className={cn(LEAD, 'lg:col-span-5 lg:pb-2')}>{intro}</p>}
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 className={H2}>{title}</h2>
+      <p className={SECTION_INTRO}>{intro}</p>
     </motion.div>
   );
 }
@@ -145,35 +145,55 @@ function ArrowIcon() {
   );
 }
 
-/**
- * Square icon tile. Its colour inversion and 5% scale on group hover is the
- * single, repeated icon animation across the page.
- */
-function IconTile({
-  icon: Glyph,
-  tone = 'surface',
-}: {
-  icon: React.ComponentType<any>;
-  tone?: 'surface' | 'accent';
-}) {
+/** Icon tile for the service cards. Colour inverts on hover. */
+function FeatureTile({ icon: Glyph }: { icon: React.ComponentType<any> }) {
   return (
-    <span
-      className={cn(
-        'inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-xl transition-colors duration-300',
-        tone === 'accent'
-          ? 'bg-accent text-navy-900 group-hover:bg-white'
-          : 'border border-navy-100 bg-navy-50 text-navy-700 group-hover:border-navy-900 group-hover:bg-navy-900 group-hover:text-accent'
-      )}
-    >
+    <span className="mb-6 flex w-12 h-12 items-center justify-center rounded-md border border-navy-100 bg-navy-50 transition-colors duration-300 group-hover:border-navy-900 group-hover:bg-navy-900">
       <Glyph
         aria-hidden="true"
-        className="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
+        className="h-6 w-6 text-navy-700 transition-colors duration-300 group-hover:text-accent"
       />
     </span>
   );
 }
 
+/** Compact accent chip used on the photographic freight cards. */
+function VehicleTile({ icon: Glyph }: { icon: React.ComponentType<any> }) {
+  return (
+    <span className="mb-4 flex w-fit rounded-md bg-accent p-2 shadow-soft">
+      <Glyph aria-hidden="true" className="h-5 w-5 text-navy-900" />
+    </span>
+  );
+}
+
 const iconMap: Record<string, any> = { Truck, Ship, Plane, Package };
+
+/**
+ * A shipment that is still open long after booking is the one thing a client
+ * needs to see first, so "needs attention" gets its own accent treatment.
+ */
+const STATUS_STYLES: Record<string, string> = {
+  DELIVERED: 'border-navy-200 bg-navy-100 text-navy-800',
+  PENDING: 'border-navy-200 bg-navy-50 text-charcoal-light',
+};
+
+function statusClass(status?: string) {
+  return STATUS_STYLES[status ?? ''] ?? 'border-accent bg-accent-light text-navy-900';
+}
+
+/** Decorative backdrop shared by every dark band. */
+function DarkBackdrop({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('pointer-events-none absolute inset-0', className)}
+      style={{
+        backgroundImage:
+          'radial-gradient(60% 120% at 12% 0%, rgba(46, 99, 168, 0.35), transparent 60%)',
+      }}
+    />
+  );
+}
 
 // Helper for classes
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -243,78 +263,94 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any; fallb
   return <span>{formatted}</span>;
 };
 
-/** Shared advertisement artwork — identical layout for the single card and the carousel. */
-function AdPanel({ ad }: { ad: any }) {
-  return (
-    <>
-      {ad.imageUrl ? (
-        <div className="relative h-72 bg-navy-100 md:h-96">
-          <Image src={ad.imageUrl} alt={ad.title} fill className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/10" />
-          <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-12">
-            <span className={EYEBROW_ON_DARK}>Announcement</span>
-            <h2 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-              {ad.title}
-            </h2>
-            {ad.description && (
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-navy-100 md:text-base">
-                {ad.description}
-              </p>
-            )}
-            {ad.linkUrl && (
-              <div className={cn(BTN_PRIMARY, BTN_SM, 'group mt-7')}>
-                Learn More
-                <ArrowIcon />
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="relative overflow-hidden bg-navy-900 p-9 text-white md:p-14">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_120%_at_85%_0%,rgba(255,199,44,0.16),transparent_65%)]"
-          />
-          <div className="relative">
-            <span className={EYEBROW_ON_DARK}>Announcement</span>
-            <h2 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-              {ad.title}
-            </h2>
-            {ad.description && (
-              <p className="mt-3 max-w-2xl leading-relaxed text-navy-100">{ad.description}</p>
-            )}
-            {ad.linkUrl && (
-              <div className={cn(BTN_PRIMARY, BTN_SM, 'group mt-7')}>
-                Learn More
-                <ArrowIcon />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
+const AD_SHELL =
+  'group relative overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg';
 
+/**
+ * One announcement. When it carries a destination it renders as a real anchor,
+ * so it is reachable and actionable from the keyboard rather than being a
+ * clickable box.
+ */
 function AdvertisementCard({ ad }: { ad: any }) {
+  const inner = ad.imageUrl ? (
+    <>
+      <div className="relative h-56 md:h-72 bg-navy-100">
+        <Image
+          src={ad.imageUrl}
+          alt={ad.title}
+          fill
+          sizes="100vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          priority
+        />
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/20"
+      />
+      <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 text-white">
+        <Eyebrow onDark>Announcement</Eyebrow>
+        <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight">{ad.title}</h2>
+        {ad.description && (
+          <p className="mt-3 text-sm md:text-base text-navy-100 max-w-3xl leading-relaxed text-pretty">
+            {ad.description}
+          </p>
+        )}
+        {ad.linkUrl && (
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-lg shadow-soft transition-all duration-200 group-hover:bg-accent-dark">
+            Learn More
+            <ArrowIcon />
+          </div>
+        )}
+      </div>
+    </>
+  ) : (
+    <div className="relative isolate overflow-hidden p-8 md:p-12 bg-navy-900 text-white">
+      <DarkBackdrop />
+      <div className="relative">
+        <Eyebrow onDark>Announcement</Eyebrow>
+        <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight">{ad.title}</h2>
+        {ad.description && (
+          <p className="mt-3 text-navy-100 max-w-3xl leading-relaxed text-pretty">
+            {ad.description}
+          </p>
+        )}
+        {ad.linkUrl && (
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold bg-accent text-navy-900 px-5 py-2.5 rounded-lg shadow-soft">
+            Learn More
+            <ArrowIcon />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (ad.linkUrl) {
+    return (
+      <motion.a
+        href={ad.linkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className={cn(AD_SHELL, 'block', FOCUS_DARK)}
+      >
+        {inner}
+      </motion.a>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className={cn(
-        'overflow-hidden transition-shadow duration-300 hover:shadow-soft-lg',
-        CARD,
-        ad.linkUrl ? 'cursor-pointer' : 'cursor-default'
-      )}
-      onClick={() => {
-        if (ad.linkUrl) {
-          window.open(ad.linkUrl, '_blank');
-        }
-      }}
+      className={AD_SHELL}
     >
-      <AdPanel ad={ad} />
+      {inner}
     </motion.div>
   );
 }
@@ -324,207 +360,116 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    // Autoplay pauses on hover/focus so it never competes with the reader.
-    if (paused) return;
+    if (paused || advertisements.length < 2) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % advertisements.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(interval);
   }, [advertisements.length, paused]);
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % advertisements.length);
-  };
-
-  const prevSlide = () => {
+  const goTo = (index: number) => setCurrentIndex(index);
+  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % advertisements.length);
+  const prevSlide = () =>
     setCurrentIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length);
-  };
 
-  const arrowButton =
-    'absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg bg-white text-navy-900 shadow-soft-lg transition-colors hover:bg-navy-50';
+  const arrowClass =
+    'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg border border-navy-100 bg-white/95 shadow-soft-lg backdrop-blur flex items-center justify-center text-navy-900 transition-all duration-200 hover:bg-white active:scale-95 z-10';
 
   return (
     <div
       role="region"
+      aria-roledescription="carousel"
       aria-label="Featured announcements"
       className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+      }}
     >
-      <div className="overflow-hidden rounded-xl">
+      <div className="overflow-hidden rounded-lg">
         <div
           className="flex transition-transform duration-700 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {advertisements.map((ad) => (
-            <div key={ad.id} className="min-w-full">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className={cn(
-                  'overflow-hidden transition-shadow duration-300',
-                  CARD,
-                  ad.linkUrl ? 'cursor-pointer' : 'cursor-default'
-                )}
-                onClick={() => {
-                  if (ad.linkUrl) {
-                    window.open(ad.linkUrl, '_blank');
-                  }
-                }}
-              >
-                <AdPanel ad={ad} />
-              </motion.div>
+          {advertisements.map((ad, index) => (
+            <div
+              key={ad.id}
+              className="min-w-full"
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${index + 1} of ${advertisements.length}`}
+              aria-hidden={index !== currentIndex}
+            >
+              <AdvertisementCard ad={ad} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        aria-label="Previous announcement"
-        className={cn(arrowButton, 'left-4')}
-      >
-        <svg
-          aria-hidden="true"
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <button
-        onClick={nextSlide}
-        aria-label="Next announcement"
-        className={cn(arrowButton, 'right-4')}
-      >
-        <svg
-          aria-hidden="true"
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
-      {/* Indicator dots */}
-      <div className="mt-6 flex justify-center gap-2">
-        {advertisements.map((_, index) => (
+      {advertisements.length > 1 && (
+        <>
           <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            aria-label={`Go to announcement ${index + 1}`}
-            aria-current={index === currentIndex}
-            className={cn(
-              'h-2.5 rounded-full transition-all duration-300',
-              index === currentIndex ? 'w-8 bg-navy-900' : 'w-2.5 bg-navy-200 hover:bg-navy-300'
-            )}
-          />
-        ))}
-      </div>
+            type="button"
+            onClick={prevSlide}
+            aria-label="Previous announcement"
+            className={cn(arrowClass, 'left-4', FOCUS_DARK)}
+          >
+            <svg
+              aria-hidden="true"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={nextSlide}
+            aria-label="Next announcement"
+            className={cn(arrowClass, 'right-4', FOCUS_DARK)}
+          >
+            <svg
+              aria-hidden="true"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <div className="flex justify-center gap-2 mt-6">
+            {advertisements.map((_, index) => (
+              <button
+                type="button"
+                key={index}
+                onClick={() => goTo(index)}
+                aria-label={`Go to announcement ${index + 1}`}
+                aria-current={index === currentIndex}
+                className={cn(
+                  'h-2.5 rounded-full transition-all duration-300',
+                  index === currentIndex ? 'bg-navy-900 w-8' : 'bg-navy-200 hover:bg-navy-400 w-2.5'
+                )}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-const ServicesGrid = React.memo(function ServicesGrid({
-  services,
-  iconMap,
-}: {
-  services: any[];
-  iconMap: Record<string, any>;
-}) {
-  return (
-    <div className={cn(GRID, 'sm:grid-cols-2 lg:grid-cols-4')}>
-      {services.map((service, index) => {
-        const IconComponent = iconMap[service.icon] || Truck;
-        return (
-          <motion.div
-            key={service.id || index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.08 }}
-            className="group relative h-80 cursor-pointer overflow-hidden rounded-2xl border border-navy-100 bg-navy-950 shadow-soft md:h-96"
-          >
-            <Image
-              src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
-              alt={service.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              priority={index < 2}
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/55 to-navy-950/5 transition-colors duration-300 group-hover:via-navy-950/75"
-            />
-            <span
-              aria-hidden="true"
-              className="absolute right-6 top-6 font-mono text-xs font-semibold tracking-[0.2em] text-white/55"
-            >
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <IconTile icon={IconComponent} tone="accent" />
-              <h3 className="mt-5 text-xl font-semibold tracking-tight text-white">
-                {service.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy-100/90">{service.description}</p>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-});
-
-const ExecSection = React.memo(function ExecSection({ executives }: { executives: any[] }) {
-  return (
-    <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
-      {executives.map((exec, index) => (
-        <motion.div
-          key={exec.id || index}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55, delay: index * 0.12 }}
-          className={cn(
-            'group overflow-hidden transition-shadow duration-300 hover:shadow-soft-lg',
-            CARD
-          )}
-        >
-          <div className="relative h-80 w-full bg-navy-50 md:h-96">
-            <Image
-              src={exec.imageUrl || '/logo.png'}
-              alt={exec.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 480px"
-              className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-navy-950/90 via-navy-950/45 to-transparent"
-            />
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <div className={EYEBROW_ON_DARK}>{exec.role}</div>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">{exec.name}</h3>
-            </div>
-          </div>
-          <div className="p-7">
-            <p className={BODY}>{exec.bio}</p>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-});
 
 interface HomeClientProps {
   initialServices: any[];
@@ -532,12 +477,96 @@ interface HomeClientProps {
   initialAdvertisements: any[];
 }
 
+const NAV_LINKS = [
+  ['#tracking', 'Track'],
+  ['#services', 'Services'],
+  ['#fleet', 'Freight'],
+  ['#leadership', 'Leadership'],
+];
+
+const MOBILE_NAV_LINKS = [
+  ['#tracking', 'Track a consignment'],
+  ['#services', 'Services'],
+  ['#fleet', 'Freight'],
+  ['#leadership', 'Leadership'],
+];
+
+const SOCIAL_LINKS = [
+  {
+    href: 'https://www.instagram.com/kapilla.group_ltd/',
+    label: 'Kapilla Group on Instagram',
+    icon: <Instagram aria-hidden="true" className="w-5 h-5" />,
+  },
+  {
+    href: 'https://x.com',
+    label: 'Kapilla Group on X',
+    icon: (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+  {
+    href: 'https://facebook.com',
+    label: 'Kapilla Group on Facebook',
+    icon: <Facebook aria-hidden="true" className="w-5 h-5" />,
+  },
+  {
+    href: 'https://tiktok.com',
+    label: 'Kapilla Group on TikTok',
+    icon: (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+      </svg>
+    ),
+  },
+];
+
+const SERVICE_PROMISES = [
+  'Live waybill tracking, 24/7',
+  'Road, sea and air freight',
+  'Customs clearing and forwarding',
+  'Pickup and delivery nationwide',
+];
+
+const SERVICE_FEATURES = [
+  {
+    icon: Package,
+    title: 'Express Courier',
+    desc: 'Time-critical documents and parcels collected, consolidated and delivered with proof of delivery.',
+  },
+  {
+    icon: Truck,
+    title: 'Freight Transportation',
+    desc: 'Road, rail, sea and air freight moved on planned schedules, with live status on every leg.',
+  },
+  {
+    icon: FileText,
+    title: 'Customs Clearing & Forwarding',
+    desc: 'Licensed brokerage that prepares documentation and duties so cargo keeps moving across borders.',
+  },
+  {
+    icon: Zap,
+    title: 'ADC Express',
+    desc: 'Priority handling for urgent consignments, using the fastest available transit window.',
+  },
+  {
+    icon: Clock,
+    title: 'Real-Time Tracking',
+    desc: 'Every consignment carries a waybill you can track from booking through to delivery, 24/7.',
+  },
+  {
+    icon: Globe,
+    title: 'Global Network',
+    desc: 'Connections into 200+ destinations let you ship internationally from a single point of contact.',
+  },
+];
+
 export default function HomeClient({
   initialServices,
   initialExecutives,
   initialAdvertisements,
 }: HomeClientProps) {
-  // Forced update trigger: 2026-01-31-12-30
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -550,9 +579,107 @@ export default function HomeClient({
   const [services, setServices] = useState<any[]>(initialServices);
   const [advertisements, setAdvertisements] = useState<any[]>(initialAdvertisements);
 
+  const ServicesGrid = React.memo(function ServicesGrid({
+    services,
+    iconMap,
+  }: {
+    services: any[];
+    iconMap: Record<string, any>;
+  }) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {services.map((service, index) => {
+          const IconComponent = iconMap[service.icon] || Truck;
+          return (
+            <motion.article
+              key={service.id || index}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: (index % 4) * 0.08 }}
+              className="group relative h-72 md:h-80 overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg"
+            >
+              <Image
+                src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
+                alt={service.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                priority={index < 2}
+              />
+              {/*
+                The description used to be reveal-on-hover only, which hid it
+                from keyboard and touch users. It is now always present, and the
+                scrim is a gradient so the text keeps its contrast at any size.
+              */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/85 to-navy-950/30 transition-colors duration-300 group-hover:via-navy-950/90"
+              />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                <VehicleTile icon={IconComponent} />
+                <h3 className="text-lg font-semibold mb-2 tracking-tight">{service.title}</h3>
+                <p className="text-sm text-navy-100 leading-relaxed text-pretty">
+                  {service.description}
+                </p>
+              </div>
+            </motion.article>
+          );
+        })}
+      </div>
+    );
+  });
+
+  const ExecSection = React.memo(function ExecSection({ executives }: { executives: any[] }) {
+    return (
+      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {executives.map((exec, index) => (
+          <motion.div
+            key={exec.id || index}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.15 }}
+            className={cn(
+              'group flex flex-col md:flex-row overflow-hidden rounded-lg border border-navy-100 bg-white shadow-soft',
+              CARD_LIFT
+            )}
+          >
+            <div className="relative w-full md:w-44 h-64 md:h-auto shrink-0 bg-navy-50">
+              <Image
+                src={exec.imageUrl || '/logo.png'}
+                alt={exec.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 176px"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            </div>
+            <div className="p-6 flex flex-col justify-center">
+              <div className="text-navy-600 font-semibold text-xs uppercase tracking-wider mb-2">
+                {exec.role}
+              </div>
+              <h3 className="text-xl font-semibold text-navy-900 mb-3 tracking-tight">
+                {exec.name}
+              </h3>
+              <p className="text-charcoal-light text-sm leading-relaxed text-pretty">{exec.bio}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  });
+
   const abortRef = useRef<AbortController | null>(null);
 
-  // Removed auto-clearing of staff session to prevent portal loading issues
+  // Escape closes the mobile menu — expected keyboard behaviour for a disclosure.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isMenuOpen]);
 
   const latestEvent = searchResult?.events?.[0];
   let latestEta: string | null = null;
@@ -593,6 +720,7 @@ export default function HomeClient({
     setError(null);
 
     try {
+      console.log('🔍 Searching for waybill:', wb);
       // Abort any previous in-flight request
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
@@ -604,18 +732,28 @@ export default function HomeClient({
       });
       clearTimeout(timeoutId);
 
+      console.log('📡 API Response Status:', res.status);
+
       if (res.ok) {
         const data = await res.json();
+        console.log('✅ Search successful:', {
+          waybill: data.waybillNumber,
+          status: data.currentStatus,
+          origin: data.origin,
+          destination: data.destination,
+        });
         setSearchResult(data);
       } else {
         if (res.status === 404) {
+          console.log('❌ Shipment not found:', wb);
           setSearchResult(null);
         } else {
+          console.log('❌ Server error:', res.status);
           setError(`Server Error: ${res.status}`);
         }
       }
     } catch (error) {
-      console.error('Search error for', wb, ':', error);
+      console.error('❌ Search error for', wb, ':', error);
       setError('Failed to connect to server. Please try again.');
     } finally {
       setLoading(false);
@@ -629,90 +767,12 @@ export default function HomeClient({
     performSearch(term);
   };
 
-  const navLinks: [string, string][] = [
-    ['#tracking', 'Track'],
-    ['#services', 'Services'],
-    ['#fleet', 'Freight'],
-    ['#leadership', 'Leadership'],
-  ];
-
-  const socialLinks = [
-    {
-      href: 'https://www.instagram.com/kapilla.group_ltd/',
-      label: 'Kapilla Group on Instagram',
-      icon: <Instagram aria-hidden="true" className="h-5 w-5" />,
-    },
-    {
-      href: 'https://facebook.com',
-      label: 'Kapilla Group on Facebook',
-      icon: <Facebook aria-hidden="true" className="h-5 w-5" />,
-    },
-    {
-      href: 'https://x.com',
-      label: 'Kapilla Group on X',
-      icon: (
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      ),
-    },
-    {
-      href: 'https://tiktok.com',
-      label: 'Kapilla Group on TikTok',
-      icon: (
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-        </svg>
-      ),
-    },
-  ];
-
-  const serviceFeatures = [
-    {
-      icon: Package,
-      title: 'Express Courier',
-      desc: 'Time-critical documents and parcels collected, consolidated and delivered with proof of delivery.',
-    },
-    {
-      icon: Truck,
-      title: 'Freight Transportation',
-      desc: 'Road, rail, sea and air freight moved on planned schedules, with live status on every leg.',
-    },
-    {
-      icon: FileText,
-      title: 'Customs Clearing & Forwarding',
-      desc: 'Licensed brokerage that prepares documentation and duties so cargo keeps moving across borders.',
-    },
-    {
-      icon: Zap,
-      title: 'ADC Express',
-      desc: 'Priority handling for urgent consignments, using the fastest available transit window.',
-    },
-    {
-      icon: Clock,
-      title: 'Real-Time Tracking',
-      desc: 'Every consignment carries a waybill you can track from booking through to delivery, 24/7.',
-    },
-    {
-      icon: Globe,
-      title: 'Global Network',
-      desc: 'Connections into 200+ destinations let you ship internationally from a single point of contact.',
-    },
-  ];
-
-  const heroPromises = [
-    'Live waybill tracking, 24/7',
-    'Road, sea and air freight',
-    'Customs clearing and forwarding',
-    'Pickup and delivery nationwide',
-  ];
-
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen bg-white font-sans text-charcoal">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
         >
           Skip to content
         </a>
@@ -721,59 +781,66 @@ export default function HomeClient({
         </Suspense>
 
         {/* Navigation */}
-        <header className="sticky top-0 z-50 border-b border-navy-800 bg-navy-900">
+        <header className="sticky top-0 z-50 border-b border-navy-800 bg-navy-900/95 backdrop-blur supports-[backdrop-filter]:bg-navy-900/85">
           <nav aria-label="Primary" className={CONTAINER}>
-            <div className="flex h-16 items-center justify-between gap-4 md:h-20">
-              <Link href="/" className="flex shrink-0 items-center gap-3">
-                <span className="rounded-lg bg-white p-1.5">
+            <div className="h-16 md:h-20 flex items-center justify-between gap-4">
+              <Link
+                href="/"
+                className={cn('flex items-center gap-3 shrink-0 rounded-lg', FOCUS_DARK)}
+              >
+                <span className="bg-white p-1.5 rounded-md shadow-soft">
                   <Image
                     src="/logo.png"
                     alt="Kapilla Group Ltd"
                     width={40}
                     height={40}
-                    className="h-8 w-8 object-contain md:h-9 md:w-9"
+                    className="w-8 h-8 md:w-9 md:h-9 object-contain"
                     priority
                   />
                 </span>
-                <span className="text-base font-semibold tracking-tight text-white md:text-lg">
+                <span className="text-base md:text-lg font-semibold text-white tracking-tight">
                   Kapilla <span className="text-accent">Group</span>
                 </span>
               </Link>
 
-              <div className="hidden items-center gap-9 text-sm font-medium text-navy-100 lg:flex">
-                {navLinks.map(([href, label]) => (
+              <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-100">
+                {NAV_LINKS.map(([href, label]) => (
                   <a
                     key={href}
                     href={href}
-                    className="group relative py-1 transition-colors hover:text-white"
+                    className={cn('group relative transition-colors hover:text-white', FOCUS_DARK)}
                   >
                     {label}
                     <span
                       aria-hidden="true"
-                      className="absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 rounded-full bg-accent transition-transform duration-300 group-hover:scale-x-100"
+                      className="absolute inset-x-0 bottom-0 border-b-2 border-accent origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                     />
                   </a>
                 ))}
               </div>
 
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden items-center gap-1 text-navy-200 xl:flex">
-                  {socialLinks.map((social) => (
+                <div className="hidden xl:flex items-center gap-1 text-navy-200">
+                  {SOCIAL_LINKS.map((social) => (
                     <a
                       key={social.href}
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={social.label}
-                      className="rounded-lg p-2 transition-colors hover:text-white"
+                      className={cn(
+                        'p-2 rounded-lg transition-colors hover:text-accent',
+                        FOCUS_DARK
+                      )}
                     >
                       {social.icon}
                     </a>
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsPickupModalOpen(true)}
-                  className={cn(BTN_PRIMARY, BTN_SM, 'group p-2.5 md:px-5 md:py-2.5')}
+                  className={cn(BTN_PRIMARY, 'p-2.5 md:px-5 md:py-2.5 text-sm')}
                   aria-label="Request a pickup"
                 >
                   <Truck aria-hidden="true" className="h-4 w-4" />
@@ -781,17 +848,18 @@ export default function HomeClient({
                 </button>
                 <Link
                   href="/staff/login"
-                  className={cn(BTN_ON_DARK, BTN_SM, 'hidden md:inline-flex')}
+                  className={cn(BTN_GHOST_DARK, 'hidden md:flex px-5 py-2.5 text-sm')}
                   aria-label="Staff portal"
                 >
-                  Staff Portal
+                  <span>Staff Portal</span>
                 </Link>
                 <button
+                  type="button"
                   onClick={() => setIsMenuOpen((v) => !v)}
                   aria-label="Toggle navigation menu"
                   aria-expanded={isMenuOpen}
                   aria-controls="mobile-menu"
-                  className="rounded-lg border border-navy-400/60 p-2.5 text-white transition-colors hover:bg-navy-800 lg:hidden"
+                  className={cn(BTN_GHOST_DARK, 'lg:hidden p-2.5')}
                 >
                   {isMenuOpen ? (
                     <X aria-hidden="true" className="h-5 w-5" />
@@ -802,168 +870,166 @@ export default function HomeClient({
               </div>
             </div>
 
-            {isMenuOpen && (
-              <div id="mobile-menu" className="border-t border-navy-800 pb-6 lg:hidden">
-                <div className="flex flex-col">
-                  {navLinks.map(([href, label]) => (
-                    <a
-                      key={href}
-                      href={href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="border-b border-navy-800 py-3.5 text-sm font-medium text-navy-100 transition-colors hover:text-white"
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  id="mobile-menu"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="lg:hidden border-t border-navy-800 pb-6 overflow-hidden"
+                >
+                  <div className="flex flex-col">
+                    {MOBILE_NAV_LINKS.map(([href, label]) => (
+                      <a
+                        key={href}
+                        href={href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={cn(
+                          'py-3.5 text-sm font-medium text-navy-100 border-b border-navy-800 transition-colors hover:text-accent',
+                          FOCUS_DARK
+                        )}
+                      >
+                        {label}
+                      </a>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 pt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setIsPickupModalOpen(true);
+                      }}
+                      className={cn(BTN_PRIMARY, 'flex-1 px-4 py-3 text-sm')}
                     >
-                      {label}
-                    </a>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3 pt-6">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      setIsPickupModalOpen(true);
-                    }}
-                    className={cn(BTN_PRIMARY, BTN_SM, 'flex-1')}
-                  >
-                    Request a Pickup
-                  </button>
-                  <Link href="/staff/login" className={cn(BTN_ON_DARK, BTN_SM)}>
-                    Staff Portal
-                  </Link>
-                </div>
-              </div>
-            )}
+                      Request a Pickup
+                    </button>
+                    <Link href="/staff/login" className={cn(BTN_GHOST_DARK, 'px-4 py-3 text-sm')}>
+                      Staff Portal
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </nav>
         </header>
 
         <main id="main">
           {/* Hero */}
-          <section className={cn('relative isolate overflow-hidden bg-navy-950', SECTION)}>
+          <section className="relative isolate bg-navy-950 overflow-hidden">
             <Image
               src="/background.jpg"
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover object-center opacity-70"
-            />
-            {/* Directional scrim: copy stays legible on the left, the photograph opens up right. */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/95 to-navy-950/45"
+              className="object-cover opacity-30"
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-navy-950/60"
+              className="absolute inset-0 bg-gradient-to-br from-navy-950 via-navy-950/90 to-navy-900/70"
             />
+            <DarkBackdrop />
 
-            <div className={cn(CONTAINER, 'relative')}>
-              <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+            <div className={cn(CONTAINER, 'relative py-16 lg:py-24')}>
+              <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                 <motion.div
-                  className="lg:col-span-7"
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7 }}
+                  transition={{ duration: 0.6 }}
                 >
-                  <div className="inline-flex items-center gap-2.5 rounded-full border border-accent/35 bg-accent/10 px-4 py-2 backdrop-blur">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                    <span className={EYEBROW_ON_DARK}>Transportation &amp; General Supply</span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-navy-700 bg-white/5 text-navy-100 text-xs font-semibold uppercase tracking-wider backdrop-blur">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    Transportation &amp; General Supply
                   </div>
                   <h1 className={H1}>
                     Freight that moves on schedule, and stays visible end to end.
                   </h1>
-                  <p className="mt-7 max-w-xl text-base leading-relaxed text-navy-100 lg:text-lg">
+                  <p className={cn(LEAD, 'mt-6 max-w-xl text-pretty')}>
                     Kapilla Group transports cargo by road, sea and air across Tanzania, East Africa
                     and 200+ international destinations — with customs clearing, forwarding and
                     last-mile delivery handled by one accountable partner.
                   </p>
 
-                  <div className="mt-10 flex flex-wrap gap-4">
+                  <div className="mt-8 flex flex-wrap gap-4">
                     <button
+                      type="button"
                       onClick={() => setIsPickupModalOpen(true)}
-                      className={cn(BTN_PRIMARY, BTN_LG, 'group')}
+                      className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
                     >
                       Request a Pickup
                       <ArrowIcon />
                     </button>
-                    <a href="#tracking" className={cn(BTN_ON_DARK, BTN_LG)}>
+                    <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
                       Track a Consignment
                     </a>
                   </div>
 
-                  <ul className="mt-14 grid gap-x-8 gap-y-5 border-t border-white/15 pt-8 text-sm text-navy-100 sm:grid-cols-2">
-                    {heroPromises.map((item) => (
-                      <li key={item} className="flex items-center gap-3">
-                        <CheckCircle aria-hidden="true" className="h-4 w-4 shrink-0 text-accent" />
+                  <ul className="mt-10 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-navy-100">
+                    {SERVICE_PROMISES.map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <CheckCircle aria-hidden="true" className="w-4 h-4 text-accent shrink-0" />
                         {item}
                       </li>
                     ))}
                   </ul>
                 </motion.div>
 
-                {/* Tracking card — the one high-contrast surface in the hero. */}
+                {/* Tracking card — the page's primary task, given the stronger surface */}
                 <motion.div
                   id="tracking"
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.15 }}
-                  className="w-full max-w-lg lg:col-span-5 lg:ml-auto"
+                  transition={{ duration: 0.6, delay: 0.15 }}
+                  className="w-full max-w-lg lg:ml-auto scroll-mt-24"
                 >
-                  <div className="overflow-hidden rounded-2xl bg-white shadow-soft-lg ring-1 ring-navy-900/5">
-                    <div className="flex items-center justify-between gap-4 border-b border-navy-100 px-7 py-5">
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-navy-900">
-                          <Package aria-hidden="true" className="h-5 w-5" />
+                  <div className="bg-white rounded-lg shadow-soft-lg p-6 lg:p-8 ring-1 ring-navy-900/5">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
+                      <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
+                      Track your consignment
+                    </h2>
+                    <p className="mt-2 text-sm text-charcoal-light text-pretty">
+                      Enter the waybill number printed on your receipt to see the latest status and
+                      location.
+                    </p>
+                    <form onSubmit={handleSearch} className="mt-6">
+                      <label htmlFor="waybill" className="sr-only">
+                        Waybill number
+                      </label>
+                      <div className="flex items-center gap-2 rounded-lg border border-navy-200 bg-navy-50 p-1.5 transition-colors focus-within:border-navy-500 focus-within:bg-white">
+                        <span className="pl-2 text-charcoal-muted" aria-hidden="true">
+                          <Package className="w-5 h-5" />
                         </span>
-                        <h2 className="text-base font-semibold tracking-tight text-navy-900">
-                          Track your consignment
-                        </h2>
+                        <input
+                          id="waybill"
+                          type="text"
+                          value={waybill}
+                          onChange={(e) => setWaybill(e.target.value)}
+                          placeholder="e.g. KPL-8829"
+                          autoComplete="off"
+                          className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          aria-label="Track consignment"
+                          className={cn(
+                            BTN_PRIMARY,
+                            BTN_PADDING_INPUT,
+                            'disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-accent'
+                          )}
+                        >
+                          {loading ? (
+                            <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <span className="hidden sm:inline">Track</span>
+                          )}
+                          {!loading && <ArrowIcon />}
+                        </button>
                       </div>
-                      <span className="shrink-0 rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-navy-600">
-                        24/7
-                      </span>
-                    </div>
-
-                    <div className="p-7">
-                      <p className={BODY}>
-                        Enter the waybill number printed on your receipt to see the latest status
-                        and location.
-                      </p>
-                      <form onSubmit={handleSearch} className="mt-6">
-                        <label htmlFor="waybill" className="sr-only">
-                          Waybill number
-                        </label>
-                        <div className="flex items-center gap-2 rounded-xl border border-navy-200 bg-white p-2 transition-colors focus-within:border-navy-500">
-                          <span className="pl-2 text-charcoal-muted" aria-hidden="true">
-                            <Package className="h-5 w-5" />
-                          </span>
-                          <input
-                            id="waybill"
-                            type="text"
-                            value={waybill}
-                            onChange={(e) => setWaybill(e.target.value)}
-                            placeholder="e.g. KPL-8829"
-                            className="flex-1 bg-transparent py-2 text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
-                          />
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className={cn(
-                              BTN_PRIMARY,
-                              'group px-5 py-3 disabled:cursor-not-allowed disabled:opacity-70'
-                            )}
-                          >
-                            {loading ? (
-                              <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
-                            ) : (
-                              <>
-                                <span className="hidden sm:inline">Track</span>
-                                <ArrowIcon />
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
+                    </form>
                   </div>
                 </motion.div>
               </div>
@@ -978,73 +1044,65 @@ export default function HomeClient({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className={cn('bg-navy-50', SECTION)}
+                className="bg-navy-50 py-12 lg:py-16 border-b border-navy-100"
               >
-                <div className={CONTAINER}>
-                  <div className={cn(CARD, 'mx-auto max-w-4xl p-6 lg:p-8')} aria-live="polite">
+                <div className={CONTAINER_NARROW}>
+                  <div
+                    aria-live="polite"
+                    className="bg-white border border-navy-100 rounded-lg shadow-soft p-6 lg:p-8"
+                  >
                     {loading ? (
-                      <div className="flex flex-col items-center py-10 text-center">
+                      <div className="py-10 flex flex-col items-center text-center">
                         <Loader2
                           aria-hidden="true"
-                          className="h-8 w-8 animate-spin text-navy-500"
+                          className="w-8 h-8 animate-spin text-navy-500"
                         />
-                        <p className={cn(BODY, 'mt-4')}>
+                        <p className="mt-4 text-sm text-charcoal-light">
                           Looking up{' '}
                           <span className="font-semibold text-navy-900">{waybill.trim()}</span> …
                         </p>
                       </div>
                     ) : error ? (
-                      <div className="py-4 text-center">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-red-50">
-                          <X aria-hidden="true" className="h-6 w-6 text-red-600" />
+                      <div className="text-center py-4">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-red-50 mb-4">
+                          <X aria-hidden="true" className="w-6 h-6 text-red-600" />
                         </div>
                         <div className="font-semibold text-navy-900">Something went wrong</div>
-                        <div className={cn(BODY, 'mt-2')}>{error}</div>
+                        <div className="text-charcoal-light text-sm mt-2 text-pretty">{error}</div>
                         <button
+                          type="button"
                           onClick={() => performSearch(waybill)}
-                          className={cn(BTN_PRIMARY, BTN_SM, 'mt-6')}
+                          className={cn(BTN_PRIMARY, 'mt-6 px-5 py-2.5 text-sm')}
                         >
                           Try Again
                         </button>
                       </div>
                     ) : !searchResult ? (
-                      <div className="py-4 text-center">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-red-50">
-                          <Package aria-hidden="true" className="h-6 w-6 text-red-600" />
+                      <div className="text-center py-4">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-navy-50 mb-4">
+                          <Package aria-hidden="true" className="w-6 h-6 text-navy-500" />
                         </div>
                         <div className="font-semibold text-navy-900">Shipment not found</div>
-                        <div className={cn(BODY, 'mt-2')}>
+                        <div className="text-charcoal-light text-sm mt-2 max-w-xl mx-auto text-pretty">
                           We couldn't find any shipment with that waybill number. Please check the
                           number and try again.
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div>
-                            <div
-                              className={cn(META, 'mb-2 font-semibold uppercase tracking-[0.14em]')}
-                            >
-                              Waybill number
-                            </div>
-                            <div className="font-mono text-xl font-bold tracking-tight text-navy-900 md:text-2xl">
+                            <div className={LABEL + ' mb-2'}>Waybill number</div>
+                            <div className="text-xl md:text-2xl font-bold text-navy-900 font-mono tracking-tight">
                               {searchResult.waybillNumber}
                             </div>
                           </div>
                           <div className="flex flex-col md:items-end">
-                            <div
-                              className={cn(META, 'mb-2 font-semibold uppercase tracking-[0.14em]')}
-                            >
-                              Current status
-                            </div>
+                            <div className={LABEL + ' mb-2'}>Current status</div>
                             <div
                               className={cn(
-                                'rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wide',
-                                searchResult.currentStatus === 'DELIVERED'
-                                  ? 'border-navy-200 bg-navy-100 text-navy-800'
-                                  : searchResult.currentStatus === 'PENDING'
-                                    ? 'border-navy-200 bg-navy-50 text-charcoal-light'
-                                    : 'border-accent bg-accent-light text-navy-900'
+                                'px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide border',
+                                statusClass(searchResult.currentStatus)
                               )}
                             >
                               {(searchResult.currentStatus || 'UNKNOWN').replace(/_/g, ' ')}
@@ -1053,14 +1111,9 @@ export default function HomeClient({
                         </div>
 
                         {/* Consignment summary */}
-                        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-navy-100 border border-navy-100 rounded-lg overflow-hidden">
+                          <div className="bg-white p-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Route
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
@@ -1069,39 +1122,24 @@ export default function HomeClient({
                               {searchResult.destination}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                          <div className="bg-white p-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Booked
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
                               <FormattedDate dateStr={searchResult.createdAt} fallback="-" />
                             </div>
                           </div>
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                          <div className="bg-white p-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Service
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
                               {searchResult.serviceType || '—'}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                          <div className="bg-white p-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Cargo
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
@@ -1120,36 +1158,26 @@ export default function HomeClient({
                         </div>
 
                         {/* Sender / recipient */}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div className="border border-navy-100 rounded-lg p-4 bg-navy-50/60">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Sender
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
                               {searchResult.senderName || '—'}
                             </div>
-                            <div className={cn(META, 'mt-1')}>
+                            <div className="text-xs text-charcoal-light mt-1">
                               {searchResult.senderAddress || searchResult.senderPhone || ''}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-navy-100 p-4">
-                            <div
-                              className={cn(
-                                META,
-                                'mb-1.5 font-semibold uppercase tracking-[0.14em]'
-                              )}
-                            >
+                          <div className="border border-navy-100 rounded-lg p-4 bg-navy-50/60">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Recipient
                             </div>
                             <div className="text-sm font-semibold text-navy-900">
                               {searchResult.receiverName || '—'}
                             </div>
-                            <div className={cn(META, 'mt-1')}>
+                            <div className="text-xs text-charcoal-light mt-1">
                               {searchResult.receiverAddress || searchResult.receiverPhone || ''}
                             </div>
                           </div>
@@ -1172,15 +1200,15 @@ export default function HomeClient({
                               <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
                             </MapErrorBoundary>
                           ) : (
-                            <div className="rounded-lg border border-navy-100 bg-navy-50 p-10 text-center">
+                            <div className="bg-navy-50 rounded-lg p-10 text-center border border-navy-100">
                               <Package
                                 aria-hidden="true"
-                                className="mx-auto mb-4 h-12 w-12 text-charcoal-muted"
+                                className="w-12 h-12 text-charcoal-muted mx-auto mb-4"
                               />
-                              <p className="font-medium text-charcoal">
+                              <p className="text-charcoal font-medium">
                                 Shipment is awaiting processing
                               </p>
-                              <p className={cn(BODY, 'mt-2')}>
+                              <p className="text-sm text-charcoal-light mt-2 text-pretty">
                                 Tracking will be available as soon as the shipment is in transit.
                               </p>
                             </div>
@@ -1190,17 +1218,14 @@ export default function HomeClient({
                         {/* Tracking history */}
                         {events.length > 0 && (
                           <div>
-                            <h3
-                              className={cn(META, 'mb-6 font-semibold uppercase tracking-[0.14em]')}
-                            >
-                              Tracking history
-                            </h3>
-                            <ol className="relative ml-3 space-y-8 border-l-2 border-navy-100">
+                            <h3 className={LABEL + ' mb-6'}>Tracking history</h3>
+                            <ol className="relative border-l-2 border-navy-100 ml-3 space-y-8">
                               {events.map((ev: any, i: number) => (
                                 <li key={ev.id || i} className="relative pl-8">
                                   <span
+                                    aria-hidden="true"
                                     className={cn(
-                                      'absolute -left-[9px] top-1 h-4 w-4 rounded-full border-2 border-white',
+                                      'absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white',
                                       i === events.length - 1 ? 'bg-accent' : 'bg-navy-300'
                                     )}
                                   />
@@ -1208,16 +1233,16 @@ export default function HomeClient({
                                     <span className="text-sm font-semibold text-navy-900">
                                       {(ev.status || '').replace(/_/g, ' ')}
                                     </span>
-                                    <span className={META}>
+                                    <span className="text-xs text-charcoal-muted">
                                       <FormattedDate dateStr={ev.timestamp} fallback="-" />
                                     </span>
                                   </div>
-                                  <div className={cn(BODY, 'mt-1')}>
+                                  <div className="text-sm text-charcoal-light mt-1 text-pretty">
                                     {ev.location}
                                     {ev.remarks ? ` — ${ev.remarks}` : ''}
                                   </div>
                                   {ev.staffName && (
-                                    <div className={cn(META, 'mt-1')}>
+                                    <div className="text-xs text-charcoal-muted mt-1">
                                       Handled by {ev.staffName}
                                     </div>
                                   )}
@@ -1236,7 +1261,7 @@ export default function HomeClient({
 
           {/* Advertisements Section */}
           {advertisements.length > 0 && (
-            <section className={cn('bg-white', SECTION)}>
+            <section className="py-16 lg:py-20 bg-white">
               <div className={CONTAINER}>
                 {advertisements.length === 1 ? (
                   <AdvertisementCard ad={advertisements[0]} />
@@ -1248,10 +1273,13 @@ export default function HomeClient({
           )}
 
           {/* Services & Fleet Showcase */}
-          <section id="fleet" className={cn('bg-navy-50', SECTION)}>
+          <section
+            id="fleet"
+            className="py-16 lg:py-20 bg-navy-50 scroll-mt-20 border-y border-navy-100"
+          >
             <div className={CONTAINER}>
               <SectionHeader
-                eyebrow="Fleet &amp; capabilities"
+                eyebrow="Our fleet"
                 title="Freight solutions built around your supply chain"
                 intro="From a single parcel to full container loads, our land, sea and air capabilities move cargo to schedule — with a documented handover at every stage."
               />
@@ -1261,7 +1289,7 @@ export default function HomeClient({
           </section>
 
           {/* Services & Features Grid */}
-          <section id="services" className={cn('bg-white', SECTION)}>
+          <section id="services" className="py-16 lg:py-20 bg-white">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="What we do"
@@ -1269,33 +1297,26 @@ export default function HomeClient({
                 intro="One partner for collection, freight, border clearance and final delivery — so you deal with one team, one reference number and one point of accountability."
               />
 
-              <div className={cn(GRID, 'sm:grid-cols-2 lg:grid-cols-3')}>
-                {serviceFeatures.map((feature, i) => (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {SERVICE_FEATURES.map((feature, i) => (
                   <motion.div
-                    key={feature.title}
-                    initial={{ opacity: 0, y: 20 }}
+                    key={i}
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
+                    transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
                     className={cn(
-                      CARD,
-                      'group relative overflow-hidden p-7 transition-all duration-300 hover:-translate-y-1 hover:border-navy-200 hover:shadow-soft-lg'
+                      'group relative p-6 rounded-lg bg-white border border-navy-100 shadow-soft overflow-hidden',
+                      CARD_LIFT
                     )}
                   >
-                    {/* Ghost index — gives each card a focal point beyond the icon. */}
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute right-6 top-5 text-5xl font-bold leading-none tracking-tighter text-navy-50 transition-colors duration-300 group-hover:text-navy-100"
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <IconTile icon={feature.icon} />
-                    <h3 className={cn(H3, 'mb-3 mt-7')}>{feature.title}</h3>
-                    <p className={BODY}>{feature.desc}</p>
-                    <span
-                      aria-hidden="true"
-                      className="mt-7 block h-0.5 w-10 rounded-full bg-accent transition-all duration-300 group-hover:w-20"
+                      className="absolute inset-x-0 top-0 border-t-2 border-transparent transition-colors duration-300 group-hover:border-accent"
                     />
+                    <FeatureTile icon={feature.icon} />
+                    <h3 className={cn(H3, 'mb-3')}>{feature.title}</h3>
+                    <p className={BODY}>{feature.desc}</p>
                   </motion.div>
                 ))}
               </div>
@@ -1303,10 +1324,13 @@ export default function HomeClient({
           </section>
 
           {/* Executive Leadership */}
-          <section id="leadership" className={cn('bg-navy-50', SECTION)}>
+          <section
+            id="leadership"
+            className="py-16 lg:py-20 bg-navy-50 scroll-mt-20 border-y border-navy-100"
+          >
             <div className={CONTAINER}>
               <SectionHeader
-                eyebrow="Our team"
+                eyebrow="Leadership"
                 title="Leadership"
                 intro="The team accountable for Kapilla Group's service standards, safety record and day-to-day freight operations."
               />
@@ -1316,127 +1340,128 @@ export default function HomeClient({
           </section>
 
           {/* Closing call to action */}
-          <section
-            className={cn(
-              'relative isolate overflow-hidden border-t border-navy-800 bg-navy-900',
-              SECTION
-            )}
-          >
+          <section className="relative isolate bg-navy-900 border-t border-navy-800 overflow-hidden">
+            <DarkBackdrop />
             <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(255,199,44,0.16),transparent_65%)]"
-            />
-            <div className={cn(CONTAINER, 'relative')}>
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="text-3xl font-bold leading-[1.12] tracking-[-0.02em] text-white sm:text-4xl lg:text-5xl">
+              className={cn(
+                CONTAINER,
+                'relative py-14 lg:py-16 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8'
+              )}
+            >
+              <div className="max-w-2xl">
+                <Eyebrow onDark>Next step</Eyebrow>
+                <h2 className="mt-4 text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Ready to move your cargo?
                 </h2>
-                <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-navy-100 lg:text-lg">
+                <p className="mt-3 text-navy-100 leading-relaxed text-pretty">
                   Book a pickup and we will confirm collection, routing and documentation before the
                   consignment leaves your site.
                 </p>
-                <div className="mt-10 flex flex-wrap justify-center gap-4">
-                  <button
-                    onClick={() => setIsPickupModalOpen(true)}
-                    className={cn(BTN_PRIMARY, BTN_LG, 'group')}
-                  >
-                    Request a Pickup
-                    <ArrowIcon />
-                  </button>
-                  <a href="#tracking" className={cn(BTN_ON_DARK, BTN_LG)}>
-                    Track a Consignment
-                  </a>
-                </div>
+              </div>
+              <div className="flex flex-wrap gap-4 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsPickupModalOpen(true)}
+                  className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
+                >
+                  Request a Pickup
+                  <ArrowIcon />
+                </button>
+                <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
+                  Track a Consignment
+                </a>
               </div>
             </div>
           </section>
         </main>
 
         {/* Footer */}
-        <footer className={cn('border-t border-navy-800 bg-navy-900 text-navy-200', SECTION)}>
-          <div className={cn(CONTAINER, 'grid gap-12 md:grid-cols-4')}>
+        <footer className="relative isolate bg-navy-900 text-navy-200 py-16 border-t border-navy-800">
+          <div className={cn(CONTAINER, 'relative grid md:grid-cols-4 gap-12')}>
             <div className="md:col-span-2">
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-lg bg-white p-1.5">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="bg-white p-1.5 rounded-md">
                   <Image
                     src="/logo.png"
                     alt="Kapilla Group Ltd"
                     width={32}
                     height={32}
-                    className="h-8 w-8 object-contain"
+                    className="w-8 h-8 object-contain"
                   />
                 </span>
-                <span className="text-base font-semibold tracking-tight text-white">
+                <span className="text-base font-semibold text-white tracking-tight">
                   Kapilla <span className="text-accent">Group</span>
                 </span>
               </div>
-              <p className="mb-6 max-w-sm leading-relaxed">
+              <p className="max-w-sm text-sm leading-relaxed mb-6 text-pretty">
                 Transportation and general supply for Tanzania and beyond. We move cargo on
                 schedule, clear it through borders and deliver it with a documented handover.
               </p>
-              <div className="mb-6 flex items-center gap-2 text-sm text-navy-200">
-                <MapPin aria-hidden="true" className="h-4 w-4 text-accent" />
+              <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
+                <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
                 Dar es Salaam, Tanzania
               </div>
-              <div className={META_ON_DARK}>© 2026 Kapilla Group Ltd.</div>
-              <div className="mt-4 text-xs font-mono font-bold tracking-wider text-navy-400">
+              <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
+              <div className="mt-4 text-[10px] font-mono text-navy-400 font-bold tracking-wider">
                 DEVELOPED BY KAISI
                 <span className="mx-2">|</span>
-                <a href="/staff/login" className="transition-colors hover:text-white">
+                <a
+                  href="/staff/login"
+                  className={cn('transition-colors hover:text-white', FOCUS_DARK)}
+                >
                   STAFF LOGIN
                 </a>
               </div>
             </div>
             <div>
-              <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                Company
-              </h3>
+              <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
               <ul className="space-y-3 text-sm">
+                {NAV_LINKS.filter(([href]) => href !== '#tracking').map(([href, label]) => (
+                  <li key={href}>
+                    <a
+                      href={href}
+                      className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                    >
+                      {label}
+                    </a>
+                  </li>
+                ))}
                 <li>
-                  <a href="#services" className="transition-colors hover:text-white">
-                    Services
-                  </a>
-                </li>
-                <li>
-                  <a href="#fleet" className="transition-colors hover:text-white">
-                    Freight
-                  </a>
-                </li>
-                <li>
-                  <a href="#leadership" className="transition-colors hover:text-white">
-                    Leadership
-                  </a>
-                </li>
-                <li>
-                  <Link href="/staff/login" className="transition-colors hover:text-white">
+                  <Link
+                    href="/staff/login"
+                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                  >
                     Staff Portal
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                Support
-              </h3>
+              <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
               <ul className="space-y-3 text-sm">
                 <li>
                   <button
+                    type="button"
                     onClick={() => setIsHelpCenterOpen(true)}
-                    className="text-left transition-colors hover:text-white"
+                    className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
                   >
                     Help Center
                   </button>
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setIsPickupModalOpen(true)}
-                    className="text-left transition-colors hover:text-white"
+                    className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
                   >
                     Request a Pickup
                   </button>
                 </li>
                 <li>
-                  <a href="#tracking" className="transition-colors hover:text-white">
+                  <a
+                    href="#tracking"
+                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                  >
                     Track a Consignment
                   </a>
                 </li>
