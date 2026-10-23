@@ -3,7 +3,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
-import { renderBillToSection, renderItemsTable, renderItemsTableCompact } from '../../../../../lib/pdf-helpers';
+import {
+  renderBillToSection,
+  renderItemsTable,
+  renderItemsTableCompact,
+} from '../../../../../lib/pdf-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +27,7 @@ export async function POST(
     const formData = await req.formData();
 
     // Support multiple photos: photo_0, photo_1, photo_2 ...
-    const photoCount = parseInt(formData.get('photoCount') as string || '1');
+    const photoCount = parseInt((formData.get('photoCount') as string) || '1');
     const photos: Array<{ base64: string; mime: string; caption: string }> = [];
 
     for (let i = 0; i < photoCount; i++) {
@@ -65,7 +69,10 @@ export async function POST(
   } catch (error) {
     console.error('[INVOICE_PDF_POST]', error);
     return NextResponse.json(
-      { error: 'Failed to generate PDF', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to generate PDF',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -154,11 +161,7 @@ function buildInvoicePDF(
         .filter((p: string) => p.length > 0).length || 0;
     const notesLen = (invoice.notes || '').length;
     const termsLen = (invoice.terms || '').length;
-    const forceCompact =
-      itemCount >= 12 ||
-      reqParts >= 6 ||
-      notesLen > 200 ||
-      termsLen > 200;
+    const forceCompact = itemCount >= 12 || reqParts >= 6 || notesLen > 200 || termsLen > 200;
 
     // Colors - matching HTML design (both use dark blue)
     const accentColor = [37, 99, 235]; // dark blue for both
@@ -364,7 +367,10 @@ function buildInvoicePDF(
       doc.setFontSize(6);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(100, 116, 139);
-      const refText = doc.splitTextToSize('Please include invoice number in payment reference', bankBoxW - 6);
+      const refText = doc.splitTextToSize(
+        'Please include invoice number in payment reference',
+        bankBoxW - 6
+      );
       doc.text(refText, bankBoxX + 3, bankY);
 
       // Totals Box (right side) - COMPACT
@@ -742,7 +748,9 @@ function buildInvoicePDF(
         doc.setFont('helvetica', 'bold');
         doc.text(
           `EVIDENCE PHOTO ${photos.length > 1 ? `(${photoIndex + 1} of ${photos.length})` : ''}`,
-          pw / 2, 11, { align: 'center' }
+          pw / 2,
+          11,
+          { align: 'center' }
         );
 
         // Invoice reference bar
@@ -753,7 +761,9 @@ function buildInvoicePDF(
         doc.setFont('helvetica', 'normal');
         doc.text(
           `Invoice: ${invoice.invoiceNumber}  |  Customer: ${invoice.customerName}`,
-          pw / 2, 25, { align: 'center' }
+          pw / 2,
+          25,
+          { align: 'center' }
         );
 
         // Photo frame — full page with padding
@@ -797,7 +807,9 @@ function buildInvoicePDF(
         doc.setTextColor(100, 116, 139);
         doc.text(
           'KAPILLA GROUP LIMITED  |  info@kapillagroup.co.tz  |  TIN: 157-935-380',
-          pw / 2, ph - 4, { align: 'center' }
+          pw / 2,
+          ph - 4,
+          { align: 'center' }
         );
       });
     }
@@ -871,20 +883,27 @@ function generateDeliveryNote(invoice: {
     doc.addImage(logoBase64, 'PNG', logoX, headerY, logoWidth, logoHeight);
   }
 
-  // Company details - right of logo, compact spacing
-  const detailsX = 55;
+  // Company details - address block sits on the right margin, right-aligned,
+  // so the header reads as logo left / address right.
+  const rightEdge = 195;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text('KAPILLA GROUP LIMITED', detailsX, headerY + 5);
+  doc.text('KAPILLA GROUP LIMITED', rightEdge, headerY + 5, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(60, 60, 60);
-  doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', detailsX, headerY + 10);
-  doc.text('Dar es Salaam, Tanzania', detailsX, headerY + 15);
-  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', detailsX, headerY + 20);
-  doc.text('Email: info@kapillagroup.co.tz  |  TIN: 157-935-380', detailsX, headerY + 25);
+  doc.text('P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani', rightEdge, headerY + 10, {
+    align: 'right',
+  });
+  doc.text('Dar es Salaam, Tanzania', rightEdge, headerY + 15, { align: 'right' });
+  doc.text('Tel: +255 65 860 4772 / +255 76 062 9563', rightEdge, headerY + 20, {
+    align: 'right',
+  });
+  doc.text('Email: info@kapillagroup.co.tz  |  TIN: 157-935-380', rightEdge, headerY + 25, {
+    align: 'right',
+  });
 
   // Separator line - below all header content
   const separatorY = headerY + logoHeight + 8;
@@ -954,7 +973,7 @@ function generateDeliveryNote(invoice: {
   // Signature sections - THREE PEOPLE: Inspection, User, and Receiver
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableEndY = (doc as any).lastAutoTable.finalY;
-  
+
   // Check if we need a new page for signatures
   const signHeight = 110; // Total height for all signature blocks
   if (tableEndY + signHeight > 280) {
