@@ -416,7 +416,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               alt="Kapilla Logo"
               width={100}
               height={100}
-              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+              className="w-40 h-40 md:w-56 md:h-56 object-contain"
             />
           </div>
 
@@ -500,7 +500,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               alt="Kapilla Logo"
               width={100}
               height={100}
-              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+              className="w-40 h-40 md:w-56 md:h-56 object-contain"
             />
           </div>
 
@@ -615,7 +615,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                 alt="Kapilla Logo"
                 width={48}
                 height={48}
-                className="w-12 h-12 object-contain"
+                className="w-16 h-16 object-contain"
               />
             </Link>
             <button

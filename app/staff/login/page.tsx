@@ -62,7 +62,7 @@ export default function StaffLogin() {
             alt="Kapilla Logo"
             width={96}
             height={96}
-            className="w-28 h-28 object-contain"
+            className="w-40 h-40 object-contain"
             priority
           />
         </div>
