@@ -57,23 +57,18 @@ export default function StaffLogin() {
       {/* Content */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="bg-white p-3 rounded-md border border-navy-100">
-            <Image
-              src="/logo.png"
-              alt="Kapilla Group Ltd"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain"
-              priority
-            />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Kapilla Logo"
+            width={96}
+            height={96}
+            className="w-28 h-28 object-contain"
+            priority
+          />
         </div>
         <h1 className="mt-8 text-center text-3xl font-bold text-white tracking-tight">
           Staff Portal
         </h1>
-        <p className="mt-3 text-center text-sm font-semibold text-navy-100 uppercase tracking-wider">
-          Kapilla Group Ltd. Internal Systems
-        </p>
       </div>
 
       <div className="relative z-10 mt-10 sm:mx-auto sm:w-full sm:max-w-md">

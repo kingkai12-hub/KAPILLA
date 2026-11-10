@@ -409,26 +409,20 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
 
         {/* Welcome Content */}
         <div className="relative z-10 flex flex-col items-center gap-8 px-4">
-          {/* Logo */}
+          {/* Logo — transparent, no background */}
           <div className="relative">
-            <div className="absolute inset-0 bg-accent/20 rounded-full blur-2xl animate-pulse" />
-            <div className="relative bg-white p-4 rounded-2xl shadow-2xl">
-              <Image
-                src="/logo.png"
-                alt="Kapilla Logo"
-                width={100}
-                height={100}
-                className="w-20 h-20 md:w-24 md:h-24 object-contain"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Kapilla Logo"
+              width={100}
+              height={100}
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
           </div>
 
           {/* Welcome Text */}
           <div className="text-center space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold text-white animate-fade-in">Welcome</h1>
-            <h2 className="text-2xl md:text-3xl font-bold text-accent animate-fade-in-delay-1">
-              KAPILLA GROUP LIMITED
-            </h2>
             <p className="text-xl md:text-2xl font-semibold text-navy-200 animate-fade-in-delay-2">
               Staff Portal
             </p>
@@ -497,26 +491,20 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
 
         {/* Welcome Content */}
         <div className="relative z-10 flex flex-col items-center gap-8 px-4">
-          {/* Logo */}
+          {/* Logo — transparent, no background */}
           <div className="relative">
-            <div className="absolute inset-0 bg-accent/20 rounded-full blur-2xl animate-pulse" />
-            <div className="relative bg-white p-4 rounded-2xl shadow-2xl">
-              <Image
-                src="/logo.png"
-                alt="Kapilla Logo"
-                width={100}
-                height={100}
-                className="w-20 h-20 md:w-24 md:h-24 object-contain"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Kapilla Logo"
+              width={100}
+              height={100}
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
           </div>
 
           {/* Welcome Text */}
           <div className="text-center space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold text-white animate-fade-in">Welcome</h1>
-            <h2 className="text-2xl md:text-3xl font-bold text-accent animate-fade-in-delay-1">
-              KAPILLA GROUP LIMITED
-            </h2>
             <p className="text-xl md:text-2xl font-semibold text-navy-200 animate-fade-in-delay-2">
               Staff Portal
             </p>
@@ -617,22 +605,14 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="h-20 flex items-center px-6 bg-navy-950 border-b border-navy-800">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image
                 src="/logo.png"
                 alt="Kapilla Logo"
-                width={40}
-                height={40}
-                className="w-10 h-10 object-contain rounded-lg"
+                width={48}
+                height={48}
+                className="w-12 h-12 object-contain"
               />
-              <div>
-                <span className="font-bold text-lg tracking-tight block leading-none">
-                  Kapilla <span className="text-accent">Group Ltd</span>
-                </span>
-                <span className="text-xs text-navy-300 font-medium tracking-wide">
-                  STAFF PORTAL
-                </span>
-              </div>
             </Link>
             <button
               className="md:hidden ml-auto text-navy-300 hover:text-white"
