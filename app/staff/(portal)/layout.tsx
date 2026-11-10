@@ -599,7 +599,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         onMouseEnter={() => setSidebarHover(true)}
         onMouseLeave={() => setSidebarHover(false)}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 glass-strong text-navy-900 transform transition-[transform,visibility] duration-300 ease-out',
+          'fixed inset-y-0 left-0 z-50 w-72 glass-menu text-navy-900 transform transition-[transform,visibility] duration-300 ease-out',
           sidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible',
           sidebarOpen || sidebarHover
             ? 'md:translate-x-0 md:visible'

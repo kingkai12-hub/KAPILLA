@@ -235,6 +235,17 @@ a {
       inset 0 1px 0 rgba(255, 255, 255, 0.85);
   }
 
+  /* Heaviest blur, reserved for the main navigation menu (sidebar) */
+  .glass-menu {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(44px) saturate(200%);
+    -webkit-backdrop-filter: blur(44px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 12px 48px rgba(11, 31, 58, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
   .glass-header {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px) saturate(180%);
@@ -283,6 +294,7 @@ a {
   }
 
   .dark .glass-strong,
+  .dark .glass-menu,
   .dark .glass-card {
     background: rgba(11, 31, 58, 0.72);
     border-color: rgba(255, 255, 255, 0.16);
