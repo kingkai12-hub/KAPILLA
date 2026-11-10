@@ -1,10 +1,12 @@
 // Enhanced SMS Service Implementation
-// Supports multiple SMS providers: Twilio, Africa's Talking, Infobip
+// Supports multiple SMS providers: Twilio, Africa's Talking, textbee.dev, simulation
 // Environment variables needed:
-// SMS_PROVIDER=twilio|africastalking|infobip|simulation
+// SMS_PROVIDER=twilio|africastalking|textbee|simulation
 // TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
 // AFRICASTALKING_API_KEY, AFRICASTALKING_USERNAME, AFRICASTALKING_SENDER
-// INFOBIP_API_KEY, INFOBIP_BASE_URL
+// TEXTBEE_API_KEY, TEXTBEE_DEVICE_ID (optional)
+
+import twilio from 'twilio';
 
 interface SMSProvider {
   sendSMS(to: string, message: string): Promise<boolean>;
@@ -24,15 +26,14 @@ class TwilioProvider implements SMSProvider {
 
   async sendSMS(to: string, message: string): Promise<boolean> {
     try {
-      const twilio = require('twilio');
       const client = twilio(this.accountSid, this.authToken);
-      
+
       await client.messages.create({
         body: message,
         to: this.formatPhone(to),
         from: this.fromNumber,
       });
-      
+
       console.log(`SMS sent via Twilio to ${to}`);
       return true;
     } catch (error) {
@@ -69,29 +70,29 @@ class AfricaTalkingProvider implements SMSProvider {
 
   async sendSMS(to: string, message: string): Promise<boolean> {
     try {
-      const axios = require('axios');
-      
-      const response = await axios.post(
-        'https://api.africastalking.com/version1/messaging',
-        {
+      const response = await fetch('https://api.africastalking.com/version1/messaging', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+          apiKey: this.apiKey,
+        },
+        body: new URLSearchParams({
           username: this.username,
           to: this.formatPhone(to),
           message: message,
           from: this.sender,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'apiKey': this.apiKey,
-          },
-        }
-      );
-      
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Africa's Talking responded with status ${response.status}`);
+      }
+
       console.log(`SMS sent via Africa's Talking to ${to}`);
       return true;
     } catch (error) {
-      console.error('Africa\'s Talking SMS failed:', error);
+      console.error("Africa's Talking SMS failed:", error);
       return false;
     }
   }
@@ -109,6 +110,56 @@ class AfricaTalkingProvider implements SMSProvider {
   }
 }
 
+// textbee.dev Provider (free tier: 300 SMS/month via an Android phone gateway)
+class TextBeeProvider implements SMSProvider {
+  private apiKey: string;
+  private deviceId?: string;
+
+  constructor() {
+    this.apiKey = process.env.TEXTBEE_API_KEY!;
+    this.deviceId = process.env.TEXTBEE_DEVICE_ID;
+  }
+
+  async sendSMS(to: string, message: string): Promise<boolean> {
+    try {
+      const response = await fetch('https://api.textbee.dev/api/v1/gateway/send-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.apiKey,
+        },
+        body: JSON.stringify({
+          message,
+          recipients: [this.formatPhone(to)],
+          ...(this.deviceId ? { deviceId: this.deviceId } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`textbee responded with status ${response.status}`);
+      }
+
+      console.log(`SMS sent via textbee to ${to}`);
+      return true;
+    } catch (error) {
+      console.error('textbee SMS failed:', error);
+      return false;
+    }
+  }
+
+  private formatPhone(phone: string): string {
+    const cleaned = phone.replace(/[^0-9]/g, '');
+    if (cleaned.startsWith('255') && cleaned.length === 12) {
+      return `+${cleaned}`;
+    } else if (cleaned.startsWith('0') && cleaned.length === 10) {
+      return `+255${cleaned.slice(1)}`;
+    } else if (cleaned.length === 9 && !cleaned.startsWith('0')) {
+      return `+255${cleaned}`;
+    }
+    return `+${cleaned}`;
+  }
+}
+
 // Simulation Provider (for development)
 class SimulationProvider implements SMSProvider {
   async sendSMS(to: string, message: string): Promise<boolean> {
@@ -123,12 +174,14 @@ class SimulationProvider implements SMSProvider {
 // Get SMS provider based on environment
 function getSMSProvider(): SMSProvider {
   const provider = process.env.SMS_PROVIDER?.toLowerCase();
-  
+
   switch (provider) {
     case 'twilio':
       return new TwilioProvider();
     case 'africastalking':
       return new AfricaTalkingProvider();
+    case 'textbee':
+      return new TextBeeProvider();
     case 'simulation':
     default:
       return new SimulationProvider();
@@ -145,7 +198,7 @@ export async function sendShipmentCreatedSMS(
   destination: string
 ): Promise<boolean> {
   const message = `📦 KAPILLA LOGISTICS\n\nDear ${senderName},\n\nYour shipment has been created!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
-  
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -157,7 +210,7 @@ export async function sendShipmentCreatedToReceiverSMS(
   destination: string
 ): Promise<boolean> {
   const message = `📦 KAPILLA LOGISTICS\n\nDear ${receiverName},\n\nYou have a shipment from ${senderName}!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
-  
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -168,7 +221,7 @@ export async function sendShipmentUpdateSMS(
   customerName: string
 ): Promise<boolean> {
   const message = `📦 KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment status updated!\n\n🎫 WAYBILL: ${waybillNumber}\n📊 Status: ${status}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\n- Kapilla Logistics`;
-  
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -179,7 +232,7 @@ export async function sendDeliveryConfirmationSMS(
   deliveredBy: string
 ): Promise<boolean> {
   const message = `✅ KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment has been delivered!\n\n🎫 WAYBILL: ${waybillNumber}\n📦 Delivered by: ${deliveredBy}\n\nThank you for choosing Kapilla Logistics!`;
-  
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -189,7 +242,7 @@ export async function sendPickupRequestSMS(
   customerName: string
 ): Promise<boolean> {
   const message = `Dear ${customerName}, your pickup request #${requestId} has been received. Our team will contact you within 24 hours. Kapilla Logistics`;
-  
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -199,7 +252,19 @@ export async function sendOTPSMS(
   purpose: string = 'login'
 ): Promise<boolean> {
   const message = `Your Kapilla Logistics ${purpose} OTP is: ${otp}. Valid for 10 minutes. Do not share this code.`;
-  
+
+  return await smsProvider.sendSMS(phoneNumber, message);
+}
+
+export async function sendWelcomeSMS(
+  phoneNumber: string,
+  name: string,
+  email: string,
+  password: string
+): Promise<boolean> {
+  const loginUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kapillagroup.vercel.app';
+  const message = `KAPILLA GROUP\n\nHello ${name}, your staff account has been created.\n\nUsername: ${email}\nPassword: ${password}\n\nLogin: ${loginUrl}/staff/login\n\nPlease change your password after your first login.`;
+
   return await smsProvider.sendSMS(phoneNumber, message);
 }
 
@@ -207,14 +272,16 @@ export async function sendOTPSMS(
 export function validatePhoneNumber(phone: string): boolean {
   // Basic validation for Tanzanian phone numbers
   const cleaned = phone.replace(/[^0-9]/g, '');
-  
+
   // Tanzania: 9 digits starting with 7, 6, or 5 (after country code)
-  if ((cleaned.startsWith('255') && cleaned.length === 12) ||
-      (cleaned.startsWith('0') && cleaned.length === 10) ||
-      (cleaned.length === 9 && /^[567]/.test(cleaned))) {
+  if (
+    (cleaned.startsWith('255') && cleaned.length === 12) ||
+    (cleaned.startsWith('0') && cleaned.length === 10) ||
+    (cleaned.length === 9 && /^[567]/.test(cleaned))
+  ) {
     return true;
   }
-  
+
   return false;
 }
 

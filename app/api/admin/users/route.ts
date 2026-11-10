@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { sendWelcomeSMS } from '@/lib/sms';
 import { hashPassword } from '@/lib/auth';
 import { requireAuth, requireRole } from '@/lib/auth';
 
@@ -151,6 +152,16 @@ export async function POST(req: Request) {
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
       // Don't fail the user creation if email fails
+    }
+
+    // Send welcome SMS with the login credentials (if a phone number was given)
+    if (phoneNumber) {
+      try {
+        await sendWelcomeSMS(phoneNumber, name, email, password);
+      } catch (smsError) {
+        console.error('Failed to send welcome SMS:', smsError);
+        // Don't fail the user creation if SMS fails
+      }
     }
 
     const { password: _, ...userWithoutPassword } = newUser;
