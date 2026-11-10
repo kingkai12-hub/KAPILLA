@@ -608,14 +608,14 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="h-20 flex items-center px-6 bg-white border-b border-navy-100">
+          <div className="h-28 flex items-center px-6 bg-white border-b border-navy-100">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image
                 src="/logo.png"
                 alt="Kapilla Logo"
-                width={48}
-                height={48}
-                className="w-16 h-16 object-contain"
+                width={96}
+                height={96}
+                className="w-24 h-24 object-contain"
               />
             </Link>
             <button
