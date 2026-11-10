@@ -42,7 +42,7 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 bg-navy-900">
+    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 bg-navy-50">
       {/* Background Image - Full Screen */}
       <Image
         src="/background.jpg"
@@ -52,7 +52,7 @@ export default function StaffLogin() {
         sizes="100vw"
         className="object-cover opacity-20"
       />
-      <div className="absolute inset-0 bg-navy-900/85" />
+      <div className="absolute inset-0 bg-white/80" />
 
       {/* Content */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
@@ -66,7 +66,7 @@ export default function StaffLogin() {
             priority
           />
         </div>
-        <h1 className="mt-8 text-center text-3xl font-bold text-white tracking-tight">
+        <h1 className="mt-8 text-center text-3xl font-bold text-navy-900 tracking-tight">
           Staff Portal
         </h1>
       </div>
@@ -130,7 +130,7 @@ export default function StaffLogin() {
             </div>
           </form>
         </div>
-        <div className="mt-8 text-center text-[10px] font-mono text-navy-300 font-bold tracking-widest">
+        <div className="mt-8 text-center text-[10px] font-mono text-navy-500 font-bold tracking-widest">
           DEVELOPED BY KAISI
         </div>
       </div>
