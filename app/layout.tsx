@@ -115,17 +115,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             disableTransitionOnChange
           >
             <ServiceWorkerCleanup />
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 px-4">
-              <div className="max-w-lg w-full text-center">
+            <div className="app-aurora" aria-hidden="true" />
+            <div className="min-h-screen relative flex items-center justify-center px-4">
+              <div className="glass-strong max-w-lg w-full text-center p-10 rounded-3xl">
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-500/20 mb-8 animate-pulse">
-                  <Wrench className="w-12 h-12 text-amber-400" />
+                  <Wrench className="w-12 h-12 text-amber-500" />
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+                <h1 className="text-4xl md:text-5xl font-black text-navy-900 dark:text-white mb-4">
                   System Under Maintenance
                 </h1>
-                <p className="text-lg text-navy-200 mb-8">{maintenanceMessage}</p>
-                <div className="inline-flex items-center gap-2 px-5 py-3 bg-navy-800/60 rounded-full text-sm text-navy-300 border border-navy-700">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <p className="text-lg text-navy-700 dark:text-navy-200 mb-8">
+                  {maintenanceMessage}
+                </p>
+                <div className="inline-flex items-center gap-2 px-5 py-3 bg-white/60 dark:bg-navy-800/60 rounded-full text-sm text-navy-600 dark:text-navy-300 border border-white/70 dark:border-navy-700">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                   We will be back shortly
                 </div>
                 <div className="mt-10">
@@ -162,6 +165,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </p>
             </div>
           )}
+          <div className="app-aurora" aria-hidden="true" />
           <ServiceWorkerCleanup />
           <RefreshHandler />
           <IdleLogout />

@@ -222,7 +222,9 @@ export default function CreateInvoicePage() {
   };
 
   // Evidence photos (optional - attached as last page(s) in PDF)
-  const [evidencePhotos, setEvidencePhotos] = useState<Array<{ file: File; preview: string; caption: string }>>([]);
+  const [evidencePhotos, setEvidencePhotos] = useState<
+    Array<{ file: File; preview: string; caption: string }>
+  >([]);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Items
@@ -349,9 +351,7 @@ export default function CreateInvoicePage() {
   };
 
   const handlePhotoCaptionChange = (index: number, caption: string) => {
-    setEvidencePhotos((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, caption } : p))
-    );
+    setEvidencePhotos((prev) => prev.map((p, i) => (i === index ? { ...p, caption } : p)));
   };
 
   // Submit form
@@ -434,7 +434,9 @@ export default function CreateInvoicePage() {
       } else {
         const error = await res.json();
         console.error('Error response:', error);
-        alert(`Error: ${error.error || `Failed to ${isEditMode ? 'update' : 'create'} invoice`}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || `Failed to ${isEditMode ? 'update' : 'create'} invoice`}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch (error) {
       console.error('Catch error:', error);
@@ -462,7 +464,7 @@ export default function CreateInvoicePage() {
       {/* Exchange Rate Modal */}
       {showRateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="glass-strong rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Set Manual Exchange Rate</h3>
             <p className="text-sm text-slate-600 mb-4">
               Enter the USD to TZS exchange rate you want to use. This will override the automatic
@@ -476,7 +478,7 @@ export default function CreateInvoicePage() {
                 type="number"
                 value={manualRate}
                 onChange={(e) => setManualRate(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-4 py-2 glass-input rounded-lg"
                 placeholder="e.g., 2500"
                 step="0.01"
                 min="0"
@@ -507,7 +509,7 @@ export default function CreateInvoicePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Invoice Type */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Invoice Type</h2>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -534,7 +536,7 @@ export default function CreateInvoicePage() {
         </div>
 
         {/* Customer Details */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-slate-900">Customer Details</h2>
             {savedCustomers.length > 0 && (
@@ -562,7 +564,7 @@ export default function CreateInvoicePage() {
                     setCustomerTIN(selected.tin || '');
                   }
                 }}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Type or select from saved customers"
                 required
               />
@@ -581,7 +583,7 @@ export default function CreateInvoicePage() {
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -592,7 +594,7 @@ export default function CreateInvoicePage() {
                 type="text"
                 value={customerTIN}
                 onChange={(e) => setCustomerTIN(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -604,7 +606,7 @@ export default function CreateInvoicePage() {
                 value={requisitionNumber}
                 onChange={(e) => setRequisitionNumber(e.target.value)}
                 placeholder="e.g., 001/2024"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             {isEditMode && (
@@ -619,7 +621,9 @@ export default function CreateInvoicePage() {
                   placeholder="e.g., INV-0001"
                   className="w-full px-4 py-2 border border-amber-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-amber-50"
                 />
-                <p className="text-xs text-amber-600 mt-1">Editing invoice number — ensure it is unique.</p>
+                <p className="text-xs text-amber-600 mt-1">
+                  Editing invoice number — ensure it is unique.
+                </p>
               </div>
             )}
             <div className="md:col-span-2">
@@ -628,14 +632,14 @@ export default function CreateInvoicePage() {
                 value={customerAddress}
                 onChange={(e) => setCustomerAddress(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
         </div>
 
         {/* Invoice Items */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-slate-900">Items</h2>
             <button
@@ -652,7 +656,7 @@ export default function CreateInvoicePage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-12 gap-4 items-start p-4 bg-slate-50 rounded-lg"
+                className="grid grid-cols-12 gap-4 items-start p-4 glass rounded-lg"
               >
                 <div className="col-span-12 md:col-span-5">
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
@@ -661,7 +665,7 @@ export default function CreateInvoicePage() {
                   <textarea
                     value={item.description}
                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm resize-y min-h-[80px]"
+                    className="w-full px-3 py-2 glass-input rounded-lg text-sm resize-y min-h-[80px]"
                     placeholder="Item description (press Enter for new line)"
                     rows={3}
                     required
@@ -682,7 +686,7 @@ export default function CreateInvoicePage() {
                         e.target.select();
                       }
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    className="w-full px-3 py-2 glass-input rounded-lg text-sm"
                     min="0"
                     step="0.01"
                   />
@@ -702,7 +706,7 @@ export default function CreateInvoicePage() {
                         e.target.select();
                       }
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    className="w-full px-3 py-2 glass-input rounded-lg text-sm"
                     min="0"
                     step="0.01"
                   />
@@ -711,7 +715,7 @@ export default function CreateInvoicePage() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Amount ({currency})
                   </label>
-                  <div className="px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-bold">
+                  <div className="px-3 py-2 glass-input rounded-lg text-sm font-bold">
                     {item.amount.toLocaleString('en-US', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -734,7 +738,7 @@ export default function CreateInvoicePage() {
         </div>
 
         {/* Calculations */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Calculator className="w-5 h-5 text-blue-600" />
             <h2 className="text-lg font-bold text-slate-900">Calculations</h2>
@@ -747,7 +751,7 @@ export default function CreateInvoicePage() {
                 <select
                   value={currency}
                   onChange={(e) => handleCurrencyChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white"
+                  className="w-full px-4 py-2 glass-input rounded-lg"
                 >
                   <option value="TZS">TZS (Tanzanian Shilling)</option>
                   <option value="USD">USD (US Dollar)</option>
@@ -810,7 +814,7 @@ export default function CreateInvoicePage() {
                       e.target.select();
                     }
                   }}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-4 py-2 glass-input rounded-lg"
                   min="0"
                   max="100"
                   step="0.01"
@@ -832,14 +836,14 @@ export default function CreateInvoicePage() {
                       e.target.select();
                     }
                   }}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-4 py-2 glass-input rounded-lg"
                   min="0"
                   step="0.01"
                 />
               </div>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+            <div className="glass p-4 rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-semibold">Subtotal:</span>
                 <span className="font-mono">
@@ -875,7 +879,7 @@ export default function CreateInvoicePage() {
         </div>
 
         {/* Additional Details */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Additional Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {type === 'PROFORMA' && (
@@ -887,7 +891,7 @@ export default function CreateInvoicePage() {
                   type="date"
                   value={validUntil}
                   onChange={(e) => setValidUntil(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-4 py-2 glass-input rounded-lg"
                 />
               </div>
             )}
@@ -900,9 +904,11 @@ export default function CreateInvoicePage() {
                 value={itemsHeader}
                 onChange={(e) => setItemsHeader(e.target.value)}
                 placeholder="e.g., FREIGHT CHARGES, LOGISTICS SERVICES, CARGO HANDLING..."
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <p className="text-xs text-slate-400 mt-1">Title shown above items table on the PDF.</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Title shown above items table on the PDF.
+              </p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2">Notes</label>
@@ -910,7 +916,7 @@ export default function CreateInvoicePage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-4 py-2 glass-input rounded-lg"
                 placeholder="Additional notes or instructions"
               />
             </div>
@@ -922,19 +928,21 @@ export default function CreateInvoicePage() {
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                className="w-full px-4 py-2 glass-input rounded-lg"
               />
             </div>
           </div>
         </div>
 
         {/* Evidence Photos - Optional */}
-        <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <div className="glass rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-indigo-500" />
               <h2 className="text-lg font-bold text-slate-900">Evidence Photos</h2>
-              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">Optional</span>
+              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">
+                Optional
+              </span>
             </div>
             <button
               type="button"
@@ -954,7 +962,8 @@ export default function CreateInvoicePage() {
             />
           </div>
           <p className="text-xs text-slate-400 mb-4">
-            Attach photos as evidence — they will be added as the last page(s) of the PDF. If no photos are added, the invoice prints normally.
+            Attach photos as evidence — they will be added as the last page(s) of the PDF. If no
+            photos are added, the invoice prints normally.
           </p>
 
           {evidencePhotos.length === 0 ? (
@@ -994,7 +1003,7 @@ export default function CreateInvoicePage() {
                     value={photo.caption}
                     onChange={(e) => handlePhotoCaptionChange(index, e.target.value)}
                     placeholder="Caption (optional)"
-                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+                    className="w-full px-2 py-1 text-xs glass-input rounded focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
                   />
                 </div>
               ))}

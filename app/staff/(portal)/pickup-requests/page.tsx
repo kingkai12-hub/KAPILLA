@@ -1,12 +1,35 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState, useMemo, useDeferredValue } from 'react';
-import { Truck, CheckCircle, Clock, PackagePlus, Search, ArrowRight, Loader2, XCircle, X, Trash2 } from 'lucide-react';
+import {
+  Truck,
+  CheckCircle,
+  Clock,
+  PackagePlus,
+  Search,
+  ArrowRight,
+  Loader2,
+  XCircle,
+  X,
+  Trash2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+type PickupRequest = {
+  id: string;
+  status: string;
+  createdAt: string;
+  senderName: string;
+  senderPhone: string;
+  pickupAddress: string;
+  destination: string;
+  cargoDetails: string;
+  estimatedWeight?: string | null;
+};
+
 export default function PickupRequests() {
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<PickupRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [userRole, setUserRole] = useState<string>('');
@@ -28,7 +51,10 @@ export default function PickupRequests() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch('/api/pickup-requests', { signal: controller.signal, cache: 'no-store' });
+      const res = await fetch('/api/pickup-requests', {
+        signal: controller.signal,
+        cache: 'no-store',
+      });
       clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
@@ -41,7 +67,7 @@ export default function PickupRequests() {
     }
   };
 
-  const handleIssueWaybill = (request: any) => {
+  const handleIssueWaybill = (request: PickupRequest) => {
     // Navigate to create shipment page with pre-filled data
     const query = new URLSearchParams({
       senderName: request.senderName,
@@ -50,13 +76,13 @@ export default function PickupRequests() {
       destination: request.destination,
       cargoDetails: request.cargoDetails,
       weight: request.estimatedWeight || '',
-      pickupRequestId: request.id
+      pickupRequestId: request.id,
     }).toString();
-    
+
     router.push(`/staff/shipments/create?${query}`);
   };
 
-  const handleReject = async (request: any) => {
+  const handleReject = async (request: PickupRequest) => {
     if (!confirm('Are you sure you want to reject this pickup request?')) return;
 
     try {
@@ -68,9 +94,9 @@ export default function PickupRequests() {
 
       if (res.ok) {
         // Update local state
-        setRequests(requests.map(req => 
-          req.id === request.id ? { ...req, status: 'REJECTED' } : req
-        ));
+        setRequests(
+          requests.map((req) => (req.id === request.id ? { ...req, status: 'REJECTED' } : req))
+        );
         alert('Request rejected. Customer has been notified via SMS.');
       } else {
         alert('Failed to reject request');
@@ -82,17 +108,20 @@ export default function PickupRequests() {
   };
 
   const handleDelete = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this request? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this request? This action cannot be undone.'))
+      return;
 
     try {
       if (!userId) {
         alert('You must be logged in to delete requests');
         return;
       }
-      const res = await fetch(`/api/pickup-requests/${requestId}?userId=${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/pickup-requests/${requestId}?userId=${userId}`, {
+        method: 'DELETE',
+      });
 
       if (res.ok) {
-        setRequests(requests.filter(req => req.id !== requestId));
+        setRequests(requests.filter((req) => req.id !== requestId));
         alert('Request deleted successfully');
       } else {
         const err = await res.json().catch(() => ({}));
@@ -107,10 +136,11 @@ export default function PickupRequests() {
   const filteredRequests = useMemo(() => {
     const term = deferredSearch.toLowerCase();
     if (!term) return requests;
-    return requests.filter(req =>
-      (req.senderName || '').toLowerCase().includes(term) ||
-      (req.senderPhone || '').includes(deferredSearch) ||
-      (req.pickupAddress || '').toLowerCase().includes(term)
+    return requests.filter(
+      (req) =>
+        (req.senderName || '').toLowerCase().includes(term) ||
+        (req.senderPhone || '').includes(deferredSearch) ||
+        (req.pickupAddress || '').toLowerCase().includes(term)
     );
   }, [requests, deferredSearch]);
 
@@ -119,17 +149,19 @@ export default function PickupRequests() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Pickup Requests</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage customer pickup requests and issue waybills.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Manage customer pickup requests and issue waybills.
+          </p>
         </div>
-        
+
         <div className="relative w-full md:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Search requests..." 
+          <input
+            type="text"
+            placeholder="Search requests..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
       </div>
@@ -141,30 +173,42 @@ export default function PickupRequests() {
       ) : (
         <div className="grid gap-4">
           {filteredRequests.length === 0 ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="text-center py-20 glass rounded-xl">
               <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white">No Requests Found</h3>
-              <p className="text-slate-500">There are no pending pickup requests matching your search.</p>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white">
+                No Requests Found
+              </h3>
+              <p className="text-slate-500">
+                There are no pending pickup requests matching your search.
+              </p>
             </div>
           ) : (
             filteredRequests.map((req) => (
-              <div 
-                key={req.id} 
-                className={`bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-2xl border transition-all hover:shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between
-                  ${req.status === 'ISSUED' ? 'border-green-200 dark:border-green-900 bg-green-50/30 dark:bg-green-900/10' : 
-                    req.status === 'REJECTED' ? 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10' :
-                    'border-slate-200 dark:border-slate-700'}
+              <div
+                key={req.id}
+                className={`glass-card p-5 sm:p-6 rounded-2xl transition-all flex flex-col md:flex-row gap-6 items-start md:items-center justify-between
+                  ${
+                    req.status === 'ISSUED'
+                      ? 'border border-green-200 dark:border-green-900'
+                      : req.status === 'REJECTED'
+                        ? 'border border-red-200 dark:border-red-900'
+                        : ''
+                  }
                 `}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border
-                      ${req.status === 'ISSUED' 
-                        ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
-                        : req.status === 'REJECTED'
-                        ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
-                        : 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'}
-                    `}>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border
+                      ${
+                        req.status === 'ISSUED'
+                          ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                          : req.status === 'REJECTED'
+                            ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
+                            : 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'
+                      }
+                    `}
+                    >
                       {req.status}
                     </span>
                     <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -172,21 +216,33 @@ export default function PickupRequests() {
                       {new Date(req.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-lg">{req.senderName}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-lg">
+                        {req.senderName}
+                      </h3>
                       <p className="text-sm text-slate-500">{req.senderPhone}</p>
                     </div>
                     <div className="text-sm">
-                      <p className="text-slate-600 dark:text-slate-300"><span className="font-medium text-slate-900 dark:text-white">Pickup:</span> {req.pickupAddress}</p>
-                      <p className="text-slate-600 dark:text-slate-300"><span className="font-medium text-slate-900 dark:text-white">Dest:</span> {req.destination}</p>
+                      <p className="text-slate-600 dark:text-slate-300">
+                        <span className="font-medium text-slate-900 dark:text-white">Pickup:</span>{' '}
+                        {req.pickupAddress}
+                      </p>
+                      <p className="text-slate-600 dark:text-slate-300">
+                        <span className="font-medium text-slate-900 dark:text-white">Dest:</span>{' '}
+                        {req.destination}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 text-sm bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p className="text-slate-700 dark:text-slate-300"><span className="font-semibold">Cargo:</span> {req.cargoDetails}</p>
-                    {req.estimatedWeight && <p className="text-slate-500 mt-1">Est. Weight: {req.estimatedWeight}</p>}
+                    <p className="text-slate-700 dark:text-slate-300">
+                      <span className="font-semibold">Cargo:</span> {req.cargoDetails}
+                    </p>
+                    {req.estimatedWeight && (
+                      <p className="text-slate-500 mt-1">Est. Weight: {req.estimatedWeight}</p>
+                    )}
                   </div>
                 </div>
 
@@ -208,7 +264,9 @@ export default function PickupRequests() {
                         <PackagePlus className="w-4 h-4" />
                         Issue Waybill
                       </button>
-                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(
+                        userRole
+                      ) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-3 rounded-xl font-semibold transition-colors w-full sm:w-auto"
@@ -224,7 +282,9 @@ export default function PickupRequests() {
                         <CheckCircle className="w-5 h-5" />
                         Waybill Issued
                       </div>
-                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(
+                        userRole
+                      ) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-xl font-semibold transition-colors"
@@ -240,7 +300,7 @@ export default function PickupRequests() {
                         <XCircle className="w-5 h-5" />
                         Rejected
                       </div>
-                      
+
                       {/* Re-issue Option */}
                       <button
                         onClick={() => handleIssueWaybill(req)}
@@ -252,7 +312,9 @@ export default function PickupRequests() {
                       </button>
 
                       {/* Delete Option - Admin/Manager/MD/CEO Only */}
-                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(userRole) && (
+                      {['ADMIN', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO'].includes(
+                        userRole
+                      ) && (
                         <button
                           onClick={() => handleDelete(req.id)}
                           className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-2 rounded-xl font-semibold transition-colors"

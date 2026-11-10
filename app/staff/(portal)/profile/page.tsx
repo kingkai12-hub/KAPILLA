@@ -1,13 +1,23 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Camera, Save, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+type StaffProfile = {
+  id: string;
+  name?: string;
+  email?: string;
+  workId?: string;
+  phoneNumber?: string;
+  image?: string;
+  [key: string]: unknown;
+};
+
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<StaffProfile | null>(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const router = useRouter();
 
   // Form states
@@ -42,7 +52,8 @@ export default function ProfilePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 500000) { // Limit to 500KB for base64
+      if (file.size > 500000) {
+        // Limit to 500KB for base64
         setMessage({ type: 'error', text: 'Image too large. Max 500KB.' });
         return;
       }
@@ -63,14 +74,14 @@ export default function ProfilePage() {
       const res = await fetch('/api/staff/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          id: user.id, 
-          name, 
-          email, 
+        body: JSON.stringify({
+          id: user.id,
+          name,
+          email,
           password: password || undefined, // Only send if changed
           image,
           workId,
-          phoneNumber
+          phoneNumber,
         }),
       });
 
@@ -85,8 +96,11 @@ export default function ProfilePage() {
         const data = await res.json();
         throw new Error(data.error || 'Failed to update profile');
       }
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to update profile',
+      });
     } finally {
       setLoading(false);
     }
@@ -98,13 +112,14 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">My Profile</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your account details and preferences.</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
+          Manage your account details and preferences.
+        </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
         <div className="p-5 sm:p-8">
           <form onSubmit={handleUpdate} className="space-y-6">
-            
             {/* Profile Image */}
             <div className="flex flex-col items-center gap-4 mb-8">
               <div className="relative group">
@@ -119,90 +134,116 @@ export default function ProfilePage() {
                 </div>
                 <label className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
                   <Camera className="w-5 h-5" />
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
                 </label>
               </div>
               <p className="text-sm text-slate-500">Click camera icon to upload</p>
             </div>
 
             {message && (
-              <div className={`p-4 rounded-lg text-sm font-medium ${
-                message.type === 'success' 
-                  ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' 
-                  : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-              }`}>
+              <div
+                className={`p-4 rounded-lg text-sm font-medium ${
+                  message.type === 'success'
+                    ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                    : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                }`}
+              >
                 {message.text}
               </div>
             )}
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Full Name
+                </label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    onChange={(e) =>
+                      setName(e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()))
+                    }
+                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="John Doe"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Work ID</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Work ID
+                </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-400 rounded">ID</div>
+                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-400 rounded">
+                    ID
+                  </div>
                   <input
                     type="text"
                     value={workId}
-                    onChange={(e) => setWorkId(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    onChange={(e) =>
+                      setWorkId(e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()))
+                    }
+                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="EMP-001"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Phone Number
+                </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs">📞</div>
+                  <div className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 flex items-center justify-center font-bold text-xs">
+                    📞
+                  </div>
                   <input
                     type="text"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    onChange={(e) =>
+                      setPhoneNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))
+                    }
+                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="0xxxxxxxxx"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Email Address
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="john@example.com"
                     disabled // Email usually shouldn't be changed easily by user
                   />
                 </div>
               </div>
 
-
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">New Password (Optional)</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  New Password (Optional)
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Leave blank to keep current password"
                   />
                 </div>

@@ -351,7 +351,7 @@ export default function DocumentsPage() {
       {/* Drag Overlay */}
       {isDragging && (
         <div className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl border-4 border-dashed border-blue-500">
+          <div className="glass-strong p-8 rounded-2xl border-4 border-dashed border-blue-500">
             <Upload className="w-16 h-16 text-blue-500 mx-auto mb-4" />
             <p className="text-2xl font-bold text-blue-600">Drop file here to upload</p>
           </div>
@@ -411,7 +411,7 @@ export default function DocumentsPage() {
       {/* Create Folder Modal */}
       {showCreateFolder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800">
+          <div className="glass-strong rounded-2xl w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-medium flex justify-between items-center">
               <h3 className="text-slate-900 dark:text-white">Create New Folder</h3>
               <button
@@ -431,7 +431,7 @@ export default function DocumentsPage() {
                   autoFocus
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-3 glass-input rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white"
                   placeholder="e.g., Invoices 2024"
                   required
                 />
@@ -487,7 +487,7 @@ export default function DocumentsPage() {
             <div
               key={folder.id}
               onClick={() => setCurrentFolder(folder)}
-              className="bg-white dark:bg-slate-900 p-4 rounded-xl border hover:shadow-md cursor-pointer transition-all group relative"
+              className="glass-card p-4 rounded-xl cursor-pointer transition-all group relative"
             >
               {/* Lock Indicator (Non-Admins) */}
               {folder.isLocked &&
@@ -506,7 +506,7 @@ export default function DocumentsPage() {
                   currentUser.role
                 ) && (
                   <div
-                    className={`absolute top-2 right-2 flex gap-1 transition-opacity bg-white dark:bg-slate-900 rounded-lg shadow-sm border p-1 z-10 ${folder.isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    className={`absolute top-2 right-2 flex gap-1 transition-opacity glass-strong rounded-lg p-1 z-10 ${folder.isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                   >
                     <button
                       onClick={(e) => handleToggleLock(folder, e)}
@@ -555,7 +555,7 @@ export default function DocumentsPage() {
       )}
 
       {/* Documents List */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-base text-left">
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 text-slate-700 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700">
@@ -655,7 +655,7 @@ export default function DocumentsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
             <button
               disabled={page <= 1}
               onClick={() => fetchDocuments(page - 1)}

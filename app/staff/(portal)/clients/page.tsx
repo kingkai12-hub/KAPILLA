@@ -37,7 +37,7 @@ export default async function ClientsPage({
             name="q"
             defaultValue={query}
             placeholder="Search by client name / code / phone number"
-            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm glass-input text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent"
           />
         </div>
         <button
@@ -48,7 +48,7 @@ export default async function ClientsPage({
         </button>
       </form>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             {clients.length} client{clients.length === 1 ? '' : 's'}

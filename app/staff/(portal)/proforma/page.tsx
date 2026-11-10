@@ -105,14 +105,14 @@ export default function ProformaPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white shadow-sm rounded-xl border border-slate-200 p-4">
+      <div className="glass rounded-xl p-4">
         <div className="relative">
           <input
             type="text"
             placeholder="Search by invoice number or customer name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 pl-10 glass-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
@@ -131,7 +131,7 @@ export default function ProformaPage() {
       </div>
 
       {/* Invoices List */}
-      <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+      <div className="glass rounded-xl overflow-hidden">
         {filteredInvoices.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />

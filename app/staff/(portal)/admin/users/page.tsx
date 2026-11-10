@@ -171,7 +171,7 @@ export default function UserManagement() {
       {/* User Form Modal/Panel */}
       {newUserMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+          <div className="glass-strong rounded-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">
                 {editingUser ? 'Edit User' : 'Create New User'}
@@ -198,7 +198,7 @@ export default function UserManagement() {
                       name: e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()),
                     })
                   }
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -214,7 +214,7 @@ export default function UserManagement() {
                       workId: e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()),
                     })
                   }
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                   placeholder="EMP-001"
                 />
               </div>
@@ -231,7 +231,7 @@ export default function UserManagement() {
                       phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10),
                     })
                   }
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                   placeholder="0xxxxxxxxx"
                 />
               </div>
@@ -244,7 +244,7 @@ export default function UserManagement() {
                   required
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                   // disabled={!!editingUser} // Allow email editing
                 />
               </div>
@@ -257,7 +257,7 @@ export default function UserManagement() {
                   required={!editingUser}
                   value={formData.password || ''}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                   placeholder={editingUser ? 'Leave blank to keep current' : ''}
                 />
               </div>
@@ -268,7 +268,7 @@ export default function UserManagement() {
                 <select
                   value={formData.role || 'STAFF'}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="glass-input w-full px-3 py-3 rounded-xl text-slate-900 dark:text-white"
                 >
                   <option value="STAFF">Staff (General)</option>
                   <option value="DRIVER">Driver</option>
@@ -280,7 +280,7 @@ export default function UserManagement() {
                   <option value="ADMIN">Admin</option>
                 </select>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600">
+              <div className="glass flex items-start gap-3 p-3 rounded-xl">
                 <ShieldCheck className="mt-0.5 w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Reports access and account status are managed on the{' '}
@@ -317,12 +317,12 @@ export default function UserManagement() {
       )}
 
       {/* Users List */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="glass rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-[980px] w-full divide-y divide-slate-100 dark:divide-slate-700">
-            <thead className="bg-slate-50 dark:bg-slate-900/50">
+            <thead className="glass-header">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 dark:bg-slate-900/50 z-10">
+                <th className="glass-header px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 z-10">
                   User
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
@@ -358,7 +358,7 @@ export default function UserManagement() {
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <td className="px-3 sm:px-6 py-4 sticky left-0 bg-white dark:bg-slate-800">
+                    <td className="glass-header px-3 sm:px-6 py-4 sticky left-0">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
                           {user.name?.[0] || user.email[0]}

@@ -71,7 +71,9 @@ export default function InvoiceDetailPage() {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   // Stored photos from creation (sessionStorage)
-  const [storedPhotos, setStoredPhotos] = useState<Array<{ base64: string; caption: string; name: string; type: string }>>([]);
+  const [storedPhotos, setStoredPhotos] = useState<
+    Array<{ base64: string; caption: string; name: string; type: string }>
+  >([]);
   const [showPhotoBanner, setShowPhotoBanner] = useState(false);
 
   useEffect(() => {
@@ -86,7 +88,9 @@ export default function InvoiceDetailPage() {
             setStoredPhotos(photos);
             setShowPhotoBanner(true);
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,7 +131,9 @@ export default function InvoiceDetailPage() {
         fetchInvoice();
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to update status');
@@ -149,7 +155,9 @@ export default function InvoiceDetailPage() {
         fetchInvoice();
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to update status'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to update status');
@@ -171,7 +179,9 @@ export default function InvoiceDetailPage() {
         fetchInvoice();
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to cancel invoice'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to cancel invoice'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to cancel invoice');
@@ -192,7 +202,9 @@ export default function InvoiceDetailPage() {
         router.push(`/staff/invoices/${finalInvoice.id}`);
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to convert'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to convert'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to convert invoice');
@@ -200,7 +212,8 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.'))
+      return;
     console.log('Delete button clicked - deleting immediately...');
 
     try {
@@ -215,7 +228,9 @@ export default function InvoiceDetailPage() {
       } else {
         const error = await res.json();
         console.error('Delete error response:', error);
-        alert(`Failed to delete invoice: ${error.error || 'Unknown error'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Failed to delete invoice: ${error.error || 'Unknown error'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch (error) {
       console.error('Delete error:', error);
@@ -237,7 +252,9 @@ export default function InvoiceDetailPage() {
         alert('Requisition number updated successfully!');
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to update requisition number'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to update requisition number'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to update requisition number');
@@ -256,7 +273,9 @@ export default function InvoiceDetailPage() {
         fetchInvoice();
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to mark as paid'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to mark as paid'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to update status');
@@ -275,7 +294,9 @@ export default function InvoiceDetailPage() {
         fetchInvoice();
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error || 'Failed to mark as delivered'}${error.details ? `\n\nDetails: ${error.details}` : ''}`);
+        alert(
+          `Error: ${error.error || 'Failed to mark as delivered'}${error.details ? `\n\nDetails: ${error.details}` : ''}`
+        );
       }
     } catch {
       alert('Failed to update status');
@@ -308,7 +329,9 @@ export default function InvoiceDetailPage() {
           const p = storedPhotos[i];
           const res = await fetch(p.base64);
           const blob = await res.blob();
-          const file = new File([blob], p.name || `photo_${i}.jpg`, { type: p.type || 'image/jpeg' });
+          const file = new File([blob], p.name || `photo_${i}.jpg`, {
+            type: p.type || 'image/jpeg',
+          });
           formData.append(`photo_${i}`, file);
           formData.append(`caption_${i}`, p.caption || '');
         }
@@ -357,7 +380,7 @@ export default function InvoiceDetailPage() {
   const bgColor = 'bg-blue-50'; // light blue for both
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
       <style>
         {`
           @page {
@@ -428,16 +451,17 @@ export default function InvoiceDetailPage() {
               </button>
             )}
 
-            {invoice.type === 'PROFORMA' && (invoice.status === 'DRAFT' || invoice.status === 'SENT') && (
-              <button
-                onClick={handleAccept}
-                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-green-600 text-white rounded text-xs sm:text-base hover:bg-green-700 font-semibold transition-colors"
-              >
-                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Accept</span>
-                <span className="sm:hidden">OK</span>
-              </button>
-            )}
+            {invoice.type === 'PROFORMA' &&
+              (invoice.status === 'DRAFT' || invoice.status === 'SENT') && (
+                <button
+                  onClick={handleAccept}
+                  className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-green-600 text-white rounded text-xs sm:text-base hover:bg-green-700 font-semibold transition-colors"
+                >
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Accept</span>
+                  <span className="sm:hidden">OK</span>
+                </button>
+              )}
 
             {invoice.type === 'PROFORMA' &&
               invoice.status === 'ACCEPTED' &&
@@ -464,16 +488,17 @@ export default function InvoiceDetailPage() {
               </button>
             )}
 
-            {invoice.type === 'FINAL' && (invoice.status === 'SENT' || invoice.status === 'DRAFT') && (
-              <button
-                onClick={handleMarkPaid}
-                className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-emerald-600 text-white rounded text-xs sm:text-base hover:bg-emerald-700 font-semibold transition-colors"
-              >
-                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Mark as Paid</span>
-                <span className="sm:hidden">Paid</span>
-              </button>
-            )}
+            {invoice.type === 'FINAL' &&
+              (invoice.status === 'SENT' || invoice.status === 'DRAFT') && (
+                <button
+                  onClick={handleMarkPaid}
+                  className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-emerald-600 text-white rounded text-xs sm:text-base hover:bg-emerald-700 font-semibold transition-colors"
+                >
+                  <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Mark as Paid</span>
+                  <span className="sm:hidden">Paid</span>
+                </button>
+              )}
 
             {invoice.type === 'FINAL' && invoice.status === 'PAID' && (
               <button
@@ -544,12 +569,18 @@ export default function InvoiceDetailPage() {
           <div className="print-hidden flex items-center justify-between gap-3 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl">
             <div className="flex items-center gap-2 text-sm text-indigo-800">
               <Camera className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-              <span className="font-semibold">{storedPhotos.length} evidence photo{storedPhotos.length > 1 ? 's' : ''} attached.</span>
-              <span className="text-indigo-600 hidden sm:inline">Use &ldquo;Print with Photo&rdquo; to include them in the PDF.</span>
+              <span className="font-semibold">
+                {storedPhotos.length} evidence photo{storedPhotos.length > 1 ? 's' : ''} attached.
+              </span>
+              <span className="text-indigo-600 hidden sm:inline">
+                Use &ldquo;Print with Photo&rdquo; to include them in the PDF.
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setShowPhotoModal(true); }}
+                onClick={() => {
+                  setShowPhotoModal(true);
+                }}
                 className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors"
               >
                 <Printer className="w-3 h-3" />
@@ -595,7 +626,10 @@ export default function InvoiceDetailPage() {
                   <div className="space-y-0 sm:space-y-1 text-xs sm:text-sm text-slate-700">
                     <div className="flex items-center gap-1 sm:gap-2">
                       <MapPin className="w-2 h-2 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm">P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania</span>
+                      <span className="text-xs sm:text-sm">
+                        P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam,
+                        Tanzania
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
                       <Phone className="w-2 h-2 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -644,12 +678,19 @@ export default function InvoiceDetailPage() {
                     )}
                     <p className="flex justify-between gap-2 sm:gap-4 mt-1 sm:mt-2">
                       <span className="font-semibold">Status:</span>
-                      <span className={`font-bold px-2 py-0.5 rounded text-xs ${
-                        invoice.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                        invoice.status === 'DELIVERED' ? 'bg-purple-100 text-purple-700' :
-                        invoice.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-slate-600'
-                      }`}>{invoice.status}</span>
+                      <span
+                        className={`font-bold px-2 py-0.5 rounded text-xs ${
+                          invoice.status === 'PAID'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : invoice.status === 'DELIVERED'
+                              ? 'bg-purple-100 text-purple-700'
+                              : invoice.status === 'ACCEPTED'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {invoice.status}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -775,50 +816,50 @@ export default function InvoiceDetailPage() {
                 </div>
               )}
               <div className="overflow-x-auto border sm:border-2 border-slate-300">
-              <table className="w-full border-collapse text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-slate-100">
-                    <th className="text-left py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
-                      DESCRIPTION
-                    </th>
-                    <th className="text-center py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
-                      QTY
-                    </th>
-                    <th className="text-right py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300 hidden sm:table-cell">
-                      UNIT PRICE
-                    </th>
-                    <th className="text-right py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
-                      AMOUNT
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {invoice.items.map((item) => (
-                    <tr key={item.id} className="border-b border-slate-300">
-                      <td className="py-1 px-1 sm:py-3 sm:px-4 text-slate-900 border-r border-slate-200 text-xs sm:text-sm">
-                        {item.description}
-                      </td>
-                      <td className="py-1 px-1 sm:py-3 sm:px-4 text-center text-slate-900 border-r border-slate-200">
-                        {item.quantity}
-                      </td>
-                      <td className="py-1 px-1 sm:py-3 sm:px-4 text-right text-slate-900 font-mono border-r border-slate-200 hidden sm:table-cell">
-                        {invoice.currency}{' '}
-                        {item.unitPrice.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="py-1 px-1 sm:py-3 sm:px-4 text-right text-slate-900 font-mono font-semibold">
-                        {invoice.currency}{' '}
-                        {item.amount.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
+                <table className="w-full border-collapse text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className="text-left py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
+                        DESCRIPTION
+                      </th>
+                      <th className="text-center py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
+                        QTY
+                      </th>
+                      <th className="text-right py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300 hidden sm:table-cell">
+                        UNIT PRICE
+                      </th>
+                      <th className="text-right py-1 px-1 sm:py-3 sm:px-4 font-bold text-slate-900 border-b sm:border-b-2 border-slate-300">
+                        AMOUNT
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white">
+                    {invoice.items.map((item) => (
+                      <tr key={item.id} className="border-b border-slate-300">
+                        <td className="py-1 px-1 sm:py-3 sm:px-4 text-slate-900 border-r border-slate-200 text-xs sm:text-sm">
+                          {item.description}
+                        </td>
+                        <td className="py-1 px-1 sm:py-3 sm:px-4 text-center text-slate-900 border-r border-slate-200">
+                          {item.quantity}
+                        </td>
+                        <td className="py-1 px-1 sm:py-3 sm:px-4 text-right text-slate-900 font-mono border-r border-slate-200 hidden sm:table-cell">
+                          {invoice.currency}{' '}
+                          {item.unitPrice.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td className="py-1 px-1 sm:py-3 sm:px-4 text-right text-slate-900 font-mono font-semibold">
+                          {invoice.currency}{' '}
+                          {item.amount.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -971,7 +1012,7 @@ export default function InvoiceDetailPage() {
       {/* ─── Photo Evidence Modal ─────────────────────────────────────────── */}
       {showPhotoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="glass-strong rounded-2xl w-full max-w-lg overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-indigo-600">
               <div className="flex items-center gap-3">
@@ -979,7 +1020,11 @@ export default function InvoiceDetailPage() {
                 <h2 className="text-lg font-bold text-white">Print with Evidence Photo</h2>
               </div>
               <button
-                onClick={() => { setShowPhotoModal(false); setPhotoFile(null); setPhotoPreview(null); }}
+                onClick={() => {
+                  setShowPhotoModal(false);
+                  setPhotoFile(null);
+                  setPhotoPreview(null);
+                }}
                 className="p-1 hover:bg-indigo-500 rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-white" />
@@ -991,20 +1036,31 @@ export default function InvoiceDetailPage() {
               {storedPhotos.length > 0 && !photoFile && (
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-slate-700">
-                    {storedPhotos.length} photo{storedPhotos.length > 1 ? 's' : ''} from invoice creation:
+                    {storedPhotos.length} photo{storedPhotos.length > 1 ? 's' : ''} from invoice
+                    creation:
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {storedPhotos.map((p, i) => (
-                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                      <div
+                        key={i}
+                        className="relative aspect-square rounded-lg overflow-hidden border border-slate-200"
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.base64} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                        <img
+                          src={p.base64}
+                          alt={`Photo ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                         <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 text-center truncate">
                           {p.caption || `Photo ${i + 1}`}
                         </div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400">These will be added as the last page(s) of the PDF. Or select a different photo below to override.</p>
+                  <p className="text-xs text-slate-400">
+                    These will be added as the last page(s) of the PDF. Or select a different photo
+                    below to override.
+                  </p>
                 </div>
               )}
 
@@ -1012,12 +1068,18 @@ export default function InvoiceDetailPage() {
               <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50 cursor-pointer hover:bg-indigo-100 transition-colors relative overflow-hidden">
                 {photoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photoPreview} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="absolute inset-0 w-full h-full object-contain p-2"
+                  />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-indigo-400">
                     <Upload className="w-8 h-8" />
                     <span className="text-sm font-medium">
-                      {storedPhotos.length > 0 ? 'Select different photo (optional)' : 'Click to select photo'}
+                      {storedPhotos.length > 0
+                        ? 'Select different photo (optional)'
+                        : 'Click to select photo'}
                     </span>
                     <span className="text-xs text-slate-400">JPG, PNG, HEIC supported</span>
                   </div>
@@ -1035,7 +1097,13 @@ export default function InvoiceDetailPage() {
                   <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
                   <span className="truncate text-slate-700">{photoFile.name}</span>
                   <span className="text-slate-400">({(photoFile.size / 1024).toFixed(0)} KB)</span>
-                  <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); }} className="ml-auto text-red-400 hover:text-red-600">
+                  <button
+                    onClick={() => {
+                      setPhotoFile(null);
+                      setPhotoPreview(null);
+                    }}
+                    className="ml-auto text-red-400 hover:text-red-600"
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -1044,7 +1112,11 @@ export default function InvoiceDetailPage() {
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={() => { setShowPhotoModal(false); setPhotoFile(null); setPhotoPreview(null); }}
+                  onClick={() => {
+                    setShowPhotoModal(false);
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                  }}
                   className="flex-1 py-2 px-4 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
                 >
                   Cancel

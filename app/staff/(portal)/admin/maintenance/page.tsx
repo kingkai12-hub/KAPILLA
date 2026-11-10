@@ -135,11 +135,7 @@ export default function MaintenancePage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-          className={`rounded-3xl border p-6 transition-colors ${
-            enabled
-              ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-700 dark:from-amber-900/20 dark:to-orange-900/20'
-              : 'border-navy-100 bg-white dark:border-navy-800 dark:bg-navy-900'
-          }`}
+          className="glass-strong rounded-3xl p-6 transition-colors"
         >
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
@@ -193,7 +189,7 @@ export default function MaintenancePage() {
         </motion.div>
 
         {/* Message editor */}
-        <div className="rounded-3xl border border-navy-100 bg-white p-6 dark:border-navy-800 dark:bg-navy-900">
+        <div className="glass rounded-3xl p-6">
           <div className="mb-3 flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-navy-500" />
             <h2 className="text-lg font-bold text-navy-900 dark:text-white">Notice Message</h2>
@@ -211,7 +207,7 @@ export default function MaintenancePage() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             maxLength={400}
-            className="w-full resize-none rounded-xl border border-navy-100 bg-navy-50/40 px-4 py-3 text-sm text-navy-900 outline-none transition-colors focus:border-navy-500 dark:border-navy-700 dark:bg-navy-800 dark:text-white"
+            className="glass-input w-full resize-none rounded-xl px-4 py-3 text-sm text-navy-900 outline-none transition-colors focus:border-navy-500 dark:text-white"
             placeholder={DEFAULT_MESSAGE}
           />
           <div className="mt-1 flex items-center justify-between">
@@ -251,11 +247,11 @@ export default function MaintenancePage() {
         </div>
 
         {/* Preview */}
-        <div className="rounded-3xl border border-navy-100 bg-navy-50/50 p-6 dark:border-navy-800 dark:bg-navy-900/50">
+        <div className="glass rounded-3xl p-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-charcoal-muted dark:text-navy-300">
             Live Preview
           </h2>
-          <div className="rounded-2xl border border-navy-100 bg-white p-6 text-center shadow-soft dark:border-navy-800 dark:bg-navy-900">
+          <div className="glass-strong rounded-2xl p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600">
               <Wrench className="h-6 w-6 text-white" />
             </div>

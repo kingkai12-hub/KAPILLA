@@ -11,10 +11,10 @@ export default function WaybillDisplayPage() {
   const waybill = Array.isArray(rawWaybill) ? rawWaybill[0] : rawWaybill;
 
   return (
-    <div className="min-h-screen bg-navy-50 flex items-center justify-center safe-page">
-      <div className="w-full max-w-xl bg-white border border-navy-100 rounded-lg shadow-soft p-6 sm:p-10 text-center">
+    <div className="min-h-screen flex items-center justify-center safe-page">
+      <div className="w-full max-w-xl glass-card p-6 sm:p-10 text-center">
         <div className="flex justify-center mb-6">
-          <span className="bg-navy-50 border border-navy-100 p-2 rounded-md">
+          <span className="glass p-2 rounded-md">
             <Image
               src="/logo.png"
               alt="Kapilla Group Ltd"

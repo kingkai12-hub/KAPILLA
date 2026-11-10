@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, UserPlus } from 'lucide-react';
 
 const inputClass =
-  'w-full px-4 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent';
+  'w-full px-4 py-2.5 rounded-xl text-sm glass-input text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent';
 const labelClass = 'block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5';
 
 export default function ClientRegistrationForm() {
@@ -53,7 +53,7 @@ export default function ClientRegistrationForm() {
   }
 
   return (
-    <details className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <details className="glass-card rounded-2xl overflow-hidden">
       <summary className="flex items-center gap-2 px-6 py-4 cursor-pointer text-sm font-semibold text-navy-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-900/40">
         <UserPlus className="w-5 h-5 text-navy-700 dark:text-accent" />
         Register a new client

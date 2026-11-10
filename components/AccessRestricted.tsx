@@ -4,7 +4,7 @@ import { ShieldAlert } from 'lucide-react';
 export default function AccessRestricted({ message }: { message?: string }) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="text-center max-w-md">
+      <div className="glass-strong rounded-2xl p-8 text-center max-w-md">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
           <ShieldAlert className="w-10 h-10 text-red-600 dark:text-red-400" />
         </div>

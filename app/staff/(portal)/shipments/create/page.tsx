@@ -210,7 +210,7 @@ export default function CreateShipment() {
 
   if (generatedWaybill) {
     return (
-      <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 shadow-lg rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+      <div className="max-w-3xl mx-auto glass rounded-2xl overflow-hidden">
         <div className="bg-green-50 dark:bg-green-900/20 p-5 sm:p-6 border-b border-green-100 dark:border-green-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-200">
@@ -327,10 +327,7 @@ export default function CreateShipment() {
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white dark:bg-slate-900 shadow-sm rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800"
-      >
+      <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Sender Section */}
           <div className="space-y-4">
@@ -347,7 +344,7 @@ export default function CreateShipment() {
                 name="senderName"
                 value={formData.senderName}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -360,7 +357,7 @@ export default function CreateShipment() {
                 name="senderPhone"
                 value={formData.senderPhone}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -372,7 +369,7 @@ export default function CreateShipment() {
                 value={formData.senderAddress}
                 onChange={handleChange}
                 rows={2}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -392,7 +389,7 @@ export default function CreateShipment() {
                 name="receiverName"
                 value={formData.receiverName}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -405,7 +402,7 @@ export default function CreateShipment() {
                 name="receiverPhone"
                 value={formData.receiverPhone}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -417,7 +414,7 @@ export default function CreateShipment() {
                 value={formData.receiverAddress}
                 onChange={handleChange}
                 rows={2}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -437,7 +434,7 @@ export default function CreateShipment() {
                 name="origin"
                 value={formData.origin}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               >
                 <option value="">Select Origin</option>
                 {Object.entries(tanzaniaLocations).map(([category, cities]) => (
@@ -459,7 +456,7 @@ export default function CreateShipment() {
                 name="destination"
                 value={formData.destination}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               >
                 <option value="">Select Destination</option>
                 {Object.entries(tanzaniaLocations).map(([category, cities]) => (
@@ -482,7 +479,7 @@ export default function CreateShipment() {
                 name="weight"
                 value={formData.weight}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -493,7 +490,7 @@ export default function CreateShipment() {
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               >
                 <option>Parcel</option>
                 <option>Document</option>
@@ -511,7 +508,7 @@ export default function CreateShipment() {
                 value={formData.packageCount}
                 onChange={handleChange}
                 placeholder="e.g. 3"
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -524,7 +521,7 @@ export default function CreateShipment() {
                 value={formData.clientReference}
                 onChange={handleChange}
                 placeholder="Client's own ref / PO no."
-                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+                className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -537,7 +534,7 @@ export default function CreateShipment() {
               value={formData.cargoDetails}
               onChange={handleChange}
               rows={3}
-              className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-950"
+              className="mt-1 block w-full glass-input rounded-xl py-3 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-slate-900 dark:text-white"
               placeholder="Describe contents, special handling instructions, etc."
             />
           </div>

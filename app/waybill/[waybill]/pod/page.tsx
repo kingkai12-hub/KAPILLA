@@ -68,8 +68,8 @@ export default function ProofOfDeliveryPage() {
 
   if (!isDelivered) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass-strong p-8 rounded-2xl max-w-md text-center">
           <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Printer className="w-8 h-8" />
           </div>
@@ -78,7 +78,7 @@ export default function ProofOfDeliveryPage() {
             Proof of Delivery can only be generated after the shipment has been marked as{' '}
             <strong>DELIVERED</strong>.
           </p>
-          <div className="text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+          <div className="text-sm glass rounded-lg p-3">
             Current Status:{' '}
             <span className="font-bold text-blue-600">{shipment.currentStatus}</span>
           </div>
@@ -88,7 +88,7 @@ export default function ProofOfDeliveryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <style>
         {`
           @page {

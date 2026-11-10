@@ -160,8 +160,8 @@ export default function ShipmentsPage() {
       {/* Status Edit Modal */}
       {editingStatusShipment && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+          <div className="glass-strong rounded-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
               <h3 className="font-bold text-lg dark:text-white">Update Status</h3>
               <button
                 onClick={() => setEditingStatusShipment(null)}
@@ -179,7 +179,7 @@ export default function ShipmentsPage() {
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
+                  className="w-full px-3 py-2.5 glass-input rounded-xl dark:text-white"
                 >
                   <option value="PENDING">PENDING</option>
                   <option value="IN_TRANSIT">IN_TRANSIT</option>
@@ -195,7 +195,7 @@ export default function ShipmentsPage() {
                 <select
                   value={updateLocation}
                   onChange={(e) => setUpdateLocation(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
+                  className="w-full px-3 py-2.5 glass-input rounded-xl dark:text-white"
                 >
                   {Object.keys(locationCoords).map((city) => (
                     <option key={city} value={city}>
@@ -215,7 +215,7 @@ export default function ShipmentsPage() {
                       type="text"
                       value={receivedBy}
                       onChange={(e) => setReceivedBy(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 dark:text-white"
+                      className="w-full px-3 py-2.5 glass-input rounded-xl dark:text-white"
                       placeholder="Receiver's Name"
                       required
                     />
@@ -272,7 +272,7 @@ export default function ShipmentsPage() {
       </div>
 
       {/* Search */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="glass p-4 rounded-xl">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input
@@ -280,13 +280,13 @@ export default function ShipmentsPage() {
             placeholder="Search by Waybill, Sender, or Receiver..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-400"
+            className="w-full pl-10 pr-4 py-3 glass-input rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-400"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="glass rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm text-left">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase font-medium">

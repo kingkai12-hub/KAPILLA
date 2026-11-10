@@ -97,7 +97,7 @@ export default async function ClientReportPage({
 
       {/* Client search */}
       {!clientId && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4 print:hidden">
+        <div className="glass rounded-2xl p-6 space-y-4 print:hidden">
           <form
             method="GET"
             action="/staff/reports/transportation/client"
@@ -110,7 +110,7 @@ export default async function ClientReportPage({
                 name="q"
                 defaultValue={query}
                 placeholder="Client name / client code / phone number"
-                className="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 rounded-xl text-sm glass-input text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <button
@@ -166,7 +166,7 @@ export default async function ClientReportPage({
           )}
 
           {!query && (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
+            <div className="glass rounded-2xl border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
               <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
               <p className="text-slate-500 dark:text-slate-400">
                 Search for a client to generate their full transportation report.
@@ -178,7 +178,7 @@ export default async function ClientReportPage({
 
       {/* Client report */}
       {clientId && !report && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-12 text-center">
+        <div className="glass rounded-2xl p-12 text-center">
           <p className="text-slate-500 dark:text-slate-400">
             That client could not be found. It may have been removed.
           </p>
@@ -195,7 +195,7 @@ export default async function ClientReportPage({
       {report && (
         <>
           {/* Client header */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+          <div className="glass rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -258,10 +258,7 @@ export default async function ClientReportPage({
               { label: 'Pending', value: report.totals.pending },
               { label: 'Returned', value: report.totals.returned },
             ].map((tile) => (
-              <div
-                key={tile.label}
-                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5"
-              >
+              <div key={tile.label} className="glass rounded-2xl p-5">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                   {tile.label}
                 </p>
@@ -273,7 +270,7 @@ export default async function ClientReportPage({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+            <div className="glass rounded-2xl p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Total weight
               </p>
@@ -281,7 +278,7 @@ export default async function ClientReportPage({
                 {report.totals.totalWeight.toLocaleString()} kg
               </p>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+            <div className="glass rounded-2xl p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Total packages
               </p>
@@ -289,7 +286,7 @@ export default async function ClientReportPage({
                 {report.totals.totalPackages.toLocaleString()}
               </p>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+            <div className="glass rounded-2xl p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Avg. transit time
               </p>
@@ -330,7 +327,7 @@ export default async function ClientReportPage({
           )}
 
           {/* Consignments */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="glass rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Consignments — {periodLabel(period)}

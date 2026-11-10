@@ -80,10 +80,8 @@ const SECTION_INTRO = 'mt-4 text-charcoal-light leading-relaxed text-pretty';
 const BODY = 'text-sm text-charcoal-light leading-relaxed text-pretty';
 const META = 'text-xs text-charcoal-muted';
 
-/* Surfaces: one radius, one hairline, one elevation step per rank. */
-const CARD = 'rounded-lg border border-navy-100 bg-white shadow-soft';
-const CARD_LIFT =
-  'transition-all duration-300 hover:-translate-y-1 hover:border-navy-200 hover:shadow-soft-lg';
+/* Surfaces: frosted glass carries the brand's translucent depth. */
+const CARD = 'glass-card';
 
 /* Controls: a single radius and a single interaction model. */
 const BTN =
@@ -263,8 +261,7 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any; fallb
   return <span>{formatted}</span>;
 };
 
-const AD_SHELL =
-  'group relative overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg';
+const AD_SHELL = 'group relative overflow-hidden glass-card transition-all duration-300';
 
 /**
  * One announcement. When it carries a destination it renders as a real anchor,
@@ -373,7 +370,7 @@ function AdvertisementCarousel({ advertisements }: { advertisements: any[] }) {
     setCurrentIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length);
 
   const arrowClass =
-    'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg border border-navy-100 bg-white/95 shadow-soft-lg backdrop-blur flex items-center justify-center text-navy-900 transition-all duration-200 hover:bg-white active:scale-95 z-10';
+    'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg glass-strong flex items-center justify-center text-navy-900 transition-all duration-200 active:scale-95 z-10';
 
   return (
     <div
@@ -597,7 +594,7 @@ export default function HomeClient({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (index % 4) * 0.08 }}
-              className="group relative h-72 md:h-80 overflow-hidden rounded-lg border border-navy-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg"
+              className="group relative h-72 md:h-80 overflow-hidden glass-card"
             >
               <Image
                 src={withVersion(service.imageUrl || '/logo.png', service.updatedAt)}
@@ -642,10 +639,7 @@ export default function HomeClient({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.15 }}
-            className={cn(
-              'group flex flex-col overflow-hidden rounded-lg border border-navy-100 bg-white shadow-soft',
-              CARD_LIFT
-            )}
+            className={cn('group flex flex-col overflow-hidden', CARD)}
           >
             <div className="relative w-full h-64 shrink-0 bg-navy-50">
               <Image
@@ -771,7 +765,7 @@ export default function HomeClient({
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen bg-white font-sans text-charcoal">
+      <div className="min-h-screen font-sans text-charcoal">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
@@ -783,7 +777,7 @@ export default function HomeClient({
         </Suspense>
 
         {/* Navigation */}
-        <header className="sticky top-0 z-50 border-b border-navy-800 bg-navy-900/95 backdrop-blur supports-[backdrop-filter]:bg-navy-900/85">
+        <header className="glass-header sticky top-0 z-50">
           <nav aria-label="Primary" className={CONTAINER}>
             <div className="h-16 md:h-20 flex items-center justify-between gap-4">
               <Link
@@ -800,17 +794,20 @@ export default function HomeClient({
                     priority
                   />
                 </span>
-                <span className="text-base md:text-lg font-semibold text-white tracking-tight">
+                <span className="text-base md:text-lg font-semibold text-navy-900 tracking-tight">
                   Kapilla <span className="text-accent">Group</span>
                 </span>
               </Link>
 
-              <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-100">
+              <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-700">
                 {NAV_LINKS.map(([href, label]) => (
                   <a
                     key={href}
                     href={href}
-                    className={cn('group relative transition-colors hover:text-white', FOCUS_DARK)}
+                    className={cn(
+                      'group relative transition-colors hover:text-navy-900',
+                      FOCUS_DARK
+                    )}
                   >
                     {label}
                     <span
@@ -822,7 +819,7 @@ export default function HomeClient({
               </div>
 
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden xl:flex items-center gap-1 text-navy-200">
+                <div className="hidden xl:flex items-center gap-1 text-navy-500">
                   {SOCIAL_LINKS.map((social) => (
                     <a
                       key={social.href}
@@ -850,7 +847,7 @@ export default function HomeClient({
                 </button>
                 <Link
                   href="/staff/login"
-                  className={cn(BTN_GHOST_DARK, 'hidden md:flex px-5 py-2.5 text-sm')}
+                  className={cn(BTN_QUIET, 'hidden md:flex px-5 py-2.5 text-sm')}
                   aria-label="Staff portal"
                 >
                   <span>Staff Portal</span>
@@ -861,7 +858,7 @@ export default function HomeClient({
                   aria-label="Toggle navigation menu"
                   aria-expanded={isMenuOpen}
                   aria-controls="mobile-menu"
-                  className={cn(BTN_GHOST_DARK, 'lg:hidden p-2.5')}
+                  className={cn(BTN_QUIET, 'lg:hidden p-2.5')}
                 >
                   {isMenuOpen ? (
                     <X aria-hidden="true" className="h-5 w-5" />
@@ -880,7 +877,7 @@ export default function HomeClient({
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="lg:hidden border-t border-navy-800 pb-6 overflow-hidden"
+                  className="lg:hidden border-t border-navy-200 pb-6 overflow-hidden"
                 >
                   <div className="flex flex-col">
                     {MOBILE_NAV_LINKS.map(([href, label]) => (
@@ -889,7 +886,7 @@ export default function HomeClient({
                         href={href}
                         onClick={() => setIsMenuOpen(false)}
                         className={cn(
-                          'py-3.5 text-sm font-medium text-navy-100 border-b border-navy-800 transition-colors hover:text-accent',
+                          'py-3.5 text-sm font-medium text-navy-700 border-b border-navy-200 transition-colors hover:text-accent',
                           FOCUS_DARK
                         )}
                       >
@@ -908,7 +905,7 @@ export default function HomeClient({
                     >
                       Request a Pickup
                     </button>
-                    <Link href="/staff/login" className={cn(BTN_GHOST_DARK, 'px-4 py-3 text-sm')}>
+                    <Link href="/staff/login" className={cn(BTN_QUIET, 'px-4 py-3 text-sm')}>
                       Staff Portal
                     </Link>
                   </div>
@@ -987,7 +984,7 @@ export default function HomeClient({
                   transition={{ duration: 0.6, delay: 0.15 }}
                   className="w-full max-w-lg lg:ml-auto scroll-mt-24"
                 >
-                  <div className="bg-white rounded-lg shadow-soft-lg p-6 lg:p-8 ring-1 ring-navy-900/5">
+                  <div className="glass-strong rounded-lg p-6 lg:p-8">
                     <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
                       <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
                       Track your consignment
@@ -1000,7 +997,7 @@ export default function HomeClient({
                       <label htmlFor="waybill" className="sr-only">
                         Waybill number
                       </label>
-                      <div className="flex items-center gap-2 rounded-lg border border-navy-200 bg-navy-50 p-1.5 transition-colors focus-within:border-navy-500 focus-within:bg-white">
+                      <div className="flex items-center gap-2 rounded-lg glass-input p-1.5 transition-colors focus-within:border-navy-500">
                         <span className="pl-2 text-charcoal-muted" aria-hidden="true">
                           <Package className="w-5 h-5" />
                         </span>
@@ -1046,13 +1043,10 @@ export default function HomeClient({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="bg-navy-50 py-12 lg:py-16 border-b border-navy-100"
+                className="py-12 lg:py-16 border-b border-navy-100"
               >
                 <div className={CONTAINER_NARROW}>
-                  <div
-                    aria-live="polite"
-                    className="bg-white border border-navy-100 rounded-lg shadow-soft p-6 lg:p-8"
-                  >
+                  <div aria-live="polite" className="glass rounded-lg p-6 lg:p-8">
                     {loading ? (
                       <div className="py-10 flex flex-col items-center text-center">
                         <Loader2
@@ -1113,8 +1107,8 @@ export default function HomeClient({
                         </div>
 
                         {/* Consignment summary */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-navy-100 border border-navy-100 rounded-lg overflow-hidden">
-                          <div className="bg-white p-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px glass rounded-lg overflow-hidden">
+                          <div className="p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Route
                             </div>
@@ -1124,7 +1118,7 @@ export default function HomeClient({
                               {searchResult.destination}
                             </div>
                           </div>
-                          <div className="bg-white p-4">
+                          <div className="p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Booked
                             </div>
@@ -1132,7 +1126,7 @@ export default function HomeClient({
                               <FormattedDate dateStr={searchResult.createdAt} fallback="-" />
                             </div>
                           </div>
-                          <div className="bg-white p-4">
+                          <div className="p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Service
                             </div>
@@ -1140,7 +1134,7 @@ export default function HomeClient({
                               {searchResult.serviceType || '—'}
                             </div>
                           </div>
-                          <div className="bg-white p-4">
+                          <div className="p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Cargo
                             </div>
@@ -1161,7 +1155,7 @@ export default function HomeClient({
 
                         {/* Sender / recipient */}
                         <div className="grid sm:grid-cols-2 gap-4">
-                          <div className="border border-navy-100 rounded-lg p-4 bg-navy-50/60">
+                          <div className="glass rounded-lg p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Sender
                             </div>
@@ -1172,7 +1166,7 @@ export default function HomeClient({
                               {searchResult.senderAddress || searchResult.senderPhone || ''}
                             </div>
                           </div>
-                          <div className="border border-navy-100 rounded-lg p-4 bg-navy-50/60">
+                          <div className="glass rounded-lg p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Recipient
                             </div>
@@ -1202,7 +1196,7 @@ export default function HomeClient({
                               <VehicleTrackingMap waybillNumber={searchResult.waybillNumber} />
                             </MapErrorBoundary>
                           ) : (
-                            <div className="bg-navy-50 rounded-lg p-10 text-center border border-navy-100">
+                            <div className="glass rounded-lg p-10 text-center">
                               <Package
                                 aria-hidden="true"
                                 className="w-12 h-12 text-charcoal-muted mx-auto mb-4"
@@ -1263,7 +1257,7 @@ export default function HomeClient({
 
           {/* Advertisements Section */}
           {advertisements.length > 0 && (
-            <section className="py-16 lg:py-20 bg-white">
+            <section className="py-16 lg:py-20">
               <div className={CONTAINER}>
                 {advertisements.length === 1 ? (
                   <AdvertisementCard ad={advertisements[0]} />
@@ -1275,10 +1269,7 @@ export default function HomeClient({
           )}
 
           {/* Services & Fleet Showcase */}
-          <section
-            id="fleet"
-            className="py-16 lg:py-20 bg-navy-50 scroll-mt-20 border-y border-navy-100"
-          >
+          <section id="fleet" className="py-16 lg:py-20 scroll-mt-20 border-y border-navy-100">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="Our fleet"
@@ -1291,7 +1282,7 @@ export default function HomeClient({
           </section>
 
           {/* Services & Features Grid */}
-          <section id="services" className="py-16 lg:py-20 bg-white">
+          <section id="services" className="py-16 lg:py-20">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="What we do"
@@ -1307,10 +1298,7 @@ export default function HomeClient({
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
-                    className={cn(
-                      'group relative p-6 rounded-lg bg-white border border-navy-100 shadow-soft overflow-hidden',
-                      CARD_LIFT
-                    )}
+                    className={cn('group relative p-6 overflow-hidden', CARD)}
                   >
                     <span
                       aria-hidden="true"
@@ -1326,10 +1314,7 @@ export default function HomeClient({
           </section>
 
           {/* Executive Leadership */}
-          <section
-            id="leadership"
-            className="py-16 lg:py-20 bg-navy-50 scroll-mt-20 border-y border-navy-100"
-          >
+          <section id="leadership" className="py-16 lg:py-20 scroll-mt-20 border-y border-navy-100">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="Leadership"

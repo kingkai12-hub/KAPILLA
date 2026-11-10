@@ -20,8 +20,7 @@ export default async function ReportsHomePage() {
     {
       href: '/staff/reports/general-supply',
       title: 'General Supply Report',
-      description:
-        'Reporting for general supply will be available once that workflow is set up.',
+      description: 'Reporting for general supply will be available once that workflow is set up.',
       icon: Package,
       gradient: 'from-emerald-600 to-teal-600',
     },
@@ -43,16 +42,14 @@ export default async function ReportsHomePage() {
           <Link
             key={option.href}
             href={option.href}
-            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 transition-all p-8"
+            className="group relative overflow-hidden rounded-2xl glass-card hover:border-blue-400 dark:hover:border-blue-500 transition-all p-8"
           >
             <div
               className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${option.gradient} text-white mb-6`}
             >
               <option.icon className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {option.title}
-            </h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{option.title}</h2>
             <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
               {option.description}
             </p>

@@ -92,8 +92,12 @@ export default async function TransportationReportPage({
       </div>
 
       {/* Search + period */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4 print:hidden">
-        <form method="GET" action="/staff/reports/transportation" className="flex flex-col sm:flex-row gap-3">
+      <div className="glass rounded-2xl p-6 space-y-4 print:hidden">
+        <form
+          method="GET"
+          action="/staff/reports/transportation"
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <input type="hidden" name="period" value={period} />
           <div className="relative flex-1">
             <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -102,7 +106,7 @@ export default async function TransportationReportPage({
               name="q"
               defaultValue={query}
               placeholder="Waybill no. / company name / sender name"
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm glass-input text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <button
@@ -114,7 +118,9 @@ export default async function TransportationReportPage({
         </form>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wide text-slate-400 mr-1">Period</span>
+          <span className="text-xs font-bold uppercase tracking-wide text-slate-400 mr-1">
+            Period
+          </span>
           {REPORT_PERIODS.map((r) => (
             <Link
               key={r.key}
@@ -132,7 +138,7 @@ export default async function TransportationReportPage({
       </div>
 
       {!query && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
+        <div className="glass rounded-2xl border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
           <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
           <p className="text-slate-500 dark:text-slate-400">
             Enter a waybill number to open a single cargo report, or a company / sender name to
@@ -144,7 +150,7 @@ export default async function TransportationReportPage({
       {/* Single waybill result */}
       {report?.waybill && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+          <div className="glass rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -180,10 +186,7 @@ export default async function TransportationReportPage({
               { label: 'Dispatched', at: report.waybill.dispatchedAt, icon: Truck },
               { label: 'Delivered', at: report.waybill.deliveredAt, icon: CheckCircle2 },
             ].map((step) => (
-              <div
-                key={step.label}
-                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5"
-              >
+              <div key={step.label} className="glass rounded-2xl p-5">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <step.icon className="w-5 h-5" />
                   <span className="text-xs font-bold uppercase tracking-wide">{step.label}</span>
@@ -197,8 +200,10 @@ export default async function TransportationReportPage({
 
           {/* Sender / receiver / cargo */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">Sender</h3>
+            <div className="glass rounded-2xl p-6">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
+                Sender
+              </h3>
               <dl className="space-y-3 text-sm">
                 <div className="flex items-start gap-3">
                   <User className="w-4 h-4 mt-0.5 text-slate-400" />
@@ -230,8 +235,10 @@ export default async function TransportationReportPage({
               </dl>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">Receiver</h3>
+            <div className="glass rounded-2xl p-6">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
+                Receiver
+              </h3>
               <dl className="space-y-3 text-sm">
                 <div className="flex items-start gap-3">
                   <User className="w-4 h-4 mt-0.5 text-slate-400" />
@@ -264,7 +271,7 @@ export default async function TransportationReportPage({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+          <div className="glass rounded-2xl p-6">
             <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
               Cargo &amp; processing
             </h3>
@@ -306,7 +313,7 @@ export default async function TransportationReportPage({
 
       {/* Company / customer results */}
       {report && !report.waybill && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="glass rounded-2xl overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">

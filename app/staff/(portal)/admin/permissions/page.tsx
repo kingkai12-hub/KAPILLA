@@ -203,7 +203,7 @@ export default function PermissionsPage() {
         </div>
 
         {/* Info note */}
-        <div className="flex items-start gap-3 rounded-2xl border border-navy-100 bg-navy-50/60 p-4 text-sm text-charcoal-light dark:border-navy-800 dark:bg-navy-900/60 dark:text-navy-200">
+        <div className="glass flex items-start gap-3 rounded-2xl p-4 text-sm text-charcoal-light dark:text-navy-200">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-navy-500" />
           <p>
             <span className="font-semibold">Reports access</span> controls whether a staff member
@@ -220,7 +220,7 @@ export default function PermissionsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by name, email or work ID…"
-              className="w-full rounded-xl border border-navy-100 bg-white py-2.5 pl-9 pr-3 text-sm text-navy-900 outline-none transition-colors placeholder:text-charcoal-muted focus:border-navy-500 dark:border-navy-800 dark:bg-navy-900 dark:text-white"
+              className="glass-input w-full rounded-xl py-2.5 pl-9 pr-3 text-sm text-navy-900 outline-none transition-colors placeholder:text-charcoal-muted focus:border-navy-500 dark:text-white"
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -241,7 +241,7 @@ export default function PermissionsPage() {
         </div>
 
         {/* List */}
-        <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-soft dark:border-navy-800 dark:bg-navy-900">
+        <div className="glass overflow-hidden rounded-2xl">
           <div className="hidden grid-cols-[1.6fr_1fr_1fr_1fr] gap-4 border-b border-navy-100 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-charcoal-muted dark:border-navy-800 dark:text-navy-300 md:grid">
             <span>Staff Member</span>
             <span>Role</span>

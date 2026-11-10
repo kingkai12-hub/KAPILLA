@@ -188,13 +188,7 @@ export default function AdminHubPage() {
 
         {/* System status banner */}
         <motion.div variants={item}>
-          <div
-            className={`flex flex-col gap-4 rounded-3xl border p-6 transition-colors sm:flex-row sm:items-center sm:justify-between ${
-              maintenance
-                ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-700 dark:from-amber-900/20 dark:to-orange-900/20'
-                : 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800 dark:from-emerald-900/20 dark:to-navy-900'
-            }`}
-          >
+          <div className="glass-strong flex flex-col gap-4 rounded-3xl p-6 transition-colors sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
               <span
                 className={`rounded-2xl p-3 shadow-soft ${
@@ -239,7 +233,7 @@ export default function AdminHubPage() {
             return (
               <div
                 key={tile.label}
-                className="group relative overflow-hidden rounded-2xl border border-navy-100 bg-white p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg dark:border-navy-800 dark:bg-navy-900"
+                className="group glass-card relative overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -273,7 +267,7 @@ export default function AdminHubPage() {
                     variants={item}
                     whileHover={{ y: -6 }}
                     whileTap={{ scale: 0.98 }}
-                    className="relative h-full overflow-hidden rounded-2xl border border-navy-100 bg-white p-6 shadow-soft transition-shadow duration-300 hover:shadow-soft-lg dark:border-navy-800 dark:bg-navy-900"
+                    className="glass-card relative h-full overflow-hidden rounded-2xl p-6 transition-shadow duration-300"
                   >
                     <div className="flex items-start justify-between">
                       <span

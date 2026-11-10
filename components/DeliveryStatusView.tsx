@@ -26,7 +26,7 @@ export function DeliveryStatusView({
   // Show this view when cargo has arrived at destination (IN_TRANSIT status)
   if (status === 'IN_TRANSIT') {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-blue-200 shadow-xl">
+      <div className="glass-strong rounded-3xl p-8">
         <div className="text-center space-y-6">
           {/* Icon */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 border-4 border-blue-200 animate-pulse">
@@ -40,7 +40,7 @@ export function DeliveryStatusView({
           </div>
 
           {/* Message */}
-          <div className="bg-white/80 backdrop-blur rounded-2xl p-6 border border-blue-200">
+          <div className="glass rounded-2xl p-6">
             <div className="flex items-start gap-3">
               <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div className="text-left">
@@ -75,7 +75,7 @@ export function DeliveryStatusView({
     const deliveryDate = deliveredAt ? new Date(deliveredAt) : null;
 
     return (
-      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 border-2 border-green-200 shadow-xl">
+      <div className="glass-strong rounded-3xl p-8">
         <div className="text-center space-y-6">
           {/* Success Icon */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 border-4 border-green-200">
@@ -91,7 +91,7 @@ export function DeliveryStatusView({
           </div>
 
           {/* Delivery Details */}
-          <div className="bg-white/80 backdrop-blur rounded-2xl p-6 border border-green-200 space-y-4">
+          <div className="glass rounded-2xl p-6 space-y-4">
             {/* Delivery Time */}
             {deliveryDate && (
               <div className="flex items-center justify-between py-3 border-b border-green-100">
@@ -164,7 +164,7 @@ export function DeliveryStatusView({
           </div>
 
           {/* Thank You Message */}
-          <div className="bg-white/80 backdrop-blur rounded-2xl p-4 border border-green-200">
+          <div className="glass rounded-2xl p-4">
             <p className="text-green-800 font-semibold">
               Thank you for choosing our logistics service! 🚚
             </p>

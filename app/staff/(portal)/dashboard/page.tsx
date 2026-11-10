@@ -190,7 +190,7 @@ export default async function StaffDashboard() {
       {isAdmin && (
         <Link
           href="/staff/admin"
-          className="group flex flex-col gap-4 rounded-3xl border border-navy-100 bg-gradient-to-br from-navy-50 via-white to-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg sm:flex-row sm:items-center sm:justify-between dark:border-navy-800 dark:from-navy-900 dark:via-navy-900 dark:to-navy-950"
+          className="group flex flex-col gap-4 rounded-3xl glass-card p-6 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-4">
             <span className="rounded-2xl bg-gradient-to-br from-navy-600 to-navy-800 p-4 shadow-soft">
@@ -219,9 +219,7 @@ export default async function StaffDashboard() {
               key={idx}
               href={action.href}
               className={cn(
-                'group relative p-5 rounded-2xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-xl',
-                action.bg,
-                'border-slate-200 dark:border-slate-700'
+                'group relative p-5 rounded-2xl glass-card transition-all duration-300 hover:scale-[1.02]'
               )}
             >
               <div
@@ -247,7 +245,7 @@ export default async function StaffDashboard() {
         {stats.map((stat) => (
           <div
             key={stat.name}
-            className={`relative overflow-hidden rounded-2xl border ${stat.border} ${stat.bg} p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group`}
+            className={`relative overflow-hidden rounded-2xl glass-card p-6 transition-all duration-300 hover:-translate-y-1 group`}
           >
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 dark:bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
             <div className="flex items-center justify-between relative z-10">
@@ -271,7 +269,7 @@ export default async function StaffDashboard() {
 
       <div className="w-full">
         {/* Recent Shipments Table */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="glass rounded-2xl overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Shipments</h3>
             <Link
@@ -299,7 +297,7 @@ export default async function StaffDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                 {recentShipments.length === 0 ? (
                   <tr>
                     <td

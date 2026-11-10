@@ -149,7 +149,7 @@ export default async function WaybillReportPage({
       </div>
 
       {/* Waybill identity */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+      <div className="glass rounded-2xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -171,10 +171,7 @@ export default async function WaybillReportPage({
       {/* Timeline */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {steps.map((step) => (
-          <div
-            key={step.key}
-            className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5"
-          >
+          <div key={step.key} className="glass rounded-2xl p-5">
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <step.icon className="w-5 h-5" />
               <span className="text-xs font-bold uppercase tracking-wide">{step.label}</span>
@@ -188,7 +185,7 @@ export default async function WaybillReportPage({
 
       {/* Sender / Receiver */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div className="glass rounded-2xl p-6">
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">Sender</h3>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start gap-3">
@@ -221,7 +218,7 @@ export default async function WaybillReportPage({
           </dl>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div className="glass rounded-2xl p-6">
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
             Receiver
           </h3>
@@ -258,7 +255,7 @@ export default async function WaybillReportPage({
       </div>
 
       {/* Cargo + processing */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+      <div className="glass rounded-2xl p-6">
         <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
           Cargo &amp; processing
         </h3>
@@ -301,7 +298,7 @@ export default async function WaybillReportPage({
       </div>
 
       {/* Full event history */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">
             Update history ({shipment.events.length})

@@ -42,7 +42,7 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 bg-navy-50">
+    <div className="min-h-screen relative flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
       {/* Background Image - Full Screen */}
       <Image
         src="/background.jpg"
@@ -50,9 +50,9 @@ export default function StaffLogin() {
         fill
         priority
         sizes="100vw"
-        className="object-cover opacity-20"
+        className="object-cover opacity-10"
       />
-      <div className="absolute inset-0 bg-white/80" />
+      <div className="absolute inset-0 bg-white/40" />
 
       {/* Content */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
@@ -72,7 +72,7 @@ export default function StaffLogin() {
       </div>
 
       <div className="relative z-10 mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-6 shadow-soft-lg border border-navy-100 rounded-lg sm:px-10">
+        <div className="glass-strong py-10 px-6 rounded-2xl sm:px-10">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-navy-900">
@@ -90,7 +90,7 @@ export default function StaffLogin() {
                   autoComplete="email"
                   required
                   defaultValue=""
-                  className="block w-full pl-12 text-base border border-navy-200 rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
+                  className="glass-input block w-full pl-12 text-base rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
                   placeholder="staff@kapillagroup.com"
                 />
               </div>
@@ -112,7 +112,7 @@ export default function StaffLogin() {
                   autoComplete="current-password"
                   required
                   defaultValue=""
-                  className="block w-full pl-12 text-base border border-navy-200 rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
+                  className="glass-input block w-full pl-12 text-base rounded-md py-3.5 text-charcoal placeholder:text-charcoal-muted focus:border-navy-500 focus:outline-none"
                   placeholder="••••••••"
                 />
               </div>

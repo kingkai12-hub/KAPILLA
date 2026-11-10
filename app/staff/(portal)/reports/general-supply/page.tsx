@@ -18,7 +18,7 @@ export default async function GeneralSupplyReportPage() {
         Back to reports
       </Link>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-12 text-center">
+      <div className="glass rounded-2xl p-12 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-900/30 mb-6">
           <Package className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
         </div>

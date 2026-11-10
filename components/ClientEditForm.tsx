@@ -6,7 +6,7 @@ import { Loader2, CheckCircle2, Pencil, Power } from 'lucide-react';
 import type { ClientSummary } from '@/lib/reports';
 
 const inputClass =
-  'w-full px-4 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent';
+  'w-full px-4 py-2.5 rounded-xl text-sm glass-input text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-700 focus:border-transparent';
 const labelClass = 'block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5';
 
 export default function ClientEditForm({ client }: { client: ClientSummary }) {

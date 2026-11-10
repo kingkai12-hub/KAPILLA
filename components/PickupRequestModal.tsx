@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import { X, Loader2, CheckCircle, Truck } from 'lucide-react';
@@ -23,10 +23,13 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
   const [success, setSuccess] = useState(false);
   const [requestId, setRequestId] = useState<string>('');
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,9 +64,11 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
         <h3 className="text-xl font-bold text-slate-900 mb-2">Request Submitted!</h3>
-        <p className="text-slate-600 mb-4">Our team has received your pickup request. We will contact you shortly.</p>
-        
-        <button 
+        <p className="text-slate-600 mb-4">
+          Our team has received your pickup request. We will contact you shortly.
+        </p>
+
+        <button
           onClick={onClose}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
         >
@@ -84,7 +89,7 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
             required
             value={formData.senderName}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
             placeholder="John Doe"
           />
         </div>
@@ -96,7 +101,7 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
             required
             value={formData.senderPhone}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
             placeholder="+255..."
           />
         </div>
@@ -110,7 +115,7 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
           required
           value={formData.pickupAddress}
           onChange={handleChange}
-          className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+          className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           placeholder="Street, Area, City"
         />
       </div>
@@ -123,19 +128,21 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
           required
           value={formData.destination}
           onChange={handleChange}
-          className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+          className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           placeholder="City, Region"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Estimated Weight (Optional)</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Estimated Weight (Optional)
+        </label>
         <input
           type="text"
           name="estimatedWeight"
           value={formData.estimatedWeight}
           onChange={handleChange}
-          className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+          className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           placeholder="e.g. 50kg"
         />
       </div>
@@ -148,7 +155,7 @@ function PickupRequestForm({ onClose }: { onClose: () => void }) {
           value={formData.cargoDetails}
           onChange={handleChange}
           rows={3}
-          className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+          className="w-full px-4 py-2 rounded-lg glass-input text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
           placeholder="Describe your items..."
         />
       </div>
@@ -180,20 +187,23 @@ export default function PickupRequestModal({ isOpen, onClose }: PickupRequestMod
   return (
     // Removed backdrop-blur-sm for performance
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+        className="glass-strong rounded-2xl w-full max-w-lg overflow-hidden"
       >
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Truck className="w-5 h-5 text-blue-600" />
             </div>
             <h2 className="text-xl font-bold text-slate-900">Request Pickup</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+          >
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>

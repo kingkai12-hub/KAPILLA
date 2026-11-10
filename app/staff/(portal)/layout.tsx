@@ -400,7 +400,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-navy-50 to-white flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-transparent flex items-center justify-center relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute w-96 h-96 bg-accent/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse" />
@@ -484,7 +484,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   if (!user && pathname !== '/staff/login') {
     // Show the same beautiful welcome screen instead of technical error message
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-navy-50 to-white flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-transparent flex items-center justify-center relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute w-96 h-96 bg-accent/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse" />
@@ -571,7 +571,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-navy-50 dark:bg-navy-950 flex font-sans transition-colors duration-300">
+    <div className="min-h-screen flex font-sans transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -599,7 +599,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         onMouseEnter={() => setSidebarHover(true)}
         onMouseLeave={() => setSidebarHover(false)}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 bg-white text-navy-900 shadow-2xl border-r border-navy-100 transform transition-[transform,visibility] duration-300 ease-out',
+          'fixed inset-y-0 left-0 z-50 w-72 glass-strong text-navy-900 transform transition-[transform,visibility] duration-300 ease-out',
           sidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible',
           sidebarOpen || sidebarHover
             ? 'md:translate-x-0 md:visible'
@@ -608,7 +608,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="h-28 flex items-center px-6 bg-white border-b border-navy-100">
+          <div className="h-28 flex items-center px-6 border-b border-white/40 dark:border-navy-800/60">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image
                 src="/logo.png"
@@ -619,7 +619,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               />
             </Link>
             <button
-              className="md:hidden ml-auto text-navy-500 hover:text-navy-900"
+              className="md:hidden ml-auto text-navy-500 hover:text-navy-900 dark:text-navy-300 dark:hover:text-white"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-6 h-6" />
@@ -635,10 +635,10 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               return (
                 <div key={section.label} className="mb-6 last:mb-0">
                   <div className="mb-3 flex items-center gap-3 px-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-navy-500">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-navy-500 dark:text-navy-300">
                       {section.label}
                     </span>
-                    <span className="h-px flex-1 bg-navy-100" />
+                    <span className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
                   </div>
                   <div className="space-y-2">
                     {visibleItems.map((item, index) => {
@@ -662,8 +662,8 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                             className={cn(
                               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
                               isActive
-                                ? 'bg-navy-100 text-navy-900 shadow-soft-lg'
-                                : 'text-navy-600 hover:bg-navy-50 hover:text-navy-900'
+                                ? 'bg-white/80 text-navy-900 shadow-soft-lg dark:bg-navy-800 dark:text-white'
+                                : 'text-navy-600 hover:bg-white/60 hover:text-navy-900 dark:text-navy-300 dark:hover:bg-navy-800/60 dark:hover:text-white'
                             )}
                           >
                             {isActive && (
@@ -695,15 +695,15 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="p-4 border-t border-navy-100 bg-white mt-auto">
+          <div className="p-4 border-t border-white/40 dark:border-navy-800/60 mt-auto">
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all duration-200"
+              className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 dark:text-red-300 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:border-red-500/20 rounded-xl transition-all duration-200"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </button>
-            <div className="mt-6 text-center text-[10px] font-mono text-navy-400 font-bold tracking-wider opacity-70">
+            <div className="mt-6 text-center text-[10px] font-mono text-navy-400 dark:text-navy-500 font-bold tracking-wider opacity-70">
               DEVELOPED BY KAISI
             </div>
           </div>
@@ -713,7 +713,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden text-charcoal dark:text-slate-100 transition-colors duration-300">
         {/* Header (Desktop & Mobile) */}
-        <header className="bg-white/90 dark:bg-navy-900/90 backdrop-blur-md border-b border-navy-100 dark:border-navy-800 sticky top-0 z-30 transition-colors duration-300 pt-[env(safe-area-inset-top)]">
+        <header className="glass-header sticky top-0 z-30 transition-colors duration-300 pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between min-h-16 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <button
@@ -779,7 +779,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-navy-900 rounded-2xl shadow-2xl border border-navy-100 dark:border-navy-800 z-50 max-h-96 overflow-y-auto"
+                      className="glass-strong absolute right-0 mt-2 w-80 rounded-2xl z-50 max-h-96 overflow-y-auto"
                     >
                       <div className="p-4 border-b border-navy-100 dark:border-navy-800">
                         <h3 className="font-semibold text-navy-900 dark:text-white">

@@ -66,7 +66,12 @@ html {
 }
 
 body {
-  background: var(--background);
+  /*
+    Transparent so the fixed `.app-aurora` backdrop (z-index: -1) shows
+    through — an opaque body background would paint over it and the glass
+    surfaces would have nothing colourful to refract.
+  */
+  background: transparent;
   color: var(--foreground);
   font-family: var(--font-sans);
   min-height: 100vh;
@@ -172,5 +177,117 @@ a {
     height: auto;
     width: 100%;
     overflow: visible;
+  }
+}
+
+/* ==================================================================
+   Glassmorphism system (bold)
+   ------------------------------------------------------------------
+   .app-aurora  -> fixed colourful backdrop the glass refracts
+   .glass       -> translucent frosted surface (default)
+   .glass-strong-> more opaque, used for nav / sidebar / modals
+   .glass-header-> sticky bars (top navigation)
+   .glass-card  -> frosted card with lift-on-hover
+   .glass-input -> frosted form field
+   Pair every glass surface with dark text tokens (navy-800/900) so
+   contrast stays at WCAG AA, or keep the existing dark: variants.
+   ================================================================== */
+@layer components {
+  .app-aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(58% 55% at 12% 18%, rgba(46, 99, 168, 0.38), transparent 70%),
+      radial-gradient(52% 48% at 88% 12%, rgba(255, 199, 44, 0.42), transparent 70%),
+      radial-gradient(60% 58% at 82% 88%, rgba(124, 58, 237, 0.3), transparent 72%),
+      radial-gradient(55% 55% at 16% 88%, rgba(14, 165, 233, 0.32), transparent 72%),
+      linear-gradient(135deg, #f7faff 0%, #eef3fb 45%, #fdf8e8 100%);
+  }
+
+  .dark .app-aurora {
+    background:
+      radial-gradient(58% 55% at 12% 18%, rgba(46, 99, 168, 0.55), transparent 70%),
+      radial-gradient(52% 48% at 88% 12%, rgba(255, 199, 44, 0.22), transparent 70%),
+      radial-gradient(60% 58% at 82% 88%, rgba(124, 58, 237, 0.4), transparent 72%),
+      radial-gradient(55% 55% at 16% 88%, rgba(14, 165, 233, 0.35), transparent 72%),
+      linear-gradient(135deg, #061428 0%, #0b1f3a 50%, #061428 100%);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(170%);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 10px 40px rgba(11, 31, 58, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+      0 12px 48px rgba(11, 31, 58, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .glass-header {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 6px 24px rgba(11, 31, 58, 0.1);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(11, 31, 58, 0.12);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(170%);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 10px 40px rgba(11, 31, 58, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    border-radius: 1rem;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 56px rgba(11, 31, 58, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .dark .glass,
+  .dark .glass-header,
+  .dark .glass-input {
+    background: rgba(11, 31, 58, 0.55);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .dark .glass-strong,
+  .dark .glass-card {
+    background: rgba(11, 31, 58, 0.72);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 }

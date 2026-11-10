@@ -1,21 +1,29 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Save, X, User, Image as ImageIcon, Upload } from 'lucide-react';
 import Image from 'next/image';
 
+interface Executive {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  imageUrl: string;
+}
+
 export default function ExecutiveManagement() {
-  const [executives, setExecutives] = useState<any[]>([]);
+  const [executives, setExecutives] = useState<Executive[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingExec, setEditingExec] = useState<any>(null);
+  const [editingExec, setEditingExec] = useState<Executive | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     role: '',
     bio: '',
-    imageUrl: ''
+    imageUrl: '',
   });
 
   useEffect(() => {
@@ -24,9 +32,9 @@ export default function ExecutiveManagement() {
 
   const fetchExecutives = async () => {
     try {
-      const res = await fetch(`/api/executives?t=${Date.now()}`, { 
+      const res = await fetch(`/api/executives?t=${Date.now()}`, {
         cache: 'no-store',
-        headers: { 'Pragma': 'no-cache' }
+        headers: { Pragma: 'no-cache' },
       }); // Using public endpoint for list
       if (res.ok) {
         setExecutives(await res.json());
@@ -40,11 +48,11 @@ export default function ExecutiveManagement() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this executive?')) return;
-    
+
     try {
       const res = await fetch(`/api/admin/executives/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setExecutives(executives.filter(e => e.id !== id));
+        setExecutives(executives.filter((e) => e.id !== id));
       } else {
         alert('Failed to delete executive');
       }
@@ -94,17 +102,18 @@ export default function ExecutiveManagement() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // Increased limit to 5MB since we compress
-        alert("File too large. Max 5MB.");
+      if (file.size > 5 * 1024 * 1024) {
+        // Increased limit to 5MB since we compress
+        alert('File too large. Max 5MB.');
         return;
       }
-      
+
       try {
         const compressedBase64 = await compressImage(file);
         setFormData({ ...formData, imageUrl: compressedBase64 });
       } catch (error) {
-        console.error("Error compressing image:", error);
-        alert("Failed to process image. Please try another file.");
+        console.error('Error compressing image:', error);
+        alert('Failed to process image. Please try another file.');
       }
     }
   };
@@ -115,15 +124,15 @@ export default function ExecutiveManagement() {
 
     setIsSubmitting(true);
     const isEdit = !!editingExec;
-    const url = isEdit ? `/api/admin/executives/${editingExec.id}` : '/api/admin/executives';
+    const url = editingExec ? `/api/admin/executives/${editingExec.id}` : '/api/admin/executives';
     const method = isEdit ? 'PUT' : 'POST';
-    const body = isEdit ? { ...formData, id: editingExec.id } : formData;
+    const body = editingExec ? { ...formData, id: editingExec.id } : formData;
 
     try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
@@ -149,17 +158,17 @@ export default function ExecutiveManagement() {
       name: '',
       role: '',
       bio: '',
-      imageUrl: ''
+      imageUrl: '',
     });
   };
 
-  const openEdit = (exec: any) => {
+  const openEdit = (exec: Executive) => {
     setEditingExec(exec);
     setFormData({
       name: exec.name,
       role: exec.role,
       bio: exec.bio,
-      imageUrl: exec.imageUrl
+      imageUrl: exec.imageUrl,
     });
     setIsModalOpen(true);
   };
@@ -177,7 +186,7 @@ export default function ExecutiveManagement() {
           <h1 className="text-2xl font-bold text-slate-900">Executive Leadership</h1>
           <p className="text-slate-500">Manage CEO, MD, and other leadership profiles</p>
         </div>
-        <button 
+        <button
           onClick={openCreate}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
@@ -190,7 +199,7 @@ export default function ExecutiveManagement() {
         // Skeleton Loader
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
+            <div key={i} className="glass-card rounded-xl overflow-hidden animate-pulse">
               <div className="h-48 bg-slate-200"></div>
               <div className="p-4 space-y-3">
                 <div className="h-4 bg-blue-100 rounded w-1/3"></div>
@@ -207,7 +216,7 @@ export default function ExecutiveManagement() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {executives.map((exec) => (
-            <div key={exec.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={exec.id} className="glass-card rounded-xl overflow-hidden transition-shadow">
               <div className="relative h-48 bg-slate-100">
                 {exec.imageUrl ? (
                   <Image src={exec.imageUrl} alt={exec.name} fill className="object-cover" />
@@ -217,13 +226,13 @@ export default function ExecutiveManagement() {
                   </div>
                 )}
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <button 
+                  <button
                     onClick={() => openEdit(exec)}
                     className="p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white text-blue-600 transition-colors shadow-sm"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(exec.id)}
                     className="p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white text-red-600 transition-colors shadow-sm"
                   >
@@ -232,7 +241,9 @@ export default function ExecutiveManagement() {
                 </div>
               </div>
               <div className="p-4">
-                <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">{exec.role}</div>
+                <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+                  {exec.role}
+                </div>
                 <h3 className="font-bold text-lg text-slate-900 mb-2">{exec.name}</h3>
                 <p className="text-slate-500 text-sm line-clamp-3">{exec.bio}</p>
               </div>
@@ -243,16 +254,19 @@ export default function ExecutiveManagement() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="glass-strong rounded-2xl w-full max-w-lg overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-xl font-bold text-slate-900">
                 {editingExec ? 'Edit Executive' : 'Add Executive'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
@@ -260,20 +274,22 @@ export default function ExecutiveManagement() {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="glass-input w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   placeholder="e.g. Sarah Kapilla"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Role / Title</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Role / Title
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.role}
-                  onChange={e => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="glass-input w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   placeholder="e.g. CEO & Founder"
                 />
               </div>
@@ -284,19 +300,26 @@ export default function ExecutiveManagement() {
                   required
                   rows={4}
                   value={formData.bio}
-                  onChange={e => setFormData({...formData, bio: e.target.value})}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  className="glass-input w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                   placeholder="Short biography..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Profile Image</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Profile Image
+                </label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="relative w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shrink-0">
                       {formData.imageUrl ? (
-                        <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
+                        <Image
+                          src={formData.imageUrl}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="flex items-center justify-center h-full text-slate-400">
                           <ImageIcon className="w-6 h-6" />
@@ -307,8 +330,8 @@ export default function ExecutiveManagement() {
                       <input
                         type="text"
                         value={formData.imageUrl}
-                        onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 mb-2"
+                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                        className="glass-input w-full px-3 py-2 text-xs rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 mb-2"
                         placeholder="Image URL (https://...)"
                       />
                       <div className="relative">
@@ -326,7 +349,8 @@ export default function ExecutiveManagement() {
                     </div>
                   </div>
                   <p className="text-[10px] text-slate-500">
-                    Paste a URL or upload a local image. Uploaded images will be converted to Base64 (database storage).
+                    Paste a URL or upload a local image. Uploaded images will be converted to Base64
+                    (database storage).
                   </p>
                 </div>
               </div>
