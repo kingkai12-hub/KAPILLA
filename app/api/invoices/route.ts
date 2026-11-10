@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,9 @@ async function getDb() {
 
 // GET all invoices
 export async function GET(req: Request) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     console.log('[INVOICES_GET] Fetching invoices...');
 
@@ -61,6 +65,9 @@ export async function GET(req: Request) {
 
 // POST create new invoice
 export async function POST(req: Request) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     console.log('[INVOICES_POST] Starting invoice creation...');
 
@@ -99,9 +106,9 @@ export async function POST(req: Request) {
 
     // Generate invoice number - RESET to start from 0073 for regular invoices
     const prefix = type === 'PROFORMA' ? 'PI' : 'INV';
-    
+
     let nextNumber = 1;
-    
+
     if (type === 'PROFORMA') {
       // For proforma invoices, continue normal sequence
       const existingInvoices = await db.invoice.findMany({
@@ -117,7 +124,7 @@ export async function POST(req: Request) {
             return match ? parseInt(match[0], 10) : 0;
           })
           .filter((num: number) => !isNaN(num));
-        
+
         if (numbers.length > 0) {
           nextNumber = Math.max(...numbers) + 1;
         }
@@ -126,15 +133,15 @@ export async function POST(req: Request) {
       // For regular invoices (INV), RESET to start from 73
       // Only check for invoices in the NEW sequence (73 onwards)
       const newSequenceInvoices = await db.invoice.findMany({
-        where: { 
+        where: {
           type,
           invoiceNumber: {
-            startsWith: 'INV-00'  // Only check INV-0073, INV-0074, etc. (not INV-3101)
-          }
+            startsWith: 'INV-00', // Only check INV-0073, INV-0074, etc. (not INV-3101)
+          },
         },
         select: { invoiceNumber: true },
         orderBy: { invoiceNumber: 'desc' },
-        take: 1
+        take: 1,
       });
 
       if (newSequenceInvoices.length > 0) {

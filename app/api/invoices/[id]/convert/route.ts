@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,9 @@ export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
@@ -25,12 +29,17 @@ export async function POST(
     }
 
     if (proforma.type !== 'PROFORMA') {
-      return NextResponse.json({ error: 'Only proforma invoices can be converted' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Only proforma invoices can be converted' },
+        { status: 400 }
+      );
     }
 
     if (proforma.status !== 'ACCEPTED') {
       return NextResponse.json(
-        { error: `Proforma must be accepted before conversion. Current status: ${proforma.status}` },
+        {
+          error: `Proforma must be accepted before conversion. Current status: ${proforma.status}`,
+        },
         { status: 400 }
       );
     }
@@ -97,19 +106,21 @@ export async function POST(
             paymentMethod: proforma.paymentMethod ?? null,
             createdBy: proforma.createdBy ?? null,
             items: {
-              create: proforma.items.map((item: {
-                description: string;
-                quantity: number;
-                unitPrice: number;
-                amount: number;
-                order: number;
-              }) => ({
-                description: item.description,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                amount: item.amount,
-                order: item.order,
-              })),
+              create: proforma.items.map(
+                (item: {
+                  description: string;
+                  quantity: number;
+                  unitPrice: number;
+                  amount: number;
+                  order: number;
+                }) => ({
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  amount: item.amount,
+                  order: item.order,
+                })
+              ),
             },
           },
           include: { items: { orderBy: { order: 'asc' } } },
@@ -123,15 +134,21 @@ export async function POST(
     }
 
     if (!finalInvoice) {
-      return NextResponse.json({ error: 'Could not generate a unique invoice number. Please try again.' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Could not generate a unique invoice number. Please try again.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(finalInvoice);
   } catch (error) {
     console.error('[INVOICE_CONVERT]', error);
-    return NextResponse.json({
-      error: 'Failed to convert invoice',
-      details: error instanceof Error ? error.message : String(error),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to convert invoice',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }

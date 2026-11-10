@@ -19,6 +19,7 @@ model User {
   image            String?
   isDisabled       Boolean          @default(false)
   canViewReports   Boolean          @default(false)
+  canViewInvoices  Boolean          @default(false)
   lastActive       DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

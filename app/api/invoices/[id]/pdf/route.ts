@@ -8,6 +8,7 @@ import {
   renderItemsTable,
   renderItemsTableCompact,
 } from '../../../../../lib/pdf-helpers';
+import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,9 @@ export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
@@ -83,6 +87,9 @@ export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();

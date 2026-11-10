@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,6 +12,9 @@ async function getDb() {
 
 // GET all invoices
 export async function GET(req: Request) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   const prisma = await getDb();
 
   try {
@@ -47,6 +51,9 @@ export async function GET(req: Request) {
 
 // POST create new invoice
 export async function POST(req: Request) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   const prisma = await getDb();
 
   try {
@@ -160,7 +167,7 @@ export async function POST(req: Request) {
     console.log('[INVOICES_NEW_POST] Creating invoice...');
 
     // Helper to parse dates safely
-    const parseDate = (dateVal: any) => {
+    const parseDate = (dateVal: string | null | undefined) => {
       if (!dateVal) return null;
       const d = new Date(dateVal);
       return isNaN(d.getTime()) ? null : d;

@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
       name,
       image,
       workId,
-      phoneNumber
+      phoneNumber,
     };
 
     if (password) {
@@ -41,7 +41,7 @@ export async function PUT(req: Request) {
     const { password: _, ...userWithoutPassword } = updatedUser;
 
     return NextResponse.json(userWithoutPassword);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Profile update error:', error);
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
@@ -71,6 +71,7 @@ export async function GET(req: Request) {
         image: true,
         isDisabled: true,
         canViewReports: true,
+        canViewInvoices: true,
         lastActive: true,
         createdAt: true,
         updatedAt: true,
@@ -80,7 +81,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     return NextResponse.json(user);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }

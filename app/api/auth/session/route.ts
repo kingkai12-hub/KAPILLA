@@ -24,6 +24,7 @@ export async function GET() {
         image: true,
         isDisabled: true,
         canViewReports: true,
+        canViewInvoices: true,
       },
     });
 

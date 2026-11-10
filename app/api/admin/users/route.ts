@@ -41,10 +41,11 @@ export async function GET(req: Request) {
         phoneNumber: true,
         isDisabled: true,
         canViewReports: true,
+        canViewInvoices: true,
         lastActive: true,
         createdAt: true,
         // Exclude password
-      }
+      },
     });
     return NextResponse.json(users);
   } catch (_error) {
@@ -61,7 +62,17 @@ export async function POST(req: Request) {
   }
   try {
     const body = await req.json();
-    const { name, email, password, role, workId, phoneNumber, isDisabled, canViewReports } = body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      workId,
+      phoneNumber,
+      isDisabled,
+      canViewReports,
+      canViewInvoices,
+    } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
@@ -79,7 +90,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const finalWorkId = workId || await generateWorkId();
+    const finalWorkId = workId || (await generateWorkId());
     const hashedPassword = await hashPassword(password);
 
     const newUser = await db.user.create({
@@ -91,8 +102,9 @@ export async function POST(req: Request) {
         workId: finalWorkId,
         phoneNumber: phoneNumber || null,
         isDisabled: !!isDisabled,
-        canViewReports: !!canViewReports
-      }
+        canViewReports: !!canViewReports,
+        canViewInvoices: !!canViewInvoices,
+      },
     });
 
     // Send welcome email to new user
@@ -100,9 +112,9 @@ export async function POST(req: Request) {
       const welcomeTemplate = emailTemplates.welcomeEmail(name, password);
       await sendEmail({
         to: email,
-        ...welcomeTemplate
+        ...welcomeTemplate,
       });
-      
+
       // Also notify admin about new user creation
       const adminEmail = process.env.ADMIN_EMAIL || 'info@kapillagroup.co.tz';
       await sendEmail({
@@ -134,7 +146,7 @@ export async function POST(req: Request) {
               </div>
             </div>
           </div>
-        `
+        `,
       });
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
@@ -145,8 +157,16 @@ export async function POST(req: Request) {
     return NextResponse.json(userWithoutPassword);
   } catch (error: unknown) {
     console.error('Create User Error:', error);
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
-      return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'Unique constraint violation. Email or Work ID already exists.' },
+        { status: 409 }
+      );
     }
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
@@ -161,30 +181,53 @@ export async function PUT(req: Request) {
   }
   try {
     const body = await req.json();
-    const { id, name, email, role, password, workId, phoneNumber, isDisabled, canViewReports } = body;
+    const {
+      id,
+      name,
+      email,
+      role,
+      password,
+      workId,
+      phoneNumber,
+      isDisabled,
+      canViewReports,
+      canViewInvoices,
+    } = body;
 
     const data: Record<string, unknown> = { name, email, role, workId, phoneNumber };
     if (password) data.password = await hashPassword(password);
     if (typeof canViewReports === 'boolean') data.canViewReports = canViewReports;
+    if (typeof canViewInvoices === 'boolean') data.canViewInvoices = canViewInvoices;
     if (typeof isDisabled === 'boolean') {
       // Prevent disabling executive/admin accounts to avoid lockout
       const target = await db.user.findUnique({ where: { id } });
       if (target && ['ADMIN', 'MD', 'CEO'].includes(target.role) && isDisabled) {
-        return NextResponse.json({ error: 'Cannot disable an Executive/Admin account' }, { status: 403 });
+        return NextResponse.json(
+          { error: 'Cannot disable an Executive/Admin account' },
+          { status: 403 }
+        );
       }
       data.isDisabled = isDisabled;
     }
 
     const updatedUser = await db.user.update({
       where: { id },
-      data
+      data,
     });
 
     const { password: _, ...userWithoutPassword } = updatedUser;
     return NextResponse.json(userWithoutPassword);
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
-      return NextResponse.json({ error: 'Unique constraint violation. Email or Work ID already exists.' }, { status: 409 });
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'Unique constraint violation. Email or Work ID already exists.' },
+        { status: 409 }
+      );
     }
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
@@ -211,16 +254,27 @@ export async function DELETE(req: Request) {
     }
 
     if (['ADMIN', 'MD', 'CEO'].includes(userToDelete.role)) {
-      return NextResponse.json({ error: 'Cannot delete an Executive/Admin account' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Cannot delete an Executive/Admin account' },
+        { status: 403 }
+      );
     }
 
     try {
       await db.user.delete({ where: { id } });
       return NextResponse.json({ success: true });
     } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2003') {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2003'
+      ) {
         return NextResponse.json(
-          { error: 'Cannot delete: user has related records (e.g., shipments, documents, requests). Remove or reassign related data first.' },
+          {
+            error:
+              'Cannot delete: user has related records (e.g., shipments, documents, requests). Remove or reassign related data first.',
+          },
           { status: 409 }
         );
       }

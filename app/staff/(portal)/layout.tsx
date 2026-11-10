@@ -67,6 +67,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     role?: string;
     image?: string;
     canViewReports?: boolean;
+    canViewInvoices?: boolean;
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPeer, setChatPeer] = useState<string>('');
@@ -304,7 +305,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           name: 'Invoices',
           href: '/staff/invoices',
           icon: Receipt,
-          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+          requiresInvoiceAccess: true,
         },
         {
           name: 'Pickup Requests',
@@ -387,12 +388,24 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   const isItemVisible = (navItem: {
     roles?: string[];
     requiresReportAccess?: boolean;
+    requiresInvoiceAccess?: boolean;
     href: string;
     name: string;
     icon: typeof LayoutDashboard;
   }) => {
     if (navItem.roles && (!user?.role || !navItem.roles.includes(user.role))) return false;
     if (navItem.requiresReportAccess && !(user?.role === 'ADMIN' || user?.canViewReports)) {
+      return false;
+    }
+    if (
+      navItem.requiresInvoiceAccess &&
+      !(
+        user?.role === 'ADMIN' ||
+        user?.role === 'MD' ||
+        user?.role === 'CEO' ||
+        user?.canViewInvoices
+      )
+    ) {
       return false;
     }
     return true;

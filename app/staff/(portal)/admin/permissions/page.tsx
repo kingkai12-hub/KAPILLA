@@ -22,6 +22,7 @@ interface AdminUser {
   workId?: string | null;
   isDisabled?: boolean;
   canViewReports?: boolean;
+  canViewInvoices?: boolean;
   lastActive?: string | null;
 }
 
@@ -143,6 +144,10 @@ export default function PermissionsPage() {
                     typeof updated.canViewReports === 'boolean'
                       ? updated.canViewReports
                       : u.canViewReports,
+                  canViewInvoices:
+                    typeof updated.canViewInvoices === 'boolean'
+                      ? updated.canViewInvoices
+                      : u.canViewInvoices,
                   isDisabled:
                     typeof updated.isDisabled === 'boolean' ? updated.isDisabled : u.isDisabled,
                 }
@@ -207,7 +212,9 @@ export default function PermissionsPage() {
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-navy-500" />
           <p>
             <span className="font-semibold">Reports access</span> controls whether a staff member
-            can open the Reports section. Executives and admins always retain access.
+            can open the Reports section. <span className="font-semibold">Invoice access</span>{' '}
+            controls whether a staff member can open invoices and proformas. Executives and admins
+            always retain access.
           </p>
         </div>
 
@@ -242,10 +249,11 @@ export default function PermissionsPage() {
 
         {/* List */}
         <div className="glass overflow-hidden rounded-2xl">
-          <div className="hidden grid-cols-[1.6fr_1fr_1fr_1fr] gap-4 border-b border-navy-100 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-charcoal-muted dark:border-navy-800 dark:text-navy-300 md:grid">
+          <div className="hidden grid-cols-[1.5fr_0.9fr_1fr_1fr_1fr] gap-4 border-b border-navy-100 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-charcoal-muted dark:border-navy-800 dark:text-navy-300 md:grid">
             <span>Staff Member</span>
             <span>Role</span>
             <span className="text-center">Reports Access</span>
+            <span className="text-center">Invoice Access</span>
             <span className="text-center">Account Active</span>
           </div>
 
@@ -269,13 +277,14 @@ export default function PermissionsPage() {
                 {filtered.map((user) => {
                   const isPrivileged = ['ADMIN', 'MD', 'CEO'].includes(user.role);
                   const reportsOn = isPrivileged || !!user.canViewReports;
+                  const invoicesOn = isPrivileged || !!user.canViewInvoices;
                   const busy = !!pending[user.id];
                   return (
                     <motion.li
                       key={user.id}
                       variants={item}
                       layout
-                      className="grid grid-cols-1 gap-4 px-6 py-4 transition-colors hover:bg-navy-50/50 dark:hover:bg-navy-800/40 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:items-center"
+                      className="grid grid-cols-1 gap-4 px-6 py-4 transition-colors hover:bg-navy-50/50 dark:hover:bg-navy-800/40 md:grid-cols-[1.5fr_0.9fr_1fr_1fr_1fr] md:items-center"
                     >
                       {/* Identity */}
                       <div className="flex items-center gap-3">
@@ -318,6 +327,29 @@ export default function PermissionsPage() {
                               label={`Toggle reports access for ${user.name || user.email}`}
                               onChange={() =>
                                 patchUser(user.id, { canViewReports: !user.canViewReports })
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Invoice access */}
+                      <div className="flex items-center justify-between md:justify-center">
+                        <span className="text-xs font-medium text-charcoal-muted dark:text-navy-300 md:hidden">
+                          Invoice Access
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {isPrivileged ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 className="h-4 w-4" /> Always
+                            </span>
+                          ) : (
+                            <Toggle
+                              checked={invoicesOn}
+                              disabled={busy}
+                              label={`Toggle invoice access for ${user.name || user.email}`}
+                              onChange={() =>
+                                patchUser(user.id, { canViewInvoices: !user.canViewInvoices })
                               }
                             />
                           )}

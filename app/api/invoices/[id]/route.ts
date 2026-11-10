@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,9 @@ export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     // Handle both Promise and direct params (Next.js 15+ compatibility)
     const params = await Promise.resolve(context.params);
@@ -83,6 +87,9 @@ export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
@@ -100,7 +107,11 @@ export async function PATCH(
     }
 
     // Check for duplicate invoice number if it's being changed
-    if (status === undefined && updateData.invoiceNumber && updateData.invoiceNumber !== invoice.invoiceNumber) {
+    if (
+      status === undefined &&
+      updateData.invoiceNumber &&
+      updateData.invoiceNumber !== invoice.invoiceNumber
+    ) {
       const existing = await db.invoice.findFirst({
         where: {
           invoiceNumber: updateData.invoiceNumber,
@@ -120,7 +131,7 @@ export async function PATCH(
     }
 
     // Helper to parse dates safely
-    const parseDate = (dateVal: any) => {
+    const parseDate = (dateVal: string | null | undefined) => {
       if (!dateVal) return null;
       const d = new Date(dateVal);
       return isNaN(d.getTime()) ? null : d;
@@ -163,6 +174,9 @@ export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
@@ -182,6 +196,9 @@ export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const denied = await requireInvoiceAccess();
+  if (denied) return denied;
+
   try {
     const params = await Promise.resolve(context.params);
     const db = await getDb();
@@ -227,7 +244,7 @@ export async function PUT(
     const total = subtotal + taxAmount - (body.discount || 0);
 
     // Helper to parse dates safely
-    const parseDate = (dateVal: any) => {
+    const parseDate = (dateVal: string | null | undefined) => {
       if (!dateVal) return null;
       const d = new Date(dateVal);
       return isNaN(d.getTime()) ? null : d;
