@@ -237,10 +237,10 @@ a {
 
   /* Heaviest blur, reserved for the main navigation menu (sidebar) */
   .glass-menu {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(44px) saturate(200%);
-    -webkit-backdrop-filter: blur(44px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(64px) saturate(220%);
+    -webkit-backdrop-filter: blur(64px) saturate(220%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
     box-shadow:
       0 12px 48px rgba(11, 31, 58, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.85);
@@ -301,5 +301,10 @@ a {
     box-shadow:
       0 12px 48px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Sidebar keeps a lower opacity in dark mode so the heavy blur shows through */
+  .dark .glass-menu {
+    background: rgba(11, 31, 58, 0.5);
   }
 }
