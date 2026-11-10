@@ -58,6 +58,8 @@ function NavPendingIndicator() {
 
 export default function StaffPortalLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Desktop: sidebar stays hidden until the cursor reaches its location (left edge)
+  const [sidebarHover, setSidebarHover] = useState(false);
   const [user, setUser] = useState<{
     id?: string;
     name?: string;
@@ -199,6 +201,24 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     const interval = setInterval(sendHeartbeat, 60000); // 1 minute
     return () => clearInterval(interval);
   }, [user]);
+
+  // Collapse the menu whenever a new page is opened
+  useEffect(() => {
+    setSidebarHover(false);
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // Close the menu with the Escape key
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSidebarHover(false);
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -573,11 +593,25 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         )}
       </AnimatePresence>
 
+      {/* Left-edge hotspot — reveals the menu when the cursor reaches its location */}
+      <div
+        onMouseEnter={() => setSidebarHover(true)}
+        className="group fixed left-0 top-0 z-40 hidden h-full w-2 md:block"
+        aria-hidden="true"
+      >
+        <span className="absolute left-0 top-1/2 h-16 w-1 -translate-y-1/2 rounded-r-full bg-navy-300/70 transition-all duration-300 group-hover:h-24 group-hover:w-1.5 group-hover:bg-accent dark:bg-navy-700" />
+      </div>
+
       {/* Sidebar */}
       <motion.div
+        onMouseEnter={() => setSidebarHover(true)}
+        onMouseLeave={() => setSidebarHover(false)}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 bg-navy-950 text-white shadow-2xl border-r border-navy-900 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 w-72 bg-navy-950 text-white shadow-2xl border-r border-navy-900 transform transition-[transform,visibility] duration-300 ease-out',
+          sidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible',
+          sidebarOpen || sidebarHover
+            ? 'md:translate-x-0 md:visible'
+            : 'md:-translate-x-full md:invisible'
         )}
       >
         <div className="flex flex-col h-full">
@@ -637,7 +671,10 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                           <Link
                             href={item.href}
                             prefetch
-                            onClick={() => setSidebarOpen(false)}
+                            onClick={() => {
+                              setSidebarOpen(false);
+                              setSidebarHover(false);
+                            }}
                             className={cn(
                               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
                               isActive
@@ -696,10 +733,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           <div className="flex items-center justify-between min-h-16 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 -ml-2 text-charcoal-muted hover:text-navy-900 dark:text-navy-300 dark:hover:text-white hover:bg-navy-50 dark:hover:bg-navy-800 rounded-lg transition-colors md:hidden"
+                onClick={() => setSidebarOpen((open) => !open)}
+                aria-label="Toggle navigation menu"
+                aria-expanded={sidebarOpen}
+                className="p-2 -ml-2 text-charcoal-muted hover:text-navy-900 dark:text-navy-300 dark:hover:text-white hover:bg-navy-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
               >
-                <Menu className="w-6 h-6" />
+                {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
 
               {/* Mobile Logo */}
