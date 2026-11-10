@@ -29,6 +29,10 @@ import {
   Bell,
   BarChart3,
   Loader2,
+  ShieldCheck,
+  Wrench,
+  Megaphone,
+  KeyRound,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -218,112 +222,161 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     }
   };
 
-  const navigation = [
+  const navSections = [
     {
-      name: 'Dashboard',
-      href: '/staff/dashboard',
-      icon: LayoutDashboard,
-      roles: [
-        'ADMIN',
-        'STAFF',
-        'DRIVER',
-        'OPERATION_MANAGER',
-        'MANAGER',
-        'MD',
-        'CEO',
-        'ACCOUNTANT',
+      label: 'Menu',
+      items: [
+        {
+          name: 'Dashboard',
+          href: '/staff/dashboard',
+          icon: LayoutDashboard,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
+        {
+          name: 'All Shipments',
+          href: '/staff/shipments',
+          icon: Boxes,
+          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+        },
+        {
+          name: 'Clients',
+          href: '/staff/clients',
+          icon: Users,
+          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+        },
+        {
+          name: 'Reports',
+          href: '/staff/reports',
+          icon: BarChart3,
+          requiresReportAccess: true,
+        },
+        {
+          name: 'Create Shipment',
+          href: '/staff/shipments/create',
+          icon: PackagePlus,
+          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+        },
+        {
+          name: 'Update Tracking',
+          href: '/staff/tracking/update',
+          icon: ScanBarcode,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
+        {
+          name: 'Invoices',
+          href: '/staff/invoices',
+          icon: Receipt,
+          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+        },
+        {
+          name: 'Pickup Requests',
+          href: '/staff/pickup-requests',
+          icon: Truck,
+          roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
+        },
+        {
+          name: 'Documents',
+          href: '/staff/documents',
+          icon: FileText,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
+        {
+          name: 'My Profile',
+          href: '/staff/profile',
+          icon: UserCircle,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
       ],
     },
     {
-      name: 'All Shipments',
-      href: '/staff/shipments',
-      icon: Boxes,
-      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
-    },
-    {
-      name: 'Clients',
-      href: '/staff/clients',
-      icon: Users,
-      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
-    },
-    {
-      name: 'Reports',
-      href: '/staff/reports',
-      icon: BarChart3,
-      requiresReportAccess: true,
-    },
-    {
-      name: 'Create Shipment',
-      href: '/staff/shipments/create',
-      icon: PackagePlus,
-      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
-    },
-    {
-      name: 'Update Tracking',
-      href: '/staff/tracking/update',
-      icon: ScanBarcode,
-      roles: [
-        'ADMIN',
-        'STAFF',
-        'DRIVER',
-        'OPERATION_MANAGER',
-        'MANAGER',
-        'MD',
-        'CEO',
-        'ACCOUNTANT',
-      ],
-    },
-    {
-      name: 'Invoices',
-      href: '/staff/invoices',
-      icon: Receipt,
-      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
-    },
-    {
-      name: 'Pickup Requests',
-      href: '/staff/pickup-requests',
-      icon: Truck,
-      roles: ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'],
-    },
-    {
-      name: 'Documents',
-      href: '/staff/documents',
-      icon: FileText,
-      roles: [
-        'ADMIN',
-        'STAFF',
-        'DRIVER',
-        'OPERATION_MANAGER',
-        'MANAGER',
-        'MD',
-        'CEO',
-        'ACCOUNTANT',
-      ],
-    },
-    { name: 'User Management', href: '/staff/admin/users', icon: UserCog, roles: ['ADMIN'] },
-    {
-      name: 'Services Showcase',
-      href: '/staff/admin/services',
-      icon: LayoutTemplate,
-      roles: ['ADMIN'],
-    },
-    { name: 'Executives', href: '/staff/admin/executives', icon: Briefcase, roles: ['ADMIN'] },
-    {
-      name: 'My Profile',
-      href: '/staff/profile',
-      icon: UserCircle,
-      roles: [
-        'ADMIN',
-        'STAFF',
-        'DRIVER',
-        'OPERATION_MANAGER',
-        'MANAGER',
-        'MD',
-        'CEO',
-        'ACCOUNTANT',
+      label: 'Administration',
+      items: [
+        { name: 'Admin Dashboard', href: '/staff/admin', icon: ShieldCheck, roles: ['ADMIN'] },
+        {
+          name: 'User Management',
+          href: '/staff/admin/users',
+          icon: UserCog,
+          roles: ['ADMIN'],
+        },
+        {
+          name: 'Permissions',
+          href: '/staff/admin/permissions',
+          icon: KeyRound,
+          roles: ['ADMIN'],
+        },
+        {
+          name: 'System Maintenance',
+          href: '/staff/admin/maintenance',
+          icon: Wrench,
+          roles: ['ADMIN'],
+        },
+        {
+          name: 'Advertisements',
+          href: '/staff/admin/advertisements',
+          icon: Megaphone,
+          roles: ['ADMIN'],
+        },
+        {
+          name: 'Services Showcase',
+          href: '/staff/admin/services',
+          icon: LayoutTemplate,
+          roles: ['ADMIN'],
+        },
+        { name: 'Executives', href: '/staff/admin/executives', icon: Briefcase, roles: ['ADMIN'] },
       ],
     },
   ];
+
+  /** A nav item is visible when its role list (if any) includes the user's role. */
+  const isItemVisible = (navItem: {
+    roles?: string[];
+    requiresReportAccess?: boolean;
+    href: string;
+    name: string;
+    icon: typeof LayoutDashboard;
+  }) => {
+    if (navItem.roles && (!user?.role || !navItem.roles.includes(user.role))) return false;
+    if (navItem.requiresReportAccess && !(user?.role === 'ADMIN' || user?.canViewReports)) {
+      return false;
+    }
+    return true;
+  };
 
   if (!mounted) {
     return (
@@ -556,53 +609,66 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <div className="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-4 px-2">
-              Menu
-            </div>
-            {navigation.map((item) => {
-              const itemRoles = 'roles' in item ? item.roles : undefined;
-              if (itemRoles && (!user?.role || !itemRoles.includes(user.role))) return null;
-              if (
-                'requiresReportAccess' in item &&
-                item.requiresReportAccess &&
-                !(user?.role === 'ADMIN' || user?.canViewReports)
-              )
-                return null;
-              const isActive = pathname === item.href;
+          <nav className="flex-1 px-4 py-6 overflow-y-auto">
+            {navSections.map((section) => {
+              const visibleItems = section.items.filter(isItemVisible);
+              if (visibleItems.length === 0) return null;
 
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  prefetch
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
-                    isActive
-                      ? 'bg-navy-800 text-white shadow-soft-lg'
-                      : 'text-navy-200 hover:bg-navy-800/60 hover:text-white'
-                  )}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r bg-accent" />
-                  )}
-                  <item.icon
-                    className={cn(
-                      'w-5 h-5 transition-transform group-hover:scale-110',
-                      isActive && 'text-accent'
-                    )}
-                  />
-                  <span className="font-medium">{item.name}</span>
-
-                  {item.name === 'Pickup Requests' && pendingPickupCount > 0 && (
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-accent text-navy-900 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
-                      {pendingPickupCount}
+                <div key={section.label} className="mb-6 last:mb-0">
+                  <div className="mb-3 flex items-center gap-3 px-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-navy-400">
+                      {section.label}
                     </span>
-                  )}
+                    <span className="h-px flex-1 bg-navy-800" />
+                  </div>
+                  <div className="space-y-2">
+                    {visibleItems.map((item, index) => {
+                      const isActive = pathname === item.href;
 
-                  <NavPendingIndicator />
-                </Link>
+                      return (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.035 * index, duration: 0.25, ease: 'easeOut' }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Link
+                            href={item.href}
+                            prefetch
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
+                              isActive
+                                ? 'bg-navy-800 text-white shadow-soft-lg'
+                                : 'text-navy-200 hover:bg-navy-800/60 hover:text-white'
+                            )}
+                          >
+                            {isActive && (
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r bg-accent" />
+                            )}
+                            <item.icon
+                              className={cn(
+                                'w-5 h-5 transition-transform group-hover:scale-110',
+                                isActive && 'text-accent'
+                              )}
+                            />
+                            <span className="font-medium">{item.name}</span>
+
+                            {item.name === 'Pickup Requests' && pendingPickupCount > 0 && (
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-accent text-navy-900 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
+                                {pendingPickupCount}
+                              </span>
+                            )}
+
+                            <NavPendingIndicator />
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </nav>

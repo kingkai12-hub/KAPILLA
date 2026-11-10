@@ -410,10 +410,7 @@ export default function ShipmentsPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(
-                                    `/staff/shipments/${shipment.waybillNumber}/pod`,
-                                    '_blank'
-                                  );
+                                  window.open(`/waybill/${shipment.waybillNumber}/pod`, '_blank');
                                 }}
                                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                               >

@@ -1,16 +1,29 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Trash2, Edit, Save, X, Search, UserCheck, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
+import { UserPlus, Trash2, Edit, X, ShieldCheck } from 'lucide-react';
+
+interface StaffUser {
+  id: string;
+  name?: string | null;
+  email: string;
+  role: string;
+  workId?: string | null;
+  phoneNumber?: string | null;
+  isDisabled?: boolean;
+  canViewReports?: boolean;
+  lastActive?: string | null;
+}
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<StaffUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<StaffUser | null>(null);
   const [newUserMode, setNewUserMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -19,7 +32,7 @@ export default function UserManagement() {
     role: 'STAFF',
     workId: '',
     phoneNumber: '',
-    canViewReports: false
+    canViewReports: false,
   });
 
   useEffect(() => {
@@ -42,52 +55,14 @@ export default function UserManagement() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
-    
+
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setUsers(users.filter(u => u.id !== id));
+        setUsers(users.filter((u) => u.id !== id));
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete user');
-    }
-  };
-
-  const handleToggleDisable = async (user: any) => {
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.id, isDisabled: !user.isDisabled })
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isDisabled: updated.isDisabled } : u));
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed to update status');
-      }
-    } catch {
-      alert('Network error updating status');
-    }
-  };
-
-  const handleToggleReports = async (user: any) => {
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.id, canViewReports: !user.canViewReports })
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, canViewReports: updated.canViewReports } : u));
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed to update report access');
-      }
-    } catch {
-      alert('Network error updating report access');
     }
   };
 
@@ -107,14 +82,22 @@ export default function UserManagement() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
         await fetchUsers();
         setNewUserMode(false);
         setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', role: 'STAFF', workId: '', phoneNumber: '', canViewReports: false });
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          role: 'STAFF',
+          workId: '',
+          phoneNumber: '',
+          canViewReports: false,
+        });
         alert(isEdit ? 'User updated successfully' : 'User created successfully');
       } else {
         const data = await res.json();
@@ -129,7 +112,7 @@ export default function UserManagement() {
     }
   };
 
-  const startEdit = (user: any) => {
+  const startEdit = (user: StaffUser) => {
     setEditingUser(user);
     setFormData({
       name: user.name || '',
@@ -138,7 +121,7 @@ export default function UserManagement() {
       role: user.role || 'STAFF',
       workId: user.workId || '',
       phoneNumber: user.phoneNumber || '',
-      canViewReports: !!user.canViewReports
+      canViewReports: !!user.canViewReports,
     });
     setNewUserMode(true);
   };
@@ -150,28 +133,39 @@ export default function UserManagement() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">User Management</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Create, edit, and manage staff access.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Create, edit, and manage staff accounts and roles.
+          </p>
         </div>
-        <button 
-          onClick={() => {
-            setNewUserMode(true);
-            setEditingUser(null);
-            setIsSubmitting(false);
-            setFormData({ 
-              name: '', 
-              email: '', 
-              password: '', 
-              role: 'STAFF',
-              workId: '',
-              phoneNumber: '',
-              canViewReports: false
-            });
-          }}
-          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold w-full sm:w-auto"
-        >
-          <UserPlus className="w-4 h-4" />
-          Add User
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Link
+            href="/staff/admin/permissions"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-semibold w-full sm:w-auto dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Manage Permissions
+          </Link>
+          <button
+            onClick={() => {
+              setNewUserMode(true);
+              setEditingUser(null);
+              setIsSubmitting(false);
+              setFormData({
+                name: '',
+                email: '',
+                password: '',
+                role: 'STAFF',
+                workId: '',
+                phoneNumber: '',
+                canViewReports: false,
+              });
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold w-full sm:w-auto"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add User
+          </button>
+        </div>
       </div>
 
       {/* User Form Modal/Panel */}
@@ -182,48 +176,74 @@ export default function UserManagement() {
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">
                 {editingUser ? 'Edit User' : 'Create New User'}
               </h3>
-              <button onClick={() => setNewUserMode(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <button
+                onClick={() => setNewUserMode(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.name || ''}
-                  onChange={e => setFormData({...formData, name: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      name: e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()),
+                    })
+                  }
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Work ID</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Work ID
+                </label>
                 <input
                   type="text"
                   value={formData.workId || ''}
-                  onChange={e => setFormData({...formData, workId: e.target.value.replace(/\b\w/g, c => c.toUpperCase())})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      workId: e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()),
+                    })
+                  }
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   placeholder="EMP-001"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Phone Number
+                </label>
                 <input
                   type="text"
                   value={formData.phoneNumber || ''}
-                  onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10)})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      phoneNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 10),
+                    })
+                  }
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   placeholder="0xxxxxxxxx"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   required
                   value={formData.email || ''}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                   // disabled={!!editingUser} // Allow email editing
                 />
@@ -236,16 +256,18 @@ export default function UserManagement() {
                   type="password"
                   required={!editingUser}
                   value={formData.password || ''}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
-                  placeholder={editingUser ? "Leave blank to keep current" : ""}
+                  placeholder={editingUser ? 'Leave blank to keep current' : ''}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Role
+                </label>
                 <select
                   value={formData.role || 'STAFF'}
-                  onChange={e => setFormData({...formData, role: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl dark:bg-slate-700 text-slate-900 dark:text-white"
                 >
                   <option value="STAFF">Staff (General)</option>
@@ -259,23 +281,21 @@ export default function UserManagement() {
                 </select>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600">
-                <input
-                  id="canViewReports"
-                  type="checkbox"
-                  checked={!!formData.canViewReports}
-                  onChange={e => setFormData({...formData, canViewReports: e.target.checked})}
-                  className="mt-1 w-4 h-4 accent-blue-600"
-                />
-                <label htmlFor="canViewReports" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <span className="font-medium block">Allow Reports access</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    When enabled, this staff member can open and generate reports.
-                  </span>
-                </label>
+                <ShieldCheck className="mt-0.5 w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Reports access and account status are managed on the{' '}
+                  <Link
+                    href="/staff/admin/permissions"
+                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    Permissions
+                  </Link>{' '}
+                  page.
+                </p>
               </div>
               <div className="pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isSubmitting}
                   className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
@@ -284,8 +304,10 @@ export default function UserManagement() {
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       {editingUser ? 'Updating...' : 'Creating...'}
                     </>
+                  ) : editingUser ? (
+                    'Update User'
                   ) : (
-                    editingUser ? 'Update User' : 'Create User'
+                    'Create User'
                   )}
                 </button>
               </div>
@@ -300,19 +322,39 @@ export default function UserManagement() {
           <table className="min-w-[980px] w-full divide-y divide-slate-100 dark:divide-slate-700">
             <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 dark:bg-slate-900/50 z-10">User</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Reports</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 dark:bg-slate-900/50 z-10">
+                  User
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
+                  Reports
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
+                  Created
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {loading ? (
-                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">Loading users...</td></tr>
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                    Loading users...
+                  </td>
+                </tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500">No users found.</td></tr>
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                    No users found.
+                  </td>
+                </tr>
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
@@ -322,20 +364,35 @@ export default function UserManagement() {
                           {user.name?.[0] || user.email[0]}
                         </div>
                         <div>
-                          <div className="font-medium text-slate-900 dark:text-white">{user.name || 'Unnamed'}</div>
+                          <div className="font-medium text-slate-900 dark:text-white">
+                            {user.name || 'Unnamed'}
+                          </div>
                           <div className="text-xs text-slate-500">{user.email}</div>
-                          {user.workId && <div className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">ID: {user.workId}</div>}
-                          {user.phoneNumber && <div className="text-xs text-slate-500 mt-0.5">{user.phoneNumber}</div>}
+                          {user.workId && (
+                            <div className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+                              ID: {user.workId}
+                            </div>
+                          )}
+                          {user.phoneNumber && (
+                            <div className="text-xs text-slate-500 mt-0.5">{user.phoneNumber}</div>
+                          )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       {(() => {
-                        const isOnline = user.lastActive && (new Date().getTime() - new Date(user.lastActive).getTime() < 2 * 60 * 1000);
+                        const isOnline =
+                          user.lastActive &&
+                          new Date().getTime() - new Date(user.lastActive).getTime() <
+                            2 * 60 * 1000;
                         return (
                           <div className="flex items-center gap-2">
-                            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
-                            <span className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-slate-400'}`}>
+                            <div
+                              className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}
+                            />
+                            <span
+                              className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-slate-400'}`}
+                            >
                               {isOnline ? 'Online' : 'Offline'}
                             </span>
                             {user.isDisabled && (
@@ -348,24 +405,37 @@ export default function UserManagement() {
                       })()}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        ['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'bg-purple-50 text-purple-700 border-purple-100' :
-                        user.role === 'DRIVER' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                        user.role === 'MANAGER' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                        user.role === 'OPERATION_MANAGER' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                        user.role === 'ACCOUNTANT' ? 'bg-teal-50 text-teal-700 border-teal-100' :
-                        'bg-slate-100 text-slate-700 border-slate-200'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          ['ADMIN', 'MD', 'CEO'].includes(user.role)
+                            ? 'bg-purple-50 text-purple-700 border-purple-100'
+                            : user.role === 'DRIVER'
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-100'
+                              : user.role === 'MANAGER'
+                                ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                : user.role === 'OPERATION_MANAGER'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                  : user.role === 'ACCOUNTANT'
+                                    ? 'bg-teal-50 text-teal-700 border-teal-100'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        user.role === 'ADMIN' || user.canViewReports
-                          ? 'bg-green-50 text-green-700 border-green-100'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
-                      }`}>
-                        {user.role === 'ADMIN' ? 'Always' : user.canViewReports ? 'Allowed' : 'Denied'}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          user.role === 'ADMIN' || user.canViewReports
+                            ? 'bg-green-50 text-green-700 border-green-100'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}
+                      >
+                        {user.role === 'ADMIN'
+                          ? 'Always'
+                          : user.canViewReports
+                            ? 'Allowed'
+                            : 'Denied'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
@@ -373,14 +443,6 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end gap-2">
                       <button
-                        onClick={() => handleToggleReports(user)}
-                        className={`p-1 rounded ${user.role === 'ADMIN' ? 'text-slate-300 cursor-not-allowed' : (user.canViewReports ? 'text-green-600 hover:bg-green-50' : 'text-slate-500 hover:bg-slate-100')}`}
-                        title={user.role === 'ADMIN' ? 'Admins always have report access' : (user.canViewReports ? 'Revoke Reports access' : 'Allow Reports access')}
-                        disabled={user.role === 'ADMIN'}
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                      </button>
-                      <button 
                         onClick={() => startEdit(user)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                         title="Edit"
@@ -388,17 +450,13 @@ export default function UserManagement() {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleToggleDisable(user)}
-                        className={`p-1 rounded ${['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'text-slate-300 cursor-not-allowed' : (user.isDisabled ? 'text-green-600 hover:bg-green-50' : 'text-orange-600 hover:bg-orange-50')}`}
-                        title={['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'Cannot disable Executive/Admin' : (user.isDisabled ? 'Enable User' : 'Disable User')}
-                        disabled={['ADMIN', 'MD', 'CEO'].includes(user.role)}
-                      >
-                        <UserCheck className="w-4 h-4" />
-                      </button>
-                      <button 
                         onClick={() => handleDelete(user.id)}
                         className={`p-1 rounded ${['ADMIN', 'MD', 'CEO'].includes(user.role) ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
-                        title={['ADMIN', 'MD', 'CEO'].includes(user.role) ? "Cannot delete Executive/Admin" : "Delete"}
+                        title={
+                          ['ADMIN', 'MD', 'CEO'].includes(user.role)
+                            ? 'Cannot delete Executive/Admin'
+                            : 'Delete'
+                        }
                         disabled={['ADMIN', 'MD', 'CEO'].includes(user.role)}
                       >
                         <Trash2 className="w-4 h-4" />

@@ -137,7 +137,7 @@ export default async function WaybillReportPage({
           </Link>
           {shipment.currentStatus === 'DELIVERED' && (
             <Link
-              href={`/staff/shipments/${shipment.waybillNumber}/pod`}
+              href={`/waybill/${shipment.waybillNumber}/pod`}
               target="_blank"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
             >
@@ -222,7 +222,9 @@ export default async function WaybillReportPage({
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">Receiver</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-4">
+            Receiver
+          </h3>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start gap-3">
               <User className="w-4 h-4 mt-0.5 text-slate-400" />

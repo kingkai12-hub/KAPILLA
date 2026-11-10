@@ -1,11 +1,21 @@
 import React from 'react';
-import { Package, Truck, CheckCheck, Hourglass, Layers, FileText, Plus, Users, MapPin, DollarSign, Settings, ArrowRight, Megaphone } from 'lucide-react';
+import {
+  Package,
+  Truck,
+  CheckCheck,
+  Hourglass,
+  Layers,
+  FileText,
+  MapPin,
+  ArrowRight,
+  Megaphone,
+  ShieldCheck,
+} from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import MaintenanceToggle from '@/components/MaintenanceToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -176,8 +186,29 @@ export default async function StaffDashboard() {
         </div>
       </div>
 
-      {/* System Maintenance Mode (admins only) */}
-      {isAdmin && <MaintenanceToggle />}
+      {/* Admin quick access */}
+      {isAdmin && (
+        <Link
+          href="/staff/admin"
+          className="group flex flex-col gap-4 rounded-3xl border border-navy-100 bg-gradient-to-br from-navy-50 via-white to-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg sm:flex-row sm:items-center sm:justify-between dark:border-navy-800 dark:from-navy-900 dark:via-navy-900 dark:to-navy-950"
+        >
+          <div className="flex items-start gap-4">
+            <span className="rounded-2xl bg-gradient-to-br from-navy-600 to-navy-800 p-4 shadow-soft">
+              <ShieldCheck className="h-7 w-7 text-white" />
+            </span>
+            <div>
+              <h3 className="text-lg font-bold text-navy-900 dark:text-white">Administration</h3>
+              <p className="mt-1 max-w-xl text-sm text-charcoal-muted dark:text-navy-300">
+                Manage users, permissions, maintenance mode and public content.
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-2 font-semibold text-navy-700 dark:text-accent">
+            Open Admin
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </span>
+        </Link>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -201,9 +232,7 @@ export default async function StaffDashboard() {
               >
                 <Icon className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                {action.title}
-              </h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">{action.title}</h3>
               <div className="flex items-center mt-1 text-xs text-slate-500 dark:text-slate-400">
                 <span>Quick access</span>
                 <ArrowRight className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
@@ -245,12 +274,12 @@ export default async function StaffDashboard() {
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Shipments</h3>
-            <a
+            <Link
               href="/staff/shipments"
               className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700"
             >
               View All
-            </a>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
@@ -311,7 +340,9 @@ export default async function StaffDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                        {shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString() : '—'}
+                        {shipment.createdAt
+                          ? new Date(shipment.createdAt).toLocaleDateString()
+                          : '—'}
                       </td>
                     </tr>
                   ))

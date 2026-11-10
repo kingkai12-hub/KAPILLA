@@ -17,6 +17,9 @@ export async function GET(
     const params = await Promise.resolve(context.params);
     const db = await getDb();
 
+    // ?download=1 saves the file instead of opening it in the PDF viewer.
+    const asDownload = new URL(req.url).searchParams.get('download') === '1';
+
     const shipment = await db.shipment.findUnique({
       where: { waybillNumber: params.waybill },
     });
@@ -211,7 +214,9 @@ export async function GET(
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="POD-${shipment.waybillNumber}.pdf"`,
+        'Content-Disposition': `${
+          asDownload ? 'attachment' : 'inline'
+        }; filename="POD-${shipment.waybillNumber}.pdf"`,
       },
     });
   } catch (error) {

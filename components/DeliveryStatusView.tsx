@@ -35,12 +35,8 @@ export function DeliveryStatusView({
 
           {/* Title */}
           <div>
-            <h2 className="text-3xl font-black text-blue-900 mb-2">
-              Cargo Has Arrived! 🎉
-            </h2>
-            <p className="text-lg text-blue-700 font-semibold">
-              Your shipment is at {destination}
-            </p>
+            <h2 className="text-3xl font-black text-blue-900 mb-2">Cargo Has Arrived! 🎉</h2>
+            <p className="text-lg text-blue-700 font-semibold">Your shipment is at {destination}</p>
           </div>
 
           {/* Message */}
@@ -48,11 +44,9 @@ export function DeliveryStatusView({
             <div className="flex items-start gap-3">
               <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div className="text-left">
-                <p className="text-blue-900 font-bold mb-2">
-                  Waiting for Pickup
-                </p>
+                <p className="text-blue-900 font-bold mb-2">Waiting for Pickup</p>
                 <p className="text-blue-700 text-sm leading-relaxed">
-                  Your cargo has safely arrived at the destination and is ready for collection. 
+                  Your cargo has safely arrived at the destination and is ready for collection.
                   Please contact our staff or wait for the delivery confirmation.
                 </p>
               </div>
@@ -64,9 +58,7 @@ export function DeliveryStatusView({
             <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">
               Waybill Number
             </p>
-            <p className="text-xl font-mono font-black text-blue-900">
-              {waybillNumber}
-            </p>
+            <p className="text-xl font-mono font-black text-blue-900">{waybillNumber}</p>
           </div>
 
           {/* Note */}
@@ -95,9 +87,7 @@ export function DeliveryStatusView({
             <h2 className="text-3xl font-black text-green-900 mb-2">
               Cargo Delivered Successfully! ✅
             </h2>
-            <p className="text-lg text-green-700 font-semibold">
-              Your shipment has been picked up
-            </p>
+            <p className="text-lg text-green-700 font-semibold">Your shipment has been picked up</p>
           </div>
 
           {/* Delivery Details */}
@@ -108,9 +98,7 @@ export function DeliveryStatusView({
                 <span className="text-sm font-bold text-green-700 uppercase tracking-wide">
                   Delivered At
                 </span>
-                <span className="text-green-900 font-bold">
-                  {format(deliveryDate, 'PPpp')}
-                </span>
+                <span className="text-green-900 font-bold">{format(deliveryDate, 'PPpp')}</span>
               </div>
             )}
 
@@ -120,9 +108,7 @@ export function DeliveryStatusView({
                 <span className="text-sm font-bold text-green-700 uppercase tracking-wide">
                   Received By
                 </span>
-                <span className="text-green-900 font-bold">
-                  {receivedBy}
-                </span>
+                <span className="text-green-900 font-bold">{receivedBy}</span>
               </div>
             )}
 
@@ -131,9 +117,7 @@ export function DeliveryStatusView({
               <span className="text-sm font-bold text-green-700 uppercase tracking-wide">
                 Destination
               </span>
-              <span className="text-green-900 font-bold">
-                {destination}
-              </span>
+              <span className="text-green-900 font-bold">{destination}</span>
             </div>
           </div>
 
@@ -142,13 +126,14 @@ export function DeliveryStatusView({
             <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
               Proof of Delivery
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {/* Preview Button */}
               <button
                 onClick={() => {
-                  // Open the full signed waybill document
-                  window.open(`/staff/shipments/${waybillNumber}/pod`, '_blank');
+                  // Public PDF endpoint: opens the signed proof of delivery
+                  // straight in the browser's PDF viewer, ready to print.
+                  window.open(`/api/shipments/${waybillNumber}/pod-pdf`, '_blank');
                 }}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
@@ -159,8 +144,8 @@ export function DeliveryStatusView({
               {/* Download Button */}
               <button
                 onClick={() => {
-                  // Open the signed waybill in a new tab for printing
-                  window.open(`/staff/shipments/${waybillNumber}/pod`, '_blank');
+                  // Same PDF, served as an attachment so it saves to the device.
+                  window.open(`/api/shipments/${waybillNumber}/pod-pdf?download=1`, '_blank');
                 }}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-green-700 font-bold rounded-xl border-2 border-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
@@ -175,9 +160,7 @@ export function DeliveryStatusView({
             <p className="text-xs text-green-600 font-bold uppercase tracking-wider mb-1">
               Waybill Number
             </p>
-            <p className="text-xl font-mono font-black text-green-900">
-              {waybillNumber}
-            </p>
+            <p className="text-xl font-mono font-black text-green-900">{waybillNumber}</p>
           </div>
 
           {/* Thank You Message */}
@@ -185,9 +168,7 @@ export function DeliveryStatusView({
             <p className="text-green-800 font-semibold">
               Thank you for choosing our logistics service! 🚚
             </p>
-            <p className="text-sm text-green-600 mt-1">
-              We hope to serve you again soon.
-            </p>
+            <p className="text-sm text-green-600 mt-1">We hope to serve you again soon.</p>
           </div>
         </div>
       </div>
