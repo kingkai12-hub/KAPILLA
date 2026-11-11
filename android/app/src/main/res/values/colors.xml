@@ -4,4 +4,8 @@
     <color name="colorPrimary">#0B1F3A</color>
     <color name="colorPrimaryDark">#071427</color>
     <color name="colorAccent">#FFC72C</color>
+
+    <!-- Launch splash sheet: white fading into navy-100, matching app/loading.tsx -->
+    <color name="splash_top">#FFFFFF</color>
+    <color name="splash_bottom">#E7EDF6</color>
 </resources>

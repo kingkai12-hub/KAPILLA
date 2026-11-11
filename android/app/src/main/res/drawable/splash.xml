@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native launch splash.
+
+  Mirrors the web loading screen (app/loading.tsx): a white sheet fading into
+  navy-100 with the logo centred, so tapping the icon lands on the same visual as
+  the in-app loading state rather than a dark flash.
+
+  The logo is a separate bitmap layer with centre gravity, so it keeps its true
+  proportions instead of being stretched to the device aspect ratio the way a
+  single full-bleed splash bitmap would be.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:type="linear"
+                android:startColor="@color/splash_top"
+                android:centerColor="@color/splash_top"
+                android:endColor="@color/splash_bottom" />
+        </shape>
+    </item>
+
+    <item android:gravity="center">
+        <bitmap
+            android:src="@drawable/splash_logo"
+            android:gravity="center" />
+    </item>
+</layer-list>

@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   appId: 'com.kapillagroup.app',
   appName: 'Kapilla Group',
   webDir: 'capacitor-web',
-  backgroundColor: '#0b1f3a',
+  backgroundColor: '#ffffff',
   server: {
     url: SERVER_URL,
     androidScheme: 'https',
