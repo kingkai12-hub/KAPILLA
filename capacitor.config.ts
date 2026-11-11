@@ -21,6 +21,12 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
+    /**
+     * Marks the WebView as the native shell. The server reads this to serve the
+     * app home screen instead of the public website — see `NATIVE_SHELL_UA` in
+     * `app/page.tsx`. Changing it requires a native rebuild.
+     */
+    appendUserAgent: 'KapillaAppShell/1.0',
   },
   plugins: {
     SplashScreen: {
