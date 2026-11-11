@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Home, Package, LayoutGrid, Phone } from 'lucide-react';
+import { Home, Package, LayoutGrid, Phone, User } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -26,6 +26,7 @@ const TABS = [
   { href: '#tracking', label: 'Track', icon: Package },
   { href: '#services', label: 'Services', icon: LayoutGrid },
   { href: '#contact', label: 'Contact', icon: Phone },
+  { href: '/staff/login', label: 'Account', icon: User },
 ];
 
 export default function AppTabBar() {
