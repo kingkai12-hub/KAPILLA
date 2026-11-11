@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# android signing (never commit keystores or their credentials)
+*.jks
+*.keystore
+keystore.properties
+
 # debug
 npm-debug.log*
 yarn-debug.log*
