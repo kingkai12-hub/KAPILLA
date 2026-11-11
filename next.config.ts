@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -13,14 +13,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  typescript: {
-    // TODO: Remove ignoreBuildErrors once all TypeScript errors are resolved.
-    // This was set to work around pre-existing type errors. New code added
-    // by security fixes is fully typed. Removing this flag is safe once
-    // `npx tsc --noEmit` passes with zero errors.
-    ignoreBuildErrors: true,
-  },
-  // Reduce build time by optimizing dependencies
   experimental: {
     optimizePackageImports: ['react', 'react-dom', 'lucide-react'],
     // Reuse recently visited pages on the client so moving back and forth
@@ -53,36 +45,36 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'strict-origin-when-cross-origin',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
-          }
-        ]
-      }
-    ]
-  }
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

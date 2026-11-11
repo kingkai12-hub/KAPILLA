@@ -36,11 +36,13 @@ export default async function StaffDashboard() {
   }[] = [];
 
   // Helper to wrap prisma calls with timeout
-  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number = 5000): Promise<T> => {
+  const withTimeout = async <P,>(promise: P, timeoutMs: number = 5000): Promise<Awaited<P>> => {
     return Promise.race([
       promise,
-      new Promise<T>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
-    ]);
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)
+      ),
+    ]) as Promise<Awaited<P>>;
   };
 
   try {

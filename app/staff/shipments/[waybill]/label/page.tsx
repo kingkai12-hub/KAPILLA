@@ -219,7 +219,7 @@ export default function LabelPage() {
           {/* QR Code at bottom center */}
           <div className="flex justify-center mt-3">
             <QRCodeSVG
-              value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber)}`}
+              value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber ?? '')}`}
               size={80}
             />
           </div>

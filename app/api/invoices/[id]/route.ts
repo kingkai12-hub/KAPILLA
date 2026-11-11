@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { requireInvoiceAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -10,10 +11,7 @@ async function getDb() {
 }
 
 // GET single invoice
-export async function GET(
-  req: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
-) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const denied = await requireInvoiceAccess();
   if (denied) return denied;
 
@@ -83,10 +81,7 @@ export async function GET(
 }
 
 // PATCH update invoice
-export async function PATCH(
-  req: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
-) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const denied = await requireInvoiceAccess();
   if (denied) return denied;
 
@@ -170,10 +165,7 @@ export async function PATCH(
 }
 
 // DELETE invoice
-export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
-) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const denied = await requireInvoiceAccess();
   if (denied) return denied;
 
@@ -192,10 +184,7 @@ export async function DELETE(
 }
 
 // PUT update entire invoice (for editing)
-export async function PUT(
-  req: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
-) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   const denied = await requireInvoiceAccess();
   if (denied) return denied;
 
@@ -251,7 +240,7 @@ export async function PUT(
     };
 
     // Use a transaction to ensure atomic update of items
-    const updated = await db.$transaction(async (tx) => {
+    const updated = await db.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Delete existing items
       await tx.invoiceItem.deleteMany({
         where: { invoiceId: params.id },

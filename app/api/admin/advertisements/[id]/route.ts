@@ -4,7 +4,8 @@ import { requireAuth, requireRole } from '@/lib/auth';
 
 const ALLOWED_ROLES = ['ADMIN', 'MD', 'CEO', 'MANAGER', 'OPERATION_MANAGER'];
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const auth = await requireAuth(req);
   if (auth.error) return auth.error;
   if (!requireRole(auth.user!, ALLOWED_ROLES)) {
@@ -22,7 +23,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const auth = await requireAuth(req);
   if (auth.error) return auth.error;
   if (!requireRole(auth.user!, ALLOWED_ROLES)) {
@@ -53,7 +55,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const auth = await requireAuth(req);
   if (auth.error) return auth.error;
   if (!requireRole(auth.user!, ALLOWED_ROLES)) {

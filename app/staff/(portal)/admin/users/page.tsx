@@ -13,6 +13,7 @@ interface StaffUser {
   phoneNumber?: string | null;
   isDisabled?: boolean;
   canViewReports?: boolean;
+  createdAt: string;
   lastActive?: string | null;
 }
 

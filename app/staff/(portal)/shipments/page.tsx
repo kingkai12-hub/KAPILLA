@@ -145,7 +145,7 @@ export default function ShipmentsPage() {
   const openStatusModal = (shipment: Shipment) => {
     setEditingStatusShipment(shipment);
     setNewStatus(shipment.currentStatus);
-    setReceivedBy(shipment.receivedBy || '');
+    setReceivedBy(String(shipment.receivedBy || ''));
   };
 
   const filteredShipments = shipments.filter(

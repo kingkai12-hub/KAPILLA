@@ -58,7 +58,7 @@ const tanzaniaLocations = {
 import { useSearchParams } from 'next/navigation';
 
 export default function CreateShipment() {
-  const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; role?: string; workId?: string } | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {

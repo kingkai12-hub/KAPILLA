@@ -5,11 +5,13 @@ const TIMEOUT_MS = 5000;
 
 // Same resilient-query pattern used elsewhere in the portal: a slow or
 // unavailable database must never take the page down.
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = TIMEOUT_MS): Promise<T> {
+// `P` is intentionally unconstrained: when a caller passes an untyped (`any`)
+// Prisma query, the result keeps that type instead of widening to `{}`.
+async function withTimeout<P>(promise: P, timeoutMs: number = TIMEOUT_MS): Promise<Awaited<P>> {
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
-  ]);
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
+  ]) as Promise<Awaited<P>>;
 }
 
 /**
@@ -33,6 +35,14 @@ export async function hasReportAccess(): Promise<boolean> {
     console.error('[REPORTS] access check failed', error);
     return false;
   }
+}
+
+interface RawTrackingEvent {
+  timestamp: Date;
+  status: string;
+  location: string;
+  remarks: string | null;
+  staffName: string | null;
 }
 
 export type ReportPeriod = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all';
@@ -233,7 +243,7 @@ export async function searchTransportReport(
         deliveredAt: shipment.deliveredAt ? shipment.deliveredAt.toISOString() : null,
         staff: shipment.createdByName ?? shipment.dispatcherName ?? null,
         receivedBy: shipment.receivedBy,
-        events: shipment.events.map((event) => ({
+        events: shipment.events.map((event: RawTrackingEvent) => ({
           timestamp: event.timestamp.toISOString(),
           status: event.status,
           location: event.location,

@@ -21,11 +21,13 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
 const TIMEOUT_MS = 5000;
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = TIMEOUT_MS): Promise<T> {
+// `P` is intentionally unconstrained: when a caller passes an untyped (`any`)
+// Prisma query, the result keeps that type instead of widening to `{}`.
+async function withTimeout<P>(promise: P, timeoutMs: number = TIMEOUT_MS): Promise<Awaited<P>> {
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
-  ]);
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), timeoutMs)),
+  ]) as Promise<Awaited<P>>;
 }
 
 function fmt(value: Date | string | null | undefined): string {
@@ -50,6 +52,15 @@ interface Step {
   label: string;
   at: Date | string | null | undefined;
   icon: React.ComponentType<{ className?: string }>;
+}
+
+interface RawTrackingEvent {
+  id: string;
+  timestamp: Date;
+  status: string;
+  location: string;
+  remarks: string | null;
+  staffName: string | null;
 }
 
 export default async function WaybillReportPage({
@@ -339,7 +350,7 @@ export default async function WaybillReportPage({
                   </td>
                 </tr>
               ) : (
-                shipment.events.map((event) => (
+                shipment.events.map((event: RawTrackingEvent) => (
                   <tr key={event.id}>
                     <td className="px-6 py-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       {fmt(event.timestamp)}

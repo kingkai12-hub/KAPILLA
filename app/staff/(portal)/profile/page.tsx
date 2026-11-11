@@ -67,6 +67,7 @@ export default function ProfilePage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
     setMessage(null);
 

@@ -21,6 +21,7 @@ export default function ProofOfDeliveryPage() {
     origin: string;
     destination: string;
     weight: number | null;
+    price: number | null;
     type: string | null;
     cargoDetails: string | null;
     createdAt: string;
