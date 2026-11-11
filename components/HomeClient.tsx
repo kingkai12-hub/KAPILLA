@@ -12,14 +12,13 @@ import {
   ArrowRight,
   CheckCircle,
   Clock,
-  Facebook,
   FileText,
   Globe,
-  Instagram,
+  LayoutGrid,
   Loader2,
   MapPin,
-  Menu,
   Package,
+  Phone,
   Plane,
   Ship,
   Truck,
@@ -30,6 +29,7 @@ import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
+import AppTabBar from '@/components/AppTabBar';
 
 const VehicleTrackingMap = dynamic(() => import('@/components/VehicleTrackingMap'), { ssr: false });
 const DeliveryStatusView = dynamic(
@@ -94,6 +94,10 @@ const BTN_GHOST_DARK = `${BTN} border border-navy-400/60 text-white hover:bg-nav
 const BTN_QUIET = `${BTN} border border-navy-200 bg-white text-navy-800 hover:border-navy-400 hover:bg-navy-50`;
 
 const FOCUS_DARK = 'focus-visible:outline-accent';
+
+/* Quick-action tile on the home screen: thumb-sized, glass over the dark hero. */
+const QUICK_TILE =
+  'flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-xl border border-navy-700/60 bg-white/5 p-3 text-center text-xs font-semibold text-navy-100 backdrop-blur transition-colors hover:bg-white/10 active:scale-95 focus-visible:outline-accent';
 
 /** Short rule + label: the marker that opens every section. */
 function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDark?: boolean }) {
@@ -481,44 +485,6 @@ const NAV_LINKS = [
   ['#leadership', 'Leadership'],
 ];
 
-const MOBILE_NAV_LINKS = [
-  ['#tracking', 'Track a consignment'],
-  ['#services', 'Services'],
-  ['#fleet', 'Freight'],
-  ['#leadership', 'Leadership'],
-];
-
-const SOCIAL_LINKS = [
-  {
-    href: 'https://www.instagram.com/kapilla.group_ltd/',
-    label: 'Kapilla Group on Instagram',
-    icon: <Instagram aria-hidden="true" className="w-5 h-5" />,
-  },
-  {
-    href: 'https://x.com',
-    label: 'Kapilla Group on X',
-    icon: (
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
-    href: 'https://facebook.com',
-    label: 'Kapilla Group on Facebook',
-    icon: <Facebook aria-hidden="true" className="w-5 h-5" />,
-  },
-  {
-    href: 'https://tiktok.com',
-    label: 'Kapilla Group on TikTok',
-    icon: (
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-      </svg>
-    ),
-  },
-];
-
 const SERVICE_PROMISES = [
   'Live waybill tracking, 24/7',
   'Road, sea and air freight',
@@ -571,7 +537,6 @@ export default function HomeClient({
   const [error, setError] = useState<string | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [executives, setExecutives] = useState<any[]>(initialExecutives);
   const [services, setServices] = useState<any[]>(initialServices);
   const [advertisements, setAdvertisements] = useState<any[]>(initialAdvertisements);
@@ -667,16 +632,6 @@ export default function HomeClient({
 
   const abortRef = useRef<AbortController | null>(null);
 
-  // Escape closes the mobile menu — expected keyboard behaviour for a disclosure.
-  useEffect(() => {
-    if (!isMenuOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMenuOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isMenuOpen]);
-
   const latestEvent = searchResult?.events?.[0];
   let latestEta: string | null = null;
   let latestMode: string | null = null;
@@ -765,7 +720,7 @@ export default function HomeClient({
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen font-sans text-charcoal">
+      <div className="min-h-screen font-sans text-charcoal pb-24">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
@@ -776,147 +731,48 @@ export default function HomeClient({
           <SearchParamsHandler onSearch={performSearch} />
         </Suspense>
 
-        {/* Navigation */}
+        {/* App bar — compact and persistent; navigation lives in the tab bar. */}
         <header className="glass-header sticky top-0 z-50">
-          <nav aria-label="Primary" className={CONTAINER}>
-            <div className="h-16 md:h-20 flex items-center justify-between gap-4">
-              <Link
-                href="/"
-                className={cn('flex items-center gap-3 shrink-0 rounded-lg', FOCUS_DARK)}
+          <div className={cn(CONTAINER, 'flex h-16 items-center justify-between gap-3')}>
+            <Link
+              href="/"
+              className={cn('flex items-center gap-3 shrink-0 rounded-lg', FOCUS_DARK)}
+            >
+              <span className="bg-white p-1.5 rounded-md shadow-soft">
+                <Image
+                  src="/logo.png"
+                  alt="Kapilla Group Ltd"
+                  width={40}
+                  height={40}
+                  className="w-8 h-8 object-contain"
+                  priority
+                />
+              </span>
+              <span className="text-base font-semibold text-navy-900 tracking-tight">
+                Kapilla <span className="text-accent">Group</span>
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsPickupModalOpen(true)}
+                className={cn(BTN_PRIMARY, 'px-4 py-2.5 text-sm')}
               >
-                <span className="bg-white p-1.5 rounded-md shadow-soft">
-                  <Image
-                    src="/logo.png"
-                    alt="Kapilla Group Ltd"
-                    width={40}
-                    height={40}
-                    className="w-8 h-8 md:w-9 md:h-9 object-contain"
-                    priority
-                  />
-                </span>
-                <span className="text-base md:text-lg font-semibold text-navy-900 tracking-tight">
-                  Kapilla <span className="text-accent">Group</span>
-                </span>
+                <Truck aria-hidden="true" className="h-4 w-4" />
+                <span className="hidden sm:inline">Request a Pickup</span>
+                <span className="sm:hidden">Pickup</span>
+              </button>
+              <Link href="/staff/login" className={cn(BTN_QUIET, 'px-4 py-2.5 text-sm')}>
+                <span className="hidden sm:inline">Staff Portal</span>
+                <span className="sm:hidden">Staff</span>
               </Link>
-
-              <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-700">
-                {NAV_LINKS.map(([href, label]) => (
-                  <a
-                    key={href}
-                    href={href}
-                    className={cn(
-                      'group relative transition-colors hover:text-navy-900',
-                      FOCUS_DARK
-                    )}
-                  >
-                    {label}
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-x-0 bottom-0 border-b-2 border-accent origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                    />
-                  </a>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden xl:flex items-center gap-1 text-navy-500">
-                  {SOCIAL_LINKS.map((social) => (
-                    <a
-                      key={social.href}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={social.label}
-                      className={cn(
-                        'p-2 rounded-lg transition-colors hover:text-accent',
-                        FOCUS_DARK
-                      )}
-                    >
-                      {social.icon}
-                    </a>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsPickupModalOpen(true)}
-                  className={cn(BTN_PRIMARY, 'p-2.5 md:px-5 md:py-2.5 text-sm')}
-                  aria-label="Request a pickup"
-                >
-                  <Truck aria-hidden="true" className="h-4 w-4" />
-                  <span className="hidden md:inline">Request a Pickup</span>
-                </button>
-                <Link
-                  href="/staff/login"
-                  className={cn(BTN_QUIET, 'hidden md:flex px-5 py-2.5 text-sm')}
-                  aria-label="Staff portal"
-                >
-                  <span>Staff Portal</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsMenuOpen((v) => !v)}
-                  aria-label="Toggle navigation menu"
-                  aria-expanded={isMenuOpen}
-                  aria-controls="mobile-menu"
-                  className={cn(BTN_QUIET, 'lg:hidden p-2.5')}
-                >
-                  {isMenuOpen ? (
-                    <X aria-hidden="true" className="h-5 w-5" />
-                  ) : (
-                    <Menu aria-hidden="true" className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
             </div>
-
-            <AnimatePresence>
-              {isMenuOpen && (
-                <motion.div
-                  id="mobile-menu"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="lg:hidden border-t border-navy-200 pb-6 overflow-hidden"
-                >
-                  <div className="flex flex-col">
-                    {MOBILE_NAV_LINKS.map(([href, label]) => (
-                      <a
-                        key={href}
-                        href={href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={cn(
-                          'py-3.5 text-sm font-medium text-navy-700 border-b border-navy-200 transition-colors hover:text-accent',
-                          FOCUS_DARK
-                        )}
-                      >
-                        {label}
-                      </a>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-3 pt-6">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setIsPickupModalOpen(true);
-                      }}
-                      className={cn(BTN_PRIMARY, 'flex-1 px-4 py-3 text-sm')}
-                    >
-                      Request a Pickup
-                    </button>
-                    <Link href="/staff/login" className={cn(BTN_QUIET, 'px-4 py-3 text-sm')}>
-                      Staff Portal
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </nav>
+          </div>
         </header>
 
         <main id="main">
-          {/* Hero */}
+          {/* Home screen — full-bleed, thumb-first. Tracking is the primary action. */}
           <section className="relative isolate bg-navy-950 overflow-hidden">
             <Image
               src="/background.jpg"
@@ -932,106 +788,118 @@ export default function HomeClient({
             />
             <DarkBackdrop />
 
-            <div className={cn(CONTAINER, 'relative py-16 lg:py-24')}>
-              <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-navy-700 bg-white/5 text-navy-100 text-xs font-semibold uppercase tracking-wider backdrop-blur">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                    Transportation &amp; General Supply
-                  </div>
-                  <h1 className={H1}>
-                    Freight that moves on schedule, and stays visible end to end.
-                  </h1>
-                  <p className={cn(LEAD, 'mt-6 max-w-xl text-pretty')}>
-                    Kapilla Group transports cargo by road, sea and air across Tanzania, East Africa
-                    and 200+ international destinations — with customs clearing, forwarding and
-                    last-mile delivery handled by one accountable partner.
+            <div className={cn(CONTAINER, 'relative py-10 lg:py-16')}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mx-auto max-w-2xl text-center"
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-navy-700 bg-white/5 text-navy-100 text-xs font-semibold uppercase tracking-wider backdrop-blur">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  Transportation &amp; General Supply
+                </div>
+                <h1 className={cn(H1, 'mt-5')}>Track it. Ship it. Delivered.</h1>
+                <p className={cn(LEAD, 'mt-4 text-pretty')}>
+                  Cargo by road, sea and air across Tanzania, East Africa and 200+ destinations —
+                  one partner for collection, clearance and last-mile delivery.
+                </p>
+              </motion.div>
+
+              {/* Tracking — the app's primary task, given the strongest surface */}
+              <motion.div
+                id="tracking"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="mx-auto mt-8 w-full max-w-2xl scroll-mt-24"
+              >
+                <div className="glass-strong rounded-2xl p-5 sm:p-6">
+                  <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
+                    <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
+                    Track your consignment
+                  </h2>
+                  <p className="mt-2 text-sm text-charcoal-light text-pretty">
+                    Enter the waybill number printed on your receipt to see the latest status and
+                    location.
                   </p>
+                  <form onSubmit={handleSearch} className="mt-5">
+                    <label htmlFor="waybill" className="sr-only">
+                      Waybill number
+                    </label>
+                    <div className="flex items-center gap-2 rounded-lg glass-input p-1.5 transition-colors focus-within:border-navy-500">
+                      <span className="pl-2 text-charcoal-muted" aria-hidden="true">
+                        <Package className="w-5 h-5" />
+                      </span>
+                      <input
+                        id="waybill"
+                        type="text"
+                        value={waybill}
+                        onChange={(e) => setWaybill(e.target.value)}
+                        placeholder="e.g. KPL-8829"
+                        autoComplete="off"
+                        className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        aria-label="Track consignment"
+                        className={cn(
+                          BTN_PRIMARY,
+                          BTN_PADDING_INPUT,
+                          'disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-accent'
+                        )}
+                      >
+                        {loading ? (
+                          <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <span className="hidden sm:inline">Track</span>
+                        )}
+                        {!loading && <ArrowIcon />}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
 
-                  <div className="mt-8 flex flex-wrap gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsPickupModalOpen(true)}
-                      className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
-                    >
-                      Request a Pickup
-                      <ArrowIcon />
-                    </button>
-                    <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
-                      Track a Consignment
-                    </a>
-                  </div>
-
-                  <ul className="mt-10 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-navy-100">
-                    {SERVICE_PROMISES.map((item) => (
-                      <li key={item} className="flex items-center gap-2">
-                        <CheckCircle aria-hidden="true" className="w-4 h-4 text-accent shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
-
-                {/* Tracking card — the page's primary task, given the stronger surface */}
-                <motion.div
-                  id="tracking"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                  className="w-full max-w-lg lg:ml-auto scroll-mt-24"
+              {/* Quick actions — the app's launcher grid */}
+              <motion.nav
+                aria-label="Quick actions"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4"
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsPickupModalOpen(true)}
+                  className={QUICK_TILE}
                 >
-                  <div className="glass-strong rounded-lg p-6 lg:p-8">
-                    <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
-                      <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
-                      Track your consignment
-                    </h2>
-                    <p className="mt-2 text-sm text-charcoal-light text-pretty">
-                      Enter the waybill number printed on your receipt to see the latest status and
-                      location.
-                    </p>
-                    <form onSubmit={handleSearch} className="mt-6">
-                      <label htmlFor="waybill" className="sr-only">
-                        Waybill number
-                      </label>
-                      <div className="flex items-center gap-2 rounded-lg glass-input p-1.5 transition-colors focus-within:border-navy-500">
-                        <span className="pl-2 text-charcoal-muted" aria-hidden="true">
-                          <Package className="w-5 h-5" />
-                        </span>
-                        <input
-                          id="waybill"
-                          type="text"
-                          value={waybill}
-                          onChange={(e) => setWaybill(e.target.value)}
-                          placeholder="e.g. KPL-8829"
-                          autoComplete="off"
-                          className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          aria-label="Track consignment"
-                          className={cn(
-                            BTN_PRIMARY,
-                            BTN_PADDING_INPUT,
-                            'disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-accent'
-                          )}
-                        >
-                          {loading ? (
-                            <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <span className="hidden sm:inline">Track</span>
-                          )}
-                          {!loading && <ArrowIcon />}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </motion.div>
-              </div>
+                  <Truck aria-hidden="true" className="h-5 w-5 text-accent" />
+                  Get a quote
+                </button>
+                <a href="#tracking" className={QUICK_TILE}>
+                  <Package aria-hidden="true" className="h-5 w-5 text-accent" />
+                  Track
+                </a>
+                <a href="#services" className={QUICK_TILE}>
+                  <LayoutGrid aria-hidden="true" className="h-5 w-5 text-accent" />
+                  Services
+                </a>
+                <a href="#contact" className={QUICK_TILE}>
+                  <Phone aria-hidden="true" className="h-5 w-5 text-accent" />
+                  Contact
+                </a>
+              </motion.nav>
+
+              <ul className="mx-auto mt-8 flex max-w-2xl flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-navy-100">
+                {SERVICE_PROMISES.map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <CheckCircle aria-hidden="true" className="w-4 h-4 text-accent shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
 
@@ -1257,7 +1125,7 @@ export default function HomeClient({
 
           {/* Advertisements Section */}
           {advertisements.length > 0 && (
-            <section className="py-16 lg:py-20">
+            <section className="py-12 lg:py-20">
               <div className={CONTAINER}>
                 {advertisements.length === 1 ? (
                   <AdvertisementCard ad={advertisements[0]} />
@@ -1269,7 +1137,7 @@ export default function HomeClient({
           )}
 
           {/* Services & Fleet Showcase */}
-          <section id="fleet" className="py-16 lg:py-20 scroll-mt-20 border-y border-navy-100">
+          <section id="fleet" className="py-12 lg:py-20 scroll-mt-20 border-y border-navy-100">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="Our fleet"
@@ -1282,7 +1150,7 @@ export default function HomeClient({
           </section>
 
           {/* Services & Features Grid */}
-          <section id="services" className="py-16 lg:py-20">
+          <section id="services" className="py-12 lg:py-20">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="What we do"
@@ -1314,7 +1182,7 @@ export default function HomeClient({
           </section>
 
           {/* Executive Leadership */}
-          <section id="leadership" className="py-16 lg:py-20 scroll-mt-20 border-y border-navy-100">
+          <section id="leadership" className="py-12 lg:py-20 scroll-mt-20 border-y border-navy-100">
             <div className={CONTAINER}>
               <SectionHeader
                 eyebrow="Leadership"
@@ -1326,16 +1194,14 @@ export default function HomeClient({
             </div>
           </section>
 
-          {/* Closing call to action */}
-          <section className="relative isolate bg-navy-900 border-t border-navy-800 overflow-hidden">
+          {/* Closing call to action — also the #contact target for the tab bar */}
+          <section
+            id="contact"
+            className="relative isolate bg-navy-900 border-t border-navy-800 overflow-hidden scroll-mt-20"
+          >
             <DarkBackdrop />
-            <div
-              className={cn(
-                CONTAINER,
-                'relative py-14 lg:py-16 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8'
-              )}
-            >
-              <div className="max-w-2xl">
+            <div className={cn(CONTAINER, 'relative py-12 lg:py-16')}>
+              <div className="mx-auto max-w-2xl text-center">
                 <Eyebrow onDark>Next step</Eyebrow>
                 <h2 className="mt-4 text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Ready to move your cargo?
@@ -1344,28 +1210,28 @@ export default function HomeClient({
                   Book a pickup and we will confirm collection, routing and documentation before the
                   consignment leaves your site.
                 </p>
-              </div>
-              <div className="flex flex-wrap gap-4 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsPickupModalOpen(true)}
-                  className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
-                >
-                  Request a Pickup
-                  <ArrowIcon />
-                </button>
-                <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
-                  Track a Consignment
-                </a>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsPickupModalOpen(true)}
+                    className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
+                  >
+                    Request a Pickup
+                    <ArrowIcon />
+                  </button>
+                  <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
+                    Track a Consignment
+                  </a>
+                </div>
               </div>
             </div>
           </section>
         </main>
 
-        {/* Footer */}
-        <footer className="relative isolate bg-navy-900 text-navy-200 py-16 border-t border-navy-800">
-          <div className={cn(CONTAINER, 'relative grid md:grid-cols-4 gap-12')}>
-            <div className="md:col-span-2">
+        {/* Footer — compact app footer */}
+        <footer className="relative isolate bg-navy-900 text-navy-200 py-12 border-t border-navy-800">
+          <div className={cn(CONTAINER, 'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4')}>
+            <div className="sm:col-span-2">
               <div className="flex items-center gap-3 mb-6">
                 <span className="bg-white p-1.5 rounded-md">
                   <Image
@@ -1389,39 +1255,6 @@ export default function HomeClient({
                 Dar es Salaam, Tanzania
               </div>
               <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
-              <div className="mt-4 text-[10px] font-mono text-navy-400 font-bold tracking-wider">
-                DEVELOPED BY KAISI
-                <span className="mx-2">|</span>
-                <a
-                  href="/staff/login"
-                  className={cn('transition-colors hover:text-white', FOCUS_DARK)}
-                >
-                  STAFF LOGIN
-                </a>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
-              <ul className="space-y-3 text-sm">
-                {NAV_LINKS.filter(([href]) => href !== '#tracking').map(([href, label]) => (
-                  <li key={href}>
-                    <a
-                      href={href}
-                      className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-                <li>
-                  <Link
-                    href="/staff/login"
-                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
-                  >
-                    Staff Portal
-                  </Link>
-                </li>
-              </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
@@ -1454,8 +1287,45 @@ export default function HomeClient({
                 </li>
               </ul>
             </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
+              <ul className="space-y-3 text-sm">
+                {NAV_LINKS.filter(([href]) => href !== '#tracking').map(([href, label]) => (
+                  <li key={href}>
+                    <a
+                      href={href}
+                      className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                    >
+                      {label}
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <Link
+                    href="/staff/login"
+                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                  >
+                    Staff Portal
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className={cn(CONTAINER, 'relative mt-10 pt-6 border-t border-navy-800')}>
+            <div className="text-[10px] font-mono text-navy-400 font-bold tracking-wider">
+              DEVELOPED BY KAISI
+              <span className="mx-2">|</span>
+              <a
+                href="/staff/login"
+                className={cn('transition-colors hover:text-white', FOCUS_DARK)}
+              >
+                STAFF LOGIN
+              </a>
+            </div>
           </div>
         </footer>
+
+        <AppTabBar />
 
         {/* Pickup Modal */}
         <PickupRequestModal
