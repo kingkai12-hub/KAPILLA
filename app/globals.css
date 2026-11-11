@@ -244,6 +244,9 @@ a {
     box-shadow:
       0 12px 48px rgba(11, 31, 58, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    /* Native app: keep the menu clear of the status / navigation bars. */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .glass-header {
@@ -252,6 +255,9 @@ a {
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 6px 24px rgba(11, 31, 58, 0.1);
+    /* Keep bar content clear of the Android status bar in the native app
+       (edge-to-edge). Resolves to 0px in normal browsers. */
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   .glass-input {

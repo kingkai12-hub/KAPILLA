@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import RefreshHandler from '@/components/RefreshHandler';
 import IdleLogout from '@/components/IdleLogout';
 import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup';
+import CapacitorShell from '@/components/CapacitorShell';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { cookies, headers } from 'next/headers';
@@ -60,6 +61,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Required so env(safe-area-inset-*) resolves inside the native Android app.
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -167,6 +170,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           )}
           <div className="app-aurora" aria-hidden="true" />
           <ServiceWorkerCleanup />
+          <CapacitorShell />
           <RefreshHandler />
           <IdleLogout />
           {children}
