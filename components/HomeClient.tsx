@@ -21,6 +21,7 @@ import {
   Plane,
   Ship,
   Truck,
+  User,
   X,
   Zap,
 } from 'lucide-react';
@@ -87,6 +88,7 @@ const BTN_PADDING_LG = 'px-6 py-3';
 const BTN_PADDING_INPUT = 'px-4 py-2.5';
 const BTN_PRIMARY = `${BTN} bg-accent text-navy-900 shadow-soft hover:bg-accent-dark hover:shadow-soft-lg`;
 const BTN_GHOST_DARK = `${BTN} border border-navy-400/60 text-white hover:bg-navy-800 focus-visible:outline-accent`;
+const BTN_SECONDARY = `${BTN} border border-navy-200 bg-white/70 text-navy-800 hover:border-navy-400 hover:bg-white`;
 
 const FOCUS_DARK = 'focus-visible:outline-accent';
 
@@ -520,20 +522,34 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                   priority
                 />
               </span>
-              <span className="text-base font-semibold text-navy-900 tracking-tight">
+              <span className="hidden text-base font-semibold text-navy-900 tracking-tight min-[380px]:inline">
                 Kapilla <span className="text-accent">Group</span>
               </span>
             </Link>
 
-            <button
-              type="button"
-              onClick={() => setIsPickupModalOpen(true)}
-              className={cn(BTN_PRIMARY, 'px-4 py-2.5 text-sm')}
-            >
-              <Truck aria-hidden="true" className="h-4 w-4" />
-              <span className="hidden sm:inline">Request a Pickup</span>
-              <span className="sm:hidden">Pickup</span>
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href="/staff/login"
+                aria-label="Sign in to the staff portal"
+                className={cn(
+                  BTN_SECONDARY,
+                  'h-11 w-11 px-0 text-sm sm:h-auto sm:w-auto sm:px-4 sm:py-2.5'
+                )}
+              >
+                <User aria-hidden="true" className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign in</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setIsPickupModalOpen(true)}
+                className={cn(BTN_PRIMARY, 'px-4 py-2.5 text-sm')}
+              >
+                <Truck aria-hidden="true" className="h-4 w-4" />
+                <span className="hidden sm:inline">Request a Pickup</span>
+                <span className="sm:hidden">Pickup</span>
+              </button>
+            </div>
           </div>
         </header>
 
