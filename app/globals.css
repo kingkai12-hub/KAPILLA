@@ -314,3 +314,52 @@ a {
     background: rgba(11, 31, 58, 0.5);
   }
 }
+
+/* ==================================================================
+   App loading screen
+   ------------------------------------------------------------------
+   The mark breathes while the app boots, so a cold start reads as an
+   intentional splash rather than a frozen white page. Both animations
+   are neutralised by the prefers-reduced-motion block above.
+   ================================================================== */
+@keyframes logo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes logo-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes loading-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
+.logo-breathe {
+  animation: logo-breathe 2.6s ease-in-out infinite;
+}
+
+.logo-ring {
+  animation: logo-ring 2.6s ease-out infinite backwards;
+}
+
+.loading-sweep {
+  animation: loading-sweep 1.4s ease-in-out infinite;
+}
