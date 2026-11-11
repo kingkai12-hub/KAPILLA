@@ -30,12 +30,26 @@ const FADE_MS = 420;
 export default function AppSplash() {
   const [phase, setPhase] = useState<'visible' | 'fading' | 'gone'>('visible');
 
+  /**
+   * Lock page scroll only while the splash actually covers the screen.
+   *
+   * Keyed on `phase` so the lock is released the moment it becomes 'gone'.
+   * AppSplash is mounted once in the root layout and never unmounts, so an
+   * unmount-only cleanup would leave `body { overflow: hidden }` applied to the
+   * whole session and make every page unscrollable.
+   */
+  useEffect(() => {
+    if (phase === 'gone') return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [phase]);
+
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
 
     const fadeOut = () => {
       if (cancelled) return;
@@ -72,7 +86,6 @@ export default function AppSplash() {
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
-      document.body.style.overflow = previousOverflow;
     };
   }, []);
 
