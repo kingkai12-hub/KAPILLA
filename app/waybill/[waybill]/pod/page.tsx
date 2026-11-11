@@ -70,17 +70,17 @@ export default function ProofOfDeliveryPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="glass-strong p-8 rounded-2xl max-w-md text-center">
-          <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-accent-light text-navy-800 rounded-md flex items-center justify-center mx-auto mb-4">
             <Printer className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Receipt Unavailable</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold text-navy-900 mb-2">Receipt Unavailable</h1>
+          <p className="text-charcoal-light mb-6">
             Proof of Delivery can only be generated after the shipment has been marked as{' '}
             <strong>DELIVERED</strong>.
           </p>
-          <div className="text-sm glass rounded-lg p-3">
+          <div className="text-sm glass rounded-md p-3">
             Current Status:{' '}
-            <span className="font-bold text-blue-600">{shipment.currentStatus}</span>
+            <span className="font-bold text-navy-700">{shipment.currentStatus}</span>
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function ProofOfDeliveryPage() {
       {/* Print Button */}
       <button
         onClick={handlePrint}
-        className="mb-8 flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-green-700 transition-transform hover:scale-105 print:hidden"
+        className="mb-8 flex items-center gap-2 bg-accent text-navy-900 px-6 py-3 rounded-md font-semibold shadow-soft hover:bg-accent-dark transition-colors print:hidden"
       >
         <Printer className="w-5 h-5" />
         Print Proof of Delivery

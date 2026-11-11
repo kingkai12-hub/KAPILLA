@@ -3,21 +3,28 @@ import { Package } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-      <div className="text-center">
-        <div className="bg-white p-4 rounded-full shadow-lg inline-flex mb-6">
-          <Package className="w-12 h-12 text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center safe-page">
+      <div className="w-full max-w-xl glass-card p-8 sm:p-10 text-center">
+        <div className="flex justify-center mb-6">
+          <span className="glass inline-flex p-3 rounded-md">
+            <Package aria-hidden="true" className="w-8 h-8 text-navy-700" />
+          </span>
         </div>
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Page Not Found</h2>
-        <p className="text-slate-600 mb-8 max-w-md">
+        <p className="text-xs font-semibold uppercase tracking-wider text-navy-600">Error 404</p>
+        <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-navy-900">
+          Page not found
+        </h1>
+        <p className="mt-4 text-sm text-charcoal-light leading-relaxed">
           The page you are looking for does not exist or has been moved.
         </p>
-        <Link 
-          href="/"
-          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all"
-        >
-          Go back home
-        </Link>
+        <div className="mt-8">
+          <Link
+            href="/"
+            className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-accent px-6 py-3 font-semibold text-navy-900 hover:bg-accent-dark transition-colors"
+          >
+            Go back home
+          </Link>
+        </div>
       </div>
     </div>
   );

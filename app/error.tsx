@@ -1,39 +1,37 @@
- "use client";
- 
- import React from "react";
- 
- export default function Error({
-   error,
-   reset,
- }: {
-   error: Error & { digest?: string };
-   reset: () => void;
- }) {
-   return (
-     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-       <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-6 text-center space-y-4">
-         <h1 className="text-2xl font-bold">Something went wrong</h1>
-         <p className="text-slate-600">
-           An unexpected error occurred. Please try again.
-         </p>
-         {error?.digest && (
-           <p className="text-xs text-slate-400">Ref: {error.digest}</p>
-         )}
-         <div className="flex gap-3 justify-center">
-           <button
-             onClick={() => reset()}
-             className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-           >
-             Retry
-           </button>
-           <a
-             href="/api/health"
-             className="px-4 py-2 rounded-lg bg-slate-200 text-slate-800 font-semibold hover:bg-slate-300 transition"
-           >
-             System Health
-           </a>
-         </div>
-       </div>
-     </div>
-   );
- }
+'use client';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center safe-page">
+      <div className="w-full max-w-xl glass-card p-8 sm:p-10 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-navy-900">
+          Something went wrong
+        </h1>
+        <p className="mt-4 text-sm text-charcoal-light leading-relaxed">
+          An unexpected error occurred. Please try again.
+        </p>
+        {error?.digest && <p className="mt-3 text-xs text-charcoal-muted">Ref: {error.digest}</p>}
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => reset()}
+            className="inline-flex items-center justify-center rounded-md bg-accent px-6 py-3 font-semibold text-navy-900 hover:bg-accent-dark transition-colors"
+          >
+            Try again
+          </button>
+          <a
+            href="/api/health"
+            className="inline-flex items-center justify-center rounded-md border border-navy-200 bg-white px-6 py-3 font-semibold text-navy-800 hover:bg-navy-50 transition-colors"
+          >
+            System health
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
