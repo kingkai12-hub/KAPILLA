@@ -363,3 +363,16 @@ a {
 .loading-sweep {
   animation: loading-sweep 1.4s ease-in-out infinite;
 }
+
+/*
+  App-style swipe row: the track scrolls horizontally with snap points but shows
+  no scrollbar, so it reads as a native carousel rather than a scrollable box.
+*/
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

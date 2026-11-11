@@ -40,40 +40,8 @@ async function getExecutives() {
   }
 }
 
-async function getAdvertisements() {
-  try {
-    const now = new Date();
-    return await db.advertisement.findMany({
-      where: {
-        isActive: true,
-        AND: [
-          {
-            OR: [{ startDate: null }, { startDate: { lte: now } }],
-          },
-          {
-            OR: [{ endDate: null }, { endDate: { gte: now } }],
-          },
-        ],
-      },
-      orderBy: { sortOrder: 'asc' },
-    });
-  } catch {
-    return [];
-  }
-}
-
 export default async function Home() {
-  const [services, executives, advertisements] = await Promise.all([
-    getServices(),
-    getExecutives(),
-    getAdvertisements(),
-  ]);
+  const [services, executives] = await Promise.all([getServices(), getExecutives()]);
 
-  return (
-    <HomeClient
-      initialServices={services}
-      initialExecutives={executives}
-      initialAdvertisements={advertisements}
-    />
-  );
+  return <HomeClient initialServices={services} initialExecutives={executives} />;
 }
