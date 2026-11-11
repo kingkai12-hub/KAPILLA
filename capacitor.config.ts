@@ -22,6 +22,26 @@ const config: CapacitorConfig = {
     captureInput: true,
     webContentsDebuggingEnabled: false,
   },
+  plugins: {
+    SplashScreen: {
+      /**
+       * Hold the launch splash for a fixed minimum so a cold start reads as one
+       * deliberate app opening rather than a blink. The native layer owns the
+       * timing, so the branded screen stays up while the remote page is still
+       * being fetched — the WebView gap is never visible.
+       *
+       * launchAutoHide keeps the fallback safe: even if the page never loads,
+       * the splash always clears itself.
+       */
+      launchShowDuration: 5000,
+      launchAutoHide: true,
+      launchFadeOutDuration: 400,
+      backgroundColor: '#ffffff',
+      showSpinner: false,
+      splashFullScreen: false,
+      splashImmersive: false,
+    },
+  },
 };
 
 export default config;

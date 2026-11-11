@@ -8,6 +8,10 @@
       same white sheet the launch drawable uses so the whole cold start reads as
       one continuous loading screen instead of a dark flash.
 
+      The splash-screen plugin holds this system splash on screen for its minimum
+      duration, so the icon has to be the brand mark rather than the default
+      launcher icon.
+
       Style resources are not merged across configuration qualifiers, so this
       re-declares the items from values/styles.xml alongside the API 31 ones.
     -->
@@ -15,5 +19,6 @@
         <item name="android:background">@drawable/splash</item>
         <item name="android:windowBackground">@drawable/splash</item>
         <item name="android:windowSplashScreenBackground">@color/splash_top</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
     </style>
 </resources>
