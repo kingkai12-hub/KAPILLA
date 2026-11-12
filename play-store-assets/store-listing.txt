@@ -1,0 +1,92 @@
+PLAY STORE LISTING COPY — Kapilla Group
+Package: com.kapillagroup.app   |   versionCode 1 / versionName 1.0.0
+Character limits are enforced by Play Console; counts are shown for each field.
+
+--------------------------------------------------------------------------
+1. APP NAME  (max 30 characters — current: 13)
+--------------------------------------------------------------------------
+Kapilla Group
+
+--------------------------------------------------------------------------
+2. SHORT DESCRIPTION  (max 80 characters — current: 71)
+--------------------------------------------------------------------------
+Track consignments, book pickups and manage freight with Kapilla Group.
+
+--------------------------------------------------------------------------
+3. FULL DESCRIPTION  (max 4000 characters — current: ~1080)
+--------------------------------------------------------------------------
+Kapilla Group Limited is a Tanzanian transport and general supply company
+moving cargo by road, sea and air across Tanzania and more than 200
+destinations worldwide.
+
+This app keeps the essentials in one place:
+
+• Track a consignment — enter the waybill number printed on your receipt to
+  see the latest status and location of your cargo.
+• Request a pickup — book a collection and our team confirms collection and
+  routing.
+• Freight solutions — road, sea and air freight, plus door-to-door delivery.
+• General supply — office stationery, IT equipment, industrial tools, safety
+  gear and building materials sourced and delivered.
+• Our services — express courier, freight transportation, customs clearing
+  and forwarding, ADC express, real-time tracking and a global network.
+• Support — reach the team from the Help Center at any time.
+
+Kapilla Group staff can also sign in to the staff portal to manage shipments,
+invoices, clients and reports.
+
+Reliable logistics, competitive pricing, and one partner for your supply
+chain.
+
+--------------------------------------------------------------------------
+4. STORE SETTINGS TO FILL IN PLAY CONSOLE  (you must supply these — do not
+   guess them)
+--------------------------------------------------------------------------
+App or game ........................ App
+Category ............................ Business   (alternative: Maps & Navigation)
+Tags ................................ Logistics, Tracking, Freight
+Contact email ....................... <your support email>
+ Website ............................. https://kapillagroup.vercel.app
+Privacy policy URL .................. https://kapillagroup.vercel.app/privacy
+                                      (live only after the next deployment —
+                                      it currently returns 404)
+Contains ads ........................ No
+In-app purchases .................... No
+App access .......................... All functionality is available without
+                                      signing in, except the staff portal
+                                      (staff-only, admin-issued accounts).
+                                      If asked, provide reviewer instructions:
+                                      "Public tracking and pickup requests need
+                                      no login. The staff portal at /staff/login
+                                      is for company employees only and requires
+                                      an account issued by the administrator."
+
+--------------------------------------------------------------------------
+5. PREREQUISITES THAT BLOCK PUBLISHING  (not assets — must be resolved)
+--------------------------------------------------------------------------
+a) Google Play Developer account — $25 one-time + identity verification.
+b) Privacy policy URL — page added at app/privacy/page.tsx, exempted from the
+   maintenance-mode gate in app/layout.tsx and added to app/sitemap.ts. It
+   MUST BE DEPLOYED before the URL works; then paste this into Play Console:
+       https://kapillagroup.vercel.app/privacy
+c) Data safety form — declare: no data collected by the app itself; the app
+   uses the internet to load the Kapilla Group service. Android permissions
+   declared in the manifest: INTERNET only (see
+   android/app/src/main/AndroidManifest.xml).
+d) New *personal* developer accounts (created after 13 Nov 2023) cannot
+   publish to Production immediately: closed testing with at least 12 testers
+   opted in for 14 continuous days is required first. An *organisation*
+   account (needs a D-U-N-S number) can go straight to Production.
+
+--------------------------------------------------------------------------
+6. ASSET FILES IN THIS FOLDER
+--------------------------------------------------------------------------
+icon-512.png                    512 x 512    app icon
+feature-graphic-1024x500.png    1024 x 500   header graphic
+screenshots/1-track-consignment.png   1080 x 1920
+screenshots/2-freight-solutions.png   1080 x 1920
+screenshots/3-our-services.png        1080 x 1920
+screenshots/4-book-a-pickup.png       1080 x 1920
+
+All four screenshots are 9:16 (Play accepts portrait ratios between 9:16 and
+16:9, min 320 px, max 3840 px, and no side longer than twice the other).
