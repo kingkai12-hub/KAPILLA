@@ -1415,6 +1415,14 @@ export default function WebHomeClient({
                 ))}
                 <li>
                   <Link
+                    href="/download"
+                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                  >
+                    Get the App
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/staff/login"
                     className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
                   >

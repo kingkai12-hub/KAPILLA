@@ -4,5 +4,20 @@
       "path": "/api/cron/update-vehicles",
       "schedule": "0 0 * * *"
     }
+  ],
+  "headers": [
+    {
+      "source": "/downloads/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment"
+        }
+      ]
+    }
   ]
 }

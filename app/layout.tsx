@@ -70,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let isMaintenance = false;
   let maintenanceMessage = '';
   let isAdmin = false;
-  let isLoginRoute = false;
+  let isExemptRoute = false;
 
   try {
     const status = await getMaintenanceStatus();
@@ -82,11 +82,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   if (isMaintenance) {
     // The login page must stay reachable so an admin can sign in and turn
-    // maintenance off — otherwise nobody can get back in.
+    // maintenance off — otherwise nobody can get back in. The privacy policy
+    // and the app download page must also stay reachable: app store review
+    // fetches the policy URL directly, and download links get shared publicly.
     const pathname = (await headers()).get('x-pathname') ?? '';
-    isLoginRoute = pathname === '/staff/login';
+    isExemptRoute =
+      pathname === '/staff/login' || pathname === '/privacy' || pathname === '/download';
 
-    if (!isLoginRoute) {
+    if (!isExemptRoute) {
       try {
         const cookieStore = await cookies();
         const userId = cookieStore.get('kapilla_uid')?.value;
@@ -108,7 +111,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     }
   }
 
-  if (isMaintenance && !isAdmin && !isLoginRoute) {
+  if (isMaintenance && !isAdmin && !isExemptRoute) {
     return (
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
