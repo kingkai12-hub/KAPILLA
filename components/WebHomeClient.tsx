@@ -22,6 +22,7 @@ import {
   Package,
   Plane,
   Ship,
+  Smartphone,
   Truck,
   X,
   Zap,
@@ -92,6 +93,7 @@ const BTN_PADDING_INPUT = 'px-4 py-2.5';
 const BTN_PRIMARY = `${BTN} bg-accent text-navy-900 shadow-soft hover:bg-accent-dark hover:shadow-soft-lg`;
 const BTN_GHOST_DARK = `${BTN} border border-navy-400/60 text-white hover:bg-navy-800 focus-visible:outline-accent`;
 const BTN_QUIET = `${BTN} border border-navy-200 bg-white text-navy-800 hover:border-navy-400 hover:bg-navy-50`;
+const BTN_DARK = `${BTN} bg-navy-800 text-white shadow-soft hover:bg-navy-900 hover:shadow-soft-lg focus-visible:outline-accent`;
 
 const FOCUS_DARK = 'focus-visible:outline-accent';
 
@@ -846,6 +848,14 @@ export default function WebHomeClient({
                   <span className="hidden md:inline">Request a Pickup</span>
                 </button>
                 <Link
+                  href="/download"
+                  className={cn(BTN_DARK, 'hidden md:flex px-5 py-2.5 text-sm')}
+                  aria-label="Download the Kapilla Group app"
+                >
+                  <Smartphone aria-hidden="true" className="h-4 w-4" />
+                  <span>Get the App</span>
+                </Link>
+                <Link
                   href="/staff/login"
                   className={cn(BTN_QUIET, 'hidden md:flex px-5 py-2.5 text-sm')}
                   aria-label="Staff portal"
@@ -909,6 +919,15 @@ export default function WebHomeClient({
                       Staff Portal
                     </Link>
                   </div>
+                  <Link
+                    href="/download"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={cn(BTN_DARK, 'mt-3 w-full px-4 py-3 text-sm')}
+                    aria-label="Download the Kapilla Group app"
+                  >
+                    <Smartphone aria-hidden="true" className="h-4 w-4" />
+                    <span>Get the App</span>
+                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1255,6 +1274,63 @@ export default function WebHomeClient({
             )}
           </AnimatePresence>
 
+          {/* App promotion — announces the new Kapilla Group mobile app */}
+          <section className="relative isolate bg-navy-950 overflow-hidden scroll-mt-20">
+            <DarkBackdrop />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl"
+            />
+            <div className={cn(CONTAINER, 'relative py-12 lg:py-16')}>
+              <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="max-w-2xl"
+                >
+                  <Eyebrow onDark>New app</Eyebrow>
+                  <h2 className="mt-4 text-2xl font-bold tracking-tight text-white md:text-3xl">
+                    The Kapilla Group app is here
+                  </h2>
+                  <p className={cn(LEAD, 'mt-3 text-pretty')}>
+                    Track your consignment by waybill number and request a pickup straight from your
+                    phone. The Android app is free to download today — the same service you rely on,
+                    built for the road.
+                  </p>
+                  <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-navy-100">
+                    {[
+                      'Track by waybill number',
+                      'Request pickups in seconds',
+                      'Free · Android 7.0 or newer',
+                    ].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <CheckCircle aria-hidden="true" className="h-4 w-4 shrink-0 text-accent" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+
+                <div className="flex shrink-0 flex-col items-stretch gap-3 lg:items-end">
+                  <Link
+                    href="/download"
+                    className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
+                    aria-label="Download the Kapilla Group app"
+                  >
+                    <Smartphone aria-hidden="true" className="h-5 w-5" />
+                    Get the App
+                    <ArrowIcon />
+                  </Link>
+                  <p className="text-xs text-navy-300 lg:text-right">
+                    Version 1.0.0 &middot; Google Play coming soon
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Advertisements Section */}
           {advertisements.length > 0 && (
             <section className="py-16 lg:py-20">
@@ -1388,6 +1464,17 @@ export default function WebHomeClient({
                 <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
                 Dar es Salaam, Tanzania
               </div>
+              <Link
+                href="/download"
+                className={cn(
+                  'group mb-6 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-navy-900 shadow-soft transition-colors hover:bg-accent-dark',
+                  FOCUS_DARK
+                )}
+                aria-label="Download the Kapilla Group app"
+              >
+                <Smartphone aria-hidden="true" className="h-4 w-4" />
+                Get the App
+              </Link>
               <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
               <div className="mt-4 text-[10px] font-mono text-navy-400 font-bold tracking-wider">
                 DEVELOPED BY KAISI
