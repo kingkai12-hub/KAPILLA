@@ -75,6 +75,9 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   const [mounted, setMounted] = useState(false);
   const [pendingPickupCount, setPendingPickupCount] = useState(0);
   const sessionManagerRef = React.useRef<SessionManager | null>(null);
+  // The content pane is the only scrolling surface in the app shell, so the
+  // browser's automatic window scroll reset never reaches it.
+  const mainRef = React.useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -201,6 +204,14 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   useEffect(() => {
     setSidebarHover(false);
     setSidebarOpen(false);
+  }, [pathname]);
+
+  // Reset the content pane scroll on navigation — the window no longer scrolls.
+  useEffect(() => {
+    const pane = mainRef.current;
+    if (!pane) return;
+    pane.scrollTop = 0;
+    pane.scrollLeft = 0;
   }, [pathname]);
 
   // Close the menu with the Escape key
@@ -593,7 +604,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex font-sans transition-colors duration-300">
+    <div className="app-shell h-dvh max-h-dvh overflow-hidden flex font-sans transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -733,16 +744,16 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden text-charcoal dark:text-slate-100 transition-colors duration-300">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden text-charcoal dark:text-slate-100 transition-colors duration-300">
         {/* Header (Desktop & Mobile) */}
         <header className="sticky top-0 z-30 border-b border-navy-100 bg-white shadow-soft pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center justify-between min-h-16 px-4 sm:px-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3 min-h-16 px-4 sm:px-6">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen((open) => !open)}
                 aria-label="Toggle navigation menu"
                 aria-expanded={sidebarOpen}
-                className="p-2 -ml-2 text-charcoal-muted hover:text-navy-900 hover:bg-navy-50 rounded-lg transition-colors"
+                className="shrink-0 p-2 -ml-2 text-charcoal-muted hover:text-navy-900 hover:bg-navy-50 rounded-lg transition-colors"
               >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -759,15 +770,15 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               </div>
 
               {/* Desktop Welcome Message */}
-              <div className="hidden md:block">
-                <h2 className="text-lg font-semibold text-navy-900">
+              <div className="hidden md:block min-w-0">
+                <h2 className="text-lg font-semibold text-navy-900 truncate">
                   Welcome back, {user?.name?.split(' ')[0]}
                 </h2>
               </div>
             </div>
 
             {/* Right Side Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               {mounted && (
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -779,9 +790,11 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               )}
 
               <div className="flex items-center gap-3 pl-4 border-l border-navy-100">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-navy-900 leading-none">{user?.name}</p>
-                  <p className="text-xs text-charcoal-muted mt-1">{user?.role}</p>
+                <div className="text-right hidden sm:block max-w-[10rem]">
+                  <p className="text-sm font-bold text-navy-900 leading-none truncate">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-charcoal-muted mt-1 truncate">{user?.role}</p>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
                   <button
@@ -819,7 +832,10 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth">
+        <main
+          ref={mainRef}
+          className="app-shell-main flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-8 lg:p-10"
+        >
           <div className="max-w-7xl mx-auto">
             <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
           </div>

@@ -185,6 +185,18 @@ a {
     width: 100%;
     overflow: visible;
   }
+
+  /*
+    The staff portal is an app shell: it locks the viewport and scrolls only
+    the content pane. Printing has to undo that or the printout is clipped to
+    one screenful.
+  */
+  .app-shell,
+  .app-shell-main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
 }
 
 /* ==================================================================
