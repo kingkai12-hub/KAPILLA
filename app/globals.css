@@ -129,10 +129,17 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Optimize images for different screen sizes */
-img {
-  max-width: 100%;
-  height: auto;
+/*
+  Responsive image defaults. This has to live in the base layer: unlayered CSS
+  outranks everything in @layer utilities, so leaving it bare silently beat
+  every `h-*` class on an <img> and let images grow to fill their container
+  instead of the height they were given.
+*/
+@layer base {
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 .safe-page {
