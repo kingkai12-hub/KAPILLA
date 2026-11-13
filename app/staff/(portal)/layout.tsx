@@ -754,7 +754,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                   alt="Kapilla Group Ltd"
                   width={801}
                   height={255}
-                  className="h-7 w-auto object-contain"
+                  className="h-5 w-auto object-contain"
                 />
               </div>
 
