@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, Package, LayoutGrid, Phone, User } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -11,33 +10,35 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 /**
- * Bottom navigation for the public site.
+ * Bottom navigation for the app shell.
  *
  * This is the single strongest signal that the site is an app rather than a
  * web page: a fixed, thumb-reachable bar that persists while content scrolls
- * underneath it. It is a floating dock rather than a full-bleed bar so it also
- * reads as intentional on desktop widths.
+ * underneath it. It is also the app's only navigation model — each tab opens a
+ * real screen rather than jumping to an anchor on one long page.
  *
  * Inside the Android shell the outer wrapper carries the gesture-bar inset, so
  * the dock never sits underneath the system navigation.
  */
-const TABS = [
+export type AppTab = 'home' | 'track' | 'services' | 'contact';
+
+const TABS: { href: string; label: string; icon: typeof Home }[] = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '#tracking', label: 'Track', icon: Package },
-  { href: '#services', label: 'Services', icon: LayoutGrid },
-  { href: '#contact', label: 'Contact', icon: Phone },
+  { href: '/track', label: 'Track', icon: Package },
+  { href: '/services', label: 'Services', icon: LayoutGrid },
+  { href: '/contact', label: 'Contact', icon: Phone },
   { href: '/staff/login', label: 'Account', icon: User },
 ];
 
-export default function AppTabBar() {
-  const [hash, setHash] = useState('');
+const HREF_BY_SCREEN: Record<AppTab, string> = {
+  home: '/',
+  track: '/track',
+  services: '/services',
+  contact: '/contact',
+};
 
-  useEffect(() => {
-    const sync = () => setHash(window.location.hash);
-    sync();
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
+export default function AppTabBar({ active = 'home' }: { active?: AppTab }) {
+  const activeHref = HREF_BY_SCREEN[active];
 
   return (
     <div
@@ -47,7 +48,7 @@ export default function AppTabBar() {
       <nav aria-label="App navigation" className="glass-strong w-full max-w-md rounded-2xl">
         <ul className="flex items-stretch">
           {TABS.map(({ href, label, icon: Icon }) => {
-            const isActive = href === '/' ? hash === '' : hash === href;
+            const isActive = href === activeHref;
             return (
               <li key={href} className="flex-1">
                 <Link

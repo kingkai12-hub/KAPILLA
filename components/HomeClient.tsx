@@ -15,6 +15,7 @@ import {
   Globe,
   LayoutGrid,
   Loader2,
+  Mail,
   MapPin,
   Package,
   Phone,
@@ -262,16 +263,23 @@ const FormattedDate = ({ dateStr, fallback = 'Just now' }: { dateStr: any; fallb
   return <span>{formatted}</span>;
 };
 
+export type AppScreen = 'home' | 'track' | 'services' | 'contact';
+
 interface HomeClientProps {
+  screen?: AppScreen;
   initialServices: any[];
   initialExecutives: any[];
 }
 
-const NAV_LINKS = [
-  ['#tracking', 'Track'],
-  ['#services', 'Services'],
-  ['#fleet', 'Freight'],
-  ['#leadership', 'Leadership'],
+/**
+ * Footer navigation. It mirrors the bottom tab bar exactly, so the app has one
+ * navigation model rather than a second, web-shaped one.
+ */
+const FOOTER_NAV: { href: string; label: string }[] = [
+  { href: '/', label: 'Home' },
+  { href: '/track', label: 'Track' },
+  { href: '/services', label: 'Services' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 const SERVICE_FEATURES = [
@@ -307,7 +315,11 @@ const SERVICE_FEATURES = [
   },
 ];
 
-export default function HomeClient({ initialServices, initialExecutives }: HomeClientProps) {
+export default function HomeClient({
+  screen = 'home',
+  initialServices,
+  initialExecutives,
+}: HomeClientProps) {
   const [waybill, setWaybill] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -492,18 +504,73 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
     performSearch(term);
   };
 
+  /** The app's primary task, shared by the home and track screens. */
+  const trackingForm = (
+    <div className="glass-strong rounded-2xl p-5 sm:p-6">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
+        <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
+        Track your consignment
+      </h2>
+      <p className="mt-2 text-sm text-charcoal-light text-pretty">
+        Enter the waybill number printed on your receipt to see the latest status and location.
+      </p>
+      <form onSubmit={handleSearch} className="mt-5">
+        <label htmlFor="waybill" className="sr-only">
+          Waybill number
+        </label>
+        <div className="flex items-center gap-2 rounded-lg glass-input p-1.5 transition-colors focus-within:border-navy-500">
+          <span className="pl-2 text-charcoal-muted" aria-hidden="true">
+            <Package className="w-5 h-5" />
+          </span>
+          <input
+            id="waybill"
+            type="text"
+            value={waybill}
+            onChange={(e) => setWaybill(e.target.value)}
+            placeholder="e.g. KPL-8829"
+            autoComplete="off"
+            className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            aria-label="Track consignment"
+            className={cn(
+              BTN_PRIMARY,
+              BTN_PADDING_INPUT,
+              'disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-accent'
+            )}
+          >
+            {loading ? (
+              <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
+            ) : (
+              <span className="hidden sm:inline">Track</span>
+            )}
+            {!loading && <ArrowIcon />}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  // The home screen is a single, non-scrolling launcher: hero, tracking form and
+  // quick actions only. Every other screen is reached from the bottom tab bar.
+  const isHome = screen === 'home';
+
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen font-sans text-charcoal pb-24">
+      <div className="flex min-h-screen flex-col font-sans text-charcoal pb-24">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-900"
         >
           Skip to content
         </a>
-        <Suspense fallback={null}>
-          <SearchParamsHandler onSearch={performSearch} />
-        </Suspense>
+        {screen === 'track' && (
+          <Suspense fallback={null}>
+            <SearchParamsHandler onSearch={performSearch} />
+          </Suspense>
+        )}
 
         {/* App bar — an opaque white surface, so the blue lockup stays legible on
             every device. The lockup already carries the wordmark, so it stands
@@ -522,7 +589,7 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
                 height={255}
                 priority
                 sizes="(max-width: 640px) 160px, 200px"
-                className="h-9 w-auto max-w-full object-contain object-left sm:h-10"
+                className="h-7 w-auto max-w-full object-contain object-left sm:h-8"
               />
             </Link>
 
@@ -552,131 +619,112 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           </div>
         </header>
 
-        <main id="main">
-          {/* Home screen — full-bleed, thumb-first. Tracking is the primary action. */}
-          <section className="relative isolate bg-navy-950 overflow-hidden">
-            <Image
-              src="/background.jpg"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover opacity-30"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-br from-navy-950 via-navy-950/90 to-navy-900/70"
-            />
-            <DarkBackdrop />
+        <main id="main" className="flex flex-1 flex-col">
+          {/* Home — a single, non-scrolling launcher screen. */}
+          {isHome && (
+            <section className="relative isolate flex flex-1 items-center bg-navy-950 overflow-hidden">
+              <Image
+                src="/background.jpg"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover opacity-30"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-br from-navy-950 via-navy-950/90 to-navy-900/70"
+              />
+              <DarkBackdrop />
 
-            <div className={cn(CONTAINER, 'relative py-10 lg:py-16')}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="mx-auto max-w-2xl text-center"
-              >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-navy-700 bg-white/5 text-navy-100 text-xs font-semibold uppercase tracking-wider backdrop-blur">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  Transportation &amp; General Supply
-                </div>
-                <h1 className={cn(H1, 'mt-5')}>Track it. Ship it. Delivered.</h1>
-                <p className="mt-3 text-sm text-navy-200 sm:text-base">
-                  Road, sea and air freight across Tanzania and 200+ destinations.
-                </p>
-              </motion.div>
-
-              {/* Tracking — the app's primary task, given the strongest surface */}
-              <motion.div
-                id="tracking"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="mx-auto mt-8 w-full max-w-2xl scroll-mt-24"
-              >
-                <div className="glass-strong rounded-2xl p-5 sm:p-6">
-                  <h2 className="flex items-center gap-2 text-lg font-semibold text-navy-900">
-                    <span aria-hidden="true" className="block w-4 border-t-2 border-accent" />
-                    Track your consignment
-                  </h2>
-                  <p className="mt-2 text-sm text-charcoal-light text-pretty">
-                    Enter the waybill number printed on your receipt to see the latest status and
-                    location.
-                  </p>
-                  <form onSubmit={handleSearch} className="mt-5">
-                    <label htmlFor="waybill" className="sr-only">
-                      Waybill number
-                    </label>
-                    <div className="flex items-center gap-2 rounded-lg glass-input p-1.5 transition-colors focus-within:border-navy-500">
-                      <span className="pl-2 text-charcoal-muted" aria-hidden="true">
-                        <Package className="w-5 h-5" />
-                      </span>
-                      <input
-                        id="waybill"
-                        type="text"
-                        value={waybill}
-                        onChange={(e) => setWaybill(e.target.value)}
-                        placeholder="e.g. KPL-8829"
-                        autoComplete="off"
-                        className="flex-1 py-2.5 bg-transparent text-base text-charcoal placeholder:text-charcoal-muted focus:outline-none"
-                      />
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        aria-label="Track consignment"
-                        className={cn(
-                          BTN_PRIMARY,
-                          BTN_PADDING_INPUT,
-                          'disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-accent'
-                        )}
-                      >
-                        {loading ? (
-                          <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <span className="hidden sm:inline">Track</span>
-                        )}
-                        {!loading && <ArrowIcon />}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </motion.div>
-
-              {/* Quick actions — the app's launcher grid */}
-              <motion.nav
-                aria-label="Quick actions"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.25 }}
-                className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4"
-              >
-                <button
-                  type="button"
-                  onClick={() => setIsPickupModalOpen(true)}
-                  className={QUICK_TILE}
+              <div className={cn(CONTAINER, 'relative py-6 lg:py-12')}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="mx-auto max-w-2xl text-center"
                 >
-                  <Truck aria-hidden="true" className="h-5 w-5 text-accent" />
-                  Get a quote
-                </button>
-                <a href="#tracking" className={QUICK_TILE}>
-                  <Package aria-hidden="true" className="h-5 w-5 text-accent" />
-                  Track
-                </a>
-                <a href="#services" className={QUICK_TILE}>
-                  <LayoutGrid aria-hidden="true" className="h-5 w-5 text-accent" />
-                  Services
-                </a>
-                <a href="#contact" className={QUICK_TILE}>
-                  <Phone aria-hidden="true" className="h-5 w-5 text-accent" />
-                  Contact
-                </a>
-              </motion.nav>
-            </div>
-          </section>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-navy-700 bg-white/5 text-navy-100 text-xs font-semibold uppercase tracking-wider backdrop-blur">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    Transportation &amp; General Supply
+                  </div>
+                  <h1 className={cn(H1, 'mt-5')}>Track it. Ship it. Delivered.</h1>
+                  <p className="mt-3 text-sm text-navy-200 sm:text-base">
+                    Road, sea and air freight across Tanzania and 200+ destinations.
+                  </p>
+                </motion.div>
 
-          {/* Search results */}
+                {/* Tracking — the app's primary task, given the strongest surface */}
+                <motion.div
+                  id="tracking"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.15 }}
+                  className="mx-auto mt-8 w-full max-w-2xl scroll-mt-24"
+                >
+                  {trackingForm}
+                </motion.div>
+
+                {/* Quick actions — the app's launcher grid */}
+                <motion.nav
+                  aria-label="Quick actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.25 }}
+                  className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setIsPickupModalOpen(true)}
+                    className={QUICK_TILE}
+                  >
+                    <Truck aria-hidden="true" className="h-5 w-5 text-accent" />
+                    Get a quote
+                  </button>
+                  <Link href="/track" className={QUICK_TILE}>
+                    <Package aria-hidden="true" className="h-5 w-5 text-accent" />
+                    Track
+                  </Link>
+                  <Link href="/services" className={QUICK_TILE}>
+                    <LayoutGrid aria-hidden="true" className="h-5 w-5 text-accent" />
+                    Services
+                  </Link>
+                  <Link href="/contact" className={QUICK_TILE}>
+                    <Phone aria-hidden="true" className="h-5 w-5 text-accent" />
+                    Contact
+                  </Link>
+                </motion.nav>
+              </div>
+            </section>
+          )}
+
+          {/* Track — the tracking form, followed by its results. */}
+          {screen === 'track' && (
+            <section className="relative isolate bg-navy-950 overflow-hidden">
+              <DarkBackdrop />
+              <div className={cn(CONTAINER, 'relative py-8 lg:py-12')}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="mx-auto max-w-2xl"
+                >
+                  <Eyebrow onDark>Tracking</Eyebrow>
+                  <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                    Tracking
+                  </h1>
+                  <p className="mt-2 text-sm text-navy-200">
+                    Every consignment carries a waybill you can follow from booking to delivery.
+                  </p>
+                  <div className="mt-6">{trackingForm}</div>
+                </motion.div>
+              </div>
+            </section>
+          )}
+
+          {/* Search results — only ever shown on the track screen. */}
           <AnimatePresence>
-            {hasSearched && (
+            {screen === 'track' && hasSearched && (
               <motion.section
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -894,195 +942,263 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
             )}
           </AnimatePresence>
 
-          {/* Freight solutions — swipeable app carousel */}
-          <section id="fleet" className="py-10 lg:py-16 scroll-mt-20 border-y border-navy-100">
-            <div className={CONTAINER}>
-              <SectionHeader
-                eyebrow="Our fleet"
-                title="Freight solutions"
-                intro="Swipe through how we move cargo."
-              />
+          {/* Services screen — what we do, the fleet and the leadership team. */}
+          {screen === 'services' && (
+            <>
+              {/* Services — compact app tiles */}
+              <section id="services" className="py-10 lg:py-16 scroll-mt-20">
+                <div className={CONTAINER}>
+                  <SectionHeader
+                    eyebrow="What we do"
+                    title="Our services"
+                    intro="Collection, freight, clearance and delivery."
+                  />
 
-              <ServicesGrid services={services} iconMap={iconMap} />
-            </div>
-          </section>
-
-          {/* Services — compact app tiles */}
-          <section id="services" className="py-10 lg:py-16">
-            <div className={CONTAINER}>
-              <SectionHeader
-                eyebrow="What we do"
-                title="Our services"
-                intro="Collection, freight, clearance and delivery."
-              />
-
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
-                {SERVICE_FEATURES.map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
-                    className={cn('group relative p-4 lg:p-6 overflow-hidden', CARD)}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-x-0 top-0 border-t-2 border-transparent transition-colors duration-300 group-hover:border-accent"
-                    />
-                    <FeatureTile icon={feature.icon} />
-                    <h3 className={cn(H3, 'mb-2')}>{feature.title}</h3>
-                    <p className={cn(BODY, 'line-clamp-3')}>{feature.desc}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Executive Leadership */}
-          <section id="leadership" className="py-10 lg:py-16 scroll-mt-20 border-y border-navy-100">
-            <div className={CONTAINER}>
-              <SectionHeader
-                eyebrow="Leadership"
-                title="Leadership"
-                intro="The team accountable for our service standards."
-              />
-
-              <ExecSection executives={executives} />
-            </div>
-          </section>
-
-          {/* Closing call to action — also the #contact target for the tab bar */}
-          <section
-            id="contact"
-            className="relative isolate bg-navy-900 border-t border-navy-800 overflow-hidden scroll-mt-20"
-          >
-            <DarkBackdrop />
-            <div className={cn(CONTAINER, 'relative py-12 lg:py-16')}>
-              <div className="mx-auto max-w-2xl text-center">
-                <Eyebrow onDark>Next step</Eyebrow>
-                <h2 className="mt-4 text-2xl md:text-3xl font-bold text-white tracking-tight">
-                  Ready to move your cargo?
-                </h2>
-                <p className="mt-3 text-sm text-navy-200">
-                  Book a pickup and we will confirm collection and routing.
-                </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsPickupModalOpen(true)}
-                    className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
-                  >
-                    Request a Pickup
-                    <ArrowIcon />
-                  </button>
-                  <a href="#tracking" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
-                    Track a Consignment
-                  </a>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+                    {SERVICE_FEATURES.map((feature, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
+                        className={cn('group relative p-4 lg:p-6 overflow-hidden', CARD)}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-x-0 top-0 border-t-2 border-transparent transition-colors duration-300 group-hover:border-accent"
+                        />
+                        <FeatureTile icon={feature.icon} />
+                        <h3 className={cn(H3, 'mb-2')}>{feature.title}</h3>
+                        <p className={cn(BODY, 'line-clamp-3')}>{feature.desc}</p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
+              </section>
+
+              {/* Freight solutions — swipeable app carousel */}
+              <section id="fleet" className="py-10 lg:py-16 scroll-mt-20 border-y border-navy-100">
+                <div className={CONTAINER}>
+                  <SectionHeader
+                    eyebrow="Our fleet"
+                    title="Freight solutions"
+                    intro="Swipe through how we move cargo."
+                  />
+
+                  <ServicesGrid services={services} iconMap={iconMap} />
+                </div>
+              </section>
+
+              {/* Executive Leadership */}
+              <section
+                id="leadership"
+                className="py-10 lg:py-16 scroll-mt-20 border-b border-navy-100"
+              >
+                <div className={CONTAINER}>
+                  <SectionHeader
+                    eyebrow="Leadership"
+                    title="Leadership"
+                    intro="The team accountable for our service standards."
+                  />
+
+                  <ExecSection executives={executives} />
+                </div>
+              </section>
+            </>
+          )}
+
+          {/* Contact screen — how to reach us, then the closing call to action. */}
+          {screen === 'contact' && (
+            <>
+              <section className="relative isolate bg-navy-950 overflow-hidden">
+                <DarkBackdrop />
+                <div className={cn(CONTAINER, 'relative py-8 lg:py-12')}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="mx-auto max-w-2xl text-center"
+                  >
+                    <Eyebrow onDark>Contact</Eyebrow>
+                    <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                      Talk to Kapilla
+                    </h1>
+                    <p className="mt-2 text-sm text-navy-200">
+                      Call, write or visit — we answer during working hours.
+                    </p>
+                  </motion.div>
+                </div>
+              </section>
+
+              <section className="py-10 lg:py-16">
+                <div className={CONTAINER_NARROW}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <a href="tel:+255756656218" className={cn('group p-5', CARD, FOCUS_DARK)}>
+                      <FeatureTile icon={Phone} />
+                      <h2 className={cn(H3, 'mb-2')}>Call us</h2>
+                      <p className={cn(BODY, 'font-semibold text-navy-900')}>+255 756 656 218</p>
+                      <p className={BODY}>+255 766 724 062</p>
+                    </a>
+                    <a
+                      href="mailto:info@kapillagroup.co.tz"
+                      className={cn('group p-5', CARD, FOCUS_DARK)}
+                    >
+                      <FeatureTile icon={Mail} />
+                      <h2 className={cn(H3, 'mb-2')}>Email us</h2>
+                      <p className={cn(BODY, 'font-semibold text-navy-900')}>
+                        info@kapillagroup.co.tz
+                      </p>
+                    </a>
+                    <div className={cn('group p-5', CARD)}>
+                      <FeatureTile icon={MapPin} />
+                      <h2 className={cn(H3, 'mb-2')}>Visit us</h2>
+                      <p className={cn(BODY, 'font-semibold text-navy-900')}>
+                        Dar es Salaam, Tanzania
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsHelpCenterOpen(true)}
+                      className={cn('group p-5 text-left', CARD, FOCUS_DARK)}
+                    >
+                      <FeatureTile icon={FileText} />
+                      <h2 className={cn(H3, 'mb-2')}>Help Center</h2>
+                      <p className={BODY}>Answers to the questions we get most.</p>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="relative isolate bg-navy-900 border-t border-navy-800 overflow-hidden">
+                <DarkBackdrop />
+                <div className={cn(CONTAINER, 'relative py-12 lg:py-16')}>
+                  <div className="mx-auto max-w-2xl text-center">
+                    <Eyebrow onDark>Next step</Eyebrow>
+                    <h2 className="mt-4 text-2xl md:text-3xl font-bold text-white tracking-tight">
+                      Ready to move your cargo?
+                    </h2>
+                    <p className="mt-3 text-sm text-navy-200">
+                      Book a pickup and we will confirm collection and routing.
+                    </p>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setIsPickupModalOpen(true)}
+                        className={cn('group', BTN_PRIMARY, BTN_PADDING_LG)}
+                      >
+                        Request a Pickup
+                        <ArrowIcon />
+                      </button>
+                      <Link href="/track" className={cn(BTN_GHOST_DARK, BTN_PADDING_LG)}>
+                        Track a Consignment
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
         </main>
 
-        {/* Footer — compact app footer */}
-        <footer className="relative isolate bg-navy-900 text-navy-200 py-12 border-t border-navy-800">
-          <div className={cn(CONTAINER, 'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4')}>
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="bg-white p-1.5 rounded-md">
-                  <Image
-                    src="/logo.png"
-                    alt="Kapilla Group Ltd"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain"
-                  />
-                </span>
-                <span className="text-base font-semibold text-white tracking-tight">
-                  Kapilla <span className="text-accent">Group</span>
-                </span>
+        {/* Footer — shown on every screen except home, which stays a single view. */}
+        {!isHome && (
+          <footer className="relative isolate bg-navy-900 text-navy-200 py-12 border-t border-navy-800">
+            <div className={cn(CONTAINER, 'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4')}>
+              <div className="sm:col-span-2">
+                <div className="mb-6 flex items-center">
+                  {/* The lockup is blue, so it sits on white to stay legible. */}
+                  <span className="rounded-md bg-white px-2 py-1.5">
+                    <Image
+                      src="/kapila logo.png"
+                      alt="Kapilla Group Ltd"
+                      width={801}
+                      height={255}
+                      className="h-8 w-auto object-contain"
+                    />
+                  </span>
+                </div>
+                <p className="max-w-sm text-sm leading-relaxed mb-6 text-pretty">
+                  Transportation and general supply for Tanzania and beyond. We move cargo on
+                  schedule, clear it through borders and deliver it with a documented handover.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
+                  <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
+                  Dar es Salaam, Tanzania
+                </div>
+                <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
               </div>
-              <p className="max-w-sm text-sm leading-relaxed mb-6 text-pretty">
-                Transportation and general supply for Tanzania and beyond. We move cargo on
-                schedule, clear it through borders and deliver it with a documented handover.
-              </p>
-              <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
-                <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
-                Dar es Salaam, Tanzania
-              </div>
-              <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setIsHelpCenterOpen(true)}
-                    className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
-                  >
-                    Help Center
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setIsPickupModalOpen(true)}
-                    className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
-                  >
-                    Request a Pickup
-                  </button>
-                </li>
-                <li>
-                  <a
-                    href="#tracking"
-                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
-                  >
-                    Track a Consignment
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
-              <ul className="space-y-3 text-sm">
-                {NAV_LINKS.filter(([href]) => href !== '#tracking').map(([href, label]) => (
-                  <li key={href}>
-                    <a
-                      href={href}
+              <div>
+                <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setIsHelpCenterOpen(true)}
+                      className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
+                    >
+                      Help Center
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setIsPickupModalOpen(true)}
+                      className={cn('text-left transition-colors hover:text-accent', FOCUS_DARK)}
+                    >
+                      Request a Pickup
+                    </button>
+                  </li>
+                  <li>
+                    <Link
+                      href="/track"
                       className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
                     >
-                      {label}
-                    </a>
+                      Track a Consignment
+                    </Link>
                   </li>
-                ))}
-                <li>
-                  <Link
-                    href="/staff/login"
-                    className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
-                  >
-                    Staff Portal
-                  </Link>
-                </li>
-              </ul>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-4 text-sm">Company</h3>
+                <ul className="space-y-3 text-sm">
+                  {FOOTER_NAV.map(({ href, label }) => (
+                    <li key={label}>
+                      <Link
+                        href={href}
+                        className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Link
+                      href="/staff/login"
+                      className={cn('transition-colors hover:text-accent', FOCUS_DARK)}
+                    >
+                      Staff Portal
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
-          </div>
-          <div className={cn(CONTAINER, 'relative mt-10 pt-6 border-t border-navy-800')}>
-            <div className="text-[10px] font-mono text-navy-400 font-bold tracking-wider">
-              DEVELOPED BY KAISI
-              <span className="mx-2">|</span>
-              <a
-                href="/staff/login"
-                className={cn('transition-colors hover:text-white', FOCUS_DARK)}
-              >
-                STAFF LOGIN
-              </a>
+            <div className={cn(CONTAINER, 'relative mt-10 pt-6 border-t border-navy-800')}>
+              <div className="text-[10px] font-mono text-navy-400 font-bold tracking-wider">
+                DEVELOPED BY KAISI
+                <span className="mx-2">|</span>
+                <Link
+                  href="/staff/login"
+                  className={cn('transition-colors hover:text-white', FOCUS_DARK)}
+                >
+                  STAFF LOGIN
+                </Link>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )}
 
-        <AppTabBar />
+        <AppTabBar active={screen} />
 
         {/* Pickup Modal */}
         <PickupRequestModal

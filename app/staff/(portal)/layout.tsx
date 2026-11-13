@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link, { useLinkStatus } from 'next/link';
-import ChatBell from '@/components/ChatBell';
-import ChatModal from '@/components/ChatModal';
 import HelpCenterModal from '@/components/HelpCenterModal';
 import PickupRequestModal from '@/components/PickupRequestModal';
 import { usePathname, useRouter } from 'next/navigation';
@@ -26,7 +24,7 @@ import {
   FileText,
   LayoutTemplate,
   Briefcase,
-  Bell,
+  MessageSquare,
   BarChart3,
   Loader2,
   ShieldCheck,
@@ -69,12 +67,8 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     canViewReports?: boolean;
     canViewInvoices?: boolean;
   } | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatPeer, setChatPeer] = useState<string>('');
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications] = useState<Array<{ title: string; message: string; time: string }>>([]);
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -317,6 +311,21 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           name: 'Documents',
           href: '/staff/documents',
           icon: FileText,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
+        {
+          name: 'Chat',
+          href: '/staff/chat',
+          icon: MessageSquare,
           roles: [
             'ADMIN',
             'STAFF',
@@ -726,35 +735,32 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden text-charcoal dark:text-slate-100 transition-colors duration-300">
         {/* Header (Desktop & Mobile) */}
-        <header className="glass-header sticky top-0 z-30 transition-colors duration-300 pt-[env(safe-area-inset-top)]">
+        <header className="sticky top-0 z-30 border-b border-navy-100 bg-white shadow-soft pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between min-h-16 px-4 sm:px-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen((open) => !open)}
                 aria-label="Toggle navigation menu"
                 aria-expanded={sidebarOpen}
-                className="p-2 -ml-2 text-charcoal-muted hover:text-navy-900 dark:text-navy-300 dark:hover:text-white hover:bg-navy-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
+                className="p-2 -ml-2 text-charcoal-muted hover:text-navy-900 hover:bg-navy-50 rounded-lg transition-colors"
               >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
 
-              {/* Mobile Logo */}
-              <div className="flex items-center gap-2 md:hidden">
-                <div className="bg-white p-1 rounded-lg dark:bg-white/90">
-                  <Image
-                    src="/logo.png"
-                    alt="Kapilla Logo"
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-                <span className="font-bold text-navy-900 dark:text-white">Kapilla Portal</span>
+              {/* Mobile logo — the lockup already carries the wordmark */}
+              <div className="flex items-center md:hidden">
+                <Image
+                  src="/kapila logo.png"
+                  alt="Kapilla Group Ltd"
+                  width={801}
+                  height={255}
+                  className="h-7 w-auto object-contain"
+                />
               </div>
 
               {/* Desktop Welcome Message */}
               <div className="hidden md:block">
-                <h2 className="text-lg font-semibold text-navy-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-navy-900">
                   Welcome back, {user?.name?.split(' ')[0]}
                 </h2>
               </div>
@@ -765,89 +771,17 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
               {mounted && (
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="p-2 rounded-full bg-navy-50 dark:bg-navy-800 text-charcoal-muted dark:text-navy-200 hover:text-navy-900 dark:hover:text-accent transition-colors"
+                  aria-label="Toggle colour theme"
+                  className="p-2 rounded-full bg-navy-50 text-charcoal-muted hover:text-navy-900 hover:text-accent transition-colors"
                 >
                   {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
               )}
 
-              {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 rounded-full bg-navy-50 dark:bg-navy-800 text-charcoal-muted dark:text-navy-200 hover:text-navy-900 dark:hover:text-accent transition-colors relative"
-                >
-                  <Bell className="w-5 h-5" />
-                  {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                      {notifications.length > 9 ? '9+' : notifications.length}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notifications Dropdown */}
-                <AnimatePresence>
-                  {showNotifications && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="glass-strong absolute right-0 mt-2 w-80 rounded-2xl z-50 max-h-96 overflow-y-auto"
-                    >
-                      <div className="p-4 border-b border-navy-100 dark:border-navy-800">
-                        <h3 className="font-semibold text-navy-900 dark:text-white">
-                          Notifications
-                        </h3>
-                      </div>
-                      {notifications.length === 0 ? (
-                        <div className="p-8 text-center text-charcoal-muted dark:text-navy-300">
-                          <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                          <p>No new notifications</p>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-navy-100 dark:divide-navy-800">
-                          {notifications.map(
-                            (notif: { title: string; message: string; time: string }, index) => (
-                              <div
-                                key={index}
-                                className="p-4 hover:bg-navy-50 dark:hover:bg-navy-800 transition-colors"
-                              >
-                                <p className="text-sm font-medium text-navy-900 dark:text-white">
-                                  {notif.title}
-                                </p>
-                                <p className="text-xs text-charcoal-light dark:text-navy-300 mt-1">
-                                  {notif.message}
-                                </p>
-                                <p className="text-xs text-charcoal-muted mt-2">{notif.time}</p>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Chat Notifications */}
-              {user?.id && (
-                <ChatBell
-                  userId={user.id}
-                  onOpenChat={(peerId) => {
-                    setChatPeer(peerId);
-                    setChatOpen(true);
-                  }}
-                />
-              )}
-
-              <div className="flex items-center gap-3 pl-4 border-l border-navy-100 dark:border-navy-800">
+              <div className="flex items-center gap-3 pl-4 border-l border-navy-100">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-navy-900 dark:text-white leading-none">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-charcoal-muted dark:text-navy-300 mt-1">
-                    {user?.role}
-                  </p>
+                  <p className="text-sm font-bold text-navy-900 leading-none">{user?.name}</p>
+                  <p className="text-xs text-charcoal-muted mt-1">{user?.role}</p>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
                   <button
@@ -861,7 +795,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                         alt="Profile"
                         width={40}
                         height={40}
-                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-white dark:border-navy-800 shadow-sm cursor-pointer"
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-white shadow-sm cursor-pointer"
                       />
                     ) : (
                       <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-navy-800 flex items-center justify-center text-accent font-bold shadow-sm cursor-pointer">
@@ -871,10 +805,10 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                   </button>
                   {/* Mobile Text Under Profile */}
                   <div className="sm:hidden flex flex-col items-center">
-                    <p className="text-[10px] font-bold text-navy-900 dark:text-white leading-none">
+                    <p className="text-[10px] font-bold text-navy-900 leading-none">
                       {user?.name?.split(' ').pop()}
                     </p>
-                    <p className="text-[8px] text-charcoal-muted dark:text-navy-300 leading-none mt-0.5">
+                    <p className="text-[8px] text-charcoal-muted leading-none mt-0.5">
                       {user?.role}
                     </p>
                   </div>
@@ -890,14 +824,6 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
             <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
           </div>
         </main>
-        {chatOpen && user?.id && chatPeer && (
-          <ChatModal
-            isOpen={chatOpen}
-            onClose={() => setChatOpen(false)}
-            userId={user.id}
-            peerId={chatPeer}
-          />
-        )}
 
         {/* Help Center Modal */}
         <HelpCenterModal isOpen={isHelpCenterOpen} onClose={() => setIsHelpCenterOpen(false)} />

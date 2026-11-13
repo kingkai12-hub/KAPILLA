@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import HomeClient from '@/components/HomeClient';
 import WebHomeClient from '@/components/WebHomeClient';
@@ -72,11 +73,21 @@ async function getAdvertisements() {
   }
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ waybill?: string }>;
+}) {
   const userAgent = (await headers()).get('user-agent') ?? '';
 
   // Inside the native shell: the app home screen, no web chrome.
   if (userAgent.includes(NATIVE_SHELL_UA)) {
+    // Deep links carry a waybill, which belongs on the app's track screen.
+    const { waybill } = await searchParams;
+    if (waybill) {
+      redirect(`/track?waybill=${encodeURIComponent(waybill)}`);
+    }
+
     const [services, executives] = await Promise.all([getServices(), getExecutives()]);
     return <HomeClient initialServices={services} initialExecutives={executives} />;
   }
