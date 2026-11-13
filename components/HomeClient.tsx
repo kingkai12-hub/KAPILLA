@@ -505,26 +505,25 @@ export default function HomeClient({ initialServices, initialExecutives }: HomeC
           <SearchParamsHandler onSearch={performSearch} />
         </Suspense>
 
-        {/* App bar — compact and persistent; navigation lives in the tab bar. */}
-        <header className="glass-header sticky top-0 z-50">
+        {/* App bar — an opaque white surface, so the blue lockup stays legible on
+            every device. The lockup already carries the wordmark, so it stands
+            alone and is sized to the bar rather than boxed in a white chip. */}
+        <header className="sticky top-0 z-50 border-b border-navy-100 bg-white shadow-soft pt-[env(safe-area-inset-top)]">
           <div className={cn(CONTAINER, 'flex h-16 items-center justify-between gap-3')}>
             <Link
               href="/"
-              className={cn('flex items-center gap-3 shrink-0 rounded-lg', FOCUS_DARK)}
+              aria-label="Kapilla Group — home"
+              className={cn('flex min-w-0 flex-1 items-center rounded-lg', FOCUS_DARK)}
             >
-              <span className="bg-white p-1.5 rounded-md shadow-soft">
-                <Image
-                  src="/logo.png"
-                  alt="Kapilla Group Ltd"
-                  width={40}
-                  height={40}
-                  className="w-8 h-8 object-contain"
-                  priority
-                />
-              </span>
-              <span className="hidden text-base font-semibold text-navy-900 tracking-tight min-[380px]:inline">
-                Kapilla <span className="text-accent">Group</span>
-              </span>
+              <Image
+                src="/kapila logo.png"
+                alt="Kapilla Group Ltd"
+                width={801}
+                height={255}
+                priority
+                sizes="(max-width: 640px) 160px, 200px"
+                className="h-9 w-auto max-w-full object-contain object-left sm:h-10"
+              />
             </Link>
 
             <div className="flex shrink-0 items-center gap-2">
