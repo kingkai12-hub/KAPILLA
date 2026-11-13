@@ -31,13 +31,16 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       /**
-       * Hold the launch splash for a fixed minimum so a cold start reads as one
-       * deliberate app opening rather than a blink. The native layer owns the
-       * timing, so the branded screen stays up while the remote page is still
-       * being fetched — the WebView gap is never visible.
+       * The web app owns the visible launch screen: `components/AppSplash.tsx`
+       * (and `app/loading.tsx`) render the animated loading page and dismiss
+       * this native splash the moment it is painted, so the static drawable is
+       * never what the user watches.
        *
-       * launchAutoHide keeps the fallback safe: even if the page never loads,
-       * the splash always clears itself.
+       * launchShowDuration is only the safety net for the case where the page
+       * never loads and nothing can call hide() (e.g. the offline error page):
+       * it is deliberately generous so a slow network is covered by the native
+       * sheet rather than by a bare white WebView. launchAutoHide keeps that
+       * fallback safe.
        */
       launchShowDuration: 5000,
       launchAutoHide: true,

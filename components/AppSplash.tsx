@@ -75,6 +75,32 @@ export default function AppSplash() {
         return;
       }
 
+      /**
+       * Hand the native launch splash over to this animated loading screen the
+       * moment it is on screen.
+       *
+       * Without this the native drawable (a static white sheet with the logo)
+       * stays up for the whole `launchShowDuration` and covers the animation
+       * entirely. Two animation frames are awaited first so the browser has
+       * painted the splash before the native layer is dismissed — otherwise the
+       * handover would flash an unpainted WebView.
+       *
+       * The plugin's own launchShowDuration stays as the fallback, so a failure
+       * here can never leave the splash stuck on screen.
+       */
+      try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        );
+        if (cancelled) return;
+        await SplashScreen.hide();
+      } catch {
+        /* Older shells without the plugin simply keep the timed auto-hide. */
+      }
+
+      if (cancelled) return;
+
       // Measured from navigation start, not from mount: the native launch
       // drawable is the same artwork, so its time on screen counts too.
       const remaining = Math.max(0, MIN_SPLASH_MS - performance.now());
