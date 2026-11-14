@@ -10,11 +10,12 @@ const path = require('path');
 const sharp = require('sharp');
 
 const ROOT = path.resolve(__dirname, '..');
-const LOGO = path.join(ROOT, 'public', 'kapila logo.png');
+const LOGO = path.join(ROOT, 'assets', 'source', 'kapilla-lion.png');
 const OUT = path.join(ROOT, 'assets');
 
-// The logo artwork is dark blue/black, so it needs a light background to stay
-// visible — matching the light branding areas used across the portal.
+// The lion artwork is brand blue (#0E45A3), so it needs a light background to
+// stay legible — matching the white splash and white header used across the
+// portal. Blue-on-navy measures only ~1.5:1 contrast and reads as muddy.
 const LIGHT = { r: 255, g: 255, b: 255, alpha: 1 };
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
@@ -31,9 +32,10 @@ async function trimmedLogo() {
 
 async function placeLogo(size, widthRatio, background, file) {
   const logo = await trimmedLogo();
-  const resized = await sharp(logo)
-    .resize({ width: Math.round(size * widthRatio), fit: 'inside' })
-    .toBuffer();
+  const box = Math.round(size * widthRatio);
+  // Constrain the longest side to the box so the safe-zone ratios below hold
+  // for artwork that is taller than it is wide (the lion is 679x790).
+  const resized = await sharp(logo).resize({ width: box, height: box, fit: 'inside' }).toBuffer();
   const { width = 0, height = 0 } = await sharp(resized).metadata();
 
   await sharp({
@@ -59,15 +61,17 @@ async function main() {
   // Legacy / Play Store listing icon — full-bleed light background.
   await placeLogo(1024, 0.72, LIGHT, 'icon-only.png');
 
-  // Adaptive icon layers (Android 8+).
+  // Adaptive icon layers (Android 8+). The generator insets both layers by
+  // 16.7%, so the foreground stays inside Android's central safe zone.
   await sharp({ create: { width: 1024, height: 1024, channels: 4, background: LIGHT } })
     .png()
     .toFile(path.join(OUT, 'icon-background.png'));
   console.log('  icon-background.png  1024x1024');
-  await placeLogo(1024, 0.6, null, 'icon-foreground.png');
+  await placeLogo(1024, 0.66, null, 'icon-foreground.png');
 
-  // Launch splash (portrait + landscape variants are derived by the generator).
-  await placeLogo(2732, 0.34, LIGHT, 'splash.png');
+  // No splash source is emitted on purpose. The native launch screen is the
+  // hand-written layer-list in res/drawable/splash.xml, so a generated
+  // splash.png would collide with it as a duplicate @drawable/splash.
 
   console.log('Done. Next: npx @capacitor/assets generate --android');
 }
