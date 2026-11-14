@@ -40,7 +40,7 @@ export default function BrandSplash({ className = '' }: { className?: string }) 
         />
         <span className="logo-breathe relative block">
           <Image
-            src="/logo.png"
+            src="/logo-mark.png"
             alt="Kapilla Group Ltd"
             width={320}
             height={320}

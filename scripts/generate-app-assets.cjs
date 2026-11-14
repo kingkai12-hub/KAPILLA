@@ -12,6 +12,8 @@ const sharp = require('sharp');
 const ROOT = path.resolve(__dirname, '..');
 const LOGO = path.join(ROOT, 'assets', 'source', 'kapilla-lion.png');
 const OUT = path.join(ROOT, 'assets');
+const ANDROID_RES = path.join(ROOT, 'android', 'app', 'src', 'main', 'res');
+const WEB = path.join(ROOT, 'public');
 
 // The lion artwork is brand blue (#0E45A3), so it needs a light background to
 // stay legible — matching the white splash and white header used across the
@@ -30,7 +32,7 @@ async function trimmedLogo() {
   }
 }
 
-async function placeLogo(size, widthRatio, background, file) {
+async function placeLogo(size, widthRatio, background, outPath) {
   const logo = await trimmedLogo();
   const box = Math.round(size * widthRatio);
   // Constrain the longest side to the box so the safe-zone ratios below hold
@@ -49,9 +51,27 @@ async function placeLogo(size, widthRatio, background, file) {
       },
     ])
     .png()
-    .toFile(path.join(OUT, file));
+    .toFile(outPath);
 
-  console.log(`  ${file}  ${size}x${size}`);
+  console.log(`  ${path.relative(ROOT, outPath)}  ${size}x${size}`);
+}
+
+// The native launch screen (res/drawable-*/splash_logo.png) is a centred bitmap
+// layer, so it needs one file per density rather than a single full-bleed sheet.
+const SPLASH_SIZES = {
+  mdpi: 130,
+  hdpi: 195,
+  xhdpi: 290,
+  xxhdpi: 430,
+  xxxhdpi: 575,
+};
+
+async function writeSplashLogos() {
+  for (const [density, size] of Object.entries(SPLASH_SIZES)) {
+    const dir = path.join(ANDROID_RES, `drawable-${density}`);
+    fs.mkdirSync(dir, { recursive: true });
+    await placeLogo(size, 0.72, null, path.join(dir, 'splash_logo.png'));
+  }
 }
 
 async function main() {
@@ -59,19 +79,25 @@ async function main() {
   console.log('Generating native app assets...');
 
   // Legacy / Play Store listing icon — full-bleed light background.
-  await placeLogo(1024, 0.72, LIGHT, 'icon-only.png');
+  await placeLogo(1024, 0.72, LIGHT, path.join(OUT, 'icon-only.png'));
 
   // Adaptive icon layers (Android 8+). The generator insets both layers by
   // 16.7%, so the foreground stays inside Android's central safe zone.
   await sharp({ create: { width: 1024, height: 1024, channels: 4, background: LIGHT } })
     .png()
     .toFile(path.join(OUT, 'icon-background.png'));
-  console.log('  icon-background.png  1024x1024');
-  await placeLogo(1024, 0.66, null, 'icon-foreground.png');
+  console.log('  assets/icon-background.png  1024x1024');
+  await placeLogo(1024, 0.66, null, path.join(OUT, 'icon-foreground.png'));
 
   // No splash source is emitted on purpose. The native launch screen is the
   // hand-written layer-list in res/drawable/splash.xml, so a generated
   // splash.png would collide with it as a duplicate @drawable/splash.
+  await writeSplashLogos();
+
+  // Web/PWA mark: the loading screen and the install manifest both render the
+  // logo as a square, so they need the lion on its own rather than the wide
+  // crest-and-wordmark lockup used in print headers.
+  await placeLogo(512, 0.72, null, path.join(WEB, 'logo-mark.png'));
 
   console.log('Done. Next: npx @capacitor/assets generate --android');
 }

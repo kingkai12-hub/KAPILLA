@@ -1324,7 +1324,7 @@ export default function WebHomeClient({
                     <ArrowIcon />
                   </Link>
                   <p className="text-xs text-navy-300 lg:text-right">
-                    Version 1.0.0 &middot; Google Play coming soon
+                    Version 1.0.1 &middot; Google Play coming soon
                   </p>
                 </div>
               </div>
