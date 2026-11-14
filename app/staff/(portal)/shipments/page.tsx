@@ -5,6 +5,7 @@ import { Package, Search, Trash2, FileText, CheckCircle, ScanLine, Edit, X } fro
 import Link from 'next/link';
 import SignatureCanvas from 'react-signature-canvas';
 import { locationCoords } from '@/lib/locations';
+import { openPdfUrl } from '@/lib/native-file';
 
 interface Shipment {
   id: string;
@@ -394,9 +395,13 @@ export default function ShipmentsPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(
+                                // Browser: opens the PDF in a new tab. Android
+                                // app: saves it to the device and shares it.
+                                openPdfUrl(
                                   `/api/shipments/${shipment.waybillNumber}/pdf`,
-                                  '_blank'
+                                  `kapilla-waybill-${shipment.waybillNumber}.pdf`
+                                ).catch(() =>
+                                  alert('Could not prepare the document. Please try again.')
                                 );
                               }}
                               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"

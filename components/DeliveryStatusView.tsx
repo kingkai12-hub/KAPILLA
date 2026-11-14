@@ -3,6 +3,7 @@
 import React from 'react';
 import { Package, CheckCircle, Clock, Download, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { openPdfUrl } from '@/lib/native-file';
 
 interface DeliveryStatusViewProps {
   status: string;
@@ -131,9 +132,12 @@ export function DeliveryStatusView({
               {/* Preview Button */}
               <button
                 onClick={() => {
-                  // Public PDF endpoint: opens the signed proof of delivery
-                  // straight in the browser's PDF viewer, ready to print.
-                  window.open(`/api/shipments/${waybillNumber}/pod-pdf`, '_blank');
+                  // Public PDF endpoint: opens the signed proof of delivery in
+                  // the browser, or saves it to the device in the Android app.
+                  openPdfUrl(
+                    `/api/shipments/${waybillNumber}/pod-pdf`,
+                    `kapilla-pod-${waybillNumber}.pdf`
+                  ).catch(() => alert('Could not prepare the document. Please try again.'));
                 }}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
@@ -144,8 +148,12 @@ export function DeliveryStatusView({
               {/* Download Button */}
               <button
                 onClick={() => {
-                  // Same PDF, served as an attachment so it saves to the device.
-                  window.open(`/api/shipments/${waybillNumber}/pod-pdf?download=1`, '_blank');
+                  // Same PDF, saved to the device and offered to the share sheet
+                  // so it can be sent on or stored in Downloads.
+                  openPdfUrl(
+                    `/api/shipments/${waybillNumber}/pod-pdf?download=1`,
+                    `kapilla-pod-${waybillNumber}.pdf`
+                  ).catch(() => alert('Could not prepare the document. Please try again.'));
                 }}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-green-700 font-bold rounded-xl border-2 border-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >

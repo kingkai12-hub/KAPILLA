@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer, CheckCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { openPdfUrl } from '@/lib/native-file';
 
 export default function ProofOfDeliveryPage() {
   const params = useParams();
@@ -57,8 +58,11 @@ export default function ProofOfDeliveryPage() {
   }, [waybill]);
 
   const handlePrint = () => {
-    // Open PDF in new window
-    window.open(`/api/shipments/${waybill}/pod-pdf`, '_blank');
+    // Browser: opens the PDF in a new tab. Android app: saves it to the device
+    // and opens the share sheet, which also offers a print service.
+    openPdfUrl(`/api/shipments/${waybill}/pod-pdf`, `kapilla-pod-${waybill}.pdf`).catch(() =>
+      alert('Could not prepare the document. Please try again.')
+    );
   };
 
   if (loading) return <div className="p-8 text-center">Loading Receipt...</div>;

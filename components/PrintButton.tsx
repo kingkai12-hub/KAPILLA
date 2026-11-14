@@ -1,6 +1,7 @@
 'use client';
 
 import { Printer } from 'lucide-react';
+import { useIsNativeShell } from '@/lib/native-file';
 
 export default function PrintButton({
   label = 'Print',
@@ -9,6 +10,14 @@ export default function PrintButton({
   label?: string;
   className?: string;
 }) {
+  const native = useIsNativeShell();
+
+  // The Android WebView has no print engine, so window.print() silently does
+  // nothing there. Every page using this button also offers a PDF action that
+  // reaches the Android share sheet, so hide it rather than leave a dead
+  // control in the app.
+  if (native) return null;
+
   return (
     <button
       type="button"

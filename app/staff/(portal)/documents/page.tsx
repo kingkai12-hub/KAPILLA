@@ -15,6 +15,7 @@ import {
   Lock,
   Unlock,
 } from 'lucide-react';
+import DocumentActionButton from '@/components/DocumentActionButton';
 
 // Types
 interface Document {
@@ -622,14 +623,14 @@ export default function DocumentsPage() {
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <a
-                          href={`/api/documents/download?id=${doc.id}`}
-                          target="_blank"
+                        <DocumentActionButton
+                          url={`/api/documents/download?id=${doc.id}`}
+                          fileName={doc.name}
                           className="p-3 hover:bg-blue-50 text-blue-600 rounded-xl transition-colors"
                           title="View/Download"
                         >
                           <Eye className="w-5 h-5" />
-                        </a>
+                        </DocumentActionButton>
                         <button
                           onClick={() => handleRename(doc)}
                           className="p-3 hover:bg-amber-50 text-amber-600 rounded-xl transition-colors"

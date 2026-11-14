@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Printer, Save, RefreshCw } from 'lucide-react';
+import { openPdfUrl } from '@/lib/native-file';
 
 const tanzaniaLocations = {
   'Major Cities': [
@@ -299,7 +300,14 @@ export default function CreateShipment() {
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
-              onClick={() => window.open(`/api/shipments/${generatedWaybill}/pdf`, '_blank')}
+              onClick={() => {
+                // Browser: opens the PDF in a new tab. Android app: saves it to
+                // the device and opens the share sheet.
+                openPdfUrl(
+                  `/api/shipments/${generatedWaybill}/pdf`,
+                  `kapilla-waybill-${generatedWaybill}.pdf`
+                ).catch(() => alert('Could not prepare the document. Please try again.'));
+              }}
               className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white py-3 rounded-xl hover:bg-slate-950 transition-colors font-semibold"
             >
               <Printer className="w-5 h-5" />

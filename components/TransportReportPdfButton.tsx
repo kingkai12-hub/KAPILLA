@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FileDown } from 'lucide-react';
 import type { TransportReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
+import { saveOrShare } from '@/lib/native-file';
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -208,7 +209,12 @@ export default function TransportReportPdfButton({
       }
 
       const safe = (report.query || 'report').replace(/[^a-z0-9\-]+/gi, '-');
-      d.save(`kapilla-transport-${safe}.pdf`);
+      const fileName = `kapilla-transport-${safe}.pdf`;
+      const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
+      // In the Android app a blob download is ignored, so save + share instead.
+      if (!(await saveOrShare(blob, fileName, 'Save or share report'))) {
+        d.save(fileName);
+      }
     } catch (error) {
       console.error('[PDF] transport report failed', error);
       alert('Could not generate the PDF. Please try again.');

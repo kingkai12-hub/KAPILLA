@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import PrintButton from '@/components/PrintButton';
+import DocumentActionButton from '@/components/DocumentActionButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -139,13 +140,13 @@ export default async function WaybillReportPage({
           Back to shipments
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/api/shipments/${shipment.waybillNumber}/pdf`}
-            target="_blank"
+          <DocumentActionButton
+            url={`/api/shipments/${shipment.waybillNumber}/pdf`}
+            fileName={`kapilla-waybill-${shipment.waybillNumber}.pdf`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
             Waybill PDF
-          </Link>
+          </DocumentActionButton>
           {shipment.currentStatus === 'DELIVERED' && (
             <Link
               href={`/waybill/${shipment.waybillNumber}/pod`}

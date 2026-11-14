@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Building2, Mail, Phone, MapPin, FileText } from 'lucide-react';
 import Image from 'next/image';
+import { isNativeShell, openPdfUrl } from '@/lib/native-file';
 
 interface Invoice {
   id: string;
@@ -55,10 +56,19 @@ export default function InvoicePrintPage() {
       if (res.ok) {
         const data = await res.json();
         setInvoice(data);
-        // Auto-print after loading
-        setTimeout(() => {
-          window.print();
-        }, 500);
+        // The Android WebView has no print engine, so hand the PDF to the share
+        // sheet there instead of firing a window.print() that does nothing.
+        if (isNativeShell()) {
+          openPdfUrl(
+            `/api/invoices/${params.id}/pdf`,
+            `kapilla-invoice-${data.invoiceNumber ?? params.id}.pdf`
+          ).catch(() => alert('Could not prepare the invoice. Please try again.'));
+        } else {
+          // Auto-print after loading
+          setTimeout(() => {
+            window.print();
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch invoice:', error);
@@ -164,7 +174,10 @@ export default function InvoicePrintPage() {
                 <div className="space-y-1 text-xs sm:text-sm text-slate-700">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="text-left">P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania</span>
+                    <span className="text-left">
+                      P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam,
+                      Tanzania
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -469,7 +482,8 @@ export default function InvoicePrintPage() {
           <div className="mt-4 text-center text-xs text-slate-500">
             <p>This is a computer-generated document. No signature is required.</p>
             <p className="mt-1 break-words">
-              KAPILLA GROUP LIMITED | P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar es Salaam, Tanzania | TIN: 157-935-380
+              KAPILLA GROUP LIMITED | P.O Box 71729, Sea Cliff Village, 10 Toure Drive, Msasani, Dar
+              es Salaam, Tanzania | TIN: 157-935-380
             </p>
           </div>
         </div>

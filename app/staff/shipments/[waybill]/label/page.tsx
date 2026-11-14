@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { openPdfUrl } from '@/lib/native-file';
 
 export default function LabelPage() {
   const params = useParams();
@@ -57,7 +58,11 @@ export default function LabelPage() {
   }, [waybill]);
 
   const handlePrint = () => {
-    window.open(`/api/shipments/${waybill}/pdf`, '_blank');
+    // Browser: opens the PDF in a new tab. Android app: saves it to the device
+    // and opens the share sheet, which also offers a print service.
+    openPdfUrl(`/api/shipments/${waybill}/pdf`, `kapilla-waybill-${waybill}.pdf`).catch(() =>
+      alert('Could not prepare the document. Please try again.')
+    );
   };
 
   if (loading) {

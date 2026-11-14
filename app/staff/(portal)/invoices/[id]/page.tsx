@@ -21,6 +21,7 @@ import {
   Upload,
 } from 'lucide-react';
 import Image from 'next/image';
+import { openPdfUrl, saveOrShare } from '@/lib/native-file';
 
 interface Invoice {
   id: string;
@@ -112,8 +113,12 @@ export default function InvoiceDetailPage() {
   };
 
   const handlePrint = () => {
-    // Open PDF in new window
-    window.open(`/api/invoices/${params.id}/pdf`, '_blank');
+    // Browser: opens the PDF in a new tab. Android app: saves it to the device
+    // and opens the share sheet.
+    openPdfUrl(
+      `/api/invoices/${params.id}/pdf`,
+      `kapilla-invoice-${invoice?.invoiceNumber ?? params.id}.pdf`
+    ).catch(() => alert('Could not prepare the document. Please try again.'));
   };
 
   const handleAccept = async () => {
@@ -346,8 +351,13 @@ export default function InvoiceDetailPage() {
       });
       if (!res.ok) throw new Error('Failed to generate PDF');
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const fileName = `kapilla-invoice-${invoice?.invoiceNumber ?? params.id}.pdf`;
+      // Browser: opens the PDF in a new tab. Android app: saves it to the
+      // device and opens the share sheet.
+      if (!(await saveOrShare(blob, fileName, 'Save or share invoice'))) {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
       setShowPhotoModal(false);
       setPhotoFile(null);
       setPhotoPreview(null);
@@ -543,9 +553,14 @@ export default function InvoiceDetailPage() {
             </button>
 
             <button
-              onClick={() =>
-                window.open(`/api/invoices/${params.id}/pdf?type=delivery-note`, '_blank')
-              }
+              onClick={() => {
+                // Browser: opens the PDF in a new tab. Android app: saves it to
+                // the device and opens the share sheet.
+                openPdfUrl(
+                  `/api/invoices/${params.id}/pdf?type=delivery-note`,
+                  `kapilla-delivery-note-${invoice.invoiceNumber}.pdf`
+                ).catch(() => alert('Could not prepare the document. Please try again.'));
+              }}
               className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-xs sm:text-base hover:bg-blue-700 font-semibold transition-colors"
             >
               <FileText className="w-3 h-3 sm:w-4 sm:h-4" />

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, FileText, CheckCircle, Clock, XCircle, Eye, Truck } from 'lucide-react';
+import { openPdfUrl } from '@/lib/native-file';
 
 interface Invoice {
   id: string;
@@ -246,12 +247,16 @@ export default function InvoicesPage() {
                           View
                         </Link>
                         <button
-                          onClick={() =>
-                            window.open(
+                          onClick={() => {
+                            // Browser: opens the PDF in a new tab. Android app:
+                            // saves it to the device and opens the share sheet.
+                            openPdfUrl(
                               `/api/invoices/${invoice.id}/pdf?type=delivery-note`,
-                              '_blank'
-                            )
-                          }
+                              `kapilla-delivery-note-${invoice.invoiceNumber}.pdf`
+                            ).catch(() =>
+                              alert('Could not prepare the document. Please try again.')
+                            );
+                          }}
                           className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
                           title="Print Delivery Note"
                         >

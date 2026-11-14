@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FileDown, Sheet } from 'lucide-react';
 import type { ClientReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
+import { saveOrShare } from '@/lib/native-file';
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -205,7 +206,12 @@ export default function ClientReportButtons({
         });
       }
 
-      d.save(`kapilla-client-${safeName}.pdf`);
+      const fileName = `kapilla-client-${safeName}.pdf`;
+      const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
+      // In the Android app a blob download is ignored, so save + share instead.
+      if (!(await saveOrShare(blob, fileName, 'Save or share report'))) {
+        d.save(fileName);
+      }
     } catch (error) {
       console.error('[PDF] client report failed', error);
       alert('Could not generate the PDF. Please try again.');
@@ -214,7 +220,7 @@ export default function ClientReportButtons({
     }
   }
 
-  function exportExcel() {
+  async function exportExcel() {
     setBusy('excel');
     try {
       const lines: string[] = [];
@@ -309,10 +315,14 @@ export default function ClientReportButtons({
       const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], {
         type: 'text/csv;charset=utf-8;',
       });
+      const fileName = `kapilla-client-${safeName}.csv`;
+      // In the Android app a download link is ignored, so save + share instead.
+      if (await saveOrShare(blob, fileName, 'Save or share spreadsheet')) return;
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `kapilla-client-${safeName}.csv`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
