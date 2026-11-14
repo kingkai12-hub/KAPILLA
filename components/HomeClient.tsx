@@ -572,10 +572,10 @@ export default function HomeClient({
           </Suspense>
         )}
 
-        {/* App bar — an opaque white surface, so the blue lockup stays legible on
-            every device. The lockup already carries the wordmark, so it stands
-            alone and is sized to the bar rather than boxed in a white chip. */}
-        <header className="sticky top-0 z-50 border-b border-navy-100 bg-white shadow-soft pt-[env(safe-area-inset-top)]">
+        {/* App bar — the shared brand surface: a white → navy gradient with the
+            Zanzibar carved-door band along its lower edge, so the blue lockup
+            stays legible without a flat white fill. */}
+        <header className="brand-header sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
           <div className={cn(CONTAINER, 'flex h-16 items-center justify-between gap-3')}>
             <Link
               href="/"

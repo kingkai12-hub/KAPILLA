@@ -746,7 +746,7 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden text-charcoal dark:text-slate-100 transition-colors duration-300">
         {/* Header (Desktop & Mobile) */}
-        <header className="sticky top-0 z-30 border-b border-navy-100 bg-white shadow-soft pt-[env(safe-area-inset-top)]">
+        <header className="brand-header sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between gap-3 min-h-16 px-4 sm:px-6">
             <div className="flex items-center gap-3 min-w-0">
               <button

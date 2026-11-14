@@ -12,10 +12,8 @@ import {
   ArrowRight,
   CheckCircle,
   Clock,
-  Facebook,
   FileText,
   Globe,
-  Instagram,
   Loader2,
   MapPin,
   Menu,
@@ -24,6 +22,7 @@ import {
   Ship,
   Smartphone,
   Truck,
+  User,
   X,
   Zap,
 } from 'lucide-react';
@@ -490,37 +489,6 @@ const MOBILE_NAV_LINKS = [
   ['#leadership', 'Leadership'],
 ];
 
-const SOCIAL_LINKS = [
-  {
-    href: 'https://www.instagram.com/kapilla.group_ltd/',
-    label: 'Kapilla Group on Instagram',
-    icon: <Instagram aria-hidden="true" className="w-5 h-5" />,
-  },
-  {
-    href: 'https://x.com',
-    label: 'Kapilla Group on X',
-    icon: (
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
-    href: 'https://facebook.com',
-    label: 'Kapilla Group on Facebook',
-    icon: <Facebook aria-hidden="true" className="w-5 h-5" />,
-  },
-  {
-    href: 'https://tiktok.com',
-    label: 'Kapilla Group on TikTok',
-    icon: (
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-      </svg>
-    ),
-  },
-];
-
 const SERVICE_PROMISES = [
   'Live waybill tracking, 24/7',
   'Road, sea and air freight',
@@ -778,90 +746,51 @@ export default function WebHomeClient({
           <SearchParamsHandler onSearch={performSearch} />
         </Suspense>
 
-        {/* Navigation */}
-        <header className="glass-header sticky top-0 z-50">
+        {/* Navigation — mirrors the native app bar: a bare Kapilla lockup on the
+            left, Sign in + Pickup on the right, over the shared decorated brand
+            surface. The mobile menu keeps the in-page section links reachable
+            on small screens. */}
+        <header className="brand-header sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
           <nav aria-label="Primary" className={CONTAINER}>
-            <div className="h-16 md:h-20 flex items-center justify-between gap-4">
+            <div className="h-16 flex items-center justify-between gap-3">
               <Link
                 href="/"
-                className={cn('flex items-center gap-3 shrink-0 rounded-lg', FOCUS_DARK)}
+                aria-label="Kapilla Group — home"
+                className={cn('flex min-w-0 flex-1 items-center rounded-lg', FOCUS_DARK)}
               >
-                <span className="bg-white p-1.5 rounded-md shadow-soft">
-                  <Image
-                    src="/logo.png"
-                    alt="Kapilla Group Ltd"
-                    width={40}
-                    height={40}
-                    className="w-8 h-8 md:w-9 md:h-9 object-contain"
-                    priority
-                  />
-                </span>
-                <span className="text-base md:text-lg font-semibold text-navy-900 tracking-tight">
-                  Kapilla <span className="text-accent">Group</span>
-                </span>
+                <Image
+                  src="/kapila logo.png"
+                  alt="Kapilla Group Ltd"
+                  width={801}
+                  height={255}
+                  priority
+                  sizes="(max-width: 640px) 160px, 200px"
+                  className="h-6 w-auto max-w-full object-contain object-left sm:h-7"
+                />
               </Link>
 
-              <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-navy-700">
-                {NAV_LINKS.map(([href, label]) => (
-                  <a
-                    key={href}
-                    href={href}
-                    className={cn(
-                      'group relative transition-colors hover:text-navy-900',
-                      FOCUS_DARK
-                    )}
-                  >
-                    {label}
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-x-0 bottom-0 border-b-2 border-accent origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                    />
-                  </a>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden xl:flex items-center gap-1 text-navy-500">
-                  {SOCIAL_LINKS.map((social) => (
-                    <a
-                      key={social.href}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={social.label}
-                      className={cn(
-                        'p-2 rounded-lg transition-colors hover:text-accent',
-                        FOCUS_DARK
-                      )}
-                    >
-                      {social.icon}
-                    </a>
-                  ))}
-                </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href="/staff/login"
+                  aria-label="Sign in to the staff portal"
+                  className={cn(
+                    BTN_QUIET,
+                    'h-11 w-11 px-0 text-sm bg-white/70 hover:bg-white sm:h-auto sm:w-auto sm:px-4 sm:py-2.5'
+                  )}
+                >
+                  <User aria-hidden="true" className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign in</span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => setIsPickupModalOpen(true)}
-                  className={cn(BTN_PRIMARY, 'p-2.5 md:px-5 md:py-2.5 text-sm')}
+                  className={cn(BTN_PRIMARY, 'px-4 py-2.5 text-sm')}
                   aria-label="Request a pickup"
                 >
                   <Truck aria-hidden="true" className="h-4 w-4" />
-                  <span className="hidden md:inline">Request a Pickup</span>
+                  <span className="hidden sm:inline">Request a Pickup</span>
+                  <span className="sm:hidden">Pickup</span>
                 </button>
-                <Link
-                  href="/download"
-                  className={cn(BTN_DARK, 'hidden md:flex px-5 py-2.5 text-sm')}
-                  aria-label="Download the Kapilla Group app"
-                >
-                  <Smartphone aria-hidden="true" className="h-4 w-4" />
-                  <span>Get the App</span>
-                </Link>
-                <Link
-                  href="/staff/login"
-                  className={cn(BTN_QUIET, 'hidden md:flex px-5 py-2.5 text-sm')}
-                  aria-label="Staff portal"
-                >
-                  <span>Staff Portal</span>
-                </Link>
                 <button
                   type="button"
                   onClick={() => setIsMenuOpen((v) => !v)}
@@ -887,7 +816,7 @@ export default function WebHomeClient({
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="lg:hidden border-t border-navy-200 pb-6 overflow-hidden"
+                  className="lg:hidden border-t border-navy-100 pb-6 overflow-hidden"
                 >
                   <div className="flex flex-col">
                     {MOBILE_NAV_LINKS.map(([href, label]) => (
@@ -896,7 +825,7 @@ export default function WebHomeClient({
                         href={href}
                         onClick={() => setIsMenuOpen(false)}
                         className={cn(
-                          'py-3.5 text-sm font-medium text-navy-700 border-b border-navy-200 transition-colors hover:text-accent',
+                          'py-3.5 text-sm font-medium text-navy-700 border-b border-navy-100 transition-colors hover:text-accent',
                           FOCUS_DARK
                         )}
                       >
