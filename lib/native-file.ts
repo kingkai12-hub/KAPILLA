@@ -58,21 +58,28 @@ export async function saveOrShare(
 ): Promise<boolean> {
   if (!isNativeShell()) return false;
 
-  const { Filesystem, Directory } = await import('@capacitor/filesystem');
-  const { Share } = await import('@capacitor/share');
+  try {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const { Share } = await import('@capacitor/share');
 
-  const path = safeFileName(fileName);
-  await Filesystem.writeFile({
-    path,
-    data: typeof data === 'string' ? data : await blobToBase64(data),
-    directory: Directory.Cache,
-    recursive: true,
-  });
+    const path = safeFileName(fileName);
+    await Filesystem.writeFile({
+      path,
+      data: typeof data === 'string' ? data : await blobToBase64(data),
+      directory: Directory.Cache,
+      recursive: true,
+    });
 
-  const { uri } = await Filesystem.getUri({ path, directory: Directory.Cache });
-  await Share.share({ title: path, files: [uri], dialogTitle });
+    const { uri } = await Filesystem.getUri({ path, directory: Directory.Cache });
+    await Share.share({ title: path, files: [uri], dialogTitle });
 
-  return true;
+    return true;
+  } catch (error) {
+    // A shell built before these plugins existed has no bridge for them, so let
+    // the caller fall back to its browser path instead of failing outright.
+    console.error('[native-file] could not save or share', error);
+    return false;
+  }
 }
 
 /**
@@ -92,5 +99,7 @@ export async function openPdfUrl(
 
   const res = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
   if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-  await saveOrShare(await res.blob(), fileName, dialogTitle);
+  if (!(await saveOrShare(await res.blob(), fileName, dialogTitle))) {
+    window.open(url, '_blank');
+  }
 }
