@@ -770,6 +770,20 @@ export default function WebHomeClient({
               </Link>
 
               <div className="flex shrink-0 items-center gap-2">
+                {/* App promo. Below `lg` the header is too tight for the label,
+                    so it collapses to the icon and the mobile menu carries the
+                    full "Get the App" row. */}
+                <Link
+                  href="/download"
+                  aria-label="Download the Kapilla Group app"
+                  className={cn(
+                    BTN_DARK,
+                    'hidden h-11 w-11 px-0 text-sm sm:inline-flex lg:h-auto lg:w-auto lg:px-4 lg:py-2.5'
+                  )}
+                >
+                  <Smartphone aria-hidden="true" className="h-4 w-4" />
+                  <span className="hidden lg:inline">Get the App</span>
+                </Link>
                 <Link
                   href="/staff/login"
                   aria-label="Sign in to the staff portal"
