@@ -104,6 +104,18 @@ async function getRoadRoute(
 }
 
 /**
+ * Prisma returns `BigInt` for a couple of VehicleTracking columns
+ * (`lastVariationUpdate`, `stopUntil`). `JSON.stringify` cannot serialize
+ * BigInt, so spreading a raw tracking row into `NextResponse.json()` throws and
+ * silently drops the response into the degraded fallback. Convert once here.
+ */
+function jsonSafe<T>(value: T): T {
+  return JSON.parse(
+    JSON.stringify(value, (_key, val) => (typeof val === 'bigint' ? Number(val) : val))
+  ) as T;
+}
+
+/**
  * Records an arrival: one ARRIVED event + one alert to the operations team.
  * The shipment is intentionally left as IN_TRANSIT — staff confirm delivery.
  */
@@ -295,7 +307,7 @@ export async function GET(req: Request) {
       // Not on the road yet (or already delivered): report the stored point.
       if (!travelling || metrics.points.length < 2) {
         return NextResponse.json({
-          ...tracking,
+          ...jsonSafe(tracking),
           isSimulated: true,
           serverTime: new Date().toISOString(),
         });
@@ -359,7 +371,7 @@ export async function GET(req: Request) {
             include: { segments: { orderBy: { order: 'asc' } } },
           })) || tracking;
         return NextResponse.json({
-          ...arrivedTracking,
+          ...jsonSafe(arrivedTracking),
           arrived: true,
           isSimulated: true,
           serverTime: new Date().toISOString(),
@@ -378,7 +390,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Tracking not found' }, { status: 404 });
     }
 
-    let payload: any = { ...tracking };
+    let payload: any = { ...jsonSafe(tracking) };
     if (!payload.segments || payload.segments.length === 0) {
       const startCoords = getLocationCoords(shipment.origin) || { lat: -6.7924, lng: 39.2083 };
       const endCoords = getLocationCoords(shipment.destination) || { lat: -2.5164, lng: 32.9033 };
