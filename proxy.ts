@@ -12,6 +12,9 @@ const MAX_REQUESTS = 100; // Limit each IP to 100 requests per minute for API
 const MAINTENANCE_CHECK_TTL_MS = 10_000;
 const MAINTENANCE_EXEMPT_PREFIXES = ['/api/auth/', '/api/maintenance', '/api/health', '/api/docs'];
 
+// Authoring tools that must never be reachable by the public internet.
+const DEV_ROUTE_PREFIXES = ['/swagger', '/responsive-test', '/api/docs'];
+
 interface CachedStatus {
   enabled: boolean;
   timestamp: number;
@@ -126,7 +129,23 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  // 3. REDIRECT PUBLIC SHIPMENT ROUTES TO HOME
+  // 3. DEVELOPER ROUTES (admin only)
+  // The API explorer (/swagger, /api/docs) and the responsive preview page are
+  // authoring tools. Hide them from the public and require an admin session.
+  const isDevRoute = DEV_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+  if (isDevRoute && !(await isAdminUser(request))) {
+    if (isApiRoute) {
+      return new NextResponse('Not Found', { status: 404 });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = '/staff/login';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
+  // 4. REDIRECT PUBLIC SHIPMENT ROUTES TO HOME
   // Any shared links like /shipments/[waybill] should redirect to home page
   if (isPublicShipmentRoute) {
     const url = request.nextUrl.clone();
@@ -139,7 +158,7 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 4. AUTH GUARD FOR STAFF ROUTES
+  // 5. AUTH GUARD FOR STAFF ROUTES
   if (isAuthPage) {
     const isLogin = request.nextUrl.pathname === '/staff/login';
 
@@ -164,7 +183,7 @@ export default async function proxy(request: NextRequest) {
   // Create response with security headers
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // 5. NO-STORE FOR PORTAL HTML DOCUMENTS
+  // 6. NO-STORE FOR PORTAL HTML DOCUMENTS
   // Ever-serving a stale portal document left users stuck on an old build
   // (e.g. seeing the maintenance screen after it was turned off). RSC and
   // prefetch requests are excluded so the client router cache configured via
@@ -177,7 +196,7 @@ export default async function proxy(request: NextRequest) {
     response.headers.set('Expires', '0');
   }
 
-  // 6. SECURITY HEADERS
+  // 7. SECURITY HEADERS
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -187,7 +206,7 @@ export default async function proxy(request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   );
 
-  // 7. CSRF protection for API routes
+  // 8. CSRF protection for API routes
   if (isApiRoute && request.method !== 'GET') {
     const origin = request.headers.get('origin');
     const host = request.headers.get('host');
