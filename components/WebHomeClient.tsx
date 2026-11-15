@@ -1369,9 +1369,9 @@ export default function WebHomeClient({
 
         {/* Footer */}
         <footer className="relative isolate bg-navy-900 text-navy-200 py-16 border-t border-navy-800">
-          <div className={cn(CONTAINER, 'relative grid md:grid-cols-4 gap-12')}>
+          <div className={cn(CONTAINER, 'relative grid md:grid-cols-4 gap-12 items-start')}>
             <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5">
                 <span className="bg-white p-1.5 rounded-md">
                   <Image
                     src="/logo.png"
@@ -1389,25 +1389,34 @@ export default function WebHomeClient({
                 Transportation and general supply for Tanzania and beyond. We move cargo on
                 schedule, clear it through borders and deliver it with a documented handover.
               </p>
-              <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
-                <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
-                Dar es Salaam, Tanzania
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Link
+                  href="/download"
+                  className={cn(
+                    'group inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-navy-900 shadow-soft transition-colors hover:bg-accent-dark',
+                    FOCUS_DARK
+                  )}
+                  aria-label="Download the Kapilla Group app"
+                >
+                  <Smartphone aria-hidden="true" className="h-4 w-4" />
+                  Get the App
+                </Link>
+                <span className="flex items-center gap-2 text-sm text-navy-200">
+                  <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
+                  Dar es Salaam, Tanzania
+                </span>
               </div>
-              <Link
-                href="/download"
-                className={cn(
-                  'group mb-6 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-navy-900 shadow-soft transition-colors hover:bg-accent-dark',
-                  FOCUS_DARK
-                )}
-                aria-label="Download the Kapilla Group app"
-              >
-                <Smartphone aria-hidden="true" className="h-4 w-4" />
-                Get the App
-              </Link>
-              <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
-              <div className="mt-4 text-[10px] font-mono text-navy-400 font-bold tracking-wider">
-                DEVELOPED BY KAISI
-                <span className="mx-2">|</span>
+              <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-navy-300">
+                © 2026 Kapilla Group Ltd.
+                <span aria-hidden="true" className="text-navy-500">
+                  ·
+                </span>
+                <span className="font-mono text-[10px] font-bold tracking-wider text-navy-400">
+                  DEVELOPED BY KAISI
+                </span>
+                <span aria-hidden="true" className="text-navy-500">
+                  |
+                </span>
                 <a
                   href="/staff/login"
                   className={cn('transition-colors hover:text-white', FOCUS_DARK)}

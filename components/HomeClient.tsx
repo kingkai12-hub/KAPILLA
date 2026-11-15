@@ -1122,9 +1122,14 @@ export default function HomeClient({
         {/* Footer — shown on every screen except home, which stays a single view. */}
         {!isHome && (
           <footer className="relative isolate bg-navy-900 text-navy-200 py-12 border-t border-navy-800">
-            <div className={cn(CONTAINER, 'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4')}>
+            <div
+              className={cn(
+                CONTAINER,
+                'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4 items-start'
+              )}
+            >
               <div className="sm:col-span-2">
-                <div className="mb-6 flex items-center">
+                <div className="mb-5 flex items-center">
                   {/* The lockup is blue, so it sits on white to stay legible. */}
                   <span className="rounded-md bg-white px-2 py-1.5">
                     <Image
@@ -1136,15 +1141,34 @@ export default function HomeClient({
                     />
                   </span>
                 </div>
-                <p className="max-w-sm text-sm leading-relaxed mb-6 text-pretty">
+                <p className="max-w-sm text-sm leading-relaxed mb-5 text-pretty">
                   Transportation and general supply for Tanzania and beyond. We move cargo on
                   schedule, clear it through borders and deliver it with a documented handover.
                 </p>
-                <div className="flex items-center gap-2 text-sm text-navy-200 mb-6">
-                  <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
-                  Dar es Salaam, Tanzania
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <span className="flex items-center gap-2 text-sm text-navy-200">
+                    <MapPin aria-hidden="true" className="w-4 h-4 text-accent" />
+                    Dar es Salaam, Tanzania
+                  </span>
                 </div>
-                <div className="text-xs text-navy-300">© 2026 Kapilla Group Ltd.</div>
+                <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-navy-300">
+                  © 2026 Kapilla Group Ltd.
+                  <span aria-hidden="true" className="text-navy-500">
+                    ·
+                  </span>
+                  <span className="font-mono text-[10px] font-bold tracking-wider text-navy-400">
+                    DEVELOPED BY KAISI
+                  </span>
+                  <span aria-hidden="true" className="text-navy-500">
+                    |
+                  </span>
+                  <Link
+                    href="/staff/login"
+                    className={cn('transition-colors hover:text-white', FOCUS_DARK)}
+                  >
+                    STAFF LOGIN
+                  </Link>
+                </div>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-4 text-sm">Support</h3>
@@ -1199,18 +1223,6 @@ export default function HomeClient({
                     </Link>
                   </li>
                 </ul>
-              </div>
-            </div>
-            <div className={cn(CONTAINER, 'relative mt-10 pt-6 border-t border-navy-800')}>
-              <div className="text-[10px] font-mono text-navy-400 font-bold tracking-wider">
-                DEVELOPED BY KAISI
-                <span className="mx-2">|</span>
-                <Link
-                  href="/staff/login"
-                  className={cn('transition-colors hover:text-white', FOCUS_DARK)}
-                >
-                  STAFF LOGIN
-                </Link>
               </div>
             </div>
           </footer>
