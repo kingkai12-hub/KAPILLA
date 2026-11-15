@@ -15,6 +15,45 @@ const MAINTENANCE_EXEMPT_PREFIXES = ['/api/auth/', '/api/maintenance', '/api/hea
 // Authoring tools that must never be reachable by the public internet.
 const DEV_ROUTE_PREFIXES = ['/swagger', '/responsive-test', '/api/docs'];
 
+/**
+ * Session cookies. `kapilla_auth` is only a marker and `kapilla_uid` names the
+ * user; neither is readable from the client (httpOnly), so only the server can
+ * end a session.
+ */
+const AUTH_COOKIE = 'kapilla_auth';
+const USER_COOKIE = 'kapilla_uid';
+
+/** Expire every session cookie on the way out. */
+function clearAuthCookies(response: NextResponse) {
+  const opts = {
+    httpOnly: true,
+    sameSite: 'strict' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  };
+  response.cookies.set(AUTH_COOKIE, '', opts);
+  response.cookies.set(USER_COOKIE, '', opts);
+  response.cookies.set('kapilla_session', '', opts);
+}
+
+/** Ask the session endpoint whether these cookies still map to a live user. */
+async function hasValidSession(request: NextRequest): Promise<boolean> {
+  try {
+    const url = new URL('/api/auth/session', request.url);
+    const res = await fetch(url.toString(), {
+      cache: 'no-store',
+      headers: { cookie: request.headers.get('cookie') || '' },
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Boolean(data?.id);
+  } catch (e) {
+    console.error('[PROXY] session check failed', e);
+    return false;
+  }
+}
+
 interface CachedStatus {
   enabled: boolean;
   timestamp: number;
@@ -64,8 +103,8 @@ async function isAdminUser(request: NextRequest): Promise<boolean> {
 }
 
 export default async function proxy(request: NextRequest) {
-  const authCookie = request.cookies.get('kapilla_auth');
-  const userId = request.cookies.get('kapilla_uid');
+  const authCookie = request.cookies.get(AUTH_COOKIE);
+  const userId = request.cookies.get(USER_COOKIE);
   const pathname = request.nextUrl.pathname;
 
   // Expose the pathname to server components (used to keep /staff/login
@@ -172,31 +211,49 @@ export default async function proxy(request: NextRequest) {
       url.search = '';
       return NextResponse.redirect(url);
     } else if (isLogin) {
-      // If already logged in, redirect to dashboard
-      const url = request.nextUrl.clone();
-      url.pathname = '/staff/dashboard';
-      url.search = '';
-      return NextResponse.redirect(url);
+      // Only bounce to the dashboard when the cookie still maps to a live
+      // session. Trusting the cookie's presence alone sent a stale cookie into
+      // a loop: dashboard → login → dashboard.
+      if (await hasValidSession(request)) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/staff/dashboard';
+        url.search = '';
+        return NextResponse.redirect(url);
+      }
     }
   }
 
   // Create response with security headers
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // 6. NO-STORE FOR PORTAL HTML DOCUMENTS
+  // 6. LEAVING THE PORTAL ENDS THE SESSION
+  // The portal runs on shared workstations, so a session must not survive a
+  // trip back to the public site. Any full document navigation to a public page
+  // expires the session cookies, which means tapping "Account" asks for the
+  // password again instead of walking straight into the dashboard. RSC and
+  // prefetch requests are excluded so in-portal navigation is untouched.
+  const isRscRequest =
+    request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc');
+  const isDocumentNavigation =
+    !isRscRequest &&
+    (request.headers.get('sec-fetch-mode') === 'navigate' ||
+      (request.headers.get('accept') ?? '').includes('text/html'));
+  if (!isAuthPage && !isApiRoute && isDocumentNavigation && (authCookie?.value || userId?.value)) {
+    clearAuthCookies(response);
+  }
+
+  // 7. NO-STORE FOR PORTAL HTML DOCUMENTS
   // Ever-serving a stale portal document left users stuck on an old build
   // (e.g. seeing the maintenance screen after it was turned off). RSC and
   // prefetch requests are excluded so the client router cache configured via
   // `staleTimes` keeps portal navigation fast.
-  const isRscRequest =
-    request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc');
   if (isAuthPage && !isRscRequest) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
   }
 
-  // 7. SECURITY HEADERS
+  // 8. SECURITY HEADERS
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -206,7 +263,7 @@ export default async function proxy(request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   );
 
-  // 8. CSRF protection for API routes
+  // 9. CSRF protection for API routes
   if (isApiRoute && request.method !== 'GET') {
     const origin = request.headers.get('origin');
     const host = request.headers.get('host');
