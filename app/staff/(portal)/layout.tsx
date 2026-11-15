@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link, { useLinkStatus } from 'next/link';
 import HelpCenterModal from '@/components/HelpCenterModal';
 import PickupRequestModal from '@/components/PickupRequestModal';
@@ -43,6 +43,12 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * How long sign-out waits for the cookie-clearing request before leaving anyway.
+ * The redirect must never depend on that request completing.
+ */
+const LOGOUT_FETCH_TIMEOUT_MS = 2500;
+
 /** Shows a spinner on the sidebar item whose page is still loading. */
 function NavPendingIndicator() {
   const { pending } = useLinkStatus();
@@ -72,16 +78,31 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  // Hydration-safe "are we on the client yet" flag. Reading it through
+  // useSyncExternalStore avoids the extra render that a setState-in-effect
+  // mount flag causes.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [pendingPickupCount, setPendingPickupCount] = useState(0);
   const sessionManagerRef = React.useRef<SessionManager | null>(null);
   // The content pane is the only scrolling surface in the app shell, so the
   // browser's automatic window scroll reset never reaches it.
   const mainRef = React.useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
+  // Collapse the menu whenever a new page is opened. Adjusting state during
+  // render (instead of in an effect) avoids a wasted second render pass and is
+  // the pattern React recommends when state resets on a value change.
+  const [collapsedPath, setCollapsedPath] = useState(pathname);
+  if (collapsedPath !== pathname) {
+    setCollapsedPath(pathname);
+    setSidebarHover(false);
+    setSidebarOpen(false);
+  }
 
+  useEffect(() => {
     // Initialize session manager
     const handleSessionTimeout = () => {
       console.log('Session expired due to inactivity');
@@ -200,12 +221,6 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     return () => clearInterval(interval);
   }, [user]);
 
-  // Collapse the menu whenever a new page is opened
-  useEffect(() => {
-    setSidebarHover(false);
-    setSidebarOpen(false);
-  }, [pathname]);
-
   // Reset the content pane scroll on navigation — the window no longer scrolls.
   useEffect(() => {
     const pane = mainRef.current;
@@ -227,25 +242,25 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
   }, []);
 
   const handleLogout = async () => {
-    try {
-      // Stop session manager
-      if (sessionManagerRef.current) {
-        sessionManagerRef.current.stop();
-      }
-
-      // Clear all session data
-      clearSession();
-
-      // Call logout API
-      try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-      } catch (error) {
-        console.error('Logout API error:', error);
-      }
-    } finally {
-      // Always redirect to home page
-      window.location.assign('/');
+    // Stop the idle monitor and drop the cached user first, so nothing can
+    // resurrect the session while the request is in flight.
+    if (sessionManagerRef.current) {
+      sessionManagerRef.current.stop();
     }
+    clearSession();
+
+    // Give the server a moment to clear the httpOnly cookies, but never let a
+    // stalled request keep the user trapped on the portal: inside the native
+    // WebView a request that never settled meant the redirect never ran and
+    // tapping "Sign Out" appeared to do nothing.
+    await Promise.race([
+      fetch('/api/auth/logout', { method: 'POST', keepalive: true }).catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, LOGOUT_FETCH_TIMEOUT_MS)),
+    ]);
+
+    // `replace` rather than `assign`: the signed-out portal page is dropped from
+    // history, so Android's hardware back button cannot walk back into it.
+    window.location.replace('/');
   };
 
   const navSections = [
