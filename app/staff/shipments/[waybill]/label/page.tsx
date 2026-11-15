@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Printer } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { openPdfUrl } from '@/lib/native-file';
+import { SITE_URL } from '@/lib/utils';
 
 export default function LabelPage() {
   const params = useParams();
@@ -224,7 +225,7 @@ export default function LabelPage() {
           {/* QR Code at bottom center */}
           <div className="flex justify-center mt-3">
             <QRCodeSVG
-              value={`https://kapillagroup.vercel.app/waybill/${encodeURIComponent(data.waybillNumber ?? '')}`}
+              value={`${SITE_URL}/waybill/${encodeURIComponent(data.waybillNumber ?? '')}`}
               size={80}
             />
           </div>

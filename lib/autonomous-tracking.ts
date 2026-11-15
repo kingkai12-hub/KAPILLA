@@ -22,6 +22,7 @@ import {
 import { calculateHeading } from '@/lib/tracking-utils';
 import { sendEmail } from '@/lib/email';
 import { sendShipmentUpdateSMS } from '@/lib/sms';
+import { SITE_URL } from '@/lib/utils';
 
 /**
  * Update single vehicle position autonomously
@@ -67,7 +68,9 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
 
     // Skip if already arrived at destination (waiting for staff confirmation)
     if (tracking.isStopped && tracking.stopReason === 'Arrived at destination') {
-      console.log(`[AUTONOMOUS] Shipment ${shipment.waybillNumber} already at destination, waiting for confirmation`);
+      console.log(
+        `[AUTONOMOUS] Shipment ${shipment.waybillNumber} already at destination, waiting for confirmation`
+      );
       return true;
     }
 
@@ -235,7 +238,7 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
           });
 
           // Send arrival notifications to sender and receiver
-          const trackingUrl = `https://kapillagroup.vercel.app/?waybill=${shipment.waybillNumber}`;
+          const trackingUrl = `${SITE_URL}/?waybill=${shipment.waybillNumber}`;
           const arrivalMessage = `Your cargo (Waybill: ${shipment.waybillNumber}) has ARRIVED at ${shipment.destination}. Please confirm receipt. Track: ${trackingUrl}`;
 
           // SMS to receiver
@@ -286,7 +289,9 @@ export async function updateVehiclePosition(trackingId: string): Promise<boolean
                 </div>
               </div>`;
 
-            const recipients = [shipment.receiverEmail, shipment.senderEmail].filter(Boolean) as string[];
+            const recipients = [shipment.receiverEmail, shipment.senderEmail].filter(
+              Boolean
+            ) as string[];
             if (recipients.length > 0) {
               sendEmail({
                 to: recipients,

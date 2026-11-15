@@ -4,19 +4,20 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import HomeClient from '@/components/HomeClient';
 import WebHomeClient from '@/components/WebHomeClient';
+import { SITE_URL } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Freight, Transport & Customs Clearing in East Africa',
   description:
     'Kapilla Group transports cargo by road, sea and air across Tanzania, East Africa and 200+ destinations — with customs clearing, forwarding and live waybill tracking.',
   alternates: {
-    canonical: 'https://kapilla-logistics.vercel.app',
+    canonical: SITE_URL,
   },
   openGraph: {
     title: 'Kapilla Group — Freight, Transport & Customs Clearing',
     description:
       'Ship by road, sea and air across East Africa and 200+ destinations, and track every consignment in real time.',
-    url: 'https://kapilla-logistics.vercel.app/',
+    url: `${SITE_URL}/`,
   },
 };
 

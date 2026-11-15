@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { SITE_URL } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ export async function GET(
 
     // Generate QR Code
     const qrDataUrl = await QRCode.toDataURL(
-      `https://kapillagroup.vercel.app/waybill/${encodeURIComponent(shipment.waybillNumber)}`,
+      `${SITE_URL}/waybill/${encodeURIComponent(shipment.waybillNumber)}`,
       { width: 60, margin: 1 }
     );
 

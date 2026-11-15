@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { sendPickupRequestSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { requireAuth, requireRole } from '@/lib/auth';
+import { SITE_URL } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +13,8 @@ const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CE
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { senderName, senderPhone, pickupAddress, destination, cargoDetails, estimatedWeight } = body;
+    const { senderName, senderPhone, pickupAddress, destination, cargoDetails, estimatedWeight } =
+      body;
 
     if (!senderName || !senderPhone || !pickupAddress || !destination || !cargoDetails) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -33,23 +35,15 @@ export async function POST(req: Request) {
     try {
       // Send SMS notification
       if (senderPhone) {
-        await sendPickupRequestSMS(
-          senderPhone,
-          request.id,
-          senderName
-        );
+        await sendPickupRequestSMS(senderPhone, request.id, senderName);
       }
 
       // Send email notification if email provided
       if (senderPhone && senderPhone.includes('@')) {
-        const emailTemplate = emailTemplates.pickupRequest(
-          request.id,
-          senderName,
-          pickupAddress
-        );
+        const emailTemplate = emailTemplates.pickupRequest(request.id, senderName, pickupAddress);
         await sendEmail({
           to: senderPhone,
-          ...emailTemplate
+          ...emailTemplate,
         });
       }
 
@@ -82,14 +76,14 @@ export async function POST(req: Request) {
               </div>
               
               <div style="text-align: center; margin-top: 30px;">
-                <a href="https://kapillagroup.vercel.app/staff/pickup-requests" 
+                <a href="${SITE_URL}/staff/pickup-requests" 
                    style="background: #f5576c; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
                   View in Staff Portal
                 </a>
               </div>
             </div>
           </div>
-        `
+        `,
       });
     } catch (notificationError) {
       console.error('Failed to send pickup notifications:', notificationError);

@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { SITE_URL } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
     'How Kapilla Group Limited collects, uses and protects personal information in the Kapilla Group app and website.',
-  alternates: { canonical: 'https://kapilla-logistics.vercel.app/privacy' },
+  alternates: { canonical: `${SITE_URL}/privacy` },
   robots: { index: true, follow: true },
 };
 
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 const LAST_UPDATED = '12 November 2026';
 
 export default function PrivacyPolicyPage() {
@@ -41,8 +43,8 @@ export default function PrivacyPolicyPage() {
 
           <p className="mt-6 text-sm text-charcoal-light leading-relaxed">
             This policy explains what information Kapilla Group Limited collects when you use the
-            Kapilla Group mobile app or the website at kapillagroup.vercel.app, why we collect it,
-            and the choices you have.
+            Kapilla Group mobile app or the website at {SITE_HOST}, why we collect it, and the
+            choices you have.
           </p>
 
           <h2 className="mt-10 text-xl font-semibold text-navy-900">Who we are</h2>

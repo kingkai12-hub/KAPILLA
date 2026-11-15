@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { SITE_URL } from '@/lib/utils';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -18,7 +19,7 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
       {
-        url: 'https://kapilla-logistics.vercel.app',
+        url: SITE_URL,
         description: 'Production server',
       },
     ],

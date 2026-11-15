@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
+import { SITE_URL } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function GET(
 
     // Generate QR Code
     const qrDataUrl = await QRCode.toDataURL(
-      `https://kapillagroup.vercel.app/waybill/${encodeURIComponent(shipment.waybillNumber)}`,
+      `${SITE_URL}/waybill/${encodeURIComponent(shipment.waybillNumber)}`,
       { width: 80, margin: 1 }
     );
 
@@ -56,7 +57,7 @@ export async function GET(
 
     // Logo in CENTER
     try {
-      const logoUrl = 'https://kapillagroup.vercel.app/kapila%20logo.png';
+      const logoUrl = `${SITE_URL}/kapila%20logo.png`;
       const logoResponse = await fetch(logoUrl);
       if (logoResponse.ok) {
         const logoBlob = await logoResponse.arrayBuffer();

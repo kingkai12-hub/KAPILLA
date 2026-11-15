@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { SITE_URL } from '@/lib/utils';
 
 // Email configuration
 const EMAIL_CONFIG = {
@@ -64,7 +65,7 @@ export const emailTemplates = {
           <p style="color: #666; line-height: 1.6; margin-top: 20px;">You can track your shipment using the waybill number above on our website or contact our support team for any assistance.</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="https://kapillagroup.vercel.app/tracking?waybill=${waybill}" 
+            <a href="${SITE_URL}/?waybill=${waybill}" 
                style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
               Track Shipment
             </a>
@@ -101,7 +102,7 @@ export const emailTemplates = {
           <p style="color: #666; line-height: 1.6; margin-top: 20px;">Our customer service team will contact you within 24 hours to schedule the pickup.</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="https://kapillagroup.vercel.app" 
+            <a href="${SITE_URL}" 
                style="background: #f5576c; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
               Visit Website
             </a>
@@ -138,7 +139,7 @@ export const emailTemplates = {
           <p style="color: #666; line-height: 1.6; margin-top: 20px;">Please login and change your password immediately for security reasons.</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="https://kapillagroup.vercel.app/staff/login" 
+            <a href="${SITE_URL}/staff/login" 
                style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
               Login to Staff Portal
             </a>

@@ -7,6 +7,7 @@
 // TEXTBEE_API_KEY, TEXTBEE_DEVICE_ID (optional)
 
 import twilio from 'twilio';
+import { SITE_URL } from '@/lib/utils';
 
 interface SMSProvider {
   sendSMS(to: string, message: string): Promise<boolean>;
@@ -197,7 +198,7 @@ export async function sendShipmentCreatedSMS(
   senderName: string,
   destination: string
 ): Promise<boolean> {
-  const message = `📦 KAPILLA LOGISTICS\n\nDear ${senderName},\n\nYour shipment has been created!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${senderName},\n\nYour shipment has been created!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: ${SITE_URL}/?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
 
   return await smsProvider.sendSMS(phoneNumber, message);
 }
@@ -209,7 +210,7 @@ export async function sendShipmentCreatedToReceiverSMS(
   senderName: string,
   destination: string
 ): Promise<boolean> {
-  const message = `📦 KAPILLA LOGISTICS\n\nDear ${receiverName},\n\nYou have a shipment from ${senderName}!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${receiverName},\n\nYou have a shipment from ${senderName}!\n\n🎫 WAYBILL: ${waybillNumber}\n📍 Route: ${destination}\n\nTrack: ${SITE_URL}/?waybill=${waybillNumber}\n\nThank you for choosing Kapilla Logistics!`;
 
   return await smsProvider.sendSMS(phoneNumber, message);
 }
@@ -220,7 +221,7 @@ export async function sendShipmentUpdateSMS(
   status: string,
   customerName: string
 ): Promise<boolean> {
-  const message = `📦 KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment status updated!\n\n🎫 WAYBILL: ${waybillNumber}\n📊 Status: ${status}\n\nTrack: kapillagroup.vercel.app/tracking?waybill=${waybillNumber}\n\n- Kapilla Logistics`;
+  const message = `📦 KAPILLA LOGISTICS\n\nDear ${customerName},\n\nYour shipment status updated!\n\n🎫 WAYBILL: ${waybillNumber}\n📊 Status: ${status}\n\nTrack: ${SITE_URL}/?waybill=${waybillNumber}\n\n- Kapilla Logistics`;
 
   return await smsProvider.sendSMS(phoneNumber, message);
 }
@@ -262,8 +263,7 @@ export async function sendWelcomeSMS(
   email: string,
   password: string
 ): Promise<boolean> {
-  const loginUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kapillagroup.vercel.app';
-  const message = `KAPILLA GROUP\n\nHello ${name}, your staff account has been created.\n\nUsername: ${email}\nPassword: ${password}\n\nLogin: ${loginUrl}/staff/login\n\nPlease change your password after your first login.`;
+  const message = `KAPILLA GROUP\n\nHello ${name}, your staff account has been created.\n\nUsername: ${email}\nPassword: ${password}\n\nLogin: ${SITE_URL}/staff/login\n\nPlease change your password after your first login.`;
 
   return await smsProvider.sendSMS(phoneNumber, message);
 }

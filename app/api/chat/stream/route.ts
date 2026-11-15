@@ -1,21 +1,21 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 import { subscribe, unsubscribe } from '@/lib/chatBus';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
-  if (!userId) {
-    return NextResponse.json({ error: 'userId required' }, { status: 400 });
-  }
+  const auth = await requireAuth(req);
+  if (auth.error) return auth.error;
+
+  // Subscribe as the authenticated user, never a client-supplied id.
+  const userId = auth.user.id;
 
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
       const sub = {
-        send(payload: any) {
+        send(payload: unknown) {
           const data = `data: ${JSON.stringify(payload)}\n\n`;
           controller.enqueue(encoder.encode(data));
         },

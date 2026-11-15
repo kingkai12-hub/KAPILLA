@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/utils';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://kapilla-logistics.vercel.app';
+  const baseUrl = SITE_URL;
   return {
     rules: [
       {

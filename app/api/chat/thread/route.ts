@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   try {
+    const auth = await requireAuth(req);
+    if (auth.error) return auth.error;
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
+    // The thread always belongs to the authenticated user, never a client-supplied id.
+    const userId = auth.user.id;
     const peerId = searchParams.get('peerId');
-    if (!userId || !peerId) {
-      return NextResponse.json({ error: 'userId and peerId required' }, { status: 400 });
+    if (!peerId) {
+      return NextResponse.json({ error: 'peerId required' }, { status: 400 });
     }
 
     const messages = await db.message.findMany({

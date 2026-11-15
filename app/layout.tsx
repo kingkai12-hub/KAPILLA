@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { getMaintenanceStatus } from '@/lib/maintenance';
 import { Wrench, ShieldAlert } from 'lucide-react';
+import { SITE_URL } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,19 +22,19 @@ export const revalidate = 0;
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://kapilla-logistics.vercel.app'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Kapilla Logistics',
     template: '%s | Kapilla Logistics',
   },
   description: 'Global Logistics & Tracking System - Fast, Reliable, Secure.',
   alternates: {
-    canonical: 'https://kapilla-logistics.vercel.app',
+    canonical: SITE_URL,
   },
   openGraph: {
     title: 'Kapilla Logistics',
     description: 'Track your shipment in real-time across our global network.',
-    url: 'https://kapilla-logistics.vercel.app/',
+    url: `${SITE_URL}/`,
     siteName: 'Kapilla Logistics',
     images: [
       {

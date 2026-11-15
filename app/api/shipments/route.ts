@@ -4,6 +4,7 @@ import { sendShipmentCreatedSMS, sendShipmentCreatedToReceiverSMS } from '@/lib/
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 import { requireAuth, requireRole } from '@/lib/auth';
+import { SITE_URL } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -233,7 +234,7 @@ export async function POST(req: Request) {
               </div>
               
               <div style="text-align: center; margin-top: 30px;">
-                <a href="https://kapillagroup.vercel.app/staff/shipments" 
+                <a href="${SITE_URL}/staff/shipments" 
                    style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
                   View in Staff Portal
                 </a>
