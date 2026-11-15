@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -315,6 +315,13 @@ const SERVICE_FEATURES = [
   },
 ];
 
+/**
+ * The only stages the public tracking history shows. Customers follow the
+ * journey as booked → moving → arrived; the internal handover steps (picked up,
+ * out for delivery, …) are deliberately kept out of the public view.
+ */
+const PUBLIC_HISTORY_STATUSES = new Set(['PENDING', 'IN_TRANSIT', 'ARRIVED']);
+
 export default function HomeClient({
   screen = 'home',
   initialServices,
@@ -329,6 +336,7 @@ export default function HomeClient({
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [executives, setExecutives] = useState<any[]>(initialExecutives);
   const [services, setServices] = useState<any[]>(initialServices);
+  const router = useRouter();
 
   const ServicesGrid = React.memo(function ServicesGrid({
     services,
@@ -444,9 +452,12 @@ export default function HomeClient({
     }
   } catch (e) {}
 
-  // Chronological (oldest first) event history for the public tracking timeline
+  // Chronological (oldest first) history for the public tracking timeline,
+  // narrowed to the stages a customer is meant to see.
   const events: any[] = Array.isArray(searchResult?.events)
-    ? [...searchResult.events].reverse()
+    ? [...searchResult.events]
+        .reverse()
+        .filter((ev: any) => PUBLIC_HISTORY_STATUSES.has(String(ev?.status ?? '').toUpperCase()))
     : [];
 
   const performSearch = async (wb: string) => {
@@ -501,6 +512,13 @@ export default function HomeClient({
     e.preventDefault();
     const term = waybill.trim();
     if (!term) return;
+    // The results only exist on the track screen, so a search started from the
+    // home launcher has to hand the waybill over to that screen — otherwise the
+    // request runs and the page never changes.
+    if (screen !== 'track') {
+      router.push(`/track?waybill=${encodeURIComponent(term)}`);
+      return;
+    }
     performSearch(term);
   };
 
