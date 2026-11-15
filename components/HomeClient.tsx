@@ -607,7 +607,7 @@ export default function HomeClient({
                 height={255}
                 priority
                 sizes="(max-width: 640px) 160px, 200px"
-                className="h-6 w-auto max-w-full object-contain object-left sm:h-7"
+                className="h-8 w-auto max-w-full object-contain object-left sm:h-9"
               />
             </Link>
 
