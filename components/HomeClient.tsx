@@ -791,14 +791,14 @@ export default function HomeClient({
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div>
+                        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                          <div className="min-w-0">
                             <div className={LABEL + ' mb-2'}>Waybill number</div>
                             <div className="text-xl md:text-2xl font-bold text-navy-900 font-mono tracking-tight">
                               {searchResult.waybillNumber}
                             </div>
                           </div>
-                          <div className="flex flex-col md:items-end">
+                          <div className="flex flex-col items-start md:items-end">
                             <div className={LABEL + ' mb-2'}>Current status</div>
                             <div
                               className={cn(
@@ -859,7 +859,7 @@ export default function HomeClient({
                         </div>
 
                         {/* Sender / recipient */}
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                           <div className="glass rounded-lg p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Sender
@@ -1125,10 +1125,10 @@ export default function HomeClient({
             <div
               className={cn(
                 CONTAINER,
-                'relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4 items-start'
+                'relative grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4 items-start'
               )}
             >
-              <div className="sm:col-span-2">
+              <div className="col-span-2">
                 <div className="mb-5 flex items-center">
                   {/* The lockup is blue, so it sits on white to stay legible. */}
                   <span className="rounded-md bg-white px-2 py-1.5">

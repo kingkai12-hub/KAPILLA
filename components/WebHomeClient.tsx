@@ -1034,14 +1034,14 @@ export default function WebHomeClient({
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div>
+                        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                          <div className="min-w-0">
                             <div className={LABEL + ' mb-2'}>Waybill number</div>
                             <div className="text-xl md:text-2xl font-bold text-navy-900 font-mono tracking-tight">
                               {searchResult.waybillNumber}
                             </div>
                           </div>
-                          <div className="flex flex-col md:items-end">
+                          <div className="flex flex-col items-start md:items-end">
                             <div className={LABEL + ' mb-2'}>Current status</div>
                             <div
                               className={cn(
@@ -1102,7 +1102,7 @@ export default function WebHomeClient({
                         </div>
 
                         {/* Sender / recipient */}
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                           <div className="glass rounded-lg p-4">
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-muted mb-1.5">
                               Sender
@@ -1369,8 +1369,13 @@ export default function WebHomeClient({
 
         {/* Footer */}
         <footer className="relative isolate bg-navy-900 text-navy-200 py-16 border-t border-navy-800">
-          <div className={cn(CONTAINER, 'relative grid md:grid-cols-4 gap-12 items-start')}>
-            <div className="md:col-span-2">
+          <div
+            className={cn(
+              CONTAINER,
+              'relative grid grid-cols-2 gap-6 md:gap-12 md:grid-cols-4 items-start'
+            )}
+          >
+            <div className="col-span-2 md:col-span-2">
               <div className="flex items-center gap-3 mb-5">
                 <span className="bg-white p-1.5 rounded-md">
                   <Image
