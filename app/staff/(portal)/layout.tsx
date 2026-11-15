@@ -632,7 +632,10 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
         onMouseEnter={() => setSidebarHover(true)}
         onMouseLeave={() => setSidebarHover(false)}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 glass-menu text-navy-900 transform transition-[transform,visibility] duration-300 ease-out',
+          // Tailwind v4 animates `translate-x-*` via the CSS `translate`
+          // property (not `transform`), so the transition must name `translate`
+          // or the panel snaps instead of sliding.
+          'fixed inset-y-0 left-0 z-50 w-72 glass-menu text-navy-900 transition-[translate,visibility] duration-300 ease-out',
           sidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible',
           sidebarOpen || sidebarHover
             ? 'md:translate-x-0 md:visible'
