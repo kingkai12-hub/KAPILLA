@@ -6,7 +6,7 @@
     <title>Kapilla Group</title>
     <style>
       :root {
-        color-scheme: dark;
+        color-scheme: light;
       }
       * {
         box-sizing: border-box;
@@ -19,8 +19,8 @@
         align-items: center;
         justify-content: center;
         gap: 20px;
-        background: radial-gradient(circle at 50% 20%, #14335c 0%, #0b1f3a 60%, #071427 100%);
-        color: #ffffff;
+        background: #ffffff;
+        color: #0b1f3a;
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         padding: 32px;
@@ -35,7 +35,7 @@
       p {
         margin: 0;
         font-size: 14px;
-        color: rgba(255, 255, 255, 0.72);
+        color: rgba(11, 31, 58, 0.66);
         max-width: 320px;
         line-height: 1.5;
       }
@@ -43,7 +43,7 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        border: 3px solid rgba(255, 255, 255, 0.18);
+        border: 3px solid rgba(11, 31, 58, 0.12);
         border-top-color: #ffc72c;
         animation: spin 0.9s linear infinite;
       }
@@ -63,12 +63,52 @@
         font-weight: 600;
         cursor: pointer;
       }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
     </style>
   </head>
   <body>
     <div class="spinner" aria-hidden="true"></div>
     <h1>Kapilla Group</h1>
     <p id="status">Connecting to Kapilla Group&hellip; Please check your internet connection.</p>
-    <button type="button" onclick="location.reload()">Retry</button>
+    <button type="button" id="retry">Retry</button>
+    <script>
+      (function () {
+        var FALLBACK_URL = 'https://kapillagroup.vercel.app';
+
+        // The error page is served from the local shell URL (e.g. https://localhost/index.html),
+        // so location.reload() would only re-render this page. Resolve the real app URL instead.
+        function getAppUrl() {
+          try {
+            if (window.Capacitor && typeof window.Capacitor.getServerUrl === 'function') {
+              var url = window.Capacitor.getServerUrl();
+              if (url) return url;
+            }
+          } catch (e) {
+            // ignore
+          }
+          if (window.WEBVIEW_SERVER_URL) return window.WEBVIEW_SERVER_URL;
+          return FALLBACK_URL;
+        }
+
+        var button = document.getElementById('retry');
+        var status = document.getElementById('status');
+
+        function reopenApp() {
+          button.disabled = true;
+          button.textContent = 'Retrying\u2026';
+          status.textContent = 'Reconnecting to Kapilla Group\u2026';
+          // Navigate back to the real app URL so the WebView re-attempts the remote app.
+          window.location.replace(getAppUrl());
+        }
+
+        button.addEventListener('click', reopenApp);
+
+        // When connectivity returns, reopen the app automatically.
+        window.addEventListener('online', reopenApp);
+      })();
+    </script>
   </body>
 </html>
