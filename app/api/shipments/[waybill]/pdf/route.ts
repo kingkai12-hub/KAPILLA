@@ -78,9 +78,10 @@ export async function GET(
     doc.setFont('helvetica', 'bold');
     doc.text('WAYBILL NO.', 180, 13, { align: 'center' });
 
-    doc.setFontSize(11);
+    // Shrink the waybill type so long numbers stay inside the 40mm box.
+    doc.setFontSize(shipment.waybillNumber.length > 14 ? 8 : 11);
     doc.setTextColor(0, 0, 0);
-    doc.text(shipment.waybillNumber, 180, 20, { align: 'center' });
+    doc.text(shipment.waybillNumber, 180, 20, { align: 'center', maxWidth: 36 });
 
     doc.setFontSize(7);
     doc.setTextColor(60, 60, 60);
@@ -106,7 +107,7 @@ export async function GET(
     doc.text('ORIGIN', 17, yPos + 5);
     doc.setFontSize(13);
     doc.setTextColor(0, 0, 0);
-    doc.text(shipment.origin.toUpperCase(), 17, yPos + 13);
+    doc.text(shipment.origin.toUpperCase(), 17, yPos + 13, { maxWidth: 80 });
 
     // Destination box - same style as origin
     doc.setDrawColor(25, 55, 109);
@@ -119,7 +120,7 @@ export async function GET(
     doc.text('DESTINATION', 107, yPos + 5);
     doc.setFontSize(13);
     doc.setTextColor(0, 0, 0);
-    doc.text(shipment.destination.toUpperCase(), 107, yPos + 13);
+    doc.text(shipment.destination.toUpperCase(), 107, yPos + 13, { maxWidth: 80 });
 
     yPos += 23;
 
@@ -257,6 +258,13 @@ export async function GET(
     }
 
     yPos += 42;
+
+    // Long cargo details can push the footer past the A4 page edge, where it
+    // would be clipped. Continue on a fresh page instead.
+    if (yPos > 235) {
+      doc.addPage();
+      yPos = 20;
+    }
 
     // Modern Footer Section
     doc.setDrawColor(25, 55, 109);

@@ -5,6 +5,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Printer, CheckCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { openPdfUrl } from '@/lib/native-file';
+import { SITE_URL } from '@/lib/utils';
+
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
 export default function ProofOfDeliveryPage() {
   const params = useParams();
@@ -106,6 +109,16 @@ export default function ProofOfDeliveryPage() {
               print-color-adjust: exact;
             }
           }
+          /*
+           * The sheet is a fixed A4 preview, so on phones it would be wider than
+           * the screen and force sideways scrolling. Scale it down to fit the
+           * viewport (zoom reflows the layout, so no empty space is left behind).
+           */
+          @media screen and (max-width: 900px) { .a4-sheet { zoom: 0.85; } }
+          @media screen and (max-width: 720px) { .a4-sheet { zoom: 0.68; } }
+          @media screen and (max-width: 560px) { .a4-sheet { zoom: 0.52; } }
+          @media screen and (max-width: 420px) { .a4-sheet { zoom: 0.4; } }
+          @media print { .a4-sheet { zoom: 1; } }
         `}
       </style>
       {/* Print Button */}
@@ -118,8 +131,8 @@ export default function ProofOfDeliveryPage() {
       </button>
 
       {/* A4 Paper Container */}
-      <div className="w-full overflow-x-auto">
-        <div className="bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl box-border relative text-black mx-auto">
+      <div className="w-full flex justify-center">
+        <div className="a4-sheet bg-white w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl box-border relative text-black mx-auto">
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
             <div className="flex items-center gap-4">
@@ -267,9 +280,12 @@ export default function ProofOfDeliveryPage() {
           <div className="absolute bottom-[20mm] left-[20mm] right-[20mm] flex justify-between items-center border-t border-black pt-4">
             <div className="text-xs text-black">
               <p>Kapilla Logistics Ltd.</p>
-              <p>www.kapilla-group.com</p>
+              <p>{SITE_HOST}</p>
             </div>
-            <QRCodeSVG value={`https://kapilla-group.com/track/${waybill}`} size={60} />
+            <QRCodeSVG
+              value={`${SITE_URL}/?waybill=${encodeURIComponent(waybill || '')}`}
+              size={60}
+            />
           </div>
         </div>
       </div>

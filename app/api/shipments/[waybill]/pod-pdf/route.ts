@@ -105,14 +105,14 @@ export async function GET(
     yPos += 8;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text(shipment.senderName, 15, yPos);
-    doc.text(shipment.receiverName, 110, yPos);
+    doc.text(shipment.senderName, 15, yPos, { maxWidth: 85 });
+    doc.text(shipment.receiverName, 110, yPos, { maxWidth: 85 });
 
     yPos += 6;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text(shipment.senderPhone, 15, yPos);
-    doc.text(shipment.receiverPhone, 110, yPos);
+    doc.text(shipment.senderPhone, 15, yPos, { maxWidth: 85 });
+    doc.text(shipment.receiverPhone, 110, yPos, { maxWidth: 85 });
 
     yPos += 5;
     doc.text(shipment.senderAddress || 'N/A', 15, yPos, { maxWidth: 85 });
@@ -149,8 +149,10 @@ export async function GET(
       doc.setFont('helvetica', 'bold');
       doc.text(label, 15, yPos);
       doc.setFont('helvetica', 'normal');
-      doc.text(value, 60, yPos);
-      yPos += 6;
+      // Wrap long values inside the page and grow the row to fit them.
+      const lines = doc.splitTextToSize(value, 130);
+      doc.text(lines, 60, yPos);
+      yPos += Math.max(6, lines.length * 4.5);
     });
 
     yPos += 5;
@@ -188,8 +190,9 @@ export async function GET(
     doc.setFontSize(7);
     doc.text('Scan to verify', 175, yPos - 30 + 33, { align: 'center' });
 
-    // Footer
-    yPos = 270;
+    // Footer — sit at the bottom of the page, but never overlap the content
+    // above it when the details section is long.
+    yPos = Math.min(Math.max(yPos + 10, 270), 284);
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.line(15, yPos, 195, yPos);
