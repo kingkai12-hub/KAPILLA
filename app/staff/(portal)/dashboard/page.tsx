@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Megaphone,
   ShieldCheck,
+  BellRing,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -33,6 +34,13 @@ export default async function StaffDashboard() {
     destination: string;
     currentStatus: string;
     createdAt: Date;
+  }[] = [];
+
+  // Cargo that has physically arrived but is still awaiting delivery confirmation.
+  let needsAction: {
+    waybillNumber: string;
+    origin: string;
+    destination: string;
   }[] = [];
 
   // Helper to wrap prisma calls with timeout
@@ -73,9 +81,22 @@ export default async function StaffDashboard() {
         },
       })
     );
+
+    needsAction = await withTimeout(
+      db.shipment.findMany({
+        where: {
+          currentStatus: { not: 'DELIVERED' },
+          events: { some: { status: 'ARRIVED' } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+        select: { waybillNumber: true, origin: true, destination: true },
+      })
+    );
   } catch (e) {
     console.error('Dashboard DB Error or Timeout:', e);
     recentShipments = [];
+    needsAction = [];
   }
 
   // Only admins may control maintenance mode. Guarded so a DB hiccup can't crash the page.
@@ -187,6 +208,49 @@ export default async function StaffDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Needs Action — cargo that has arrived but is not yet confirmed delivered */}
+      {needsAction.length > 0 && (
+        <div className="rounded-3xl glass-card p-6 border-l-4 border-amber-400 space-y-4">
+          <div className="flex items-center gap-4">
+            <span className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-3 shadow-soft">
+              <BellRing className="h-6 w-6 text-white" />
+            </span>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Needs Action — Arrived Cargo
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {needsAction.length} waybill{needsAction.length > 1 ? 's' : ''} awaiting delivery
+                confirmation.
+              </p>
+            </div>
+          </div>
+          <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+            {needsAction.map((item) => (
+              <li key={item.waybillNumber}>
+                <Link
+                  href={`/staff/shipments/${encodeURIComponent(item.waybillNumber)}`}
+                  className="flex items-center justify-between gap-4 py-3 group"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold font-mono text-slate-900 dark:text-white">
+                      {item.waybillNumber}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {item.origin} → {item.destination}
+                    </p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-amber-600">
+                    Confirm
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Admin quick access */}
       {isAdmin && (

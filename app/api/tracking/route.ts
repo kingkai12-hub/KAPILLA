@@ -3,18 +3,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getLocationCoords } from '@/lib/locations';
-import {
-  calculateMovement,
-  haversineDistance,
-  DEFAULT_SPEED_CONFIG,
-  type VehicleState,
-  type RouteContext,
-  type SpeedConfig,
-} from '@/lib/speed-manager';
-import { calculateHeading } from '@/lib/tracking-utils';
 import { deduplicateByWaybill } from '@/lib/request-deduplication';
-import { updateVehiclePosition } from '@/lib/autonomous-tracking';
 import { requireAuth, requireRole } from '@/lib/auth';
+import {
+  buildRouteMetrics,
+  normalizeRoutePoints,
+  computeSimulation,
+  pickCruiseKmh,
+  DEFAULT_CRUISE_KMH,
+} from '@/lib/tracking-simulation';
+import { notifyArrival } from '@/lib/arrival-notification';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -103,6 +101,36 @@ async function getRoadRoute(
     [startLat, startLng],
     [endLat, endLng],
   ];
+}
+
+/**
+ * Records an arrival: one ARRIVED event + one alert to the operations team.
+ * The shipment is intentionally left as IN_TRANSIT — staff confirm delivery.
+ */
+async function handleArrival(shipment: any, trackingEventModel: any): Promise<void> {
+  if (trackingEventModel) {
+    const existingArrival = await trackingEventModel.findFirst({
+      where: { shipmentId: shipment.id, status: 'ARRIVED' },
+    });
+    if (!existingArrival) {
+      await trackingEventModel.create({
+        data: {
+          shipmentId: shipment.id,
+          status: 'ARRIVED',
+          location: shipment.destination,
+          remarks: 'Cargo has arrived at destination. Waiting for delivery confirmation.',
+        },
+      });
+    }
+  }
+
+  await notifyArrival({
+    waybillNumber: shipment.waybillNumber,
+    origin: shipment.origin,
+    destination: shipment.destination,
+    senderName: shipment.senderName,
+    receiverName: shipment.receiverName,
+  });
 }
 
 export async function GET(req: Request) {
@@ -251,26 +279,21 @@ export async function GET(req: Request) {
       }
     }
 
-    // MOVEMENT LOGIC - Enhanced with realistic speed behavior
+    // ── TIME-BASED SIMULATION ──────────────────────────────────────────────
+    // Position is a pure function of the stored anchor (lat/lng + time +
+    // cruise speed) and the wall clock, so the truck keeps driving — and
+    // catches up to exactly where it should be — even while nobody is online.
     if (
       tracking &&
-      (tracking as any).routePoints &&
       Array.isArray((tracking as any).routePoints) &&
       (tracking as any).routePoints.length > 1
     ) {
-      const poly: [number, number][] = (tracking as any).routePoints;
-      const total = poly.length;
+      const metrics = buildRouteMetrics(normalizeRoutePoints((tracking as any).routePoints));
+      const travelling =
+        shipment.currentStatus === 'IN_TRANSIT' || shipment.currentStatus === 'OUT_FOR_DELIVERY';
 
-      // CHECK IF VEHICLE WAS JUST RESET (at origin with speed 0)
-      // If so, don't move it yet - wait for client-side tracker or cron job
-      const isAtOrigin =
-        Math.abs(tracking.currentLat - poly[0][0]) < 0.0001 &&
-        Math.abs(tracking.currentLng - poly[0][1]) < 0.0001;
-      const isStationary = tracking.speed === 0 || tracking.speed === null;
-
-      if (isAtOrigin && isStationary && shipment.currentStatus === 'IN_TRANSIT') {
-        console.log('[TRACKING] Vehicle at origin, waiting for first movement');
-        // Return current position without moving
+      // Not on the road yet (or already delivered): report the stored point.
+      if (!travelling || metrics.points.length < 2) {
         return NextResponse.json({
           ...tracking,
           isSimulated: true,
@@ -278,220 +301,45 @@ export async function GET(req: Request) {
         });
       }
 
-      // CHECK FOR MANUAL LOCATION UPDATES FROM ADMIN
-      // If admin created a tracking event with a location, jump vehicle to that location
-      if (trackingEventModel) {
-        const latestEvent = await trackingEventModel.findFirst({
-          where: {
-            shipmentId: shipment.id,
-            location: { not: null },
-          },
-          orderBy: { timestamp: 'desc' },
-        });
-
-        if (latestEvent && latestEvent.location && latestEvent.location !== 'Admin Update') {
-          // Check if this is a new location update (after last vehicle update)
-          const lastUpdate = tracking.lastUpdated
-            ? new Date(tracking.lastUpdated as any)
-            : new Date(0);
-          const eventTime = new Date(latestEvent.timestamp);
-
-          if (eventTime > lastUpdate) {
-            // Admin updated location - jump vehicle to this location
-            const locationCoords = getLocationCoords(latestEvent.location);
-            if (locationCoords) {
-              console.log(`[TRACKING] Admin location update detected: ${latestEvent.location}`);
-
-              // Update vehicle position to the new location
-              await vehicleTrackingModel.update({
-                where: { id: tracking.id },
-                data: {
-                  currentLat: locationCoords.lat,
-                  currentLng: locationCoords.lng,
-                  lastUpdated: new Date(),
-                  speed: 0, // Reset speed when jumping to new location
-                },
-              });
-
-              // Refresh tracking data
-              tracking = await vehicleTrackingModel.findUnique({
-                where: { id: tracking.id },
-                include: { segments: { orderBy: { order: 'asc' } } },
-              });
-            }
-          }
-        }
-      }
-
-      // Find closest point on route
-      let iClosest = 0;
-      let minD = Infinity;
-      for (let i = 0; i < total; i++) {
-        const dLat = poly[i][0] - tracking.currentLat;
-        const dLng = poly[i][1] - tracking.currentLng;
-        const d = dLat * dLat + dLng * dLng;
-        if (d < minD) {
-          minD = d;
-          iClosest = i;
-        }
-      }
-      let targetIdx = Math.min(iClosest + 1, total - 1);
-
-      // Calculate route context
-      const dest = poly[poly.length - 1];
-      const remainingDistance = haversineDistance(
-        tracking.currentLat,
-        tracking.currentLng,
-        dest[0],
-        dest[1]
-      );
-      let totalDistance = 0;
-      for (let i = 0; i < poly.length - 1; i++) {
-        totalDistance += haversineDistance(poly[i][0], poly[i][1], poly[i + 1][0], poly[i + 1][1]);
-      }
-
-      const routeContext: RouteContext = {
-        routePoints: poly,
-        currentIndex: iClosest,
-        totalDistance,
-        remainingDistance,
-        progressRatio: targetIdx / (total - 1),
+      // Rows created before this feature has no anchor: fall back to where the
+      // vehicle currently sits, starting the clock now.
+      const anchor = {
+        lat: Number.isFinite((tracking as any).anchorLat)
+          ? (tracking as any).anchorLat
+          : tracking.currentLat,
+        lng: Number.isFinite((tracking as any).anchorLng)
+          ? (tracking as any).anchorLng
+          : tracking.currentLng,
+        atMs: (tracking as any).anchorAt
+          ? new Date((tracking as any).anchorAt).getTime()
+          : new Date((tracking as any).lastUpdated || Date.now()).getTime(),
+        cruiseKmh: Number((tracking as any).cruiseSpeedKmh) || DEFAULT_CRUISE_KMH,
       };
 
-      // Create vehicle state
-      // Cap lastUpdated to max 30s ago to prevent teleporting on stale/old shipments
-      const rawLastUpdated = tracking.lastUpdated ? new Date(tracking.lastUpdated as any) : new Date();
-      const cappedLastUpdated = new Date(Math.max(rawLastUpdated.getTime(), Date.now() - 30000));
+      const sim = computeSimulation(metrics, anchor, Date.now());
+      const lastPoint = metrics.points[metrics.points.length - 1];
 
-      const vehicleState: VehicleState = {
-        currentLat: tracking.currentLat,
-        currentLng: tracking.currentLng,
-        speed: typeof tracking.speed === 'number' ? tracking.speed : 0,
-        heading: tracking.heading || 0,
-        lastUpdated: cappedLastUpdated,
-        isStopped: (tracking as any).isStopped || false,
-        stopUntil: (tracking as any).stopUntil || undefined,
-        stopReason: (tracking as any).stopReason || undefined,
-        speedVariationOffset: (tracking as any).speedVariationOffset || 0,
-        lastVariationUpdate: (tracking as any).lastVariationUpdate || 0,
-      };
-
-      // If vehicle already arrived at destination, skip movement and return arrived flag
-      const distToDestCheck = haversineDistance(
-        tracking.currentLat, tracking.currentLng, dest[0], dest[1]
-      );
-      if (distToDestCheck < 50 || (tracking as any).stopReason === 'Arrived at destination') {
-        // Ensure vehicle is snapped to destination
-        if (distToDestCheck >= 50) {
-          await vehicleTrackingModel.update({
-            where: { id: tracking.id },
-            data: { currentLat: dest[0], currentLng: dest[1], speed: 0, isStopped: true, stopReason: 'Arrived at destination' },
-          });
-        }
-        // Create ARRIVED event if not exists
-        if (trackingEventModel && shipment.currentStatus !== 'DELIVERED') {
-          const existingArrival = await trackingEventModel.findFirst({
-            where: { shipmentId: shipment.id, status: 'ARRIVED' },
-          });
-          if (!existingArrival) {
-            await trackingEventModel.create({
-              data: {
-                shipmentId: shipment.id,
-                status: 'ARRIVED',
-                location: shipment.destination,
-                remarks: 'Cargo has arrived at destination. Waiting for delivery confirmation.',
-              },
-            });
-          }
-        }
-        const arrivedTracking = await vehicleTrackingModel.findUnique({
-          where: { id: tracking.id },
-          include: { segments: { orderBy: { order: 'asc' } } },
-        }) || tracking;
-        return NextResponse.json({
-          ...arrivedTracking,
-          arrived: true,
-          isSimulated: true,
-          serverTime: new Date().toISOString(),
-        });
-      }
-
-      // Speed configuration (can be customized via env vars)
-      const speedConfig: SpeedConfig = {
-        ...DEFAULT_SPEED_CONFIG,
-        citySpeedMin: Number(process.env.CITY_SPEED_MIN_KMH || 20),
-        citySpeedMax: Number(process.env.CITY_SPEED_MAX_KMH || 50),
-        highwaySpeedMin: Number(process.env.HIGHWAY_SPEED_MIN_KMH || 60),
-        highwaySpeedMax: Number(process.env.HIGHWAY_SPEED_MAX_KMH || 90),
-        accelRate: Number(process.env.SPEED_ACCEL_KMHPS || 8),
-        decelRate: Number(process.env.SPEED_DECEL_KMHPS || 12),
-        speedVariation: Number(process.env.SPEED_VARIATION_KMH || 5),
-        enableTrafficStops: process.env.ENABLE_TRAFFIC_STOPS !== 'false',
-      };
-
-      // Calculate movement with realistic speed behavior
-      const movement = calculateMovement(vehicleState, routeContext, speedConfig);
-
-      // Move vehicle along route
-      let distToTravel = movement.distanceToTravel;
-      let curLat = tracking.currentLat;
-      let curLng = tracking.currentLng;
-      let traveled = 0;
-
-      while (distToTravel > 0 && targetIdx < total) {
-        const aLat = curLat;
-        const aLng = curLng;
-        const bLat = poly[targetIdx][0];
-        const bLng = poly[targetIdx][1];
-        const dy = bLat - aLat;
-        const dx = bLng - aLng;
-        const segLen = haversineDistance(aLat, aLng, bLat, bLng);
-
-        if (segLen <= distToTravel && segLen > 0) {
-          curLat = bLat;
-          curLng = bLng;
-          distToTravel -= segLen;
-          traveled += segLen;
-          targetIdx += 1;
-        } else if (segLen > 0) {
-          const ratio = distToTravel / segLen;
-          curLat = aLat + dy * ratio;
-          curLng = aLng + dx * ratio;
-          traveled += distToTravel;
-          distToTravel = 0;
-        } else {
-          targetIdx += 1;
-        }
-      }
-
-      // Calculate heading with robust edge case handling
-      const targetPoint = poly[Math.min(targetIdx, total - 1)];
-      const heading = calculateHeading(
-        curLat,
-        curLng,
-        targetPoint[0],
-        targetPoint[1],
-        tracking.heading || 0 // Use previous heading as fallback
-      );
-
-      // Update tracking with new position and speed
       const updateData: any = {
-        currentLat: curLat,
-        currentLng: curLng,
-        speed: movement.newSpeed,
-        heading,
+        currentLat: sim.arrived ? lastPoint[0] : sim.lat,
+        currentLng: sim.arrived ? lastPoint[1] : sim.lng,
+        speed: sim.arrived ? 0 : sim.speedKmh,
+        heading: sim.heading,
         lastUpdated: new Date(),
-        // Persist traffic simulation state
-        isStopped: vehicleState.isStopped,
-        stopUntil: vehicleState.stopUntil,
-        stopReason: vehicleState.stopReason,
-        speedVariationOffset: vehicleState.speedVariationOffset,
-        lastVariationUpdate: vehicleState.lastVariationUpdate,
+        // Persist the anchor (written once, or again after a staff snap).
+        anchorLat: anchor.lat,
+        anchorLng: anchor.lng,
+        anchorAt: new Date(anchor.atMs),
+        cruiseSpeedKmh: anchor.cruiseKmh,
       };
 
-      console.log(
-        `[TRACKING] Vehicle at ${curLat.toFixed(5)},${curLng.toFixed(5)} | Speed: ${movement.newSpeed.toFixed(1)} km/h | Reason: ${movement.reason} | Remaining: ${(remainingDistance / 1000).toFixed(1)} km`
-      );
+      if (sim.arrived) {
+        updateData.isStopped = true;
+        updateData.stopReason = 'Arrived at destination';
+      } else if ((tracking as any).isStopped) {
+        // A staff location update clears the stop so the journey continues.
+        updateData.isStopped = false;
+        updateData.stopReason = null;
+      }
 
       try {
         tracking = await vehicleTrackingModel.update({
@@ -503,27 +351,24 @@ export async function GET(req: Request) {
         tracking = { ...tracking, ...updateData } as any;
       }
 
-      // Check if reached destination
-      const remain = haversineDistance(curLat, curLng, dest[0], dest[1]);
-      if (remain < 50) {
-        try {
-          if (shipment.currentStatus !== 'DELIVERED') {
-            await shipmentModel.update({
-              where: { id: shipment.id },
-              data: { currentStatus: 'DELIVERED' },
-            });
-            if (trackingEventModel) {
-              await trackingEventModel.create({
-                data: {
-                  shipmentId: shipment.id,
-                  status: 'DELIVERED',
-                  location: `${dest[0].toFixed(5)},${dest[1].toFixed(5)}`,
-                },
-              });
-            }
-          }
-        } catch {}
+      if (sim.arrived) {
+        await handleArrival(shipment, trackingEventModel);
+        const arrivedTracking =
+          (await vehicleTrackingModel.findUnique({
+            where: { id: tracking.id },
+            include: { segments: { orderBy: { order: 'asc' } } },
+          })) || tracking;
+        return NextResponse.json({
+          ...arrivedTracking,
+          arrived: true,
+          isSimulated: true,
+          serverTime: new Date().toISOString(),
+        });
       }
+
+      console.log(
+        `[TRACKING] ${shipment.waybillNumber} at ${sim.lat.toFixed(5)},${sim.lng.toFixed(5)} | ${sim.speedKmh.toFixed(1)} km/h | ${(sim.remainingMeters / 1000).toFixed(1)} km remaining`
+      );
     }
     // NOTE: Old segment-based and straight-line fallbacks removed
     // All routes now use OSRM routePoints for accurate road-following
@@ -678,6 +523,8 @@ export async function POST(req: Request) {
       estimatedDelivery,
       estimatedDeliveryTime,
       transportType,
+      lat,
+      lng,
     } = body;
 
     // Resolve the staff member making this update (audit trail).
@@ -740,57 +587,63 @@ export async function POST(req: Request) {
       },
     });
 
-    // IMPORTANT: When status changes to IN_TRANSIT, reset vehicle to origin
-    if (status === 'IN_TRANSIT' && vehicleTrackingModel) {
-      const originCoords = getLocationCoords(shipment.origin);
-      if (originCoords) {
-        console.log(`[TRACKING] Resetting vehicle to origin: ${shipment.origin}`);
-
-        // Get or create route
-        const destCoords = getLocationCoords(shipment.destination);
-        if (destCoords) {
-          const poly = await getRoadRoute(
-            originCoords.lat,
-            originCoords.lng,
-            destCoords.lat,
-            destCoords.lng
-          );
-
-          await vehicleTrackingModel.upsert({
-            where: { shipmentId: shipment.id },
-            update: {
-              currentLat: poly[0][0],
-              currentLng: poly[0][1],
-              speed: 0,
-              heading: 0,
-              routePoints: poly,
-              lastUpdated: new Date(),
-              isStopped: false,
-              stopUntil: null,
-            },
-            create: {
-              shipmentId: shipment.id,
-              currentLat: poly[0][0],
-              currentLng: poly[0][1],
-              speed: 0,
-              heading: 0,
-              routePoints: poly,
-              lastUpdated: new Date(),
-            },
-          });
-        }
+    // ── VEHICLE POSITIONING ────────────────────────────────────────────────
+    // A staff location update becomes the vehicle's new ANCHOR: the truck
+    // snaps there instantly, then carries on at cruise speed from that
+    // moment — whether the new location is ahead of or behind where it was.
+    if (vehicleTrackingModel && status !== 'DELIVERED') {
+      // Prefer explicit coordinates (from geocoding or a dropped map pin) so
+      // villages missing from the dropdown still work.
+      let coords: { lat: number; lng: number } | null = null;
+      const bodyLat = Number(lat);
+      const bodyLng = Number(lng);
+      if (
+        Number.isFinite(bodyLat) &&
+        Number.isFinite(bodyLng) &&
+        (bodyLat !== 0 || bodyLng !== 0)
+      ) {
+        coords = { lat: bodyLat, lng: bodyLng };
+      } else if (location) {
+        coords = getLocationCoords(location) || null;
       }
-    }
-    // Update vehicle tracking position if location is recognized (for other status updates)
-    else if (location && vehicleTrackingModel) {
-      const coords = getLocationCoords(location);
+
+      // First dispatch with no location yet → start the journey at origin.
+      if (!coords && status === 'IN_TRANSIT') {
+        coords = getLocationCoords(shipment.origin) || null;
+      }
+
       if (coords) {
+        const existing = await vehicleTrackingModel.findUnique({
+          where: { shipmentId: shipment.id },
+        });
+
+        const routeOrigin = getLocationCoords(shipment.origin) || coords;
+        const routeDest = getLocationCoords(shipment.destination) || coords;
+        const poly = await getRoadRoute(
+          routeOrigin.lat,
+          routeOrigin.lng,
+          routeDest.lat,
+          routeDest.lng
+        );
+
+        const cruise = Number(existing?.cruiseSpeedKmh) || pickCruiseKmh();
+        const now = new Date();
+
         await vehicleTrackingModel.upsert({
           where: { shipmentId: shipment.id },
           update: {
             currentLat: coords.lat,
             currentLng: coords.lng,
-            lastUpdated: new Date(),
+            speed: 0,
+            routePoints: poly,
+            anchorLat: coords.lat,
+            anchorLng: coords.lng,
+            anchorAt: now,
+            cruiseSpeedKmh: cruise,
+            lastUpdated: now,
+            isStopped: false,
+            stopUntil: null,
+            stopReason: null,
           },
           create: {
             shipmentId: shipment.id,
@@ -798,9 +651,18 @@ export async function POST(req: Request) {
             currentLng: coords.lng,
             speed: 0,
             heading: 0,
-            lastUpdated: new Date(),
+            routePoints: poly,
+            anchorLat: coords.lat,
+            anchorLng: coords.lng,
+            anchorAt: now,
+            cruiseSpeedKmh: cruise,
+            lastUpdated: now,
           },
         });
+      } else {
+        console.warn(
+          `[TRACKING_POST] No coordinates for "${location}" (waybill ${shipment.waybillNumber}); vehicle not moved`
+        );
       }
     }
 

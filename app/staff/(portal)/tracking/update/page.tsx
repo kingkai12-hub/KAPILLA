@@ -1,10 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { ScanLine, MapPin, Navigation, Save, Calendar, Clock } from 'lucide-react';
+import { ScanLine, MapPin, Save, Calendar, Clock, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { locationCoords } from '@/lib/locations';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+const LocationPinPicker = dynamic(() => import('@/components/LocationPinPicker'), { ssr: false });
+
+/** Case-insensitive lookup into the built-in location dictionary. */
+function findLocationCoords(name: string): { lat: number; lng: number } | null {
+  const needle = name.trim().toLowerCase();
+  if (!needle) return null;
+  const key = Object.keys(locationCoords).find((k) => k.toLowerCase() === needle);
+  return key ? locationCoords[key] : null;
+}
 
 type RecentScan = {
   id: number;
@@ -38,6 +49,16 @@ function UpdateTrackingContent() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Coordinates resolved for the entered location — from the built-in
+  // dictionary, an OpenStreetMap lookup, or a pin dropped on the map.
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geocodeResults, setGeocodeResults] = useState<
+    { lat: number; lng: number; displayName: string }[]
+  >([]);
+  const [geocoding, setGeocoding] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [geocodeMessage, setGeocodeMessage] = useState('');
+
   const handleLocationBlur = () => {
     setTimeout(() => {
       setShowSuggestions(false);
@@ -46,7 +67,42 @@ function UpdateTrackingContent() {
 
   const handleSuggestionClick = (place: string) => {
     setLocation(place);
+    setCoords(findLocationCoords(place));
+    setGeocodeResults([]);
+    setGeocodeMessage('');
     setShowSuggestions(false);
+  };
+
+  // Look the typed name up on OpenStreetMap when it is missing from the dropdown.
+  const handleGeocode = async () => {
+    const query = location.trim();
+    if (!query) return;
+    setGeocoding(true);
+    setGeocodeResults([]);
+    setGeocodeMessage('');
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      const results = Array.isArray(data.results) ? data.results : [];
+      setGeocodeResults(results);
+      if (results.length === 0) {
+        setShowPin(true);
+        setGeocodeMessage('Not found on the map. Drop a pin where the shipment is.');
+      }
+    } catch {
+      setShowPin(true);
+      setGeocodeMessage('Search failed. Drop a pin where the shipment is.');
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  const handleGeocodePick = (result: { lat: number; lng: number; displayName: string }) => {
+    setLocation(result.displayName);
+    setCoords({ lat: result.lat, lng: result.lng });
+    setGeocodeResults([]);
+    setGeocodeMessage('');
+    setShowPin(false);
   };
 
   const handleLocationFocus = () => {
@@ -72,6 +128,10 @@ function UpdateTrackingContent() {
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;
     setLocation(newLocation);
+    // The old coordinates no longer match what the staff typed.
+    setCoords(findLocationCoords(newLocation));
+    setGeocodeResults([]);
+    setGeocodeMessage('');
 
     if (newLocation) {
       const filtered = Object.keys(locationCoords).filter((loc) =>
@@ -82,6 +142,7 @@ function UpdateTrackingContent() {
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
+      setShowPin(false);
     }
   };
 
@@ -108,6 +169,9 @@ function UpdateTrackingContent() {
           estimatedDelivery,
           estimatedDeliveryTime,
           transportType,
+          // Explicit coordinates for places missing from the dropdown.
+          lat: coords?.lat,
+          lng: coords?.lng,
         }),
       });
 
@@ -206,8 +270,72 @@ function UpdateTrackingContent() {
                 )}
               </div>
 
+              {/* Resolve places that are missing from the dropdown */}
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleGeocode}
+                  disabled={geocoding || !location.trim()}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
+                >
+                  {geocoding ? (
+                    <span className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Search className="h-3.5 w-3.5" />
+                  )}
+                  Find on map
+                </button>
+
+                {coords && geocodeResults.length === 0 && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <MapPin className="h-3 w-3" />
+                    {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                  </span>
+                )}
+
+                {!showPin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(true)}
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors"
+                  >
+                    Drop pin on map
+                  </button>
+                )}
+              </div>
+
+              {geocodeMessage && <p className="text-xs text-amber-600 mt-2">{geocodeMessage}</p>}
+
+              {/* Geocoding candidates */}
+              {geocodeResults.length > 0 && (
+                <ul className="mt-2 glass-strong rounded-xl divide-y divide-slate-100 dark:divide-slate-700 max-h-56 overflow-y-auto">
+                  {geocodeResults.map((result) => (
+                    <li key={`${result.lat}-${result.lng}`}>
+                      <button
+                        type="button"
+                        onClick={() => handleGeocodePick(result)}
+                        className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700 text-sm text-slate-700 dark:text-slate-300 transition-colors"
+                      >
+                        {result.displayName}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Manual pin for places geocoding cannot find */}
+              {showPin && (
+                <div className="mt-3">
+                  <LocationPinPicker value={coords} onChange={(point) => setCoords(point)} />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Tap the map to place the shipment&apos;s exact position.
+                  </p>
+                </div>
+              )}
+
               <p className="text-xs text-slate-500 mt-1">
-                Enter any place in Tanzania where the shipment is currently located.
+                Enter any place in Tanzania. Not in the list? Use &ldquo;Find on map&rdquo; or drop
+                a pin.
               </p>
             </div>
 

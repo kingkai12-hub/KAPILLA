@@ -160,6 +160,14 @@ model VehicleTracking {
   heading              Float          @default(0)
   lastUpdated          DateTime       @default(now())
   routePoints          Json?
+  // "Anchor" for the time-based simulation: the last known point the vehicle
+  // was snapped to, the moment it was there, and the planned cruise speed.
+  // Position is always recomputed as anchor + cruiseSpeed * (now - anchorAt),
+  // so it keeps moving (and catches up) even when nobody is online.
+  anchorLat            Float?
+  anchorLng            Float?
+  anchorAt             DateTime?
+  cruiseSpeedKmh       Float?         @default(70)
   isStopped            Boolean?       @default(false)
   lastVariationUpdate  BigInt?        @default(0)
   speedVariationOffset Float?         @default(0)
