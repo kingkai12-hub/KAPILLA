@@ -5,13 +5,13 @@ import { ArrowLeft, Download, ShieldCheck, Smartphone } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Download the App',
   description:
-    'Download the Kapilla Group Android app (APK) directly — track consignments and request pickups. Version 1.0.1.',
+    'Download the Kapilla Group Android app (APK) directly — track consignments and request pickups. Version 1.0.2.',
   alternates: { canonical: 'https://kapilla-logistics.vercel.app/download' },
   robots: { index: true, follow: true },
 };
 
-const APK_PATH = '/downloads/kapilla-group-1.0.1.apk';
-const VERSION = '1.0.1';
+const APK_PATH = '/downloads/kapilla-group-1.0.2.apk';
+const VERSION = '1.0.2';
 const SIZE = '3.5 MB';
 
 export default function DownloadPage() {
