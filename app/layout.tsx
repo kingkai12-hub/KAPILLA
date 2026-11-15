@@ -7,6 +7,7 @@ import IdleLogout from '@/components/IdleLogout';
 import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup';
 import CapacitorShell from '@/components/CapacitorShell';
 import AppSplash from '@/components/AppSplash';
+import AppUpdateGate from '@/components/AppUpdateGate';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { cookies, headers } from 'next/headers';
@@ -176,6 +177,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="app-aurora" aria-hidden="true" />
           <ServiceWorkerCleanup />
           <CapacitorShell />
+          <AppUpdateGate />
           <AppSplash />
           <RefreshHandler />
           <IdleLogout />
