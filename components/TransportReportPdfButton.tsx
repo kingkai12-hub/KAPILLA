@@ -5,6 +5,16 @@ import { FileDown } from 'lucide-react';
 import type { TransportReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
 import { saveOrShare } from '@/lib/native-file';
+import PdfPreviewModal from '@/components/PdfPreviewModal';
+
+function downloadUrl(url: string, name: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -30,6 +40,14 @@ export default function TransportReportPdfButton({
   periodLabel: string;
 }) {
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
+
+  function closePreview() {
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current.url);
+      return null;
+    });
+  }
 
   async function generate() {
     setBusy(true);
@@ -212,9 +230,9 @@ export default function TransportReportPdfButton({
       const fileName = `kapilla-transport-${safe}.pdf`;
       const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
       // In the Android app a blob download is ignored, so save + share instead.
-      if (!(await saveOrShare(blob, fileName, 'Save or share report'))) {
-        d.save(fileName);
-      }
+      if (await saveOrShare(blob, fileName, 'Save or share report')) return;
+      // On the web, open the preview first so the user can review before saving.
+      setPreview({ url: URL.createObjectURL(blob), name: fileName });
     } catch (error) {
       console.error('[PDF] transport report failed', error);
       alert('Could not generate the PDF. Please try again.');
@@ -224,14 +242,25 @@ export default function TransportReportPdfButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={generate}
-      disabled={busy}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-    >
-      <FileDown className="w-4 h-4" />
-      {busy ? 'Generating…' : 'Download PDF'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={generate}
+        disabled={busy}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+      >
+        <FileDown className="w-4 h-4" />
+        {busy ? 'Generating…' : 'Preview PDF'}
+      </button>
+      <PdfPreviewModal
+        open={preview !== null}
+        onClose={closePreview}
+        title={report.waybill ? `Waybill ${report.waybill.waybillNumber}` : 'Transportation report'}
+        src={preview?.url ?? null}
+        onSave={() => {
+          if (preview) downloadUrl(preview.url, preview.name);
+        }}
+      />
+    </>
   );
 }

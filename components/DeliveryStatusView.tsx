@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Package, CheckCircle, Clock, Download, Eye } from 'lucide-react';
+import Link from 'next/link';
+import { Package, CheckCircle, Clock, Eye } from 'lucide-react';
 import { format } from 'date-fns';
-import { openPdfUrl } from '@/lib/native-file';
 
 interface DeliveryStatusViewProps {
   status: string;
@@ -122,44 +122,23 @@ export function DeliveryStatusView({
             </div>
           </div>
 
-          {/* Proof of Delivery Actions */}
+          {/* Proof of Delivery Action */}
           <div className="space-y-3">
             <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
               Proof of Delivery
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              {/* Preview Button */}
-              <button
-                onClick={() => {
-                  // Public PDF endpoint: opens the signed proof of delivery in
-                  // the browser, or saves it to the device in the Android app.
-                  openPdfUrl(
-                    `/api/shipments/${waybillNumber}/pod-pdf`,
-                    `kapilla-pod-${waybillNumber}.pdf`
-                  ).catch(() => alert('Could not prepare the document. Please try again.'));
-                }}
+            {/* One action: open the A4 preview, which offers a Save/Print option
+                inside. Showing a separate download button split the same document
+                into two confusing choices. */}
+            <div className="flex justify-center">
+              <Link
+                href={`/waybill/${encodeURIComponent(waybillNumber)}/pod`}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
                 <Eye className="w-5 h-5" />
-                Preview Signed Waybill
-              </button>
-
-              {/* Download Button */}
-              <button
-                onClick={() => {
-                  // Same PDF, saved to the device and offered to the share sheet
-                  // so it can be sent on or stored in Downloads.
-                  openPdfUrl(
-                    `/api/shipments/${waybillNumber}/pod-pdf?download=1`,
-                    `kapilla-pod-${waybillNumber}.pdf`
-                  ).catch(() => alert('Could not prepare the document. Please try again.'));
-                }}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-green-700 font-bold rounded-xl border-2 border-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-              >
-                <Download className="w-5 h-5" />
-                Download Signed Waybill
-              </button>
+                View Signed Waybill
+              </Link>
             </div>
           </div>
 

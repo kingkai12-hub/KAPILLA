@@ -222,15 +222,15 @@ export default async function StaffDashboard() {
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 {needsAction.length} waybill{needsAction.length > 1 ? 's' : ''} awaiting delivery
-                confirmation.
+                confirmation. Full list in the notification centre.
               </p>
             </div>
           </div>
           <ul className="divide-y divide-slate-100 dark:divide-slate-700">
-            {needsAction.map((item) => (
+            {needsAction.slice(0, 3).map((item) => (
               <li key={item.waybillNumber}>
                 <Link
-                  href={`/staff/shipments/${encodeURIComponent(item.waybillNumber)}`}
+                  href={`/staff/shipments/${encodeURIComponent(item.waybillNumber)}/confirm`}
                   className="flex items-center justify-between gap-4 py-3 group"
                 >
                   <div className="min-w-0">
@@ -249,6 +249,13 @@ export default async function StaffDashboard() {
               </li>
             ))}
           </ul>
+          <Link
+            href="/staff/notifications"
+            className="inline-flex items-center gap-1 text-sm font-bold text-amber-600 hover:text-amber-700"
+          >
+            View all in Notifications
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       )}
 

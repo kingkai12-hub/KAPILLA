@@ -9,7 +9,13 @@ import { EnhancedTrackingMapLayers } from './EnhancedTrackingMap';
 import { DynamicRoutePolyline } from './DynamicRoutePolyline';
 import { ClientSideTracker } from '@/lib/client-side-tracking';
 
-function AnimatedVehicleMarker({ position, rotation }: { position: [number, number]; rotation: number }) {
+function AnimatedVehicleMarker({
+  position,
+  rotation,
+}: {
+  position: [number, number];
+  rotation: number;
+}) {
   return (
     <Marker
       position={position}
@@ -58,17 +64,26 @@ function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): num
   const toR = (d: number) => (d * Math.PI) / 180;
   const dLat = toR(lat2 - lat1);
   const dLng = toR(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLng / 2) ** 2;
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function advanceAlongRoute(routePoints: [number, number][], startLat: number, startLng: number, distanceMeters: number): [number, number] {
+function advanceAlongRoute(
+  routePoints: [number, number][],
+  startLat: number,
+  startLng: number,
+  distanceMeters: number
+): [number, number] {
   if (!routePoints || routePoints.length < 2 || distanceMeters <= 0) return [startLat, startLng];
   let closestIdx = 0;
   let minD = Infinity;
   for (let i = 0; i < routePoints.length; i++) {
     const d = haversineM(startLat, startLng, routePoints[i][0], routePoints[i][1]);
-    if (d < minD) { minD = d; closestIdx = i; }
+    if (d < minD) {
+      minD = d;
+      closestIdx = i;
+    }
   }
   let curLat = startLat;
   let curLng = startLng;
@@ -76,10 +91,15 @@ function advanceAlongRoute(routePoints: [number, number][], startLat: number, st
   let idx = Math.min(closestIdx + 1, routePoints.length - 1);
   while (remaining > 0 && idx < routePoints.length) {
     const segLen = haversineM(curLat, curLng, routePoints[idx][0], routePoints[idx][1]);
-    if (segLen <= 0) { idx++; continue; }
+    if (segLen <= 0) {
+      idx++;
+      continue;
+    }
     if (segLen <= remaining) {
-      curLat = routePoints[idx][0]; curLng = routePoints[idx][1];
-      remaining -= segLen; idx++;
+      curLat = routePoints[idx][0];
+      curLng = routePoints[idx][1];
+      remaining -= segLen;
+      idx++;
     } else {
       const ratio = remaining / segLen;
       curLat = curLat + (routePoints[idx][0] - curLat) * ratio;
@@ -90,7 +110,13 @@ function advanceAlongRoute(routePoints: [number, number][], startLat: number, st
   return [curLat, curLng];
 }
 
-function MapController({ position, followMode }: { position: [number, number]; followMode: boolean }) {
+function MapController({
+  position,
+  followMode,
+}: {
+  position: [number, number];
+  followMode: boolean;
+}) {
   const map = useMap();
   useEffect(() => {
     if (followMode) {
@@ -112,8 +138,13 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const arrivalShownRef = useRef(false);
 
   const anchorRef = useRef<{
-    lat: number; lng: number; speedKmh: number; heading: number;
-    routePoints: [number, number][] | null; receivedAt: number; arrived: boolean;
+    lat: number;
+    lng: number;
+    speedKmh: number;
+    heading: number;
+    routePoints: [number, number][] | null;
+    receivedAt: number;
+    arrived: boolean;
   } | null>(null);
 
   const [displayPos, setDisplayPos] = useState<[number, number]>([0, 0]);
@@ -122,10 +153,16 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   const clientTrackerRef = useRef<ClientSideTracker | null>(null);
   const displayPosRef = useRef<[number, number]>([0, 0]);
 
-  useEffect(() => { displayPosRef.current = displayPos; }, [displayPos]);
+  useEffect(() => {
+    displayPosRef.current = displayPos;
+  }, [displayPos]);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    const check = () =>
+      setIsMobile(
+        window.innerWidth < 768 ||
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      );
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -133,7 +170,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
   useEffect(() => {
     setIsLiveTracking(false);
-    return () => { clientTrackerRef.current?.stop(); };
+    return () => {
+      clientTrackerRef.current?.stop();
+    };
   }, [waybillNumber]);
 
   const handleTrackingData = (data: TrackingData) => {
@@ -144,10 +183,13 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       setShowArrivalPopup(true);
     }
     anchorRef.current = {
-      lat: data.currentLat, lng: data.currentLng,
-      speedKmh: data.speed || 0, heading: data.heading || 0,
+      lat: data.currentLat,
+      lng: data.currentLng,
+      speedKmh: data.speed || 0,
+      heading: data.heading || 0,
       routePoints: data.routePoints || null,
-      receivedAt: Date.now(), arrived: !!data.arrived,
+      receivedAt: Date.now(),
+      arrived: !!data.arrived,
     };
     if (displayPosRef.current[0] === 0 && displayPosRef.current[1] === 0) {
       setDisplayPos([data.currentLat, data.currentLng]);
@@ -160,11 +202,20 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
     const fetchData = async () => {
       if (state.isCleaningUp) return;
       try {
-        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}&t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) { setErrorText(`Unable to load tracking (${res.status})`); setTracking(null); }
-        else { handleTrackingData(await res.json()); }
-      } catch { if (!state.isCleaningUp) setErrorText('Connection issue. Retrying...'); }
-      finally { setLoading(false); }
+        const res = await fetch(`/api/tracking?waybillNumber=${waybillNumber}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          setErrorText(`Unable to load tracking (${res.status})`);
+          setTracking(null);
+        } else {
+          handleTrackingData(await res.json());
+        }
+      } catch {
+        if (!state.isCleaningUp) setErrorText('Connection issue. Retrying...');
+      } finally {
+        setLoading(false);
+      }
     };
 
     let es: EventSource | null = null;
@@ -175,39 +226,78 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
 
     const startPolling = () => {
       if (state.pollingActive || state.isCleaningUp) return;
-      state.pollingActive = true; fetchData();
+      state.pollingActive = true;
+      fetchData();
       pollInterval = setInterval(fetchData, 15000);
     };
-    const stopPolling = () => { if (pollInterval) { clearInterval(pollInterval); pollInterval = null; state.pollingActive = false; } };
+    const stopPolling = () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+        state.pollingActive = false;
+      }
+    };
     const cleanupSSE = () => {
       if (es) {
-        es.onopen = null; es.onmessage = null; es.onerror = null;
-        if (es.readyState !== EventSource.CLOSED) { try { es.close(); } catch {} }
-        es = null; state.sseActive = false;
+        es.onopen = null;
+        es.onmessage = null;
+        es.onerror = null;
+        if (es.readyState !== EventSource.CLOSED) {
+          try {
+            es.close();
+          } catch {}
+        }
+        es = null;
+        state.sseActive = false;
       }
     };
 
     fetchData();
     try {
-      es = new EventSource(`/api/tracking/stream?waybillNumber=${encodeURIComponent(waybillNumber)}`);
+      es = new EventSource(
+        `/api/tracking/stream?waybillNumber=${encodeURIComponent(waybillNumber)}`
+      );
       es.onopen = () => {
-        state.sseActive = true; lastMsg = Date.now(); stopPolling();
+        state.sseActive = true;
+        lastMsg = Date.now();
+        stopPolling();
         heartbeatTimer = setInterval(() => {
-          if (Date.now() - lastMsg > 30000 && state.sseActive) { cleanupSSE(); startPolling(); }
+          if (Date.now() - lastMsg > 30000 && state.sseActive) {
+            cleanupSSE();
+            startPolling();
+          }
         }, 5000);
       };
-      es.onmessage = (evt) => { lastMsg = Date.now(); try { handleTrackingData(JSON.parse(evt.data)); } catch {} };
-      es.onerror = () => { if (!state.isCleaningUp) { cleanupSSE(); startPolling(); } };
-      fallbackTimer = setTimeout(() => { if (!state.sseActive && !state.isCleaningUp) { cleanupSSE(); startPolling(); } }, 3000);
-    } catch { startPolling(); }
+      es.onmessage = (evt) => {
+        lastMsg = Date.now();
+        try {
+          handleTrackingData(JSON.parse(evt.data));
+        } catch {}
+      };
+      es.onerror = () => {
+        if (!state.isCleaningUp) {
+          cleanupSSE();
+          startPolling();
+        }
+      };
+      fallbackTimer = setTimeout(() => {
+        if (!state.sseActive && !state.isCleaningUp) {
+          cleanupSSE();
+          startPolling();
+        }
+      }, 3000);
+    } catch {
+      startPolling();
+    }
 
     return () => {
       state.isCleaningUp = true;
       if (fallbackTimer) clearTimeout(fallbackTimer);
       if (heartbeatTimer) clearInterval(heartbeatTimer);
-      stopPolling(); cleanupSSE();
+      stopPolling();
+      cleanupSSE();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [waybillNumber]);
 
   // Smooth animation — extrapolate position from anchor using speed every frame
@@ -230,7 +320,10 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         }
         frame++;
         if (frame % 4 === 0) {
-          if (Math.abs(lat - lastRenderPos.current[0]) > 0.000001 || Math.abs(lng - lastRenderPos.current[1]) > 0.000001) {
+          if (
+            Math.abs(lat - lastRenderPos.current[0]) > 0.000001 ||
+            Math.abs(lng - lastRenderPos.current[1]) > 0.000001
+          ) {
             setDisplayPos([lat, lng]);
             setDisplayHeading(anchor.heading);
             lastRenderPos.current = [lat, lng];
@@ -244,11 +337,23 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
   }, []);
 
   const completedSegments = useMemo(
-    () => tracking?.segments?.filter((s) => s.isCompleted).map((s) => [[s.startLat, s.startLng], [s.endLat, s.endLng]]) || [],
+    () =>
+      tracking?.segments
+        ?.filter((s) => s.isCompleted)
+        .map((s) => [
+          [s.startLat, s.startLng],
+          [s.endLat, s.endLng],
+        ]) || [],
     [tracking?.segments]
   );
   const remainingSegments = useMemo(
-    () => tracking?.segments?.filter((s) => !s.isCompleted).map((s) => [[s.startLat, s.startLng], [s.endLat, s.endLng]]) || [],
+    () =>
+      tracking?.segments
+        ?.filter((s) => !s.isCompleted)
+        .map((s) => [
+          [s.startLat, s.startLng],
+          [s.endLat, s.endLng],
+        ]) || [],
     [tracking?.segments]
   );
   const sampledRoute = useMemo(() => {
@@ -261,7 +366,9 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       <div className="h-[600px] w-full flex items-center justify-center bg-slate-100 rounded-3xl border-4 border-white shadow-inner">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Initializing GPS...</p>
+          <p className="text-slate-500 font-black uppercase tracking-widest text-sm">
+            Initializing GPS...
+          </p>
         </div>
       </div>
     );
@@ -272,8 +379,12 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         <div className="text-center px-6">
           <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-200 inline-block">
             <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-900 font-black uppercase tracking-tight mb-1">No Signal Detected</p>
-            <p className="text-slate-500 text-xs font-bold uppercase">{errorText || 'Awaiting coordinates'}</p>
+            <p className="text-slate-900 font-black uppercase tracking-tight mb-1">
+              No Signal Detected
+            </p>
+            <p className="text-slate-500 text-xs font-bold uppercase">
+              {errorText || 'Awaiting coordinates'}
+            </p>
           </div>
         </div>
       </div>
@@ -284,11 +395,14 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       {isLiveTracking && (
         <div className="absolute top-3 left-3 z-[1000] pointer-events-none">
           <div className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-full shadow-lg text-xs font-bold">
-            <Radio className="w-4 h-4 animate-pulse" /><span>LIVE</span>
+            <Radio className="w-4 h-4 animate-pulse" />
+            <span>LIVE</span>
           </div>
         </div>
       )}
-      <div className={`absolute ${isMobile ? 'top-3 right-3' : 'top-6 right-6'} z-[1000] flex justify-end items-start pointer-events-none`}>
+      <div
+        className={`absolute ${isMobile ? 'top-3 right-3' : 'top-6 right-6'} z-[1000] flex justify-end items-start pointer-events-none`}
+      >
         <div className="pointer-events-auto">
           <button
             onClick={() => setFollowMode(!followMode)}
@@ -312,20 +426,58 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
       >
         <EnhancedTrackingMapLayers routePoints={tracking.routePoints} showLandmarks={true} />
         {sampledRoute && sampledRoute.length > 1 && (
-          <DynamicRoutePolyline routePoints={sampledRoute} currentPosition={displayPos} completedColor="#2563eb" remainingColor="#ef4444" completedWeight={8} remainingWeight={6} completedOpacity={0.9} remainingOpacity={0.5} showProgress={true} />
+          <DynamicRoutePolyline
+            routePoints={sampledRoute}
+            currentPosition={displayPos}
+            completedColor="#2563eb"
+            remainingColor="#ef4444"
+            completedWeight={8}
+            remainingWeight={6}
+            completedOpacity={0.9}
+            remainingOpacity={0.5}
+            showProgress={true}
+          />
         )}
         {!tracking?.routePoints && completedSegments.length > 0 && (
           <>
             {completedSegments.map((pos, idx) => (
-              <DynamicRoutePolyline key={`c-${idx}`} routePoints={pos as [number, number][]} currentPosition={displayPos} completedColor="#2563eb" remainingColor="#2563eb" completedWeight={8} remainingWeight={8} completedOpacity={0.9} remainingOpacity={0.9} showProgress={false} />
+              <DynamicRoutePolyline
+                key={`c-${idx}`}
+                routePoints={pos as [number, number][]}
+                currentPosition={displayPos}
+                completedColor="#2563eb"
+                remainingColor="#2563eb"
+                completedWeight={8}
+                remainingWeight={8}
+                completedOpacity={0.9}
+                remainingOpacity={0.9}
+                showProgress={false}
+              />
             ))}
             {remainingSegments.map((pos, idx) => (
-              <DynamicRoutePolyline key={`r-${idx}`} routePoints={pos as [number, number][]} currentPosition={displayPos} completedColor="#ef4444" remainingColor="#ef4444" completedWeight={6} remainingWeight={6} completedOpacity={0.5} remainingOpacity={0.5} showProgress={false} />
+              <DynamicRoutePolyline
+                key={`r-${idx}`}
+                routePoints={pos as [number, number][]}
+                currentPosition={displayPos}
+                completedColor="#ef4444"
+                remainingColor="#ef4444"
+                completedWeight={6}
+                remainingWeight={6}
+                completedOpacity={0.5}
+                remainingOpacity={0.5}
+                showProgress={false}
+              />
             ))}
           </>
         )}
         <AnimatedVehicleMarker position={displayPos} rotation={displayHeading} />
-        <CircleMarker center={displayPos} radius={4} color="#2563eb" opacity={0.9} fillOpacity={1} />
+        <CircleMarker
+          center={displayPos}
+          radius={4}
+          color="#2563eb"
+          opacity={0.9}
+          fillOpacity={1}
+        />
         <MapController position={displayPos} followMode={followMode} />
       </MapContainer>
 
@@ -333,16 +485,36 @@ export default function VehicleTrackingMap({ waybillNumber }: { waybillNumber: s
         <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl p-8 mx-4 max-w-sm w-full text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-10 h-10 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h2 className="text-2xl font-black text-slate-900 mb-2">Cargo Arrived!</h2>
-            <p className="text-slate-600 text-sm mb-1">Shipment <span className="font-bold text-blue-600">#{waybillNumber}</span> has reached its destination.</p>
-            <p className="text-slate-500 text-xs mb-6">A notification has been sent to the sender and receiver.</p>
+            <p className="text-slate-600 text-sm mb-1">
+              Shipment <span className="font-bold text-blue-600">#{waybillNumber}</span> has reached
+              its destination.
+            </p>
+            <p className="text-slate-500 text-xs mb-6">
+              Delivery will be confirmed by our staff. You will see the signed proof of delivery
+              once it has been handed over.
+            </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowArrivalPopup(false)} className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-colors text-sm">Confirm Arrival</button>
-              <button onClick={() => setShowArrivalPopup(false)} className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors text-sm">Dismiss</button>
+              <button
+                onClick={() => setShowArrivalPopup(false)}
+                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-colors text-sm"
+              >
+                Got it
+              </button>
             </div>
           </div>
         </div>

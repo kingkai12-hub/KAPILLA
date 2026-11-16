@@ -31,12 +31,15 @@ import {
   Wrench,
   Megaphone,
   KeyRound,
+  Bell,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from 'next-themes';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import NotificationToaster from '@/components/NotificationToaster';
+import PushRegistrar from '@/components/PushRegistrar';
 import { SessionManager, clearSession } from '@/lib/session-manager';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -87,6 +90,9 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
     () => false
   );
   const [pendingPickupCount, setPendingPickupCount] = useState(0);
+  // Fed by <NotificationToaster/> so the sidebar badge and the pop-up share one
+  // source of truth.
+  const [notificationCount, setNotificationCount] = useState(0);
   const sessionManagerRef = React.useRef<SessionManager | null>(null);
   // The content pane is the only scrolling surface in the app shell, so the
   // browser's automatic window scroll reset never reaches it.
@@ -271,6 +277,21 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           name: 'Dashboard',
           href: '/staff/dashboard',
           icon: LayoutDashboard,
+          roles: [
+            'ADMIN',
+            'STAFF',
+            'DRIVER',
+            'OPERATION_MANAGER',
+            'MANAGER',
+            'MD',
+            'CEO',
+            'ACCOUNTANT',
+          ],
+        },
+        {
+          name: 'Notifications',
+          href: '/staff/notifications',
+          icon: Bell,
           roles: [
             'ADMIN',
             'STAFF',
@@ -734,6 +755,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
                               </span>
                             )}
 
+                            {item.name === 'Notifications' && notificationCount > 0 && (
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                {notificationCount > 99 ? '99+' : notificationCount}
+                              </span>
+                            )}
+
                             <NavPendingIndicator />
                           </Link>
                         </motion.div>
@@ -867,6 +894,12 @@ export default function StaffPortalLayout({ children }: { children: React.ReactN
           isOpen={isPickupModalOpen}
           onClose={() => setIsPickupModalOpen(false)}
         />
+
+        {/* Delivery alerts — pop-up + unread badge for the sidebar */}
+        <NotificationToaster onCountChange={setNotificationCount} />
+
+        {/* FCM device registration (native shell only) */}
+        <PushRegistrar />
       </div>
     </div>
   );

@@ -127,7 +127,7 @@ export default function ProofOfDeliveryPage() {
         className="mb-8 flex items-center gap-2 bg-accent text-navy-900 px-6 py-3 rounded-md font-semibold shadow-soft hover:bg-accent-dark transition-colors print:hidden"
       >
         <Printer className="w-5 h-5" />
-        Print Proof of Delivery
+        Save / Download proof of delivery
       </button>
 
       {/* A4 Paper Container */}

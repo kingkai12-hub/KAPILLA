@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { openPdfUrl, saveOrShare } from '@/lib/native-file';
+import PdfPreviewModal from '@/components/PdfPreviewModal';
 
 interface Invoice {
   id: string;
@@ -71,6 +72,9 @@ export default function InvoiceDetailPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [preview, setPreview] = useState<{ title: string; src: string; fileName: string } | null>(
+    null
+  );
   // Stored photos from creation (sessionStorage)
   const [storedPhotos, setStoredPhotos] = useState<
     Array<{ base64: string; caption: string; name: string; type: string }>
@@ -113,12 +117,13 @@ export default function InvoiceDetailPage() {
   };
 
   const handlePrint = () => {
-    // Browser: opens the PDF in a new tab. Android app: saves it to the device
-    // and opens the share sheet.
-    openPdfUrl(
-      `/api/invoices/${params.id}/pdf`,
-      `kapilla-invoice-${invoice?.invoiceNumber ?? params.id}.pdf`
-    ).catch(() => alert('Could not prepare the document. Please try again.'));
+    // Open the PDF in the shared preview surface so the user can review it and
+    // then decide to save it, rather than auto-downloading it.
+    setPreview({
+      title: 'Invoice',
+      src: `/api/invoices/${params.id}/pdf`,
+      fileName: `kapilla-invoice-${invoice?.invoiceNumber ?? params.id}.pdf`,
+    });
   };
 
   const handleAccept = async () => {
@@ -352,11 +357,14 @@ export default function InvoiceDetailPage() {
       if (!res.ok) throw new Error('Failed to generate PDF');
       const blob = await res.blob();
       const fileName = `kapilla-invoice-${invoice?.invoiceNumber ?? params.id}.pdf`;
-      // Browser: opens the PDF in a new tab. Android app: saves it to the
-      // device and opens the share sheet.
-      if (!(await saveOrShare(blob, fileName, 'Save or share invoice'))) {
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+      // Android app: save + share. Web: open it in the preview surface.
+      const handled = await saveOrShare(blob, fileName, 'Save or share invoice');
+      if (!handled) {
+        setPreview({
+          title: 'Invoice (with photo)',
+          src: URL.createObjectURL(blob),
+          fileName,
+        });
       }
       setShowPhotoModal(false);
       setPhotoFile(null);
@@ -554,12 +562,13 @@ export default function InvoiceDetailPage() {
 
             <button
               onClick={() => {
-                // Browser: opens the PDF in a new tab. Android app: saves it to
-                // the device and opens the share sheet.
-                openPdfUrl(
-                  `/api/invoices/${params.id}/pdf?type=delivery-note`,
-                  `kapilla-delivery-note-${invoice.invoiceNumber}.pdf`
-                ).catch(() => alert('Could not prepare the document. Please try again.'));
+                // Preview the delivery note; saving is a separate action inside
+                // the preview surface.
+                setPreview({
+                  title: 'Delivery Note',
+                  src: `/api/invoices/${params.id}/pdf?type=delivery-note`,
+                  fileName: `kapilla-delivery-note-${invoice.invoiceNumber}.pdf`,
+                });
               }}
               className="flex items-center gap-1 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-xs sm:text-base hover:bg-blue-700 font-semibold transition-colors"
             >
@@ -1158,6 +1167,19 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
       )}
+
+      <PdfPreviewModal
+        open={preview !== null}
+        onClose={() => setPreview(null)}
+        title={preview?.title ?? ''}
+        src={preview?.src ?? null}
+        onSave={() => {
+          if (!preview) return;
+          openPdfUrl(preview.src, preview.fileName).catch(() =>
+            alert('Could not prepare the document. Please try again.')
+          );
+        }}
+      />
     </div>
   );
 }

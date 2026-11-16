@@ -321,6 +321,21 @@ model Notification {
   @@map("Notification")
 }
 
+/// An FCM registration token for one device of one user. A user can be signed
+/// in on several devices, so this is a separate row per token rather than a
+/// column on User.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("android")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("PushSubscription")
+}
+
 model Invoice {
   id                String        @id @default(uuid())
   invoiceNumber     String        @unique

@@ -5,6 +5,16 @@ import { FileDown, Sheet } from 'lucide-react';
 import type { ClientReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
 import { saveOrShare } from '@/lib/native-file';
+import PdfPreviewModal from '@/components/PdfPreviewModal';
+
+function downloadUrl(url: string, name: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 function fmt(value: string | null): string {
   if (!value) return '—';
@@ -35,8 +45,16 @@ export default function ClientReportButtons({
   periodLabel: string;
 }) {
   const [busy, setBusy] = useState<null | 'pdf' | 'excel'>(null);
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
 
   const safeName = report.client.name.replace(/[^a-z0-9\-]+/gi, '-').toLowerCase();
+
+  function closePreview() {
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current.url);
+      return null;
+    });
+  }
 
   async function generatePdf() {
     setBusy('pdf');
@@ -209,9 +227,9 @@ export default function ClientReportButtons({
       const fileName = `kapilla-client-${safeName}.pdf`;
       const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
       // In the Android app a blob download is ignored, so save + share instead.
-      if (!(await saveOrShare(blob, fileName, 'Save or share report'))) {
-        d.save(fileName);
-      }
+      if (await saveOrShare(blob, fileName, 'Save or share report')) return;
+      // On the web, open the preview first so the user can review before saving.
+      setPreview({ url: URL.createObjectURL(blob), name: fileName });
     } catch (error) {
       console.error('[PDF] client report failed', error);
       alert('Could not generate the PDF. Please try again.');
@@ -344,7 +362,7 @@ export default function ClientReportButtons({
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         <FileDown className="w-4 h-4" />
-        {busy === 'pdf' ? 'Generating…' : 'Download PDF'}
+        {busy === 'pdf' ? 'Generating…' : 'Preview PDF'}
       </button>
       <button
         type="button"
@@ -355,6 +373,15 @@ export default function ClientReportButtons({
         <Sheet className="w-4 h-4" />
         {busy === 'excel' ? 'Generating…' : 'Export Excel'}
       </button>
+      <PdfPreviewModal
+        open={preview !== null}
+        onClose={closePreview}
+        title={`Transportation report — ${report.client.name}`}
+        src={preview?.url ?? null}
+        onSave={() => {
+          if (preview) downloadUrl(preview.url, preview.name);
+        }}
+      />
     </>
   );
 }
