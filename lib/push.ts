@@ -9,9 +9,21 @@ import { db } from '@/lib/db';
  * so the in-app notification centre keeps working on its own while the Firebase
  * project is still being prepared.
  */
-const PROJECT_ID = process.env.FCM_PROJECT_ID;
-const CLIENT_EMAIL = process.env.FCM_CLIENT_EMAIL;
-const PRIVATE_KEY = process.env.FCM_PRIVATE_KEY?.replace(/\\n/g, '\n');
+const PROJECT_ID = process.env.FCM_PROJECT_ID?.trim();
+const CLIENT_EMAIL = process.env.FCM_CLIENT_EMAIL?.trim();
+
+/**
+ * Hosting dashboards happily store a PEM wrapped in quotes or with the
+ * newlines escaped, which makes `importPKCS8` throw. Normalise both so a
+ * copy-pasted key still works.
+ */
+function normalizeKey(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const unquoted = raw.trim().replace(/^["']|["']$/g, '');
+  return unquoted.replace(/\\n/g, '\n').trim();
+}
+
+const PRIVATE_KEY = normalizeKey(process.env.FCM_PRIVATE_KEY);
 
 export function isPushConfigured(): boolean {
   return Boolean(PROJECT_ID && CLIENT_EMAIL && PRIVATE_KEY);
@@ -63,7 +75,11 @@ export interface PushPayload {
 
 /** Send one payload to every device registered by the given users. */
 export async function sendPushToUsers(userIds: string[], payload: PushPayload): Promise<void> {
-  if (!isPushConfigured() || userIds.length === 0) return;
+  if (userIds.length === 0) return;
+  if (!isPushConfigured()) {
+    console.warn('[PUSH] FCM env vars are missing - push skipped (in-app alert still saved)');
+    return;
+  }
 
   try {
     const tokens: string[] = await db.pushSubscription
@@ -78,26 +94,44 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload): 
     const accessToken = await getAccessToken();
     if (!accessToken) return;
 
+    const rejected: string[] = [];
+
     await Promise.all(
-      tokens.map((token: string) =>
-        fetch(`https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: {
-              token,
-              notification: { title: payload.title, body: payload.body },
-              ...(payload.link ? { data: { link: payload.link } } : {}),
-            },
-          }),
-        }).catch(() => {
-          // A single dead token must not abort delivery to the rest.
-        })
-      )
+      tokens.map(async (token: string) => {
+        try {
+          const res = await fetch(
+            `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message: {
+                  token,
+                  notification: { title: payload.title, body: payload.body },
+                  ...(payload.link ? { data: { link: payload.link } } : {}),
+                },
+              }),
+            }
+          );
+
+          if (res.ok) return;
+
+          const body = await res.text();
+          console.error('[PUSH] FCM rejected a token', res.status, body.slice(0, 300));
+          // A token FCM no longer knows would keep failing on every alert.
+          if (res.status === 404 || body.includes('UNREGISTERED')) rejected.push(token);
+        } catch (error) {
+          console.error('[PUSH] FCM request failed', error);
+        }
+      })
     );
+
+    if (rejected.length > 0) {
+      await db.pushSubscription.deleteMany({ where: { token: { in: rejected } } });
+    }
   } catch (error) {
     console.error('[PUSH] send failed', error);
   }
