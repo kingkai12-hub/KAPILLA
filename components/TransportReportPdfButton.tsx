@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FileDown } from 'lucide-react';
 import type { TransportReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
-import { saveOrShare } from '@/lib/native-file';
+import { saveOrShare, useIsNativeShell } from '@/lib/native-file';
 import PdfPreviewModal from '@/components/PdfPreviewModal';
 
 function downloadUrl(url: string, name: string) {
@@ -40,13 +40,21 @@ export default function TransportReportPdfButton({
   periodLabel: string;
 }) {
   const [busy, setBusy] = useState(false);
-  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
+  const native = useIsNativeShell();
+  const [preview, setPreview] = useState<{ blob: Blob; url: string; name: string } | null>(null);
 
   function closePreview() {
     setPreview((current) => {
       if (current) URL.revokeObjectURL(current.url);
       return null;
     });
+  }
+
+  async function save() {
+    if (!preview) return;
+    // In the Android app a download link is ignored, so save + share instead.
+    if (native && (await saveOrShare(preview.blob, preview.name, 'Save or share report'))) return;
+    downloadUrl(preview.url, preview.name);
   }
 
   async function generate() {
@@ -229,10 +237,8 @@ export default function TransportReportPdfButton({
       const safe = (report.query || 'report').replace(/[^a-z0-9\-]+/gi, '-');
       const fileName = `kapilla-transport-${safe}.pdf`;
       const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
-      // In the Android app a blob download is ignored, so save + share instead.
-      if (await saveOrShare(blob, fileName, 'Save or share report')) return;
-      // On the web, open the preview first so the user can review before saving.
-      setPreview({ url: URL.createObjectURL(blob), name: fileName });
+      // Always preview first — including inside the app, where pdf.js renders it.
+      setPreview({ blob, url: URL.createObjectURL(blob), name: fileName });
     } catch (error) {
       console.error('[PDF] transport report failed', error);
       alert('Could not generate the PDF. Please try again.');
@@ -257,9 +263,7 @@ export default function TransportReportPdfButton({
         onClose={closePreview}
         title={report.waybill ? `Waybill ${report.waybill.waybillNumber}` : 'Transportation report'}
         src={preview?.url ?? null}
-        onSave={() => {
-          if (preview) downloadUrl(preview.url, preview.name);
-        }}
+        onSave={save}
       />
     </>
   );

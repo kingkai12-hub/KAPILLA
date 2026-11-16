@@ -75,3 +75,41 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+/**
+ * Remove notifications the user no longer needs.
+ *
+ * - `{ id }`   deletes that alert. A regular user can only delete their own;
+ *              an ADMIN may delete any alert (useful for cleaning up noise
+ *              that was raised by mistake).
+ * - `{ all: true }` empties the caller's own inbox.
+ */
+export async function DELETE(req: Request) {
+  const session = await getSession(req);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = (await req.json().catch(() => ({}))) as { id?: string; all?: boolean };
+
+    if (body.all) {
+      await db.notification.deleteMany({ where: { userId: session.id } });
+    } else if (body.id) {
+      const where =
+        session.role === 'ADMIN' ? { id: body.id } : { id: body.id, userId: session.id };
+      await db.notification.deleteMany({ where });
+    } else {
+      return NextResponse.json({ error: 'Provide "id" or "all"' }, { status: 400 });
+    }
+
+    const unreadCount = await db.notification.count({
+      where: { userId: session.id, isRead: false },
+    });
+
+    return NextResponse.json({ ok: true, unreadCount });
+  } catch (error) {
+    console.error('[NOTIFICATIONS_DELETE]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

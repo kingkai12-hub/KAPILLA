@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BellRing, CheckCheck, ArrowRight, Inbox, Loader2 } from 'lucide-react';
+import { BellRing, CheckCheck, ArrowRight, Inbox, Loader2, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -48,6 +48,7 @@ export default function NotificationsPage() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -97,6 +98,43 @@ export default function NotificationsPage() {
     }
   }
 
+  async function remove(id: string) {
+    // Optimistic — the row disappears immediately. Restored if the call fails.
+    const previous = items;
+    setItems((prev) => prev.filter((n) => n.id !== id));
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+    } catch (error) {
+      console.error('[NOTIFICATIONS] delete failed', error);
+      setItems(previous);
+    }
+  }
+
+  async function clearAll() {
+    if (items.length === 0) return;
+    setClearingAll(true);
+    const previous = items;
+    setItems([]);
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+    } catch (error) {
+      console.error('[NOTIFICATIONS] clear all failed', error);
+      setItems(previous);
+    } finally {
+      setClearingAll(false);
+    }
+  }
+
   const unreadCount = items.filter((n) => !n.isRead).length;
 
   return (
@@ -112,19 +150,34 @@ export default function NotificationsPage() {
               : 'You are all caught up.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={markAllRead}
-          disabled={markingAll || unreadCount === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {markingAll ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <CheckCheck className="w-4 h-4" />
-          )}
-          Mark all as read
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={markAllRead}
+            disabled={markingAll || unreadCount === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {markingAll ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCheck className="w-4 h-4" />
+            )}
+            Mark all as read
+          </button>
+          <button
+            type="button"
+            onClick={clearAll}
+            disabled={clearingAll || items.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {clearingAll ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            Clear all
+          </button>
+        </div>
       </div>
 
       <div className="glass rounded-2xl overflow-hidden">
@@ -143,18 +196,21 @@ export default function NotificationsPage() {
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-slate-700">
             {items.map((item) => (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                className={cn(
+                  'flex items-stretch transition-colors group',
+                  item.isRead
+                    ? 'hover:bg-slate-50/80 dark:hover:bg-slate-700/40'
+                    : 'bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-900/10 dark:hover:bg-amber-900/20'
+                )}
+              >
                 <Link
                   href={item.link || '#'}
                   onClick={() => {
                     if (!item.isRead) markRead(item.id);
                   }}
-                  className={cn(
-                    'flex items-start gap-4 p-4 transition-colors group',
-                    item.isRead
-                      ? 'hover:bg-slate-50/80 dark:hover:bg-slate-700/40'
-                      : 'bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-900/10 dark:hover:bg-amber-900/20'
-                  )}
+                  className="flex min-w-0 flex-1 items-start gap-4 p-4"
                 >
                   <span
                     className={cn(
@@ -189,6 +245,17 @@ export default function NotificationsPage() {
                     <ArrowRight className="mt-2 w-4 h-4 shrink-0 text-slate-400 transition-transform duration-300 group-hover:translate-x-1" />
                   )}
                 </Link>
+                <div className="flex items-center pr-3">
+                  <button
+                    type="button"
+                    onClick={() => remove(item.id)}
+                    aria-label="Delete notification"
+                    title="Delete"
+                    className="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

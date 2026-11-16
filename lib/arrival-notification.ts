@@ -10,27 +10,16 @@
  * endpoint is polled.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
 import { sendShipmentUpdateSMS } from '@/lib/sms';
-import { sendPushToUsers } from '@/lib/push';
+import { notifyStaff, ALL_PORTAL_ROLES } from '@/lib/notify';
 import { SITE_URL } from '@/lib/utils';
 
 /**
  * The arrival message goes to every user in the portal — not just the
  * operations desk — so whoever is at hand can confirm the hand-over.
  */
-const NOTIFY_ROLES = [
-  'ADMIN',
-  'STAFF',
-  'DRIVER',
-  'OPERATION_MANAGER',
-  'MANAGER',
-  'MD',
-  'CEO',
-  'ACCOUNTANT',
-];
+const NOTIFY_ROLES = ALL_PORTAL_ROLES;
 
 const OFFICE_EMAIL = process.env.OFFICE_EMAIL || 'info@kapillagroup.co.tz';
 const OFFICE_PHONE = process.env.OFFICE_PHONE || '+255712345678';
@@ -50,40 +39,20 @@ export interface ArrivalShipment {
  * Safe to call on every request — duplicates are suppressed.
  */
 export async function notifyArrival(shipment: ArrivalShipment): Promise<void> {
-  const notificationModel = (db as any).Notification || (db as any).notification;
-  const userModel = (db as any).User || (db as any).user;
-
   const title = `Waybill ${shipment.waybillNumber} arrived — needs action`;
   const message = `Cargo from ${shipment.origin} has arrived at ${shipment.destination}. Confirm delivery and hand it over to the recipient.`;
   const link = `/staff/shipments/${encodeURIComponent(shipment.waybillNumber)}/confirm`;
 
-  // 1) In-app notifications for every user in the portal.
-  const notifiedUserIds: string[] = [];
-  if (notificationModel && userModel) {
-    try {
-      const staff = await userModel.findMany({
-        where: { role: { in: NOTIFY_ROLES }, isDisabled: false },
-        select: { id: true },
-      });
-
-      for (const member of staff) {
-        const existing = await notificationModel.findFirst({
-          where: { userId: member.id, type: ARRIVAL_NOTIFICATION_TYPE, link },
-        });
-        if (existing) continue;
-        await notificationModel.create({
-          data: { userId: member.id, title, message, type: ARRIVAL_NOTIFICATION_TYPE, link },
-        });
-        notifiedUserIds.push(member.id);
-      }
-    } catch (e) {
-      console.error('[ARRIVAL] In-app notification failed:', e);
-    }
-  }
-
-  // 1b) Mirror the same alert as a device push. Only users who just received the
-  // in-app row are pushed, so polling the tracking endpoint cannot spam phones.
-  await sendPushToUsers(notifiedUserIds, { title, body: message, link });
+  // 1) In-app alerts + a device push, deduped on the waybill so polling the
+  // tracking endpoint cannot raise the same alert twice.
+  await notifyStaff({
+    title,
+    message,
+    link,
+    type: ARRIVAL_NOTIFICATION_TYPE,
+    roles: NOTIFY_ROLES,
+    dedupe: true,
+  });
 
   // 2) Office email.
   try {

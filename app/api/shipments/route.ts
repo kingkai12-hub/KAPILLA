@@ -4,6 +4,7 @@ import { sendShipmentCreatedSMS, sendShipmentCreatedToReceiverSMS } from '@/lib/
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 import { requireAuth, requireRole } from '@/lib/auth';
+import { notifyStaff } from '@/lib/notify';
 import { SITE_URL } from '@/lib/utils';
 
 export const runtime = 'nodejs';
@@ -246,6 +247,18 @@ export async function POST(req: Request) {
     } catch (emailError) {
       console.error('Failed to send admin email:', emailError);
     }
+
+    // Alert the operations desk in the portal — in-app plus device push. The
+    // staff member who raised the waybill is skipped so they are not notified
+    // about their own action.
+    await notifyStaff({
+      title: `New shipment ${waybillNumber}`,
+      message: `${senderName} → ${receiverName} · ${origin} → ${destination}.`,
+      link: `/staff/shipments/${encodeURIComponent(waybillNumber)}`,
+      type: 'SHIPMENT_CREATED',
+      dedupe: true,
+      excludeUserIds: [auth.user!.id],
+    });
 
     revalidatePath('/staff/dashboard');
     revalidatePath('/staff/shipments');

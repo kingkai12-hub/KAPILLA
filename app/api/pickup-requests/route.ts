@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { sendPickupRequestSMS } from '@/lib/sms';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { requireAuth, requireRole } from '@/lib/auth';
+import { notifyStaff } from '@/lib/notify';
 import { SITE_URL } from '@/lib/utils';
 
 export const runtime = 'nodejs';
@@ -84,6 +85,15 @@ export async function POST(req: Request) {
             </div>
           </div>
         `,
+      });
+
+      // Raise it in the portal too — in-app alert plus a device push.
+      await notifyStaff({
+        title: `New pickup request #${request.id}`,
+        message: `${senderName} requested a pickup at ${pickupAddress} → ${destination}.`,
+        link: '/staff/pickup-requests',
+        type: 'PICKUP_REQUEST',
+        dedupe: true,
       });
     } catch (notificationError) {
       console.error('Failed to send pickup notifications:', notificationError);

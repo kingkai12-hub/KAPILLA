@@ -38,6 +38,23 @@ export default function PushRegistrar() {
           console.error('[push] registration failed', error);
         });
 
+        // While the app is in the foreground Android does not draw the OS
+        // notification itself, so surface it as an in-app toast instead.
+        const onReceived = await PushNotifications.addListener(
+          'pushNotificationReceived',
+          (notification) => {
+            window.dispatchEvent(
+              new CustomEvent('kapilla:push', {
+                detail: {
+                  title: notification.title,
+                  message: notification.body,
+                  link: notification.data?.link,
+                },
+              })
+            );
+          }
+        );
+
         // Tapping the OS notification opens the alert's target page.
         const onAction = await PushNotifications.addListener(
           'pushNotificationActionPerformed',
@@ -54,6 +71,7 @@ export default function PushRegistrar() {
         cleanup = () => {
           onRegistration.remove();
           onError.remove();
+          onReceived.remove();
           onAction.remove();
         };
       } catch (error) {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FileDown, Sheet } from 'lucide-react';
 import type { ClientReport } from '@/lib/reports';
 import { loadPdfLogo } from '@/lib/pdf-logo';
-import { saveOrShare } from '@/lib/native-file';
+import { saveOrShare, useIsNativeShell } from '@/lib/native-file';
 import PdfPreviewModal from '@/components/PdfPreviewModal';
 
 function downloadUrl(url: string, name: string) {
@@ -45,7 +45,8 @@ export default function ClientReportButtons({
   periodLabel: string;
 }) {
   const [busy, setBusy] = useState<null | 'pdf' | 'excel'>(null);
-  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
+  const native = useIsNativeShell();
+  const [preview, setPreview] = useState<{ blob: Blob; url: string; name: string } | null>(null);
 
   const safeName = report.client.name.replace(/[^a-z0-9\-]+/gi, '-').toLowerCase();
 
@@ -54,6 +55,13 @@ export default function ClientReportButtons({
       if (current) URL.revokeObjectURL(current.url);
       return null;
     });
+  }
+
+  async function save() {
+    if (!preview) return;
+    // In the Android app a download link is ignored, so save + share instead.
+    if (native && (await saveOrShare(preview.blob, preview.name, 'Save or share report'))) return;
+    downloadUrl(preview.url, preview.name);
   }
 
   async function generatePdf() {
@@ -226,10 +234,8 @@ export default function ClientReportButtons({
 
       const fileName = `kapilla-client-${safeName}.pdf`;
       const blob = (doc as unknown as { output: (type: 'blob') => Blob }).output('blob');
-      // In the Android app a blob download is ignored, so save + share instead.
-      if (await saveOrShare(blob, fileName, 'Save or share report')) return;
-      // On the web, open the preview first so the user can review before saving.
-      setPreview({ url: URL.createObjectURL(blob), name: fileName });
+      // Always preview first — including inside the app, where pdf.js renders it.
+      setPreview({ blob, url: URL.createObjectURL(blob), name: fileName });
     } catch (error) {
       console.error('[PDF] client report failed', error);
       alert('Could not generate the PDF. Please try again.');
@@ -378,9 +384,7 @@ export default function ClientReportButtons({
         onClose={closePreview}
         title={`Transportation report — ${report.client.name}`}
         src={preview?.url ?? null}
-        onSave={() => {
-          if (preview) downloadUrl(preview.url, preview.name);
-        }}
+        onSave={save}
       />
     </>
   );

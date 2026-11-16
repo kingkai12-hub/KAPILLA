@@ -2,16 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { requireAuth, requireRole } from '@/lib/auth';
+import { notifyStaff } from '@/lib/notify';
 
 const STAFF_ROLES = ['ADMIN', 'STAFF', 'OPERATION_MANAGER', 'MANAGER', 'MD', 'CEO', 'ACCOUNTANT'];
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ waybill: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ waybill: string }> }) {
   try {
     const { waybill } = await params;
 
@@ -20,10 +18,10 @@ export async function GET(
       include: {
         events: {
           orderBy: {
-            timestamp: 'desc'
-          }
-        }
-      }
+            timestamp: 'desc',
+          },
+        },
+      },
     });
 
     if (!shipment) {
@@ -37,10 +35,7 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ waybill: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ waybill: string }> }) {
   const auth = await requireAuth(req);
   if (auth.error) return auth.error;
   if (!requireRole(auth.user!, ['ADMIN'])) {
@@ -53,7 +48,7 @@ export async function DELETE(
     // Find the shipment first to get its ID (needed for relation deletion)
     const shipment = await db.shipment.findUnique({
       where: { waybillNumber: waybill },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!shipment) {
@@ -62,7 +57,7 @@ export async function DELETE(
 
     // Delete shipment directly - Cascade delete in DB handles related records
     await db.shipment.delete({
-      where: { waybillNumber: waybill }
+      where: { waybillNumber: waybill },
     });
 
     revalidatePath('/staff/dashboard');
@@ -75,10 +70,7 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ waybill: string }> }
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ waybill: string }> }) {
   const auth = await requireAuth(req);
   if (auth.error) return auth.error;
   if (!requireRole(auth.user!, STAFF_ROLES)) {
@@ -99,10 +91,20 @@ export async function PATCH(
     }
 
     if (shipment.currentStatus === 'DELIVERED') {
-      return NextResponse.json({ error: 'Shipment is already delivered and cannot be edited' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Shipment is already delivered and cannot be edited' },
+        { status: 400 }
+      );
     }
 
-    const updateData: any = { currentStatus: status };
+    const updateData: {
+      currentStatus: string;
+      receiverSignature?: string;
+      receivedBy?: string;
+      deliveredAt?: Date;
+      pickedUpAt?: Date;
+      dispatchedAt?: Date;
+    } = { currentStatus: status };
     if (status === 'DELIVERED') {
       if (signature) updateData.receiverSignature = signature;
       if (receivedBy) updateData.receivedBy = receivedBy;
@@ -125,17 +127,29 @@ export async function PATCH(
       data: {
         shipmentId: shipment.id,
         status: status,
-        location: location || 'Admin Update', 
+        location: location || 'Admin Update',
         remarks: `Status updated to ${status}`,
         staffId: auth.user!.id,
         staffName,
-      }
+      },
     });
 
     const updatedShipment = await db.shipment.update({
       where: { waybillNumber: waybill },
-      data: updateData
+      data: updateData,
     });
+
+    // Announce the hand-over in the portal once the shipment is DELIVERED.
+    if (status === 'DELIVERED') {
+      await notifyStaff({
+        title: `Waybill ${waybill} delivered`,
+        message: `${receivedBy || shipment.receiverName || 'The recipient'} confirmed receipt at ${shipment.destination}.`,
+        link: `/staff/shipments/${encodeURIComponent(waybill)}`,
+        type: 'SHIPMENT_DELIVERED',
+        dedupe: true,
+        excludeUserIds: [auth.user!.id],
+      });
+    }
 
     revalidatePath('/staff/dashboard');
     revalidatePath('/staff/shipments');

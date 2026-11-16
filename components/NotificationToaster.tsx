@@ -110,6 +110,24 @@ export default function NotificationToaster({
     };
   }, [showToast]);
 
+  // A push that arrives while the app is open is not drawn by Android, so the
+  // native shell re-broadcasts it as an event and we show it as an in-app toast.
+  useEffect(() => {
+    const onPush = (event: Event) => {
+      const detail = (event as CustomEvent<{ title?: string; message?: string; link?: string }>)
+        .detail;
+      if (!detail) return;
+      showToast({
+        id: `push-${Date.now()}`,
+        title: detail.title || 'New notification',
+        message: detail.message || '',
+        link: typeof detail.link === 'string' && detail.link.startsWith('/') ? detail.link : null,
+      });
+    };
+    window.addEventListener('kapilla:push', onPush);
+    return () => window.removeEventListener('kapilla:push', onPush);
+  }, [showToast]);
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[55] flex justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-0 sm:justify-end">
       <AnimatePresence>

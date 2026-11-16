@@ -214,6 +214,23 @@ export async function POST(req: Request) {
     });
 
     console.log('[INVOICES_POST] Invoice created successfully:', invoice.id);
+
+    // Alert the finance/exec desks in the portal. Only roles that always hold
+    // invoice access are targeted, so the link never lands on a 403.
+    try {
+      const { notifyStaff } = await import('@/lib/notify');
+      await notifyStaff({
+        title: `${type === 'PROFORMA' ? 'Proforma' : 'Invoice'} ${invoiceNumber} created`,
+        message: `${customerName} · ${currency} ${Number(total).toLocaleString()}`,
+        link: `/staff/invoices/${invoice.id}`,
+        type: type === 'PROFORMA' ? 'PROFORMA_CREATED' : 'INVOICE_CREATED',
+        roles: ['ADMIN', 'MD', 'CEO'],
+        dedupe: true,
+      });
+    } catch (notifyError) {
+      console.error('[INVOICES_POST] notification failed:', notifyError);
+    }
+
     return NextResponse.json(invoice);
   } catch (error) {
     console.error('[INVOICES_POST] ERROR:', error);
