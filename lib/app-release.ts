@@ -14,7 +14,7 @@
  * asked to update to itself forever.
  */
 export const APP_RELEASE = {
-  requiredVersion: '1.0.2',
+  requiredVersion: '1.0.3',
   downloadPath: '/download',
 } as const;
 

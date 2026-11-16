@@ -6,15 +6,15 @@ import { SITE_URL } from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'Download the App',
   description:
-    'Download the Kapilla Group Android app (APK) directly — track consignments and request pickups. Version 1.0.2.',
+    'Download the Kapilla Group Android app (APK) directly — track consignments and request pickups. Version 1.0.3.',
   alternates: { canonical: `${SITE_URL}/download` },
   robots: { index: true, follow: true },
 };
 
-const APK_PATH = '/downloads/kapilla-group-1.0.2.apk';
+const APK_PATH = '/downloads/kapilla-group-1.0.3.apk';
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
-const VERSION = '1.0.2';
-const SIZE = '3.5 MB';
+const VERSION = '1.0.3';
+const SIZE = '4.8 MB';
 
 export default function DownloadPage() {
   return (
