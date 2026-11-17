@@ -4,44 +4,84 @@ import { db } from '@/lib/db';
 /**
  * Server-side FCM (HTTP v1) push for the Kapilla app.
  *
- * Deliberately fail-open: until the Firebase service-account env vars are set
- * (FCM_PROJECT_ID / FCM_CLIENT_EMAIL / FCM_PRIVATE_KEY) every call is a no-op,
- * so the in-app notification centre keeps working on its own while the Firebase
- * project is still being prepared.
+ * The Firebase service account is resolved from environment variables first,
+ * then from the `SystemConfig` table. The database fallback exists because some
+ * hosting dashboards refuse to hand the key to a deployment; storing it in the
+ * app's own config keeps push working without touching the dashboard.
+ *
+ * Deliberately fail-open: with no credentials every call is a no-op, so the
+ * in-app notification centre keeps working on its own.
  */
-const PROJECT_ID = process.env.FCM_PROJECT_ID?.trim();
-const CLIENT_EMAIL = process.env.FCM_CLIENT_EMAIL?.trim();
+export interface PushConfig {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+}
+
+export const FCM_CONFIG_KEYS = {
+  projectId: 'fcm_project_id',
+  clientEmail: 'fcm_client_email',
+  privateKey: 'fcm_private_key',
+} as const;
 
 /**
  * Hosting dashboards happily store a PEM wrapped in quotes or with the
  * newlines escaped, which makes `importPKCS8` throw. Normalise both so a
  * copy-pasted key still works.
  */
-function normalizeKey(raw?: string): string | undefined {
+export function normalizeKey(raw?: string | null): string | undefined {
   if (!raw) return undefined;
   const unquoted = raw.trim().replace(/^["']|["']$/g, '');
   return unquoted.replace(/\\n/g, '\n').trim();
 }
 
-const PRIVATE_KEY = normalizeKey(process.env.FCM_PRIVATE_KEY);
+let cachedConfig: PushConfig | null = null;
 
-export function isPushConfigured(): boolean {
-  return Boolean(PROJECT_ID && CLIENT_EMAIL && PRIVATE_KEY);
+/** Resolve the FCM service account from the environment or the database. */
+export async function getPushConfig(): Promise<PushConfig | null> {
+  if (cachedConfig) return cachedConfig;
+
+  let projectId = process.env.FCM_PROJECT_ID?.trim();
+  let clientEmail = process.env.FCM_CLIENT_EMAIL?.trim();
+  let privateKey = normalizeKey(process.env.FCM_PRIVATE_KEY);
+
+  if (!projectId || !clientEmail || !privateKey) {
+    try {
+      const rows: { key: string; value: string }[] = await db.systemConfig.findMany({
+        where: { key: { in: Object.values(FCM_CONFIG_KEYS) } },
+        select: { key: true, value: true },
+      });
+      const stored = new Map(rows.map((row) => [row.key, row.value]));
+      projectId ||= stored.get(FCM_CONFIG_KEYS.projectId)?.trim();
+      clientEmail ||= stored.get(FCM_CONFIG_KEYS.clientEmail)?.trim();
+      privateKey ||= normalizeKey(stored.get(FCM_CONFIG_KEYS.privateKey));
+    } catch (error) {
+      console.error('[PUSH] could not read the FCM config from the database', error);
+    }
+  }
+
+  if (!projectId || !clientEmail || !privateKey) return null;
+
+  cachedConfig = { projectId, clientEmail, privateKey };
+  return cachedConfig;
+}
+
+export async function isPushConfigured(): Promise<boolean> {
+  return Boolean(await getPushConfig());
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
-async function getAccessToken(): Promise<string | null> {
-  if (!PROJECT_ID || !CLIENT_EMAIL || !PRIVATE_KEY) return null;
+async function getAccessToken(config: PushConfig): Promise<string | null> {
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) return cachedToken.value;
 
   const now = Math.floor(Date.now() / 1000);
-  const key = await importPKCS8(PRIVATE_KEY, 'RS256');
+  const key = await importPKCS8(config.privateKey, 'RS256');
   const assertion = await new SignJWT({
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
   })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(CLIENT_EMAIL)
+    .setIssuer(config.clientEmail)
     .setAudience('https://oauth2.googleapis.com/token')
     .setIssuedAt(now)
     .setExpirationTime(now + 3600)
@@ -76,8 +116,10 @@ export interface PushPayload {
 /** Send one payload to every device registered by the given users. */
 export async function sendPushToUsers(userIds: string[], payload: PushPayload): Promise<void> {
   if (userIds.length === 0) return;
-  if (!isPushConfigured()) {
-    console.warn('[PUSH] FCM env vars are missing - push skipped (in-app alert still saved)');
+
+  const config = await getPushConfig();
+  if (!config) {
+    console.warn('[PUSH] FCM credentials are missing - push skipped (in-app alert still saved)');
     return;
   }
 
@@ -91,7 +133,7 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload): 
 
     if (tokens.length === 0) return;
 
-    const accessToken = await getAccessToken();
+    const accessToken = await getAccessToken(config);
     if (!accessToken) return;
 
     const rejected: string[] = [];
@@ -100,7 +142,7 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload): 
       tokens.map(async (token: string) => {
         try {
           const res = await fetch(
-            `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`,
+            `https://fcm.googleapis.com/v1/projects/${config.projectId}/messages:send`,
             {
               method: 'POST',
               headers: {
