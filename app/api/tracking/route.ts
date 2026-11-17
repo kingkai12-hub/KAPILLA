@@ -120,11 +120,15 @@ function jsonSafe<T>(value: T): T {
  * The shipment is intentionally left as IN_TRANSIT — staff confirm delivery.
  */
 async function handleArrival(shipment: any, trackingEventModel: any): Promise<void> {
+  let isFirstArrival = true;
+
   if (trackingEventModel) {
     const existingArrival = await trackingEventModel.findFirst({
       where: { shipmentId: shipment.id, status: 'ARRIVED' },
     });
-    if (!existingArrival) {
+    if (existingArrival) {
+      isFirstArrival = false;
+    } else {
       await trackingEventModel.create({
         data: {
           shipmentId: shipment.id,
@@ -135,6 +139,10 @@ async function handleArrival(shipment: any, trackingEventModel: any): Promise<vo
       });
     }
   }
+
+  // The public tracking map polls every few seconds, so alert only on the very
+  // first arrival — otherwise every poll stacks another round of alerts.
+  if (!isFirstArrival) return;
 
   await notifyArrival({
     waybillNumber: shipment.waybillNumber,
