@@ -48,6 +48,11 @@ export async function GET(req: Request) {
     vercelUrl: process.env.VERCEL_URL ?? null,
     gitCommit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
     deploymentId: process.env.VERCEL_DEPLOYMENT_ID ?? null,
+    vercelProjectId: process.env.VERCEL_PROJECT_ID ?? null,
+    repoSlug: process.env.VERCEL_GIT_REPO_SLUG ?? null,
+    repoOwner: process.env.VERCEL_GIT_REPO_OWNER ?? null,
+    branch: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+    region: process.env.VERCEL_REGION ?? null,
     envCount: Object.keys(process.env).length,
     fcmLikeNames: Object.keys(process.env).filter((k) =>
       /FCM|FIREBASE|PRIVATE_KEY|CLIENT_EMAIL/i.test(k)
