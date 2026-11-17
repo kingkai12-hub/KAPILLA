@@ -44,6 +44,14 @@ export async function GET(req: Request) {
     keyHasEscapedNewline: Boolean(rawKey?.includes('\\n')),
     keyHasRealNewline: Boolean(rawKey?.includes('\n')),
     keyLooksPem: Boolean(PRIVATE_KEY?.includes('BEGIN PRIVATE KEY')),
+    vercelEnv: process.env.VERCEL_ENV ?? null,
+    vercelUrl: process.env.VERCEL_URL ?? null,
+    gitCommit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    deploymentId: process.env.VERCEL_DEPLOYMENT_ID ?? null,
+    envCount: Object.keys(process.env).length,
+    fcmLikeNames: Object.keys(process.env).filter((k) =>
+      /FCM|FIREBASE|PRIVATE_KEY|CLIENT_EMAIL/i.test(k)
+    ),
   };
 
   if (PROJECT_ID && CLIENT_EMAIL && PRIVATE_KEY) {
