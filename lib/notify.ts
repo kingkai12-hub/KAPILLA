@@ -59,36 +59,39 @@ export async function notifyStaff(input: NotifyStaffInput): Promise<string[]> {
 
   const roles = input.roles?.length ? input.roles : STAFF_ROLES;
   const exclude = new Set(input.excludeUserIds ?? []);
-  const notifiedUserIds: string[] = [];
+  let notifiedUserIds: string[] = [];
 
   if (notificationModel && userModel) {
     try {
-      const recipients = await userModel.findMany({
+      const recipients: { id: string }[] = await userModel.findMany({
         where: { role: { in: roles }, isDisabled: false },
         select: { id: true },
       });
 
-      for (const member of recipients) {
-        if (exclude.has(member.id)) continue;
+      let targets = recipients.map((member) => member.id).filter((id) => !exclude.has(id));
 
-        if (input.dedupe) {
-          const existing = await notificationModel.findFirst({
-            where: { userId: member.id, type: input.type, title: input.title },
-            select: { id: true },
-          });
-          if (existing) continue;
-        }
+      if (input.dedupe && targets.length > 0) {
+        const existing: { userId: string }[] = await notificationModel.findMany({
+          where: { userId: { in: targets }, type: input.type, title: input.title },
+          select: { userId: true },
+        });
+        const alreadyNotified = new Set(existing.map((row) => row.userId));
+        targets = targets.filter((id) => !alreadyNotified.has(id));
+      }
 
-        await notificationModel.create({
-          data: {
-            userId: member.id,
+      // One bulk write instead of a round-trip per recipient — the old
+      // sequential loop took ~26s for a busy alert.
+      if (targets.length > 0) {
+        await notificationModel.createMany({
+          data: targets.map((userId) => ({
+            userId,
             title: input.title,
             message: input.message,
             type: input.type,
             link: input.link ?? null,
-          },
+          })),
         });
-        notifiedUserIds.push(member.id);
+        notifiedUserIds = targets;
       }
     } catch (error) {
       console.error('[NOTIFY] in-app notification failed', error);
